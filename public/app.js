@@ -411,3 +411,39 @@ window.switchAdminSubTab = function(tabName) {
   const activePill = Array.from(pills).find(p => p.getAttribute('onclick')?.includes(tabName));
   if (activePill) activePill.classList.add('active');
 };
+
+// 16개 메뉴 클릭 통합 토스트 및 안내 헬퍼
+window.showAdminMenuNotice = function(menuKey) {
+  const menuNames = {
+    'DASHBOARD': '1. DASHBOARD (대시보드)',
+    'USER_MGMT': '2. USER_MGMT (회원 관리)',
+    'AUTHOR_MGMT': '3. AUTHOR_MGMT (작가 관리)',
+    'WORK_MGMT': '4. WORK_MGMT (작품 연재)',
+    'EPISODE_MGMT': '5. EPISODE_MGMT (회차 관리)',
+    'CONTENT_REVIEW': '6. CONTENT_REVIEW (심사)',
+    'COMMENT_REPORT': '7. COMMENT_REPORT (댓글/신고)',
+    'AD_MGMT': '8. AD_MGMT (광고 플랫폼)',
+    'FAN_MEETING': '11. FAN_MEETING (팬미팅)',
+    'GOODS_MGMT': '12. GOODS_MGMT (굿즈 커머스)',
+    'EVENT_MGMT': '13. EVENT_MGMT (이벤트)',
+    'ANALYTICS': '14. ANALYTICS (매출 통계)'
+  };
+  const name = menuNames[menuKey] || menuKey;
+  showToast(`📌 [${name}] 관리자 메뉴로 진입했습니다.`);
+  
+  // Update menu 16 navbar active status
+  document.querySelectorAll('.menu-16-item').forEach(btn => btn.classList.remove('active'));
+  const clickedBtn = Array.from(document.querySelectorAll('.menu-16-item')).find(btn => btn.getAttribute('onclick')?.includes(menuKey));
+  if (clickedBtn) clickedBtn.classList.add('active');
+};
+
+// 신규 서브 관리자 생성 (16개 메뉴 접근 권한 포함)
+window.handleCreateSubAdminSubmit = function() {
+  const newId = document.getElementById('newSubAdminId').value;
+  const newName = document.getElementById('newSubAdminName').value;
+  
+  const checkedPerms = Array.from(document.querySelectorAll('input[name="newPerm"]:checked')).map(el => el.value);
+
+  showToast(`👤 신규 서브 관리자 (${newId} / ${newName}) 계정이 생성되었습니다. (부여 권한: ${checkedPerms.length}개 메뉴)`);
+  closeAllModals();
+};

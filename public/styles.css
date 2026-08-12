@@ -606,10 +606,59 @@ body {
   cursor: pointer;
 }
 
-.flex-between {
+/* 16-Menu Sub-Bar Navbar */
+.admin-16menu-nav-bar {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.menu-16-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.menu-16-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-16-item svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+.menu-16-item:hover, .menu-16-item.active {
+  background: var(--color-brand-gradient);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(109, 94, 245, 0.3);
+}
+
+.style-danger {
+  border-color: rgba(244, 63, 94, 0.4) !important;
+  color: var(--accent-rose) !important;
+}
+
+.style-danger:hover {
+  background: rgba(244, 63, 94, 0.2) !important;
 }
 
 .card-meta {
