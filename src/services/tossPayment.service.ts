@@ -52,10 +52,10 @@ export class TossPaymentService {
         })
       });
 
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || '토스페이먼츠 결제 승인 실패');
+        throw new Error(data?.message || '토스페이먼츠 결제 승인 실패');
       }
 
       return data;
@@ -94,10 +94,10 @@ export class TossPaymentService {
         })
       });
 
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || '토스페이먼츠 결제 취소 실패');
+        throw new Error(data?.message || '토스페이먼츠 결제 취소 실패');
       }
 
       return data;
