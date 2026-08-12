@@ -249,3 +249,77 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
     return res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * 독자 회원 정보수정 (닉네임 변경, 비밀번호 변경)
+ * 보안: 기존 비밀번호 검증 필수
+ */
+authRouter.put('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { nickname, currentPassword, newPassword } = req.body;
+
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    const updateData: any = {};
+
+    // 닉네임 수정
+    if (nickname && nickname.trim() !== '') {
+      updateData.nickname = nickname.trim();
+    }
+
+    // 비밀번호 변경 요청 시 기존 비밀번호 검증
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: '비밀번호를 변경하려면 기존 비밀번호를 입력하셔야 합니다.' });
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isCurrentPasswordValid) {
+        return res.status(401).json({ error: '기존 비밀번호가 일치하지 않습니다.' });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: '새 비밀번호는 최소 6자 이상이어야 합니다.' });
+      }
+
+      updateData.passwordHash = await bcrypt.hash(newPassword, 10);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: '수정할 정보를 입력해주세요.' });
+    }
+
+    const updatedUser = await db.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        nickname: true,
+        role: true,
+        isAdultVerified: true
+      }
+    });
+
+    return res.json({
+      message: '회원 정보가 성공적으로 수정되었습니다.',
+      user: updatedUser
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || '프로필 수정 실패' });
+  }
+});
+
+/**
+ * 로그아웃
+ */
+authRouter.post('/logout', authenticateToken, async (req: AuthRequest, res: Response) => {
+  return res.json({
+    message: '성공적으로 로그아웃되었습니다. 클라이언트의 인증 토큰이 폐기되었습니다.'
+  });
+});
