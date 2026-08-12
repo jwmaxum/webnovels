@@ -1,0 +1,363 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id              String               @id @default(uuid())
+  email           String               @unique
+  username        String               @unique
+  passwordHash    String
+  nickname        String
+  role            String               @default("READER") // READER, AUTHOR, SUB_ADMIN, SUPER_ADMIN, ADMIN
+  permissions     String?              // JSON array string of allowed menu keys for SUB_ADMIN
+  isAdultVerified Boolean              @default(false)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  profile         UserProfile?
+  author          Author?
+  readingHistories UserReadingHistory[]
+  adHistories     UserAdHistory[]
+  unlocks         EpisodeUnlock[]
+  comments        Comment[]
+  likes           Like[]
+  reports         Report[]
+  orders          Order[]
+  subscriptions   AuthorSubscription[]
+  workFavorites   WorkFavorite[]
+}
+
+model UserProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  profileImageUrl String?
+  favoriteGenre  String?
+  notificationOn Boolean  @default(true)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Author {
+  id              String            @id @default(uuid())
+  userId          String            @unique
+  penName         String
+  bio             String?
+  copyrightAgreed Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account         AuthorAccount?
+  works           Work[]
+  revenues        AuthorRevenue[]
+  settlements     AuthorSettlement[]
+  subscribers     AuthorSubscription[]
+}
+
+model AuthorAccount {
+  id            String   @id @default(uuid())
+  authorId      String   @unique
+  bankName      String
+  accountNumber String
+  accountHolder String
+  taxInfo       String?
+  author        Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Work {
+  id            String          @id @default(uuid())
+  authorId      String
+  title         String
+  coverImageUrl String?
+  description   String
+  genre         String
+  tags          String          // comma separated
+  rating        String          @default("ALL") // ALL, AGE_15, AGE_18
+  aiUsageType   String          @default("NONE") // NONE, ASSISTED, FULL
+  status        String          @default("ONGOING") // ONGOING, PAUSED, COMPLETED
+  publishDays   String          @default("MON,WED,FRI")
+  viewCount     Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  author        Author          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  episodes      Episode[]
+  statistics    WorkStatistics?
+  favorites     WorkFavorite[]
+}
+
+model WorkStatistics {
+  id            String   @id @default(uuid())
+  workId        String   @unique
+  totalReads    Int      @default(0)
+  totalAdViews  Int      @default(0)
+  completionRate Float   @default(0.0) // 완독률 (%)
+  avgDwellTime  Float    @default(0.0) // 체류시간 (초)
+  subscriberCount Int    @default(0)
+  contributionScore Float @default(0.0) // 수익배분 기여도 점수
+  updatedAt     DateTime @updatedAt
+  
+  work          Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+}
+
+model Episode {
+  id                String            @id @default(uuid())
+  workId            String
+  episodeNumber     Int
+  title             String
+  content           String
+  authorComment     String?
+  isFree            Boolean           @default(false)
+  adUnlockRequired  Boolean           @default(true)
+  isPublished       Boolean           @default(true)
+  scheduledAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  work              Work              @relation(fields: [workId], references: [id], onDelete: Cascade)
+  statistics        EpisodeStatistics?
+  unlocks           EpisodeUnlock[]
+  comments          Comment[]
+}
+
+model EpisodeStatistics {
+  id            String   @id @default(uuid())
+  episodeId     String   @unique
+  readCount     Int      @default(0)
+  adUnlockCount Int      @default(0)
+  episode       Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+}
+
+model EpisodeUnlock {
+  id              String   @id @default(uuid())
+  userId          String
+  episodeId       String
+  unlockedAt      DateTime @default(now())
+  adTransactionId String?
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode         Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+}
+
+model UserReadingHistory {
+  id              String   @id @default(uuid())
+  userId          String
+  workId          String
+  episodeId       String
+  readTimeSeconds Int      @default(0)
+  readAt          DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AdImpression {
+  id            String   @id @default(uuid())
+  userId        String?
+  adType        String   // REWARDED_VIDEO, DISPLAY, NATIVE
+  placement     String   // EPISODE_UNLOCK, MAIN_BANNER, WORK_DETAIL
+  adNetwork     String   // ADMOB, INTERNAL
+  rewardToken   String?  @unique
+  status        String   // REQUESTED, VIEWED, COMPLETED, VERIFIED
+  createdAt     DateTime @default(now())
+
+  completions   AdCompletion[]
+}
+
+model AdCompletion {
+  id              String       @id @default(uuid())
+  adImpressionId  String
+  userId          String
+  rewardVerified  Boolean      @default(false)
+  serverSignature String?
+  completedAt     DateTime     @default(now())
+
+  adImpression    AdImpression @relation(fields: [adImpressionId], references: [id], onDelete: Cascade)
+}
+
+model UserAdHistory {
+  id            String   @id @default(uuid())
+  userId        String
+  adImpressionId String
+  episodeId     String?
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RevenueEvent {
+  id              String   @id @default(uuid())
+  periodMonth     String   // YYYY-MM
+  grossRevenue    Float    // 광고 총매출
+  adNetworkFee    Float    // 광고 플랫폼 수수료
+  netRevenue      Float    // 순광고수익 (gross - adNetworkFee)
+  writerPoolRatio Float    @default(0.625) // 작가 Pool 비율 (예: 62.5%)
+  writerPool      Float    // 작가 Pool 총액 (net * writerPoolRatio)
+  platformRevenue Float    // 플랫폼 귀속 (net - writerPool)
+  isClosed        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  authorRevenues AuthorRevenue[]
+}
+
+model AuthorRevenue {
+  id                String         @id @default(uuid())
+  revenueEventId    String
+  authorId          String
+  workId            String?
+  contributionScore Float          // 작품 기여도 점수
+  contributionRatio Float          // 기여도 비중 (%)
+  estimatedAmount   Float          // 추정 정산금 (Estimated)
+  confirmedAmount   Float          // 확정 정산금 (Confirmed)
+  periodMonth       String
+  status            String         @default("PENDING") // PENDING, CONFIRMED, PAID, REJECTED
+  createdAt         DateTime       @default(now())
+
+  revenueEvent      RevenueEvent   @relation(fields: [revenueEventId], references: [id], onDelete: Cascade)
+  author            Author         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model AuthorSettlement {
+  id            String   @id @default(uuid())
+  authorId      String
+  amount        Float
+  status        String   @default("PENDING") // PENDING, CONFIRMED, PAID, REJECTED
+  bankInfo      String
+  requestedAt   DateTime @default(now())
+  processedAt   DateTime?
+
+  author        Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model WorkFavorite {
+  id        String   @id @default(uuid())
+  userId    String
+  workId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work      Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workId])
+}
+
+model AuthorSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  author    Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, authorId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String
+  episodeId String
+  content   String
+  isBlocked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  likes     Like[]
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  commentId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  userId    String
+  targetType String  // COMMENT, WORK, EPISODE
+  targetId  String
+  reason    String
+  status    String   @default("PENDING") // PENDING, RESOLVED, REJECTED
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FanMeeting {
+  id          String   @id @default(uuid())
+  authorId    String
+  title       String
+  eventDate   DateTime
+  location    String
+  price       Float
+  totalSeats  Int
+  availableSeats Int
+  description String
+  createdAt   DateTime @default(now())
+
+  tickets     Ticket[]
+}
+
+model Ticket {
+  id           String     @id @default(uuid())
+  fanMeetingId String
+  userId       String
+  ticketNumber String     @unique
+  purchasedAt  DateTime   @default(now())
+
+  fanMeeting   FanMeeting @relation(fields: [fanMeetingId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  workId      String?
+  name        String
+  price       Float
+  stock       Int
+  description String
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  orders      Order[]
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  userId      String
+  productId   String
+  quantity    Int
+  totalAmount Float
+  status      String   @default("PAID")
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model SystemConfig {
+  id               String   @id @default("default")
+  tossClientKey    String?  @default("test_ck_docs_O7l2mZ1N3p81A2jL3b5z")
+  tossSecretKey    String?  @default("test_sk_docs_O7l2mZ1N3p81A2jL3b5z")
+  tossMid          String?  @default("tosspayments")
+  tossMode         String   @default("TEST") // TEST, LIVE
+
+  kcpSiteCode      String?  @default("T0000")
+  kcpSiteKey       String?  @default("3383f5080e729a67a57a8a1c0d48")
+  kcpCertUrl       String?  @default("https://cert.kcp.co.kr")
+  kcpMode          String   @default("TEST") // TEST, LIVE
+
+  portoneImpKey    String?
+  portoneImpSecret String?
+
+  updatedAt        DateTime @updatedAt
+}
+
