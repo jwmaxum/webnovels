@@ -32,9 +32,9 @@ jobs:
     - name: Run Backend Integration & System Tests
       run: npm run test
       env:
-        SUPER_ADMIN_ID: ${{ secrets.SUPER_ADMIN_ID || 'jwmaxum@gmail.com' }}
-        SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD || 'sang@4478000' }}
-        SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL || 'jwmaxum@gmail.com' }}
+        SUPER_ADMIN_ID: ${{ secrets.SUPER_ADMIN_ID }}
+        SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
+        SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
 
     - name: Check Build Output
       run: npm run build
