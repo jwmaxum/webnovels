@@ -11,9 +11,15 @@ export class SuperAdminInitService {
    * .env.local에 정의된 SUPER_ADMIN 계정 자동 초기화/시딩
    */
   static async initSuperAdmin() {
-    const adminId = process.env.system_admin_id || process.env.super_admin_id || process.env.SUPER_ADMIN_ID || 'jwmaxum@gmail.com';
-    const adminPassword = process.env.system_admin_password || process.env.super_admin_password || process.env.SUPER_ADMIN_PASSWORD || 'SUPER_ADMIN_PASSWORD_REDACTED';
-    const adminEmail = process.env.system_admin_email || process.env.super_admin_email || process.env.SUPER_ADMIN_EMAIL || (adminId.includes('@') ? adminId : 'admin@webnovel.com');
+    const adminId = process.env.system_admin_id || process.env.super_admin_id || process.env.SUPER_ADMIN_ID;
+    const adminPassword = process.env.system_admin_password || process.env.super_admin_password || process.env.SUPER_ADMIN_PASSWORD;
+
+    if (!adminId || !adminPassword) {
+      console.log('⚠️ [SuperAdminInit] 환경변수(.env.local)에 SUPER_ADMIN 계정 정보가 지정되지 않았습니다.');
+      return null;
+    }
+
+    const adminEmail = process.env.system_admin_email || process.env.super_admin_email || process.env.SUPER_ADMIN_EMAIL || (adminId.includes('@') ? adminId : 'admin@webnovel.local');
 
     const passwordHash = await bcrypt.hash(adminPassword, 10);
 

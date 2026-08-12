@@ -113,12 +113,7 @@ npm run build
 
 ## 🔑 주요 계정 정보 (Initial Credentials)
 
-* **최고 관리자 (Super Admin)**:
-  * **ID / Email**: `jwmaxum@gmail.com`
-  * **Password**: `SUPER_ADMIN_PASSWORD_REDACTED`
-
----
-
+* 
 ## 📄 라이선스 (License)
 
 Copyright © 2026 WebNovels. All rights reserved.

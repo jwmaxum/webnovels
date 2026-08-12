@@ -329,10 +329,13 @@ async function runVerification() {
     const { SuperAdminInitService } = await import('../src/services/superAdminInit.service.js');
     await SuperAdminInitService.initSuperAdmin();
 
+    const targetSuperAdminId = process.env.system_admin_id || process.env.super_admin_id || process.env.SUPER_ADMIN_ID || 'admin_super';
+    const targetSuperAdminPw = process.env.system_admin_password || process.env.super_admin_password || process.env.SUPER_ADMIN_PASSWORD || 'admin_password123';
+
     const superAdminLoginRes = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jwmaxum@gmail.com', password: 'SUPER_ADMIN_PASSWORD_REDACTED' })
+      body: JSON.stringify({ username: targetSuperAdminId, password: targetSuperAdminPw })
     });
     const superAdminLoginData: any = await superAdminLoginRes.json();
     const superAdminToken = superAdminLoginData.token;
