@@ -10,7 +10,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
 
     steps:
     - name: Checkout Repository
@@ -34,9 +35,9 @@ jobs:
     - name: Run Backend Integration & System Tests
       run: npm run test
       env:
-        SUPER_ADMIN_ID: ${{ secrets.SUPER_ADMIN_ID }}
-        SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
-        SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
+        SUPER_ADMIN_ID: ${{ secrets.SUPER_ADMIN_ID || 'ci_super_admin' }}
+        SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD || 'ci_super_pass123!' }}
+        SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL || 'ci_super@webnovel.local' }}
 
     - name: Check Build Output
       run: npm run build
