@@ -107,7 +107,15 @@ function bindWebNovelsEvents() {
   });
 }
 
+let isAdminLoggedIn = false;
+
 function switchWebNovelsView(viewId, activeLink) {
+  // 관리자 메뉴 접근 시 로그인 검증
+  if (viewId === 'view-admin-cms' && !isAdminLoggedIn) {
+    openModal('modalAdminLogin');
+    return;
+  }
+
   document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(l => l.classList.remove('active'));
 
@@ -122,6 +130,26 @@ function switchWebNovelsView(viewId, activeLink) {
     fetchCreatorDashboardData();
   }
 }
+
+// 관리자 로그인 로직 처리
+window.handleAdminLoginProcess = function() {
+  const idInput = document.getElementById('adminLoginId').value;
+  const pwInput = document.getElementById('adminLoginPw').value;
+
+  if (!idInput || !pwInput) {
+    showToast('관리자 ID와 비밀번호를 모두 입력해주세요.');
+    return;
+  }
+
+  isAdminLoggedIn = true;
+  closeAllModals();
+  showToast(`🔑 관리자 로그인 성공! (${idInput})`);
+  
+  // 관리자 관제탑 활성화
+  document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
+  const adminView = document.getElementById('view-admin-cms');
+  if (adminView) adminView.classList.add('active');
+};
 
 // ----------------------------------------------------
 // 1. Home & Discover Views

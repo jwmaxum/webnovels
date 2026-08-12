@@ -572,6 +572,46 @@ body {
   margin-bottom: 8px;
 }
 
+/* 16-Menu Sub-Admin Permission Control Matrix Grid */
+.permission-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.perm-switch-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.perm-switch-card:hover {
+  background: rgba(109, 94, 245, 0.15);
+  border-color: rgba(109, 94, 245, 0.4);
+}
+
+.perm-switch-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-brand-primary);
+  cursor: pointer;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .card-meta {
   display: flex;
   align-items: center;
