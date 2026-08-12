@@ -28,7 +28,7 @@
 ---
 
 ### 🛡️ 3. 통합 관리자 CMS (Admin Web Application - `/admin`)
-* **최고 관리자 (Super Admin) 세팅**: `.env.local` 기반 자동 계정 세팅 (`jwmaxum@gmail.com`).
+* **최고 관리자 (Super Admin) 세팅**: `.env.local` 기반 자동 계정 세팅 ().
 * **서브 관리자 권한 매트릭스 (Fine-Grained RBAC)**:
   * 16개 관리자 메뉴(`DASHBOARD`, `USER_MGMT`, `AUTHOR_MGMT`, `WORK_MGMT`, `EPISODE_MGMT`, `CONTENT_REVIEW`, `COMMENT_REPORT`, `AD_MGMT`, `AD_REVENUE`, `AUTHOR_SETTLEMENT`, `FAN_MEETING`, `GOODS_MGMT`, `EVENT_MGMT`, `ANALYTICS`, `SYSTEM_MGMT`, `SECURITY_MGMT`)에 대해 스위치 토글로 접근 권한 지정/수정.
 * **광고 수익배분 Engine (Revenue Allocation Engine)**:

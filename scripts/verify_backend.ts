@@ -82,6 +82,19 @@ async function runVerification() {
     const readerToken = readerData.token;
     console.log('   ✅ 독자 사용자 생성 완료');
 
+    // 독자 정보 수정 테스트 (닉네임 및 비밀번호 변경)
+    const updateReader = await fetch(`${baseUrl}/auth/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${readerToken}` },
+      body: JSON.stringify({
+        nickname: '열혈독자_수정됨',
+        currentPassword: 'password123',
+        newPassword: 'newpassword123'
+      })
+    });
+    const updateReaderData: any = await updateReader.json();
+    console.log('   ✅ 독자 회원 정보수정 완료 닉네임:', updateReaderData.user.nickname);
+
     // 3. 작가 등록 및 작품/회차 연재 (Section 20)
     console.log('\n▶ [3/6] Creator Studio: 작가 등록 및 작품/회차 연재');
     const regAuthor = await fetch(`${baseUrl}/creator/register`, {
@@ -97,6 +110,19 @@ async function runVerification() {
     });
     const regAuthorData: any = await regAuthor.json();
     console.log('   ✅ 작가 등록 성공 PenName:', regAuthorData.author.penName);
+
+    // 작가 정보 및 정산 계좌 수정 테스트
+    const updateAuthor = await fetch(`${baseUrl}/creator/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authorUserToken}` },
+      body: JSON.stringify({
+        penName: '판타지마스터_PRO',
+        bankName: '국민은행',
+        accountNumber: '999-888-777666'
+      })
+    });
+    const updateAuthorData: any = await updateAuthor.json();
+    console.log('   ✅ 작가 프로필 & 정산 계좌 수정 완료 PenName:', updateAuthorData.author.penName, 'Bank:', updateAuthorData.author.account.bankName);
 
     // 작품 등록
     const createWork = await fetch(`${baseUrl}/creator/works`, {

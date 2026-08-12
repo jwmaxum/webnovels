@@ -229,3 +229,70 @@ creatorRouter.post('/settlement/request', authenticateToken, async (req: AuthReq
     return res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * 작가 프로필 및 정산 계좌 정보 수정 API
+ * 보안: 본인 작가 계정만 수정 가능
+ */
+creatorRouter.put('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { penName, bio, bankName, accountNumber, accountHolder } = req.body;
+
+    const author = await db.author.findUnique({
+      where: { userId },
+      include: { account: true }
+    });
+
+    if (!author) {
+      return res.status(404).json({ error: '등록된 작가 계정이 없습니다.' });
+    }
+
+    const authorUpdateData: any = {};
+    if (penName && penName.trim() !== '') authorUpdateData.penName = penName.trim();
+    if (bio !== undefined) authorUpdateData.bio = bio;
+
+    // 작가 기본 정보 업데이트
+    if (Object.keys(authorUpdateData).length > 0) {
+      await db.author.update({
+        where: { id: author.id },
+        data: authorUpdateData
+      });
+    }
+
+    // 정산 계좌 정보 업데이트
+    if (bankName || accountNumber || accountHolder) {
+      if (author.account) {
+        await db.authorAccount.update({
+          where: { authorId: author.id },
+          data: {
+            bankName: bankName || author.account.bankName,
+            accountNumber: accountNumber || author.account.accountNumber,
+            accountHolder: accountHolder || author.account.accountHolder
+          }
+        });
+      } else if (bankName && accountNumber && accountHolder) {
+        await db.authorAccount.create({
+          data: {
+            authorId: author.id,
+            bankName,
+            accountNumber,
+            accountHolder
+          }
+        });
+      }
+    }
+
+    const updatedAuthor = await db.author.findUnique({
+      where: { id: author.id },
+      include: { account: true }
+    });
+
+    return res.json({
+      message: '작가 정보 및 정산 계좌가 성공적으로 수정되었습니다.',
+      author: updatedAuthor
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || '작가 정보 수정 실패' });
+  }
+});
