@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebNovels - 광고 기반 무료 웹소설 플랫폼</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="WebNovels - 돈을 내지 않아도 광고를 시청하면 다음 회차를 무료로 즐길 수 있는 작가 상생 웹소설 플랫폼">
+  <meta name="theme-color" content="#6D5EF5">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&family=Outfit:wght@600;700;800;900&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="theme-default">
+  <div id="app" class="app-shell">
+
+    <!-- Top Navigation Header (Desktop & Mobile Header) -->
+    <header class="webnovels-header" id="mainHeader">
+      <div class="header-inner">
+        <a href="#home" class="brand-link" id="brandLink">
+          <div class="brand-symbol">
+            <i data-lucide="book-open"></i>
+          </div>
+          <span class="brand-text">Web<span class="brand-highlight">Novels</span></span>
+        </a>
+
+        <!-- Desktop Navigation Menu -->
+        <nav class="desktop-nav">
+          <a href="#home" class="nav-link active" data-target="view-home">홈</a>
+          <a href="#discover" class="nav-link" data-target="view-discover">탐색</a>
+          <a href="#ranking" class="nav-link" data-target="view-discover">랭킹</a>
+          <a href="#library" class="nav-link" data-target="view-mypage">보관함</a>
+          <a href="#creator" class="nav-link nav-highlight" data-target="view-creator">
+            <i data-lucide="feather"></i> Creator Studio
+          </a>
+          <a href="#admin" class="nav-link nav-admin" data-target="view-admin-cms">
+            <i data-lucide="shield-check"></i> Admin CMS
+          </a>
+        </nav>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <button class="btn btn-icon btn-ghost" id="btnSearchOpen" title="작품/작가 검색">
+            <i data-lucide="search"></i>
+          </button>
+          <div class="user-profile-menu" id="userProfileMenu">
+            <button class="btn btn-primary btn-sm" id="btnHeaderLogin">로그인</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="webnovels-body">
+
+      <!-- View 1: Home View (design.md Section 16) -->
+      <section id="view-home" class="main-view active">
+        <!-- Hero Carousel Section -->
+        <div class="hero-carousel-wrapper">
+          <div class="hero-slide active">
+            <div class="hero-bg" style="background-image: url('/images/cover_fantasy.png');"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+              <span class="badge badge-accent mb-2">🔥 실시간 1위 판타지</span>
+              <h1 class="hero-title">대적자: 신을 삼킨 기사</h1>
+              <p class="hero-desc">신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!</p>
+              <div class="hero-tags mb-4">
+                <span>#회귀</span> <span>#판타지</span> <span>#성장물</span> <span>#독점연재</span>
+              </div>
+              <div class="hero-cta">
+                <button class="btn btn-hero btn-lg" onclick="openWorkDetailDirect('w-fantasy')">
+                  <i data-lucide="play-circle"></i> 첫 화 무료 읽기
+                </button>
+                <button class="btn btn-outline btn-lg" onclick="openWorkDetailDirect('w-fantasy')">
+                  <i data-lucide="info"></i> 작품 정보
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Continue Reading Section (design.md Section 17) -->
+        <div class="container section-padding" id="sectionContinueReading">
+          <div class="section-header">
+            <h3><i data-lucide="history" class="icon-indigo"></i> 최근 읽던 작품 (이어보기)</h3>
+          </div>
+          <div class="continue-reading-card glass-panel" onclick="openReaderDirect('w-fantasy', 'ep-1')">
+            <img src="/images/cover_fantasy.png" alt="대적자" class="continue-thumb">
+            <div class="continue-info">
+              <h4>대적자: 신을 삼킨 기사</h4>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 75%;"></div>
+              </div>
+              <span class="progress-text">1화 읽는 중 (75% 완료)</span>
+            </div>
+            <button class="btn btn-primary btn-sm">계속 읽기 <i data-lucide="chevron-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Today's Updates (design.md Section 18) -->
+        <div class="container section-padding">
+          <div class="section-header">
+            <h3><i data-lucide="sparkles" class="icon-amber"></i> 오늘 업데이트된 작품</h3>
+            <a href="#discover" class="link-more">전체보기 <i data-lucide="chevron-right"></i></a>
+          </div>
+
+          <div class="works-grid" id="homeWorksGrid">
+            <!-- Dynamic Work Cards -->
+          </div>
+        </div>
+
+        <!-- Ad Unlock Recommended Section -->
+        <div class="container section-padding">
+          <div class="ad-unlock-banner-card">
+            <div class="banner-badge">🎁 100% 무료 혜택</div>
+            <h2>"광고 30초 보고 다음 편 바로 해금!"</h2>
+            <p>유료 결제 없이 광고를 시청하면 작가에게 직접 수익이 전달되고, 독자는 다음 회차를 무료로 감상할 수 있습니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 2: Discover View (design.md Section 20) -->
+      <section id="view-discover" class="main-view">
+        <div class="container section-padding">
+          <div class="section-header">
+            <h2>작품 탐색 & 랭킹</h2>
+          </div>
+
+          <!-- Genre Filter Pills -->
+          <div class="filter-pills mb-6">
+            <button class="pill active">전체</button>
+            <button class="pill">판타지</button>
+            <button class="pill">로맨스 판타지</button>
+            <button class="pill">현대 판타지</button>
+            <button class="pill">무협</button>
+            <button class="pill">19+ 성인</button>
+          </div>
+
+          <div class="works-grid" id="discoverWorksGrid">
+            <!-- Discover Works List -->
+          </div>
+        </div>
+      </section>
+
+      <!-- View 3: Work Detail Page (design.md Section 22~25) -->
+      <section id="view-work-detail" class="main-view">
+        <div class="container section-padding">
+          <div class="work-detail-hero">
+            <div class="detail-cover-box">
+              <img id="detailCoverImg" src="/images/cover_fantasy.png" alt="표지">
+            </div>
+            <div class="detail-info-box">
+              <div class="detail-badges">
+                <span class="badge badge-accent" id="detailGenreBadge">판타지</span>
+                <span class="badge badge-outline" id="detailRatingBadge">전체이용가</span>
+                <span class="badge badge-outline" id="detailAiBadge">AI 미사용</span>
+              </div>
+              <h1 id="detailTitle" class="detail-title">대적자: 신을 삼킨 기사</h1>
+              <p class="detail-author" id="detailAuthor">작가: 판타지마스터</p>
+              <p class="detail-desc" id="detailDescription">광고를 보면 다음 회차가 무료로 공개되는 대표 판타지 웹소설입니다.</p>
+
+              <div class="detail-actions">
+                <button class="btn btn-primary btn-lg" id="btnDetailReadFirst">
+                  <i data-lucide="play-circle"></i> 첫 화 읽기 (무료)
+                </button>
+                <button class="btn btn-outline btn-lg" id="btnDetailFavorite">
+                  <i data-lucide="heart"></i> 관심등록
+                </button>
+                <button class="btn btn-outline btn-lg" id="btnDetailSubscribe">
+                  <i data-lucide="user-plus"></i> 작가 구독
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Episode List (design.md Section 24) -->
+          <div class="episodes-section mt-8">
+            <h3 class="mb-4"><i data-lucide="list"></i> 회차 목록</h3>
+            <div class="episode-list" id="detailEpisodeList">
+              <!-- Dynamic Episode Rows -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky Bottom CTA for Mobile (design.md Section 25) -->
+        <div class="sticky-bottom-cta">
+          <button class="btn btn-icon btn-outline" id="btnStickyHeart"><i data-lucide="heart"></i></button>
+          <button class="btn btn-primary btn-lg flex-1" id="btnStickyRead">첫 화 읽기 (무료)</button>
+        </div>
+      </section>
+
+      <!-- View 4: Fullscreen Web Novel Reader (design.md Section 26~31) -->
+      <section id="view-reader" class="main-view full-screen-reader">
+        <header class="reader-header" id="readerHeader">
+          <button class="btn btn-icon btn-ghost" id="btnReaderBack">
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <div class="reader-title-info">
+            <h4 id="readerWorkTitle">대적자: 신을 삼킨 기사</h4>
+            <span id="readerEpTitle">제 1 화</span>
+          </div>
+          <button class="btn btn-icon btn-ghost" id="btnReaderSettings">
+            <i data-lucide="sliders"></i>
+          </button>
+        </header>
+
+        <!-- Reader Text Content Area -->
+        <div class="reader-container" id="readerContainer">
+          <div class="reader-paper" id="readerPaper">
+            <h2 class="ep-heading" id="readerHeading">제 1 화</h2>
+            <div class="ep-content" id="readerBody">
+              <!-- Web novel content rendered here -->
+            </div>
+            <div class="author-comment-box" id="readerAuthorComment">
+              <strong>작가의 말:</strong> 재미있게 읽으셨다면 구독과 댓글 부탁드립니다!
+            </div>
+
+            <!-- Reader Bottom Navigation -->
+            <div class="reader-bottom-nav">
+              <button class="btn btn-outline" id="btnPrevEp"><i data-lucide="chevron-left"></i> 이전 화</button>
+              <button class="btn btn-primary" id="btnNextEp">다음 화 <i data-lucide="chevron-right"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 5: Creator Studio (design.md Section 39~45) -->
+      <section id="view-creator" class="main-view">
+        <div class="container section-padding">
+          <div class="panel-header">
+            <div>
+              <h2>Creator Studio (작가 전용 스튜디오)</h2>
+              <p class="text-muted">작품 연재 및 독자 반응, 3단계 투명 광고 수익 대시보드와 정산 신청을 관리합니다.</p>
+            </div>
+            <button class="btn btn-primary" id="btnOpenCreateWork">
+              <i data-lucide="plus-circle"></i> 새 작품 등록
+            </button>
+          </div>
+
+          <!-- 3-Stage Transparent Revenue Dashboard (design.md Section 40, 42) -->
+          <div class="grid-3-col gap-6 mt-6">
+            <div class="card glass-panel text-center">
+              <small class="text-muted">실시간 예상 수익 (Estimated)</small>
+              <h2 class="amount-title text-indigo" id="creatorEstimatedRevenue">₩0</h2>
+              <small class="text-muted">이번 달 실시간 광고 발생 추정치</small>
+            </div>
+            <div class="card glass-panel text-center">
+              <small class="text-muted">마감 확정 수익 (Confirmed)</small>
+              <h2 class="amount-title text-emerald" id="creatorConfirmedRevenue">₩0</h2>
+              <small class="text-muted">월말 마감 승인 완료된 확정 정산금</small>
+            </div>
+            <div class="card glass-panel text-center">
+              <small class="text-muted">출금 가능 정산금 (Payable)</small>
+              <h2 class="amount-title text-amber" id="creatorPayableRevenue">₩0</h2>
+              <button class="btn btn-success btn-sm w-full mt-3" id="btnRequestSettlement">
+                <i data-lucide="wallet"></i> 정산 신청하기
+              </button>
+            </div>
+          </div>
+
+          <!-- Creator Works & Episodes Management -->
+          <div class="card glass-panel mt-6">
+            <div class="card-header">
+              <h3><i data-lucide="book-open"></i> 내 연재 작품 및 회차 작성</h3>
+            </div>
+            <div class="card-body">
+              <div id="creatorWorksContainer">
+                <!-- Creator Works List -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 6: My Page (design.md Section 47) -->
+      <section id="view-mypage" class="main-view">
+        <div class="container section-padding">
+          <div class="panel-header">
+            <div>
+              <h2>My Page (마이페이지)</h2>
+              <p class="text-muted">독서 이력, 관심 작품, 구독 작가 및 PASS 성인 본인인증 상태 관리</p>
+            </div>
+          </div>
+
+          <div class="card glass-panel mt-6">
+            <div class="card-body">
+              <div class="user-profile-summary">
+                <div class="profile-avatar-lg" id="myAvatar">M</div>
+                <div>
+                  <h3 id="myNickname">열혈독자</h3>
+                  <p id="myEmail" class="text-muted">reader@webnovel.com</p>
+                  <div class="mt-2">
+                    <span class="badge badge-accent" id="myAdultBadge">성인 인증 미완료</span>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="divider">
+
+              <h4><i data-lucide="shield-check"></i> PASS 성인 본인인증 (KCP 연동)</h4>
+              <p class="text-muted small">18+ 성인 콘텐츠를 열람하기 위해서는 만 19세 이상 본인확인이 필요합니다.</p>
+              <button class="btn btn-primary mt-3" id="btnStartPassVerify">
+                <i data-lucide="smartphone"></i> PASS / KCP 성인 인증 시작
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 7: Admin CMS Integration -->
+      <section id="view-admin-cms" class="main-view">
+        <iframe src="/admin" id="adminFrame" style="width: 100%; height: 85vh; border: none; border-radius: 16px;"></iframe>
+      </section>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation (design.md Section 4.1) -->
+    <nav class="mobile-bottom-nav">
+      <a href="#home" class="bottom-nav-item active" data-target="view-home">
+        <i data-lucide="home"></i>
+        <span>홈</span>
+      </a>
+      <a href="#discover" class="bottom-nav-item" data-target="view-discover">
+        <i data-lucide="compass"></i>
+        <span>탐색</span>
+      </a>
+      <a href="#library" class="bottom-nav-item" data-target="view-mypage">
+        <i data-lucide="bookmark"></i>
+        <span>보관함</span>
+      </a>
+      <a href="#creator" class="bottom-nav-item" data-target="view-creator">
+        <i data-lucide="feather"></i>
+        <span>스튜디오</span>
+      </a>
+      <a href="#mypage" class="bottom-nav-item" data-target="view-mypage">
+        <i data-lucide="user"></i>
+        <span>MY</span>
+      </a>
+    </nav>
+
+    <!-- Modal: Rewarded Ad Unlock Modal (design.md Section 35) -->
+    <div class="modal-backdrop" id="modalAdUnlock">
+      <div class="modal-dialog glass-panel dialog-ad">
+        <div class="ad-modal-content text-center">
+          <div class="ad-unlock-icon">🔓</div>
+          <h2>다음 편을 무료로 읽어보세요!</h2>
+          <p class="text-muted">약 30초 보상형 광고를 시청하면 작가에게 광고 수익이 배분되고, 다음 회차가 즉시 무료 해금됩니다.</p>
+          
+          <div class="ad-player-box mt-4" id="adPlayerBox" style="display: none;">
+            <div class="ad-video-sim">
+              <i data-lucide="play" class="pulse-icon"></i>
+              <span id="adTimerText">광고 시청 중... 30초</span>
+            </div>
+          </div>
+
+          <div class="ad-modal-actions mt-6">
+            <button class="btn btn-primary btn-lg w-full" id="btnWatchAdSubmit">
+              <i data-lucide="play"></i> 광고 보고 무료 열람
+            </button>
+            <button class="btn btn-ghost modal-close w-full mt-2">나중에 보기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Reader Settings Drawer (design.md Section 29) -->
+    <div class="modal-backdrop" id="modalReaderSettings">
+      <div class="modal-dialog glass-panel dialog-bottom">
+        <div class="modal-header">
+          <h3><i data-lucide="sliders"></i> 읽기 설정</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>독서 테마</label>
+            <div class="theme-selector-grid">
+              <button class="theme-btn theme-light active" onclick="setReaderTheme('theme-light')">Light</button>
+              <button class="theme-btn theme-sepia" onclick="setReaderTheme('theme-sepia')">Sepia</button>
+              <button class="theme-btn theme-dark" onclick="setReaderTheme('theme-dark')">Dark</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>글자 크기</label>
+            <div class="font-size-control">
+              <button class="btn btn-outline" onclick="changeFontSize(-2)">A-</button>
+              <span id="fontSizeDisplay">18px</span>
+              <button class="btn btn-outline" onclick="changeFontSize(2)">A+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div class="toast-container" id="toastContainer"></div>
+
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
