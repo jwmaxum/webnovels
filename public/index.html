@@ -324,70 +324,62 @@
             </div>
           </div>
 
-          <!-- Admin Nav Tabs -->
-          <div class="filter-pills mt-4 mb-6">
-            <button class="pill active" onclick="switchAdminSubTab('subadmins')"><i data-lucide="users"></i> 서브 관리자 권한</button>
-            <button class="pill" onclick="switchAdminSubTab('revenue')"><i data-lucide="calculator"></i> 광고 수익배분 Engine</button>
-            <button class="pill" onclick="switchAdminSubTab('settlements')"><i data-lucide="wallet"></i> 작가 정산 승인</button>
-            <button class="pill" onclick="switchAdminSubTab('pgconfig')"><i data-lucide="settings"></i> PG & PASS 설정</button>
+          <!-- 16-Menu Navigation Sub-Bar (Section 4 & RBAC) -->
+          <div class="admin-16menu-nav-bar mb-6 p-4 glass-panel">
+            <h4 class="mb-3 text-indigo"><i data-lucide="layout-grid"></i> 관리자 16개 메뉴 통합 관제 센터</h4>
+            <div class="menu-16-grid">
+              <button class="menu-16-item active" onclick="showAdminMenuNotice('DASHBOARD')"><i data-lucide="layout-dashboard"></i> 1. DASHBOARD (대시보드)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('USER_MGMT')"><i data-lucide="users"></i> 2. USER_MGMT (회원 관리)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('AUTHOR_MGMT')"><i data-lucide="feather"></i> 3. AUTHOR_MGMT (작가 관리)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('WORK_MGMT')"><i data-lucide="book-open"></i> 4. WORK_MGMT (작품 연재)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('EPISODE_MGMT')"><i data-lucide="file-text"></i> 5. EPISODE_MGMT (회차 관리)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('CONTENT_REVIEW')"><i data-lucide="check-square"></i> 6. CONTENT_REVIEW (심사)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('COMMENT_REPORT')"><i data-lucide="message-square"></i> 7. COMMENT_REPORT (댓글/신고)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('AD_MGMT')"><i data-lucide="tv"></i> 8. AD_MGMT (광고 플랫폼)</button>
+              <button class="menu-16-item" onclick="switchAdminSubTab('revenue')"><i data-lucide="calculator"></i> 9. AD_REVENUE (수익배분 Engine)</button>
+              <button class="menu-16-item" onclick="switchAdminSubTab('settlements')"><i data-lucide="wallet"></i> 10. SETTLEMENT (작가 정산)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('FAN_MEETING')"><i data-lucide="smile"></i> 11. FAN_MEETING (팬미팅)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('GOODS_MGMT')"><i data-lucide="shopping-bag"></i> 12. GOODS_MGMT (굿즈 커머스)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('EVENT_MGMT')"><i data-lucide="gift"></i> 13. EVENT_MGMT (이벤트)</button>
+              <button class="menu-16-item" onclick="showAdminMenuNotice('ANALYTICS')"><i data-lucide="line-chart"></i> 14. ANALYTICS (매출 통계)</button>
+              <button class="menu-16-item" onclick="switchAdminSubTab('pgconfig')"><i data-lucide="settings"></i> 15. SYSTEM_MGMT (시스템/PG)</button>
+              <button class="menu-16-item" onclick="switchAdminSubTab('subadmins')"><i data-lucide="shield"></i> 16. SECURITY_MGMT (서브관리자 RBAC)</button>
+            </div>
           </div>
 
-          <!-- Sub-Tab 1: Sub-Admin RBAC Matrix -->
+          <!-- Sub-Tab 1: Sub-Admin Management Control Center -->
           <div id="adminTab-subadmins" class="admin-subtab active">
             <div class="card glass-panel p-6">
               <div class="section-header">
                 <div>
-                  <h3>서브 관리자 계정 & 16개 메뉴별 접근 권한 매트릭스</h3>
-                  <p class="text-muted small mt-1">최고 관리자(SUPER_ADMIN)가 서브 관리자의 16개 메뉴 접근 권한을 스위치 토글로 실시간 제어합니다.</p>
+                  <h3>서브 관리자 계정 & 16개 메뉴 접근 권한 제어판</h3>
+                  <p class="text-muted small mt-1">최고 관리자(SUPER_ADMIN)가 서브 관리자를 생성하고, 16개 메뉴별 접근 권한 수정, 비밀번호 변경, 계정 삭제를 관리합니다.</p>
                 </div>
                 <button class="btn btn-primary btn-sm" onclick="openModal('modalAddSubAdmin')">
-                  <i data-lucide="user-plus"></i> 신규 서브 관리자 생성
+                  <i data-lucide="user-plus"></i> 신규 서브 관리자 생성 (권한 설정)
                 </button>
               </div>
               
-              <!-- 16 Menu Permission Control Matrix Grid View -->
-              <div class="matrix-box mt-6 p-4 glass-panel" style="background: rgba(0,0,0,0.3);">
-                <h4 class="mb-3 text-indigo"><i data-lucide="grid"></i> 16개 서브 관리자 메뉴 접근 권한 매트릭스 (RBAC Grid)</h4>
-                
-                <div class="permission-matrix-grid">
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_DASHBOARD" checked> <span>1. DASHBOARD (대시보드)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_USER_MGMT" checked> <span>2. USER_MGMT (회원 관리)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_AUTHOR_MGMT" checked> <span>3. AUTHOR_MGMT (작가 관리)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_WORK_MGMT" checked> <span>4. WORK_MGMT (작품 연재)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_EPISODE_MGMT" checked> <span>5. EPISODE_MGMT (회차 관리)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_CONTENT_REVIEW"> <span>6. CONTENT_REVIEW (심사)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_COMMENT_REPORT"> <span>7. COMMENT_REPORT (댓글/신고)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_AD_MGMT"> <span>8. AD_MGMT (광고 플랫폼)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_AD_REVENUE"> <span>9. AD_REVENUE (수익배분)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_AUTHOR_SETTLEMENT"> <span>10. SETTLEMENT (작가 정산)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_FAN_MEETING"> <span>11. FAN_MEETING (팬미팅)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_GOODS_MGMT"> <span>12. GOODS_MGMT (굿즈 커머스)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_EVENT_MGMT"> <span>13. EVENT_MGMT (이벤트)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_ANALYTICS"> <span>14. ANALYTICS (매출 통계)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_SYSTEM_MGMT"> <span>15. SYSTEM_MGMT (시스템 설정)</span></label>
-                  <label class="perm-switch-card"><input type="checkbox" id="perm_SECURITY_MGMT"> <span>16. SECURITY_MGMT (보안 감사)</span></label>
-                </div>
-              </div>
-
-              <!-- Sub-Admin Card List -->
+              <!-- Sub-Admin List with Management Controls -->
               <div class="subadmin-card-grid mt-6" id="adminSubAdminContainer">
-                <div class="card glass-panel p-4 mb-3">
+                <div class="card glass-panel p-4 mb-4">
                   <div class="flex-between">
                     <div>
                       <strong>콘텐츠담당서브관 (sub_admin_01)</strong>
-                      <div class="text-muted small">role: SUB_ADMIN | ID: sub_admin_01</div>
+                      <div class="text-muted small">role: SUB_ADMIN | ID: sub_admin_01 | 이메일: sub01@webnovel.com</div>
                     </div>
-                    <div>
-                      <span class="badge badge-primary mr-2">활성</span>
-                      <button class="btn btn-outline btn-sm" onclick="showToast('비밀번호 변경 모달이 열립니다.')">PW 변경</button>
+                    <div class="action-buttons-group" style="display: flex; gap: 8px;">
+                      <button class="btn btn-outline btn-sm" onclick="openModal('modalEditSubAdminPerms')">⚙️ 권한 수정</button>
+                      <button class="btn btn-ghost btn-sm" onclick="openModal('modalChangeSubAdminPw')">🔑 비밀번호 변경</button>
+                      <button class="btn btn-outline btn-sm style-danger" onclick="if(confirm('서브 관리자 계정(sub_admin_01)을 삭제하시겠습니까?')) showToast('서브 관리자 계정이 삭제되었습니다.');">🗑️ 삭제</button>
                     </div>
                   </div>
                   <hr class="divider">
-                  <small class="text-muted">현재 부여된 접근 권한 (3/16 메뉴):</small>
+                  <small class="text-muted">부여된 접근 권한 (3/16 메뉴):</small>
                   <div class="perm-tags mt-2">
-                    <span class="badge badge-accent">DASHBOARD</span>
-                    <span class="badge badge-accent">USER_MGMT</span>
-                    <span class="badge badge-accent">WORK_MGMT</span>
+                    <span class="badge badge-accent">1. DASHBOARD</span>
+                    <span class="badge badge-accent">2. USER_MGMT</span>
+                    <span class="badge badge-accent">4. WORK_MGMT</span>
                   </div>
                 </div>
               </div>
@@ -571,28 +563,107 @@
       </div>
     </div>
 
-    <!-- Modal: Add Sub-Admin Modal -->
+    <!-- Modal: Add Sub-Admin Modal (With 16 Menu Permission Selection) -->
     <div class="modal-backdrop" id="modalAddSubAdmin">
-      <div class="modal-dialog glass-panel dialog-lg" style="max-width: 600px;">
+      <div class="modal-dialog glass-panel dialog-lg" style="max-width: 680px;">
         <div class="modal-header">
-          <h3><i data-lucide="user-plus"></i> 신규 서브 관리자 계정 생성</h3>
+          <h3><i data-lucide="user-plus"></i> 신규 서브 관리자 생성 & 16개 메뉴 접근 권한 지정</h3>
           <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body">
-          <form id="formCreateSubAdmin" onsubmit="event.preventDefault(); showToast('신규 서브 관리자가 생성이 완료되었습니다.'); closeAllModals();">
-            <div class="form-group mb-3">
-              <label>서브 관리자 Username / ID</label>
-              <input type="text" class="form-control" value="sub_admin_02" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+          <form id="formCreateSubAdmin" onsubmit="event.preventDefault(); handleCreateSubAdminSubmit();">
+            <div class="grid-2-col gap-4 mb-3">
+              <div class="form-group">
+                <label>서브 관리자 Username / ID</label>
+                <input type="text" id="newSubAdminId" class="form-control" value="sub_admin_02" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              </div>
+              <div class="form-group">
+                <label>초기 비밀번호</label>
+                <input type="password" id="newSubAdminPw" class="form-control" value="subpass1234!" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              </div>
             </div>
-            <div class="form-group mb-3">
-              <label>초기 비밀번호</label>
-              <input type="password" class="form-control" value="subpass1234!" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+            <div class="form-group mb-4">
+              <label>담당자 닉네임 / 직책</label>
+              <input type="text" id="newSubAdminName" class="form-control" value="정산담당서브관" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
             </div>
-            <div class="form-group mb-3">
-              <label>담당자 닉네임</label>
-              <input type="text" class="form-control" value="정산담당서브관" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+
+            <!-- 16 Menu Permission Selection Checklist -->
+            <label class="font-bold text-indigo mb-2 block"><i data-lucide="shield"></i> 서브 관리자 부여 메뉴 접근 권한 선택 (16개 메뉴):</label>
+            <div class="permission-matrix-grid p-3 glass-panel" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3);">
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="DASHBOARD" checked> <span>1. DASHBOARD</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="USER_MGMT"> <span>2. USER_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="AUTHOR_MGMT"> <span>3. AUTHOR_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="WORK_MGMT"> <span>4. WORK_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="EPISODE_MGMT"> <span>5. EPISODE_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="CONTENT_REVIEW"> <span>6. CONTENT_REVIEW</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="COMMENT_REPORT"> <span>7. COMMENT_REPORT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="AD_MGMT"> <span>8. AD_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="AD_REVENUE" checked> <span>9. AD_REVENUE</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="AUTHOR_SETTLEMENT" checked> <span>10. SETTLEMENT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="FAN_MEETING"> <span>11. FAN_MEETING</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="GOODS_MGMT"> <span>12. GOODS_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="EVENT_MGMT"> <span>13. EVENT_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="ANALYTICS"> <span>14. ANALYTICS</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="SYSTEM_MGMT"> <span>15. SYSTEM_MGMT</span></label>
+              <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="SECURITY_MGMT"> <span>16. SECURITY_MGMT</span></label>
             </div>
-            <button type="submit" class="btn btn-primary btn-lg w-full mt-4">서브 관리자 생성 승인</button>
+
+            <button type="submit" class="btn btn-primary btn-lg w-full mt-4">서브 관리자 계정 생성 승인</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Edit Sub-Admin Permissions -->
+    <div class="modal-backdrop" id="modalEditSubAdminPerms">
+      <div class="modal-dialog glass-panel dialog-lg" style="max-width: 680px;">
+        <div class="modal-header">
+          <h3>⚙️ 서브 관리자 16개 메뉴 접근 권한 수정 (sub_admin_01)</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <form onsubmit="event.preventDefault(); showToast('서브 관리자 권한 수정이 저장되었습니다.'); closeAllModals();">
+            <p class="text-muted small mb-3">체크한 메뉴만 서브 관리자 로그인 시 메뉴 바에 표출되며 API 접근이 허용됩니다.</p>
+            
+            <div class="permission-matrix-grid p-3 glass-panel" style="max-height: 220px; overflow-y: auto; background: rgba(0,0,0,0.3);">
+              <label class="perm-switch-card"><input type="checkbox" checked> <span>1. DASHBOARD (대시보드)</span></label>
+              <label class="perm-switch-card"><input type="checkbox" checked> <span>2. USER_MGMT (회원 관리)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>3. AUTHOR_MGMT (작가 관리)</span></label>
+              <label class="perm-switch-card"><input type="checkbox" checked> <span>4. WORK_MGMT (작품 연재)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>5. EPISODE_MGMT (회차 관리)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>6. CONTENT_REVIEW (심사)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>7. COMMENT_REPORT (댓글/신고)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>8. AD_MGMT (광고 플랫폼)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>9. AD_REVENUE (수익배분)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>10. SETTLEMENT (작가 정산)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>11. FAN_MEETING (팬미팅)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>12. GOODS_MGMT (굿즈 커머스)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>13. EVENT_MGMT (이벤트)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>14. ANALYTICS (매출 통계)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>15. SYSTEM_MGMT (시스템 설정)</span></label>
+              <label class="perm-switch-card"><input type="checkbox"> <span>16. SECURITY_MGMT (보안 감사)</span></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-full mt-4">권한 변경 사항 저장</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Change Sub-Admin Password -->
+    <div class="modal-backdrop" id="modalChangeSubAdminPw">
+      <div class="modal-dialog glass-panel">
+        <div class="modal-header">
+          <h3>🔑 서브 관리자 비밀번호 변경 (sub_admin_01)</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <form onsubmit="event.preventDefault(); showToast('🔑 서브 관리자 비밀번호가 성공적으로 변경되었습니다.'); closeAllModals();">
+            <div class="form-group mb-4">
+              <label>새 비밀번호 입력</label>
+              <input type="password" class="form-control" placeholder="새 비밀번호 입력" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-full">비밀번호 즉시 변경</button>
           </form>
         </div>
       </div>
