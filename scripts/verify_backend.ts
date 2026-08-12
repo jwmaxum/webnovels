@@ -37,7 +37,7 @@ async function runVerification() {
     // 1. Health Check
     console.log('▶ [1/6] Health Check');
     const healthRes = await fetch(`${baseUrl}/health`);
-    const healthData = await healthRes.json();
+    const healthData: any = await healthRes.json();
     console.log('   Health Status:', healthData.status);
 
     // 2. 회원가입 및 Auth 검증
