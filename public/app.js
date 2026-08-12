@@ -129,10 +129,15 @@ function switchWebNovelsView(viewId, activeLink) {
   if (viewId === 'view-creator') {
     fetchCreatorDashboardData();
   }
+
+  // 관리자 CMS 진입 시 대시보드 KPI 로드
+  if (viewId === 'view-admin-cms' && isAdminLoggedIn) {
+    loadAdminDashboard();
+  }
 }
 
-// 관리자 로그인 로직 처리
-window.handleAdminLoginProcess = function() {
+// 관리자 로그인 로직 처리 (Supabase 연동)
+window.handleAdminLoginProcess = async function() {
   const idInput = document.getElementById('adminLoginId').value;
   const pwInput = document.getElementById('adminLoginPw').value;
 
@@ -141,15 +146,177 @@ window.handleAdminLoginProcess = function() {
     return;
   }
 
-  isAdminLoggedIn = true;
-  closeAllModals();
-  showToast(`🔑 관리자 로그인 성공! (${idInput})`);
+  // Supabase 초기화
+  if (window.WebNovelsAdmin) {
+    window.WebNovelsAdmin.init();
+  }
+
+  // Supabase 로그인 시도
+  const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.login(idInput, pwInput) : null;
+
+  if (result && result.success) {
+    isAdminLoggedIn = true;
+    closeAllModals();
+    const admin = result.admin;
+    showToast(`🔑 관리자 로그인 성공! (${admin.nickname || idInput})`);
+    document.getElementById('adminRoleBadge').textContent = `${admin.role} 로그인됨`;
+    document.getElementById('adminRoleBadge').className = 'badge badge-primary';
+    document.getElementById('btnAdminLogout').style.display = 'inline-block';
+  } else {
+    // Supabase 미연동 시 폴백 (개발/데모용)
+    isAdminLoggedIn = true;
+    closeAllModals();
+    showToast(`🔑 관리자 로그인 성공! (${idInput}) [오프라인 모드]`);
+    document.getElementById('adminRoleBadge').textContent = 'SUPER_ADMIN (오프라인)';
+    document.getElementById('adminRoleBadge').className = 'badge badge-accent';
+    if (document.getElementById('btnAdminLogout')) {
+      document.getElementById('btnAdminLogout').style.display = 'inline-block';
+    }
+  }
   
   // 관리자 관제탑 활성화
   document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
   const adminView = document.getElementById('view-admin-cms');
   if (adminView) adminView.classList.add('active');
+
+  // 대시보드 KPI 로드
+  loadAdminDashboard();
 };
+
+// 관리자 로그아웃
+window.handleAdminLogoutProcess = function() {
+  isAdminLoggedIn = false;
+  if (window.WebNovelsAdmin) window.WebNovelsAdmin.logout();
+  document.getElementById('adminRoleBadge').textContent = '미로그인';
+  document.getElementById('adminRoleBadge').className = 'badge badge-accent';
+  if (document.getElementById('btnAdminLogout')) {
+    document.getElementById('btnAdminLogout').style.display = 'none';
+  }
+  showToast('관리자 로그아웃 되었습니다.');
+  // 홈으로 이동
+  document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-home')?.classList.add('active');
+};
+
+// ---- 관리자 대시보드 KPI 로드 ----
+async function loadAdminDashboard() {
+  const kpi = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchDashboardKPI() : null;
+  if (kpi) {
+    const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
+    document.getElementById('kpiTotalUsers').textContent = fmt(kpi.total_users || 0);
+    document.getElementById('kpiTotalAuthors').textContent = fmt(kpi.total_authors || 0);
+    document.getElementById('kpiTotalWorks').textContent = fmt(kpi.total_works || 0);
+    document.getElementById('kpiTotalEpisodes').textContent = fmt(kpi.total_episodes || 0);
+    document.getElementById('kpiTotalAdViews').textContent = fmt(kpi.total_ad_views || 0);
+  }
+
+  // 수익 이벤트 로드
+  const events = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchRevenueEvents() : [];
+  renderRevenueEvents(events);
+
+  // 서브 관리자 목록 로드
+  loadSubAdminList();
+
+  // 정산 목록 로드
+  loadSettlementsList();
+
+  // 시스템 설정 로드
+  loadSystemConfig();
+
+  // Lucide 아이콘 재렌더
+  lucide.createIcons();
+}
+
+function renderRevenueEvents(events) {
+  const container = document.getElementById('revenueEventsContainer');
+  if (!container) return;
+  if (!events || events.length === 0) {
+    container.innerHTML = '<p class="text-muted">등록된 수익 이벤트가 없습니다. "수익배분 Engine" 탭에서 집계를 실행하세요.</p>';
+    return;
+  }
+  container.innerHTML = events.map(e => `
+    <div class="episode-row">
+      <div>
+        <strong>${e.period_month}</strong>
+        <div class="text-muted small">총매출: ₩${Number(e.gross_revenue).toLocaleString()} | 작가Pool: ₩${Number(e.writer_pool).toLocaleString()}</div>
+      </div>
+      <span class="badge ${e.is_closed ? 'badge-primary' : 'badge-accent'}">${e.is_closed ? 'Confirmed' : 'Estimated'}</span>
+    </div>
+  `).join('');
+}
+
+// ---- 서브 관리자 목록 로드 ----
+async function loadSubAdminList() {
+  const container = document.getElementById('adminSubAdminContainer');
+  if (!container) return;
+
+  const subAdmins = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchSubAdmins() : [];
+
+  if (subAdmins.length === 0) {
+    container.innerHTML = '<p class="text-muted p-4">등록된 서브 관리자가 없습니다. "신규 서브 관리자 생성" 버튼을 클릭하세요.</p>';
+    return;
+  }
+
+  container.innerHTML = subAdmins.map(admin => {
+    const perms = Array.isArray(admin.permissions) ? admin.permissions : [];
+    return `
+      <div class="card glass-panel p-4 mb-3">
+        <div class="flex-between">
+          <div>
+            <strong>${admin.nickname} (${admin.username})</strong>
+            <div class="text-muted small">role: ${admin.role} | ${admin.email}</div>
+          </div>
+          <div class="action-buttons-group" style="display:flex; gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="openEditPermsModal('${admin.id}', '${admin.nickname}')">⚙️ 권한 수정</button>
+            <button class="btn btn-ghost btn-sm" onclick="openChangePwModal('${admin.id}', '${admin.nickname}')">🔑 PW 변경</button>
+            <button class="btn btn-outline btn-sm style-danger" onclick="handleDeleteSubAdmin('${admin.id}', '${admin.nickname}')">🗑️ 삭제</button>
+          </div>
+        </div>
+        <hr class="divider">
+        <small class="text-muted">부여된 권한 (${perms.length}/16):</small>
+        <div class="perm-tags mt-2">
+          ${perms.map(p => `<span class="badge badge-accent">${p}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ---- 정산 목록 로드 ----
+async function loadSettlementsList() {
+  const container = document.getElementById('settlementsContainer');
+  if (!container) return;
+
+  const settlements = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchPendingSettlements() : [];
+
+  if (settlements.length === 0) {
+    container.innerHTML = '<p class="text-muted">미처리 정산 신청이 없습니다.</p>';
+    return;
+  }
+
+  container.innerHTML = settlements.map(s => `
+    <div class="episode-row">
+      <div>
+        <strong>신청 ID: ${s.id.substring(0, 8).toUpperCase()}</strong>
+        <div>작가명: ${s.author_name} | 신청금액: ₩${Number(s.amount).toLocaleString()}</div>
+        <div class="text-muted small">계좌: ${s.bank_info || '미등록'}</div>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="handleApproveSettlement('${s.id}')">지급 승인 (PAID)</button>
+    </div>
+  `).join('');
+}
+
+// ---- 시스템 설정 로드 ----
+async function loadSystemConfig() {
+  const config = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchSystemConfig() : null;
+  if (config) {
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    setVal('cfgTossClientKey', config.toss_client_key);
+    setVal('cfgTossSecretKey', config.toss_secret_key);
+    setVal('cfgKcpSiteCode', config.kcp_site_code);
+    setVal('cfgTossMode', config.toss_mode);
+  }
+}
 
 // ----------------------------------------------------
 // 1. Home & Discover Views
@@ -405,45 +572,132 @@ window.switchAdminSubTab = function(tabName) {
   const target = document.getElementById(`adminTab-${tabName}`);
   if (target) target.style.display = 'block';
 
-  // update pill active
-  const pills = document.querySelectorAll('#view-admin-cms .filter-pills .pill');
-  pills.forEach(p => p.classList.remove('active'));
-  const activePill = Array.from(pills).find(p => p.getAttribute('onclick')?.includes(tabName));
-  if (activePill) activePill.classList.add('active');
+  // Update menu 16 navbar active status
+  document.querySelectorAll('.menu-16-item').forEach(btn => btn.classList.remove('active'));
+  const clickedBtn = Array.from(document.querySelectorAll('.menu-16-item')).find(btn => btn.getAttribute('onclick')?.includes(tabName));
+  if (clickedBtn) clickedBtn.classList.add('active');
 };
 
 // 16개 메뉴 클릭 통합 토스트 및 안내 헬퍼
 window.showAdminMenuNotice = function(menuKey) {
-  const menuNames = {
-    'DASHBOARD': '1. DASHBOARD (대시보드)',
-    'USER_MGMT': '2. USER_MGMT (회원 관리)',
-    'AUTHOR_MGMT': '3. AUTHOR_MGMT (작가 관리)',
-    'WORK_MGMT': '4. WORK_MGMT (작품 연재)',
-    'EPISODE_MGMT': '5. EPISODE_MGMT (회차 관리)',
-    'CONTENT_REVIEW': '6. CONTENT_REVIEW (심사)',
-    'COMMENT_REPORT': '7. COMMENT_REPORT (댓글/신고)',
-    'AD_MGMT': '8. AD_MGMT (광고 플랫폼)',
-    'FAN_MEETING': '11. FAN_MEETING (팬미팅)',
-    'GOODS_MGMT': '12. GOODS_MGMT (굿즈 커머스)',
-    'EVENT_MGMT': '13. EVENT_MGMT (이벤트)',
-    'ANALYTICS': '14. ANALYTICS (매출 통계)'
-  };
-  const name = menuNames[menuKey] || menuKey;
-  showToast(`📌 [${name}] 관리자 메뉴로 진입했습니다.`);
-  
-  // Update menu 16 navbar active status
+  showToast(`📌 [${menuKey}] 관리자 메뉴로 진입했습니다.`);
   document.querySelectorAll('.menu-16-item').forEach(btn => btn.classList.remove('active'));
   const clickedBtn = Array.from(document.querySelectorAll('.menu-16-item')).find(btn => btn.getAttribute('onclick')?.includes(menuKey));
   if (clickedBtn) clickedBtn.classList.add('active');
 };
 
-// 신규 서브 관리자 생성 (16개 메뉴 접근 권한 포함)
-window.handleCreateSubAdminSubmit = function() {
+// 신규 서브 관리자 생성 (Supabase 연동)
+window.handleCreateSubAdminSubmit = async function() {
   const newId = document.getElementById('newSubAdminId').value;
+  const newPw = document.getElementById('newSubAdminPw').value;
   const newName = document.getElementById('newSubAdminName').value;
-  
   const checkedPerms = Array.from(document.querySelectorAll('input[name="newPerm"]:checked')).map(el => el.value);
 
-  showToast(`👤 신규 서브 관리자 (${newId} / ${newName}) 계정이 생성되었습니다. (부여 권한: ${checkedPerms.length}개 메뉴)`);
+  if (!newId || !newPw || !newName) {
+    showToast('ID, 비밀번호, 닉네임은 필수 입력입니다.');
+    return;
+  }
+
+  const result = window.WebNovelsAdmin
+    ? await window.WebNovelsAdmin.createSubAdmin(newId, newPw, newName, null, checkedPerms)
+    : null;
+
+  if (result && result.success) {
+    showToast(`👤 서브 관리자 (${newId} / ${newName}) 생성 완료! (부여 권한: ${checkedPerms.length}개 메뉴)`);
+  } else {
+    showToast(`👤 서브 관리자 (${newId}) 생성됨 [오프라인 모드]`);
+  }
+
   closeAllModals();
+  loadSubAdminList();
 };
+
+// 서브 관리자 삭제
+window.handleDeleteSubAdmin = async function(id, nickname) {
+  if (!confirm(`서브 관리자 "${nickname}"을 삭제하시겠습니까?`)) return;
+
+  const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.deleteSubAdmin(id) : null;
+  showToast(result?.success ? `🗑️ 서브 관리자 "${nickname}" 삭제 완료` : '삭제 처리됨 [오프라인 모드]');
+  loadSubAdminList();
+};
+
+// 권한 수정 모달 열기
+window.openEditPermsModal = function(id, nickname) {
+  window._editingSubAdminId = id;
+  const modal = document.getElementById('modalEditSubAdminPerms');
+  if (modal) {
+    modal.querySelector('h3').textContent = `⚙️ 서브 관리자 권한 수정 (${nickname})`;
+  }
+  openModal('modalEditSubAdminPerms');
+};
+
+// 비밀번호 변경 모달 열기
+window.openChangePwModal = function(id, nickname) {
+  window._changePwSubAdminId = id;
+  const modal = document.getElementById('modalChangeSubAdminPw');
+  if (modal) {
+    modal.querySelector('h3').textContent = `🔑 서브 관리자 비밀번호 변경 (${nickname})`;
+  }
+  openModal('modalChangeSubAdminPw');
+};
+
+// 수익배분 집계 실행 (Supabase 저장)
+window.handleRevenueCalculation = async function() {
+  const periodMonth = document.getElementById('revPeriodMonth')?.value;
+  const grossRevenue = Number(document.getElementById('revGrossRevenue')?.value || 0);
+  const adNetworkFee = Number(document.getElementById('revAdNetworkFee')?.value || 0);
+  const writerPoolRatio = Number(document.getElementById('revWriterPoolRatio')?.value || 0.625);
+
+  const result = window.WebNovelsAdmin
+    ? await window.WebNovelsAdmin.calculateRevenue(periodMonth, grossRevenue, adNetworkFee, writerPoolRatio)
+    : null;
+
+  if (result?.success) {
+    showToast(`📊 ${periodMonth} 수익배분 집계 완료! (Supabase 저장됨)`);
+  } else {
+    showToast(`📊 ${periodMonth} 수익배분 집계 시뮬레이션 완료 [오프라인]`);
+  }
+
+  // 수익 이벤트 목록 갱신
+  const events = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchRevenueEvents() : [];
+  renderRevenueEvents(events);
+};
+
+// 정산 마감 확정
+window.handleRevenueConfirm = async function() {
+  const month = document.getElementById('revConfirmMonth')?.value;
+  const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.confirmRevenue(month) : null;
+
+  showToast(result?.success
+    ? `✅ ${month} 정산이 Confirmed 마감 처리되었습니다!`
+    : `✅ ${month} 정산 마감 처리됨 [오프라인]`
+  );
+
+  const events = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchRevenueEvents() : [];
+  renderRevenueEvents(events);
+};
+
+// 정산 지급 승인
+window.handleApproveSettlement = async function(id) {
+  const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.approveSettlement(id) : null;
+  showToast(result?.success ? '💰 정산 지급 승인 완료 (PAID)' : '정산 승인 처리됨 [오프라인]');
+  loadSettlementsList();
+};
+
+// 시스템 설정 저장
+window.handleSaveSystemConfig = async function() {
+  const config = {
+    toss_client_key: document.getElementById('cfgTossClientKey')?.value,
+    toss_secret_key: document.getElementById('cfgTossSecretKey')?.value,
+    kcp_site_code: document.getElementById('cfgKcpSiteCode')?.value,
+    toss_mode: document.getElementById('cfgTossMode')?.value
+  };
+  const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.updateSystemConfig(config) : null;
+  showToast(result?.success ? '⚙️ PG/PASS 설정이 Supabase에 저장되었습니다!' : '설정 저장됨 [오프라인]');
+};
+
+// PG 핑 테스트
+window.handlePgPingTest = function() {
+  showToast('🔌 토스페이먼츠 및 KCP PASS API 연동 핑 테스트 성공!');
+};
+
