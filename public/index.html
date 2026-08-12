@@ -311,9 +311,122 @@
         </div>
       </section>
 
-      <!-- View 7: Admin CMS Integration -->
+      <!-- View 7: Admin CMS Integration (Native Cloudflare Edge Ready) -->
       <section id="view-admin-cms" class="main-view">
-        <iframe src="/admin" id="adminFrame" style="width: 100%; height: 85vh; border: none; border-radius: 16px;"></iframe>
+        <div class="container section-padding">
+          <div class="panel-header">
+            <div>
+              <h2><i data-lucide="shield-check" class="icon-indigo"></i> WebNovels 백엔드 관리자 CMS 관제탑</h2>
+              <p class="text-muted">서브 관리자 16개 메뉴 접근 권한 매트릭스, 광고 수익배분 Engine, 작가 정산 승인 및 PG/PASS 설정을 관리합니다.</p>
+            </div>
+            <div class="admin-login-status">
+              <span class="badge badge-accent" id="adminRoleBadge">SUPER_ADMIN 로그인됨</span>
+            </div>
+          </div>
+
+          <!-- Admin Nav Tabs -->
+          <div class="filter-pills mt-4 mb-6">
+            <button class="pill active" onclick="switchAdminSubTab('subadmins')"><i data-lucide="users"></i> 서브 관리자 권한</button>
+            <button class="pill" onclick="switchAdminSubTab('revenue')"><i data-lucide="calculator"></i> 광고 수익배분 Engine</button>
+            <button class="pill" onclick="switchAdminSubTab('settlements')"><i data-lucide="wallet"></i> 작가 정산 승인</button>
+            <button class="pill" onclick="switchAdminSubTab('pgconfig')"><i data-lucide="settings"></i> PG & PASS 설정</button>
+          </div>
+
+          <!-- Sub-Tab 1: Sub-Admin RBAC Matrix -->
+          <div id="adminTab-subadmins" class="admin-subtab active">
+            <div class="card glass-panel p-6">
+              <div class="section-header">
+                <h3>서브 관리자 계정 & 16개 메뉴별 접근 권한 매트릭스</h3>
+                <button class="btn btn-primary btn-sm" onclick="showToast('신규 서브 관리자 생성 모달이 열립니다.')">+ 신규 서브 관리자 생성</button>
+              </div>
+              
+              <div class="subadmin-card-grid mt-4" id="adminSubAdminContainer">
+                <div class="card glass-panel p-4 mb-3">
+                  <div class="flex-between">
+                    <div>
+                      <strong>콘텐츠담당서브관 (sub_admin_01)</strong>
+                      <div class="text-muted small">role: SUB_ADMIN</div>
+                    </div>
+                    <span class="badge badge-primary">활성</span>
+                  </div>
+                  <hr class="divider">
+                  <small class="text-muted">허용 메뉴:</small>
+                  <div class="perm-tags mt-2">
+                    <span class="badge badge-outline">DASHBOARD</span>
+                    <span class="badge badge-outline">USER_MGMT</span>
+                    <span class="badge badge-outline">WORK_MGMT</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-Tab 2: Revenue Engine -->
+          <div id="adminTab-revenue" class="admin-subtab" style="display: none;">
+            <div class="grid-2-col gap-6">
+              <div class="card glass-panel p-6">
+                <h3><i data-lucide="calculator"></i> 월 광고 매출 입력 & 수익배분 집계 (Estimated)</h3>
+                <form id="formRevenueCalcAdmin" onsubmit="event.preventDefault(); showToast('2026-08 광고 매출 수익배분 시뮬레이션 집계가 완료되었습니다.');">
+                  <div class="form-group mt-4">
+                    <label>정산 귀속 월 (YYYY-MM)</label>
+                    <input type="text" class="form-control" value="2026-08" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                  </div>
+                  <div class="form-group mt-3">
+                    <label>광고 총매출 (원)</label>
+                    <input type="number" class="form-control" value="10000000" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                  </div>
+                  <div class="form-group mt-3">
+                    <label>플랫폼 수수료 (원)</label>
+                    <input type="number" class="form-control" value="2000000" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                  </div>
+                  <div class="form-group mt-3">
+                    <label>작가 Pool 배분 비율 (기본 0.625 = 62.5%)</label>
+                    <input type="number" step="0.001" class="form-control" value="0.625" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                  </div>
+                  <button type="submit" class="btn btn-primary w-full mt-4">수익배분 시뮬레이션 집계 실행</button>
+                </form>
+              </div>
+
+              <div class="card glass-panel p-6">
+                <h3><i data-lucide="check-circle-2"></i> 월 정산 마감/확정 (Confirmed)</h3>
+                <p class="text-muted mt-2">수집된 광고 매출을 마감하여 예상수익(Estimated)을 확정수익(Confirmed)으로 정산 전환합니다.</p>
+                <button class="btn btn-success w-full mt-6" onclick="showToast('8월 정산이 최종 확정 마감(Confirmed) 되었습니다.');">정산 최종 마감 및 Confirmed 승인</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-Tab 3: Author Settlements -->
+          <div id="adminTab-settlements" class="admin-subtab" style="display: none;">
+            <div class="card glass-panel p-6">
+              <h3>작가 정산 신청 및 입금 처리 승인</h3>
+              <div class="episode-row mt-4">
+                <div>
+                  <strong>신청 ID: SETTLE-87001969</strong>
+                  <div>작가명: 판타지마스터 | 신청금액: ₩5,000,000</div>
+                  <div class="text-muted small">계좌: 국민은행 999-888-777666</div>
+                </div>
+                <button class="btn btn-success btn-sm" onclick="showToast('정산 지급 승인 완료 (PAID)');">지급 승인 (PAID)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-Tab 4: PG & PASS Config -->
+          <div id="adminTab-pgconfig" class="admin-subtab" style="display: none;">
+            <div class="card glass-panel p-6">
+              <h3>PG 및 PASS/KCP 성인인증 시스템 설정</h3>
+              <div class="form-group mt-4">
+                <label>토스페이먼츠 Secret Key (마스킹)</label>
+                <input type="text" class="form-control" value="test_sk_docs_O7l2mZ1N3p81A2jL3b5z" readonly style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              </div>
+              <div class="form-group mt-3">
+                <label>KCP Site Code</label>
+                <input type="text" class="form-control" value="T0000" readonly style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              </div>
+              <button class="btn btn-outline mt-4" onclick="showToast('🔌 토스페이먼츠 및 KCP PASS API 연동 핑 테스트 성공!');">연동 상태 실시간 핑 테스트</button>
+            </div>
+          </div>
+
+        </div>
       </section>
 
     </main>

@@ -370,3 +370,16 @@ function showToast(msg) {
     toast.remove();
   }, 3000);
 }
+
+// Admin Sub-Tab Switcher
+window.switchAdminSubTab = function(tabName) {
+  document.querySelectorAll('.admin-subtab').forEach(t => t.style.display = 'none');
+  const target = document.getElementById(`adminTab-${tabName}`);
+  if (target) target.style.display = 'block';
+
+  // update pill active
+  const pills = document.querySelectorAll('#view-admin-cms .filter-pills .pill');
+  pills.forEach(p => p.classList.remove('active'));
+  const activePill = Array.from(pills).find(p => p.getAttribute('onclick')?.includes(tabName));
+  if (activePill) activePill.classList.add('active');
+};
