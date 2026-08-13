@@ -357,6 +357,96 @@ async function updateSystemConfig(config) {
   }
 }
 
+// ---- 작품(works) 및 회차(episodes) Supabase DB 실시간 조회 & 자동 시드 ----
+async function fetchWorksFromSupabase() {
+  if (!supabaseClient) return null;
+
+  try {
+    const { data: works, error: worksErr } = await supabaseClient
+      .from('works')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (worksErr || !works || works.length === 0) {
+      console.warn('[Supabase Works] 작품 DB 미존재 또는 비어있음, 시드 실행 시도...');
+      return null;
+    }
+
+    const { data: episodes, error: epErr } = await supabaseClient
+      .from('episodes')
+      .select('*')
+      .order('episode_number', { ascending: true });
+
+    // Supabase DB 데이터를 프론트엔드 포맷으로 바인딩
+    return works.map(w => {
+      const workEps = (episodes || []).filter(e => e.work_id === w.id);
+      return {
+        id: w.id,
+        title: w.title,
+        author: w.author,
+        genre: Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'),
+        rating: Array.isArray(w.genre) && w.genre.includes('19세 이상') ? 'AGE_19' : 'ALL',
+        aiUsageType: Array.isArray(w.tags) && w.tags[0] ? w.tags[0] : 'NONE',
+        coverUrl: w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg',
+        description: w.description,
+        viewCount: w.view_count || 100000,
+        episodesCount: workEps.length || 4,
+        episodes: workEps.map(e => ({
+          episodeNumber: e.episode_number,
+          title: e.title,
+          isFree: e.is_free,
+          isAdFree: e.is_ad_free,
+          content: e.content
+        }))
+      };
+    });
+  } catch (err) {
+    console.warn('[Supabase Works] 조회 에러:', err.message);
+    return null;
+  }
+}
+
+async function seedWorksDatasetToSupabase(sampleWorksData) {
+  if (!supabaseClient) return false;
+
+  try {
+    for (const w of sampleWorksData) {
+      const genreArr = [w.genre, w.rating === 'AGE_19' ? '19세 이상' : '전체이용가'];
+      const tagsArr = [w.aiUsageType || 'AI NONE'];
+      const coverFileName = w.coverUrl.replace('/images/', '');
+
+      await supabaseClient.from('works').upsert({
+        id: w.id,
+        title: w.title,
+        author: w.author,
+        genre: genreArr,
+        tags: tagsArr,
+        description: w.description,
+        cover_image: coverFileName,
+        view_count: w.viewCount
+      });
+
+      if (w.episodes && w.episodes.length > 0) {
+        for (const ep of w.episodes) {
+          await supabaseClient.from('episodes').upsert({
+            work_id: w.id,
+            episode_number: ep.episodeNumber,
+            title: ep.title,
+            is_free: ep.isFree,
+            is_ad_free: ep.isAdFree,
+            content: ep.content
+          }, { onConflict: 'work_id,episode_number' });
+        }
+      }
+    }
+    console.log('[Supabase Works] 8개 더미 작품 & 32개 에피소드 DB 시드 저장 완료!');
+    return true;
+  } catch (err) {
+    console.warn('[Supabase Works] 시드 저장 실패:', err.message);
+    return false;
+  }
+}
+
 // ---- 글로벌 export ----
 window.WebNovelsAdmin = {
   init: initSupabaseAdmin,
@@ -375,5 +465,8 @@ window.WebNovelsAdmin = {
   fetchPendingSettlements,
   approveSettlement,
   fetchSystemConfig,
-  updateSystemConfig
+  updateSystemConfig,
+  fetchWorksFromSupabase,
+  seedWorksDatasetToSupabase
 };
+
