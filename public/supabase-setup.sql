@@ -178,3 +178,54 @@ INSERT INTO episodes (work_id, episode_number, title, is_free, is_ad_free, conte
 (8, 3, '제3화', true, false, '이천은 무림맹의 초대를 받아 처음으로 강호에 자신의 이름을 알리기 시작한다.'),
 (8, 4, '제4화', false, true, '천하제일인 자리에서 마주한 강자는 이천에게 검의 진짜 주인에 대한 비밀을 암시한다.');
 
+-- 12. 독자 회원(readers) 및 작가 회원(authors) 스키마 & 실데이터 시드
+CREATE TABLE IF NOT EXISTS readers (
+  id INT PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  is_adult_verified BOOLEAN DEFAULT false,
+  subscription_status TEXT DEFAULT 'ACTIVE',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS authors (
+  id INT PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  email TEXT NOT NULL,
+  pen_name TEXT NOT NULL,
+  work_title TEXT NOT NULL,
+  birthdate DATE NOT NULL,
+  address TEXT NOT NULL,
+  bank_info TEXT NOT NULL,
+  status TEXT DEFAULT 'APPROVED',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE readers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE authors ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anon read readers" ON readers FOR SELECT USING (true);
+CREATE POLICY "Allow anon read authors" ON authors FOR SELECT USING (true);
+
+-- 독자 회원 3명 시드 데이터 (더미 데이터 삭제 및 실데이터 등록)
+INSERT INTO readers (id, username, password_hash, email, phone, is_adult_verified, subscription_status) VALUES
+(1, 'reader1', '!12345', 'reader1@webnovels.com', '+82-010-111-1111', false, '일반 회원'),
+(2, 'reader2', '!12345', 'reader2@webnovels.com', '+82-010-111-1112', true, '프리미엄 구독중'),
+(3, 'reader3', '!12345', 'reader3@webnovels.com', '+82-010-111-1113', true, '프리미엄 구독중')
+ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, phone = EXCLUDED.phone, is_adult_verified = EXCLUDED.is_adult_verified;
+
+-- 작가 회원 8명 시드 데이터 (작품DB와 1:1 매칭)
+INSERT INTO authors (id, username, password_hash, email, pen_name, work_title, birthdate, address, bank_info, status) VALUES
+(1, 'writer1', '!123456', 'writer1@webnovels.com', '판타지마스터', '대적자: 신을 삼킨 기사', '1990-01-15', '서울특별시 강남구 테헤란로 123', '국민은행 999-888-777666', '공식 인증 작가'),
+(2, 'writer2', '!123456', 'writer2@webnovels.com', '무협의신', '천마의 귀환', '1985-05-20', '서울특별시 서초구 반포대로 45', '신한은행 110-222-333444', '공식 인증 작가'),
+(3, 'writer3', '!123456', 'writer3@webnovels.com', '나이트로즈', '금기의 계약', '1992-08-12', '경기도 성남시 분당구 판교로 78', '우리은행 1002-555-666777', '공식 인증 작가'),
+(4, 'writer4', '!123456', 'writer4@webnovels.com', '로맨스퀸', '황제의 유일한 후궁', '1994-11-03', '서울특별시 마포구 월드컵북로 99', '하나은행 222-333-444555', '공식 인증 작가'),
+(5, 'writer5', '!123456', 'writer5@webnovels.com', '스페이스로그', '성간 항로: 마지막 항해사', '1988-03-30', '대전광역시 유성구 대학로 100', '농협 301-777-888999', '공식 인증 작가'),
+(6, 'writer6', '!123456', 'writer6@webnovels.com', '도시마법사', '서울에 나타난 마왕', '1995-07-07', '서울특별시 송파구 올림픽로 200', '카카오뱅크 3333-01-234567', '공식 인증 작가'),
+(7, 'writer7', '!123456', 'writer7@webnovels.com', '공포작가', '죽은 자들의 학교', '1991-10-31', '부산광역시 해운대구 센텀서로 30', '기업은행 010-9999-8888', '공식 인증 작가'),
+(8, 'writer8', '!123456', 'writer8@webnovels.com', '검성', '검의 전설: 천하제일인', '1987-12-25', '대구광역시 수성구 달구벌대로 500', '대구은행 508-12-345678', '공식 인증 작가')
+ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, address = EXCLUDED.address, bank_info = EXCLUDED.bank_info;
+
+
