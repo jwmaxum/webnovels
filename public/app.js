@@ -555,24 +555,27 @@ function renderHomeWorks() {
   const container = document.getElementById('homeWorksGrid');
   if (!container) return;
 
-  container.innerHTML = SAMPLE_WORKS.map(w => `
-    <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
-      <div class="cover-wrapper">
-        <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
-        <span class="card-badge">${w.genre}</span>
-      </div>
-      <div class="card-info">
-        <div>
-          <h4 class="card-title">${w.title}</h4>
-          <p class="card-author">${w.author}</p>
+  container.innerHTML = SAMPLE_WORKS.map(w => {
+    const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+    return `
+      <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
+        <div class="cover-wrapper">
+          <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
+          <span class="card-badge ${isAdult ? 'card-badge-adult' : ''}">${isAdult ? '🔞 19+ 성인' : w.genre}</span>
         </div>
-        <div class="card-meta">
-          <span>★ 4.9</span>
-          <span>조회 ${(w.viewCount / 1000).toFixed(1)}K</span>
+        <div class="card-info">
+          <div>
+            <h4 class="card-title">${w.title}</h4>
+            <p class="card-author">${w.author}</p>
+          </div>
+          <div class="card-meta">
+            <span style="color:#FBBF24;">★ 4.9</span>
+            <span style="color:#60A5FA;">조회 ${(w.viewCount / 1000).toFixed(1)}K</span>
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderDiscoverWorks(genreFilter = 'ALL') {
@@ -585,24 +588,27 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
     return w.genre.includes(genreFilter);
   });
 
-  container.innerHTML = filtered.map(w => `
-    <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
-      <div class="cover-wrapper">
-        <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
-        <span class="card-badge">${w.genre}</span>
-      </div>
-      <div class="card-info">
-        <div>
-          <h4 class="card-title">${w.title}</h4>
-          <p class="card-author">${w.author}</p>
+  container.innerHTML = filtered.map(w => {
+    const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+    return `
+      <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
+        <div class="cover-wrapper">
+          <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
+          <span class="card-badge ${isAdult ? 'card-badge-adult' : ''}">${isAdult ? '🔞 19+ 성인' : w.genre}</span>
         </div>
-        <div class="card-meta">
-          <span>${w.rating === 'AGE_19' ? '🔞 성인' : '전체이용가'}</span>
-          <span>${w.episodesCount}화</span>
+        <div class="card-info">
+          <div>
+            <h4 class="card-title">${w.title}</h4>
+            <p class="card-author">${w.author}</p>
+          </div>
+          <div class="card-meta">
+            <span style="color:${isAdult ? '#F472B6' : '#34D399'}; font-weight:600;">${isAdult ? '🔞 19세 이상' : '🌱 전체이용가'}</span>
+            <span style="color:#94A3B8;">${w.episodesCount}화 연재</span>
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // ----------------------------------------------------
