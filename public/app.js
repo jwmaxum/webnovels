@@ -2,31 +2,151 @@
 
 const API_BASE = '/api';
 
-// Sample Works Seed Data
+// Sample Works Seed Data (8 Full Works with 4 Episodes each)
 const SAMPLE_WORKS = [
   {
-    id: 'w-fantasy',
-    title: '대적자: 신을 삼킨 기사',
-    author: '판타지마스터',
-    genre: '판타지',
-    rating: 'ALL',
-    aiUsageType: 'NONE',
-    coverUrl: '/images/cover_fantasy.png',
-    description: '신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!',
-    viewCount: 124500,
-    episodesCount: 4
+    id: 1,
+    title: "대적자: 신을 삼킨 기사",
+    author: "판타지마스터",
+    genre: "판타지",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    coverUrl: "/images/stormqueen_oath.jpg",
+    description: "신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 154000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "신의 저주로 멸망한 왕국에서 한 기사가 깨어나 처음으로 자신의 힘을 깨닫는다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "기사는 폐허가 된 성에서 고대의 검을 발견하고 신의 잔당과 첫 전투를 벌인다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "동료를 잃은 기사는 복수를 다짐하며 신의 사도가 숨은 탑으로 향한다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "탑 정상에서 마주한 신은 기사에게 충격적인 진실을 알려준다." }
+    ]
   },
   {
-    id: 'w-romance',
-    title: '북부 대공의 수수께끼 신부',
-    author: '로맨스퀸',
-    genre: '로맨스 판타지',
-    rating: 'AGE_15',
-    aiUsageType: 'ASSISTED',
-    coverUrl: '/images/cover_romance.png',
-    description: '얼어붙은 북부 대공가에 찾아온 수수께끼 영애의 달콤 살벌한 계약 결혼 이야기.',
-    viewCount: 98200,
-    episodesCount: 4
+    id: 2,
+    title: "천마의 귀환",
+    author: "무협의신",
+    genre: "무협",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    coverUrl: "/images/sword_dao_supreme.jpg",
+    description: "천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 231000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "천마는 수백 년의 봉인에서 깨어나 자신이 누구인지 기억해 내기 시작한다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "옛 제자들의 후손을 만난 천마는 무림의 변화를 확인하고 첫 번째 적을 쓰러뜨린다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "천마는 잃어버린 검법을 되찾기 위해 금지된 동굴로 들어간다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "동굴 안에서 천마는 자신을 봉인한 자의 후예와 운명적인 대면을 한다." }
+    ]
+  },
+  {
+    id: 3,
+    title: "금기의 계약",
+    author: "나이트로즈",
+    genre: "성인",
+    rating: "AGE_19",
+    aiUsageType: "NONE",
+    coverUrl: "/images/velvet_and_thorns.jpg",
+    description: "금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 189000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "여주인공은 빚을 갚기 위해 정체불명의 남자와 위험한 계약을 맺는다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "계약의 첫 번째 조건이 실행되고, 두 사람 사이에 묘한 긴장감이 흐른다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "남자의 정체가 조금씩 드러나며 여주인공은 빠져나올 수 없는 감정에 휩싸인다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "계약의 진짜 목적이 밝혀지고, 두 사람의 관계는 돌이킬 수 없는 방향으로 흐른다." }
+    ]
+  },
+  {
+    id: 4,
+    title: "황제의 유일한 후궁",
+    author: "로맨스퀸",
+    genre: "로맨스",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    coverUrl: "/images/flower_blooming.jpg",
+    description: "황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 312000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "평범한 처녀가 황제의 간택을 받아 궁에 들어가며 새로운 삶을 시작한다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "황제와의 첫 대면에서 그녀는 그의 차가운 눈빛 속에 숨겨진 외로움을 느낀다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "후궁들의 시기 속에서 그녀는 황제의 유일한 관심을 받게 된다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "황제가 그녀에게만 보여 주는 부드러운 모습에 마음이 흔들리기 시작한다." }
+    ]
+  },
+  {
+    id: 5,
+    title: "성간 항로: 마지막 항해사",
+    author: "스페이스로그",
+    genre: "SF",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    coverUrl: "/images/stellar_horizon.jpg",
+    description: "인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 97000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "마지막 항해사는 지구가 멸망한 후 남은 인류를 태우고 미지의 별로 출발한다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "항해 중 발견한 고대 외계 유물에서 충격적인 메시지가 해독된다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "함선에 침입한 미지의 존재가 승무원들을 하나씩 사라지게 만든다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "항해사는 함선의 AI와 함께 적의 정체를 밝혀내고 생존을 위한 결단을 내린다." }
+    ]
+  },
+  {
+    id: 6,
+    title: "서울에 나타난 마왕",
+    author: "도시마법사",
+    genre: "현대 판타지",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    coverUrl: "/images/seoul_sorcerer.jpg",
+    description: "현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 278000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "평범한 회사원 김현우는 퇴근길에 마왕의 힘이 자신에게 깃드는 것을 느낀다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "처음으로 마법을 사용한 현우는 우연히 마족을 쓰러뜨리고 자신의 정체를 숨기려 한다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "마법사 협회가 그를 추적하기 시작하고, 현우는 도망치며 힘을 다스리는 법을 배운다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "현우는 자신을 노리는 진짜 적이 마족이 아닌 인간이라는 사실을 알게 된다." }
+    ]
+  },
+  {
+    id: 7,
+    title: "죽은 자들의 학교",
+    author: "공포작가",
+    genre: "호러",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    coverUrl: "/images/darkness_swallowed_classroom.jpg",
+    description: "폐교에 남은 것들. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 84000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "폐교 탐사를 온 학생들은 이상한 발소리와 함께 문이 저절로 닫히는 것을 경험한다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "한 명이 사라지고, 남은 학생들은 복도 끝에서 교복을 입은 그림자를 목격한다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "학교 지하실에서 발견된 일기장은 과거에 일어난 참극을 상세히 기록하고 있다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "일기장의 주인공이 눈앞에 나타나며, 학생들은 자신들이 이미 죽은 존재일지도 모른다는 공포에 휩싸인다." }
+    ]
+  },
+  {
+    id: 8,
+    title: "검의 전설: 천하제일인",
+    author: "검성",
+    genre: "무협",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    coverUrl: "/images/sword_dao_defies_heavens.jpg",
+    description: "천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    viewCount: 195000,
+    episodesCount: 4,
+    episodes: [
+      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "하급 무사 이천은 우연히 전설의 검을 손에 넣고 자신의 운명이 바뀌는 것을 느낀다." },
+      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "검을 노리는 암살자들을 물리친 이천은 검에 깃든 고대 검성의 기억을 일부 받아들인다." },
+      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "이천은 무림맹의 초대를 받아 처음으로 강호에 자신의 이름을 알리기 시작한다." },
+      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "천하제일인 자리에서 마주한 강자는 이천에게 검의 진짜 주인에 대한 비밀을 암시한다." }
+    ]
   }
 ];
 
