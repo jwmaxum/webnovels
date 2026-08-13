@@ -326,10 +326,10 @@ function renderHomeWorks() {
   if (!container) return;
 
   container.innerHTML = SAMPLE_WORKS.map(w => `
-    <div class="work-card" onclick="openWorkDetailDirect('${w.id}')">
+    <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
       <div class="cover-wrapper">
         <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
-        <span class="card-badge">무료 + 광고 해금</span>
+        <span class="card-badge">${w.genre}</span>
       </div>
       <div class="card-info">
         <div>
@@ -350,7 +350,7 @@ function renderDiscoverWorks() {
   if (!container) return;
 
   container.innerHTML = SAMPLE_WORKS.map(w => `
-    <div class="work-card" onclick="openWorkDetailDirect('${w.id}')">
+    <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
       <div class="cover-wrapper">
         <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
         <span class="card-badge">${w.genre}</span>
@@ -361,8 +361,8 @@ function renderDiscoverWorks() {
           <p class="card-author">${w.author}</p>
         </div>
         <div class="card-meta">
-          <span>등급: ${w.rating}</span>
-          <span>AI: ${w.aiUsageType}</span>
+          <span>${w.rating === 'AGE_19' ? '🔞 성인' : '전체이용가'}</span>
+          <span>${w.episodesCount}화</span>
         </div>
       </div>
     </div>
@@ -373,60 +373,75 @@ function renderDiscoverWorks() {
 // 2. Work Detail & Episode List
 // ----------------------------------------------------
 window.openWorkDetailDirect = function(workId) {
-  const work = SAMPLE_WORKS.find(w => w.id === workId) || SAMPLE_WORKS[0];
+  const targetId = Number(workId);
+  const work = SAMPLE_WORKS.find(w => Number(w.id) === targetId) || SAMPLE_WORKS[0];
   activeWork = work;
 
   document.getElementById('detailCoverImg').src = work.coverUrl;
   document.getElementById('detailTitle').textContent = work.title;
   document.getElementById('detailAuthor').textContent = `작가: ${work.author}`;
   document.getElementById('detailGenreBadge').textContent = work.genre;
-  document.getElementById('detailRatingBadge').textContent = work.rating === 'ALL' ? '전체이용가' : '15세 제한';
+  document.getElementById('detailRatingBadge').textContent = work.rating === 'ALL' ? '전체이용가' : '19세 이상 성인';
   document.getElementById('detailAiBadge').textContent = `AI ${work.aiUsageType}`;
   document.getElementById('detailDescription').textContent = work.description;
 
-  // Render Episode List (1~3 Free, 4 Ad Unlock)
+  // Render Episode List
   const epList = document.getElementById('detailEpisodeList');
   let epHtml = '';
-  for (let i = 1; i <= 4; i++) {
-    const isFree = i <= 3;
+  work.episodes.forEach(ep => {
+    const isUnlocked = ep.isFree || unlockedEpisodes.has(`${work.id}-${ep.episodeNumber}`);
     epHtml += `
-      <div class="episode-row" onclick="openReaderDirect('${work.id}', 'ep-${i}')">
+      <div class="episode-row" onclick="openReaderDirect(${work.id}, ${ep.episodeNumber})">
         <div class="ep-left">
-          <span class="ep-number">${i}화</span>
-          <span class="ep-title">제 ${i} 화</span>
+          <span class="ep-number">${ep.episodeNumber}화</span>
+          <span class="ep-title">${ep.title}</span>
         </div>
         <div class="ep-right">
-          ${isFree 
-            ? '<span class="badge badge-accent">FREE (무료)</span>' 
+          ${isUnlocked 
+            ? '<span class="badge badge-accent">FREE (열람 가능)</span>' 
             : '<span class="badge badge-warning">🔓 광고보고 무료열람</span>'}
         </div>
       </div>
     `;
-  }
+  });
   epList.innerHTML = epHtml;
 
   switchWebNovelsView('view-work-detail');
 };
 
 // ----------------------------------------------------
-// 3. Reader Logic & Rewarded Ad Unlock (design.md Section 26~38)
+// 3. Reader Logic & Rewarded Ad Unlock
 // ----------------------------------------------------
-window.openReaderDirect = function(workId, epId) {
-  const epNum = parseInt(epId.replace('ep-', ''), 10);
+window.openReaderDirect = function(workId, epNumber) {
+  const targetWorkId = Number(workId);
+  const work = SAMPLE_WORKS.find(w => Number(w.id) === targetWorkId) || SAMPLE_WORKS[0];
+  activeWork = work;
 
-  // If 4th episode (Requires Ad Unlock)
-  if (epNum === 4) {
+  const epNum = Number(epNumber);
+  const ep = work.episodes.find(e => e.episodeNumber === epNum) || work.episodes[0];
+  const unlockKey = `${work.id}-${epNum}`;
+
+  // 성인 콘텐츠 여부 확인
+  if (work.rating === 'AGE_19' && !window._isAdultVerified) {
+    openModal('modalPassAdultVerify');
+    return;
+  }
+
+  // 광고 시청 해금 필요 체크
+  if (!ep.isFree && !unlockedEpisodes.has(unlockKey)) {
+    window._pendingAdUnlockEpKey = unlockKey;
+    window._pendingAdUnlockWorkId = work.id;
+    window._pendingAdUnlockEpNum = epNum;
     openModal('modalAdUnlock');
     return;
   }
 
-  activeEpisodeId = epId;
-  document.getElementById('readerWorkTitle').textContent = activeWork.title;
-  document.getElementById('readerEpTitle').textContent = `제 ${epNum} 화`;
-  document.getElementById('readerHeading').textContent = `제 ${epNum} 화`;
+  activeEpisodeId = String(epNum);
+  document.getElementById('readerWorkTitle').textContent = work.title;
+  document.getElementById('readerEpTitle').textContent = ep.title;
+  document.getElementById('readerHeading').textContent = ep.title;
 
   const bodyContent = `
-    <p>이것은 웹소설 『${activeWork.title}』 제 ${epNum}화 본문 내용입니다.</p>
     <p>주인공은 불길하게 타오르는 붉은 하늘을 바라보며 검 자루를 쥐었다. 바람이 부는 순간, 차가운 강철의 감촉이 손바닥에 선명하게 전해졌다.</p>
     <p>"끝을 낼 시간이군."</p>
     <p>그의 짧은 읊조림과 함께 수많은 몬스터들이 함성을 지르며 전장으로 쏟아져 들어왔다. 광고를 보면 다음 회차가 연속으로 해금되어 계속 읽을 수 있습니다.</p>
