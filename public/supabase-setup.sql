@@ -66,14 +66,20 @@ CREATE TABLE IF NOT EXISTS platform_stats (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 6. RLS 비활성화 (관리자 전용 테이블이므로 anon key로 접근 허용)
+-- 6. RLS 활성화 및 관리자 전용 테이블 anon key 접근 허용
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE revenue_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE author_settlements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_stats ENABLE ROW LEVEL SECURITY;
 
--- anon key로 전체 접근 허용 정책 (관리자 CMS 전용)
+-- 멱등성 보장을 위해 기존 정책이 있으면 삭제 후 재생성 (재실행 시 에러 방지)
+DROP POLICY IF EXISTS "Allow anon full access" ON admin_users;
+DROP POLICY IF EXISTS "Allow anon full access" ON revenue_events;
+DROP POLICY IF EXISTS "Allow anon full access" ON author_settlements;
+DROP POLICY IF EXISTS "Allow anon full access" ON system_config;
+DROP POLICY IF EXISTS "Allow anon full access" ON platform_stats;
+
 CREATE POLICY "Allow anon full access" ON admin_users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow anon full access" ON revenue_events FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow anon full access" ON author_settlements FOR ALL USING (true) WITH CHECK (true);
@@ -128,6 +134,10 @@ CREATE TABLE IF NOT EXISTS episodes (
 
 ALTER TABLE works ENABLE ROW LEVEL SECURITY;
 ALTER TABLE episodes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow anon read works" ON works;
+DROP POLICY IF EXISTS "Allow anon read episodes" ON episodes;
+
 CREATE POLICY "Allow anon read works" ON works FOR SELECT USING (true);
 CREATE POLICY "Allow anon read episodes" ON episodes FOR SELECT USING (true);
 
@@ -206,6 +216,10 @@ CREATE TABLE IF NOT EXISTS authors (
 
 ALTER TABLE readers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE authors ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow anon read readers" ON readers;
+DROP POLICY IF EXISTS "Allow anon read authors" ON authors;
+
 CREATE POLICY "Allow anon read readers" ON readers FOR SELECT USING (true);
 CREATE POLICY "Allow anon read authors" ON authors FOR SELECT USING (true);
 
