@@ -39,12 +39,30 @@ document.addEventListener('DOMContentLoaded', () => {
   initWebNovelsApp();
 });
 
-function initWebNovelsApp() {
+async function initWebNovelsApp() {
   lucide.createIcons();
   bindWebNovelsEvents();
+
+  // Supabase 클라이언트 초기화 & 실시간 DB 연동
+  if (window.WebNovelsAdmin) {
+    window.WebNovelsAdmin.init();
+    
+    // Supabase DB에서 8개 작품 데이터 fetch
+    const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+    if (remoteWorks && remoteWorks.length > 0) {
+      console.log('[App Init] Supabase DB 실시간 작품 로드 성공:', remoteWorks.length);
+      SAMPLE_WORKS.length = 0;
+      SAMPLE_WORKS.push(...remoteWorks);
+    } else {
+      console.log('[App Init] Supabase DB 작품 미존재 -> 8개 작품 & 32개 에피소드 자동 시드 저장');
+      await window.WebNovelsAdmin.seedWorksDatasetToSupabase(SAMPLE_WORKS);
+    }
+  }
+
   renderHomeWorks();
   renderDiscoverWorks();
 }
+
 
 function bindWebNovelsEvents() {
   // Navigation
@@ -62,6 +80,16 @@ function bindWebNovelsEvents() {
   document.getElementById('btnHeaderLogin')?.addEventListener('click', () => {
     window.location.hash = '#admin';
     switchWebNovelsView('view-admin-cms');
+  });
+
+  // Genre Filter Pills Event
+  document.querySelectorAll('.filter-pills .pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pills .pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const genreText = pill.textContent.trim();
+      renderDiscoverWorks(genreText);
+    });
   });
 
   // Detail Page Action Buttons
@@ -345,11 +373,17 @@ function renderHomeWorks() {
   `).join('');
 }
 
-function renderDiscoverWorks() {
+function renderDiscoverWorks(genreFilter = 'ALL') {
   const container = document.getElementById('discoverWorksGrid');
   if (!container) return;
 
-  container.innerHTML = SAMPLE_WORKS.map(w => `
+  const filtered = SAMPLE_WORKS.filter(w => {
+    if (genreFilter === 'ALL' || genreFilter === '전체') return true;
+    if (genreFilter === '19+ 성인') return w.rating === 'AGE_19' || w.genre === '성인';
+    return w.genre.includes(genreFilter);
+  });
+
+  container.innerHTML = filtered.map(w => `
     <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
       <div class="cover-wrapper">
         <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
