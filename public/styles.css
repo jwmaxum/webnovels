@@ -56,11 +56,11 @@ body {
   min-height: 100vh;
 }
 
-/* Header (WebNovels Branding) */
+/* Header (WebNovels Branding - Spec 5.1) */
 .webnovels-header {
   height: var(--header-height);
-  background: rgba(9, 13, 22, 0.85);
-  backdrop-filter: blur(16px);
+  background: rgba(15, 17, 23, 0.85);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
@@ -89,51 +89,61 @@ body {
   width: 38px;
   height: 38px;
   border-radius: var(--radius-sm);
-  background: var(--color-brand-gradient);
+  background: linear-gradient(135deg, #A78BFA 0%, #6366F1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  box-shadow: 0 0 15px rgba(109, 94, 245, 0.4);
+  box-shadow: 0 4px 14px rgba(167, 139, 250, 0.35);
 }
 
 .brand-text {
   font-family: var(--font-heading);
   font-size: 1.4rem;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 
 .brand-highlight {
-  color: var(--color-brand-secondary);
+  color: #A78BFA;
 }
 
-/* Desktop Navigation */
+/* Desktop Navigation (Spec 5.1: Soft hover background highlight) */
 .desktop-nav {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
 }
 
 .nav-link {
-  color: var(--text-secondary);
+  color: #E2E8F0;
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.95rem;
-  transition: color 0.2s ease;
+  font-size: 14.5px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  letter-spacing: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-link:hover, .nav-link.active {
-  color: var(--text-primary);
+.nav-link:hover {
+  background: rgba(139, 92, 246, 0.15);
+  color: #F1F5F9;
+}
+
+.nav-link.active {
+  background: rgba(139, 92, 246, 0.22);
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .nav-highlight {
-  color: #a7f3d0;
+  color: #34D399 !important;
   font-weight: 600;
 }
 
 .nav-admin {
-  color: #f472b6;
+  color: #F472B6 !important;
   font-weight: 600;
 }
 
@@ -143,7 +153,7 @@ body {
   gap: 12px;
 }
 
-/* Button System (design.md Section 14) */
+/* Button System (Type Scale Spec: 14px, weight: 600, letter-spacing: 0.01em) */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -151,12 +161,14 @@ body {
   gap: 8px;
   padding: 10px 20px;
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
   cursor: pointer;
   border: 1px solid transparent;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: transparent;
   color: var(--text-primary);
   text-decoration: none;
@@ -171,15 +183,16 @@ body {
 }
 
 .btn-hero, .btn-primary {
-  background: var(--color-brand-gradient) !important;
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%) !important;
   color: #ffffff !important;
   border: none !important;
-  box-shadow: 0 4px 20px rgba(109, 94, 245, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35) !important;
 }
 
 .btn-hero:hover, .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(109, 94, 245, 0.6) !important;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55) !important;
+  background: linear-gradient(135deg, #9333EA 0%, #4F46E5 100%) !important;
 }
 
 .btn-outline {
@@ -214,22 +227,22 @@ body {
 
 .btn-sm {
   padding: 6px 14px;
-  font-size: 0.82rem;
+  font-size: 13px;
   border-radius: var(--radius-sm);
 }
 
 .btn-lg {
   padding: 12px 26px;
-  font-size: 1rem;
+  font-size: 15px;
   border-radius: var(--radius-md);
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
+  background: linear-gradient(135deg, #34D399, #059669) !important;
   color: #ffffff !important;
 }
 
-/* Container & Sections */
+/* Container & Sections (Type Scale Spec: Page Title 28~32px, 700 weight, -0.02em) */
 .container {
   max-width: 1280px;
   margin: 0 auto;
@@ -237,23 +250,27 @@ body {
 }
 
 .section-padding {
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-top: 32px;
+  padding-bottom: 32px;
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .section-header h3, .section-header h2 {
   font-family: var(--font-heading);
-  font-size: 1.35rem;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #F1F5F9;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  line-height: 1.3;
 }
 
 .link-more {
@@ -594,15 +611,15 @@ body {
 .card-badge {
   position: absolute;
   top: 12px; left: 12px;
-  font-size: 0.72rem;
+  font-size: 11.5px;
   padding: 4px 10px;
   border-radius: 8px;
-  font-weight: 700;
+  font-weight: 500;
   background: rgba(15, 17, 23, 0.78);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #F1F5F9;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.02em;
 }
 
 .card-badge-adult {
@@ -620,17 +637,19 @@ body {
 }
 
 .card-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 15.5px;
+  font-weight: 600;
   margin-bottom: 6px;
-  line-height: 1.35;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
+  line-height: 1.5;
+  color: #F1F5F9;
+  letter-spacing: -0.01em;
 }
 
 .card-author {
-  font-size: 0.83rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #94A3B8;
   margin-bottom: 10px;
 }
 
@@ -638,9 +657,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.78rem;
-  color: var(--text-tertiary);
-  font-weight: 500;
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
 /* 16-Menu Sub-Admin Permission Control Matrix Grid */
