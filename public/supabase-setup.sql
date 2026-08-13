@@ -91,8 +91,7 @@ ON CONFLICT (id) DO NOTHING;
 -- 9. 비밀번호 해싱 함수 (pgcrypto 확장)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- 10. 최고 관리자 계정 시드 (비밀번호: 환경변수에서 설정한 값 사용)
--- 주의: 실제 운영 시 Supabase Dashboard에서 직접 생성하세요
+-- 10. 최고 관리자 계정 시드
 INSERT INTO admin_users (email, username, password_hash, nickname, role, permissions)
 VALUES (
   'admin@webnovels.com',
@@ -102,3 +101,80 @@ VALUES (
   'SUPER_ADMIN',
   '["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]'::jsonb
 ) ON CONFLICT (email) DO NOTHING;
+
+-- 11. 작품(works) 및 회차(episodes) 스키마 생성 및 시드 데이터
+CREATE TABLE IF NOT EXISTS works (
+  id INT PRIMARY KEY,
+  title TEXT NOT NULL,
+  author TEXT NOT NULL,
+  genre TEXT[] NOT NULL,
+  tags TEXT[] NOT NULL,
+  description TEXT,
+  cover_image TEXT,
+  view_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS episodes (
+  id SERIAL PRIMARY KEY,
+  work_id INT REFERENCES works(id) ON DELETE CASCADE,
+  episode_number INT NOT NULL,
+  title TEXT NOT NULL,
+  is_free BOOLEAN DEFAULT true,
+  is_ad_free BOOLEAN DEFAULT false,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE works ENABLE ROW LEVEL SECURITY;
+ALTER TABLE episodes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anon read works" ON works FOR SELECT USING (true);
+CREATE POLICY "Allow anon read episodes" ON episodes FOR SELECT USING (true);
+
+-- 8개 작품 시드 데이터
+INSERT INTO works (id, title, author, genre, tags, description, cover_image, view_count) VALUES
+(1, '대적자: 신을 삼킨 기사', '판타지마스터', ARRAY['판타지', '전체이용가'], ARRAY['AI NONE'], '신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'stormqueen_oath.jpg', 154000),
+(2, '천마의 귀환', '무협의신', ARRAY['무협', '전체이용가'], ARRAY['AI NONE'], '천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'sword_dao_supreme.jpg', 231000),
+(3, '금기의 계약', '나이트로즈', ARRAY['성인', '19세 이상'], ARRAY['AI NONE'], '금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'velvet_and_thorns.jpg', 189000),
+(4, '황제의 유일한 후궁', '로맨스퀸', ARRAY['로맨스', '전체이용가'], ARRAY['AI NONE'], '황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'flower_blooming.jpg', 312000),
+(5, '성간 항로: 마지막 항해사', '스페이스로그', ARRAY['SF', '전체이용가'], ARRAY['AI NONE'], '인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'stellar_horizon.jpg', 97000),
+(6, '서울에 나타난 마왕', '도시마법사', ARRAY['현대 판타지', '전체이용가'], ARRAY['AI NONE'], '현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'seoul_sorcerer.jpg', 278000),
+(7, '죽은 자들의 학교', '공포작가', ARRAY['호러', '전체이용가'], ARRAY['AI NONE'], '폐교에 남은 것들. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'darkness_swallowed_classroom.jpg', 84000),
+(8, '검의 전설: 천하제일인', '검성', ARRAY['무협', '전체이용가'], ARRAY['AI NONE'], '천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!', 'sword_dao_defies_heavens.jpg', 195000)
+ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, cover_image = EXCLUDED.cover_image, description = EXCLUDED.description;
+
+-- 32개 에피소드 시드 데이터
+INSERT INTO episodes (work_id, episode_number, title, is_free, is_ad_free, content) VALUES
+(1, 1, '제1화', true, false, '신의 저주로 멸망한 왕국에서 한 기사가 깨어나 처음으로 자신의 힘을 깨닫는다.'),
+(1, 2, '제2화', true, false, '기사는 폐허가 된 성에서 고대의 검을 발견하고 신의 잔당과 첫 전투를 벌인다.'),
+(1, 3, '제3화', true, false, '동료를 잃은 기사는 복수를 다짐하며 신의 사도가 숨은 탑으로 향한다.'),
+(1, 4, '제4화', false, true, '탑 정상에서 마주한 신은 기사에게 충격적인 진실을 알려준다.'),
+(2, 1, '제1화', true, false, '천마는 수백 년의 봉인에서 깨어나 자신이 누구인지 기억해 내기 시작한다.'),
+(2, 2, '제2화', true, false, '옛 제자들의 후손을 만난 천마는 무림의 변화를 확인하고 첫 번째 적을 쓰러뜨린다.'),
+(2, 3, '제3화', true, false, '천마는 잃어버린 검법을 되찾기 위해 금지된 동굴로 들어간다.'),
+(2, 4, '제4화', false, true, '동굴 안에서 천마는 자신을 봉인한 자의 후예와 운명적인 대면을 한다.'),
+(3, 1, '제1화', true, false, '여주인공은 빚을 갚기 위해 정체불명의 남자와 위험한 계약을 맺는다.'),
+(3, 2, '제2화', true, false, '계약의 첫 번째 조건이 실행되고, 두 사람 사이에 묘한 긴장감이 흐른다.'),
+(3, 3, '제3화', true, false, '남자의 정체가 조금씩 드러나며 여주인공은 빠져나올 수 없는 감정에 휩싸인다.'),
+(3, 4, '제4화', false, true, '계약의 진짜 목적이 밝혀지고, 두 사람의 관계는 돌이킬 수 없는 방향으로 흐른다.'),
+(4, 1, '제1화', true, false, '평범한 처녀가 황제의 간택을 받아 궁에 들어가며 새로운 삶을 시작한다.'),
+(4, 2, '제2화', true, false, '황제와의 첫 대면에서 그녀는 그의 차가운 눈빛 속에 숨겨진 외로움을 느낀다.'),
+(4, 3, '제3화', true, false, '후궁들의 시기 속에서 그녀는 황제의 유일한 관심을 받게 된다.'),
+(4, 4, '제4화', false, true, '황제가 그녀에게만 보여 주는 부드러운 모습에 마음이 흔들리기 시작한다.'),
+(5, 1, '제1화', true, false, '마지막 항해사는 지구가 멸망한 후 남은 인류를 태우고 미지의 별로 출발한다.'),
+(5, 2, '제2화', true, false, '항해 중 발견한 고대 외계 유물에서 충격적인 메시지가 해독된다.'),
+(5, 3, '제3화', true, false, '함선에 침입한 미지의 존재가 승무원들을 하나씩 사라지게 만든다.'),
+(5, 4, '제4화', false, true, '항해사는 함선의 AI와 함께 적의 정체를 밝혀내고 생존을 위한 결단을 내린다.'),
+(6, 1, '제1화', true, false, '평범한 회사원 김현우는 퇴근길에 마왕의 힘이 자신에게 깃드는 것을 느낀다.'),
+(6, 2, '제2화', true, false, '처음으로 마법을 사용한 현우는 우연히 마족을 쓰러뜨리고 자신의 정체를 숨기려 한다.'),
+(6, 3, '제3화', true, false, '마법사 협회가 그를 추적하기 시작하고, 현우는 도망치며 힘을 다스리는 법을 배운다.'),
+(6, 4, '제4화', false, true, '현우는 자신을 노리는 진짜 적이 마족이 아닌 인간이라는 사실을 알게 된다.'),
+(7, 1, '제1화', true, false, '폐교 탐사를 온 학생들은 이상한 발소리와 함께 문이 저절로 닫히는 것을 경험한다.'),
+(7, 2, '제2화', true, false, '한 명이 사라지고, 남은 학생들은 복도 끝에서 교복을 입은 그림자를 목격한다.'),
+(7, 3, '제3화', true, false, '학교 지하실에서 발견된 일기장은 과거에 일어난 참극을 상세히 기록하고 있다.'),
+(7, 4, '제4화', false, true, '일기장의 주인공이 눈앞에 나타나며, 학생들은 자신들이 이미 죽은 존재일지도 모른다는 공포에 휩싸인다.'),
+(8, 1, '제1화', true, false, '하급 무사 이천은 우연히 전설의 검을 손에 넣고 자신의 운명이 바뀌는 것을 느낀다.'),
+(8, 2, '제2화', true, false, '검을 노리는 암살자들을 물리친 이천은 검에 깃든 고대 검성의 기억을 일부 받아들인다.'),
+(8, 3, '제3화', true, false, '이천은 무림맹의 초대를 받아 처음으로 강호에 자신의 이름을 알리기 시작한다.'),
+(8, 4, '제4화', false, true, '천하제일인 자리에서 마주한 강자는 이천에게 검의 진짜 주인에 대한 비밀을 암시한다.');
+
