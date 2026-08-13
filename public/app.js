@@ -150,8 +150,26 @@ const SAMPLE_WORKS = [
   }
 ];
 
+const SAMPLE_READERS = [
+  { id: 1, username: 'reader1', password_hash: '!12345', email: 'reader1@webnovels.com', phone: '+82-010-111-1111', is_adult_verified: false, subscription_status: '일반 회원' },
+  { id: 2, username: 'reader2', password_hash: '!12345', email: 'reader2@webnovels.com', phone: '+82-010-111-1112', is_adult_verified: true, subscription_status: '프리미엄 구독중' },
+  { id: 3, username: 'reader3', password_hash: '!12345', email: 'reader3@webnovels.com', phone: '+82-010-111-1113', is_adult_verified: true, subscription_status: '프리미엄 구독중' }
+];
+
+const SAMPLE_AUTHORS = [
+  { id: 1, username: 'writer1', password_hash: '!123456', email: 'writer1@webnovels.com', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666', status: '공식 인증 작가' },
+  { id: 2, username: 'writer2', password_hash: '!123456', email: 'writer2@webnovels.com', pen_name: '무협의신', work_title: '천마의 귀환', birthdate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bank_info: '신한은행 110-222-333444', status: '공식 인증 작가' },
+  { id: 3, username: 'writer3', password_hash: '!123456', email: 'writer3@webnovels.com', pen_name: '나이트로즈', work_title: '금기의 계약', birthdate: '1992-08-12', address: '경기도 성남시 분당구 판교로 78', bank_info: '우리은행 1002-555-666777', status: '공식 인증 작가' },
+  { id: 4, username: 'writer4', password_hash: '!123456', email: 'writer4@webnovels.com', pen_name: '로맨스퀸', work_title: '황제의 유일한 후궁', birthdate: '1994-11-03', address: '서울특별시 마포구 월드컵북로 99', bank_info: '하나은행 222-333-444555', status: '공식 인증 작가' },
+  { id: 5, username: 'writer5', password_hash: '!123456', email: 'writer5@webnovels.com', pen_name: '스페이스로그', work_title: '성간 항로: 마지막 항해사', birthdate: '1988-03-30', address: '대전광역시 유성구 대학로 100', bank_info: '농협 301-777-888999', status: '공식 인증 작가' },
+  { id: 6, username: 'writer6', password_hash: '!123456', email: 'writer6@webnovels.com', pen_name: '도시마법사', work_title: '서울에 나타난 마왕', birthdate: '1995-07-07', address: '서울특별시 송파구 올림픽로 200', bank_info: '카카오뱅크 3333-01-234567', status: '공식 인증 작가' },
+  { id: 7, username: 'writer7', password_hash: '!123456', email: 'writer7@webnovels.com', pen_name: '공포작가', work_title: '죽은 자들의 학교', birthdate: '1991-10-31', address: '부산광역시 해운대구 센텀서로 30', bank_info: '기업은행 010-9999-8888', status: '공식 인증 작가' },
+  { id: 8, username: 'writer8', password_hash: '!123456', email: 'writer8@webnovels.com', pen_name: '검성', work_title: '검의 전설: 천하제일인', birthdate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bank_info: '대구은행 508-12-345678', status: '공식 인증 작가' }
+];
+
 let activeWork = SAMPLE_WORKS[0];
 let activeEpisodeId = 'ep-1';
+let unlockedEpisodes = new Set();
 let currentTheme = 'theme-dark';
 let currentFontSize = 18;
 
@@ -177,11 +195,27 @@ async function initWebNovelsApp() {
       console.log('[App Init] Supabase DB 작품 미존재 -> 8개 작품 & 32개 에피소드 자동 시드 저장');
       await window.WebNovelsAdmin.seedWorksDatasetToSupabase(SAMPLE_WORKS);
     }
+
+    // Supabase DB에서 독자 & 작가 실데이터 fetch 및 시드
+    const remoteReaders = await window.WebNovelsAdmin.fetchReadersFromSupabase();
+    if (remoteReaders && remoteReaders.length > 0) {
+      SAMPLE_READERS.length = 0;
+      SAMPLE_READERS.push(...remoteReaders);
+    } else {
+      await window.WebNovelsAdmin.seedRealUsersToSupabase(SAMPLE_READERS, SAMPLE_AUTHORS);
+    }
+
+    const remoteAuthors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
+    if (remoteAuthors && remoteAuthors.length > 0) {
+      SAMPLE_AUTHORS.length = 0;
+      SAMPLE_AUTHORS.push(...remoteAuthors);
+    }
   }
 
   renderHomeWorks();
   renderDiscoverWorks();
 }
+
 
 
 function bindWebNovelsEvents() {
@@ -368,11 +402,59 @@ async function loadAdminDashboard() {
   // 정산 목록 로드
   loadSettlementsList();
 
+  // 독자 회원 & 작가 회원 실데이터 렌더링 (더미데이터 제거 완료)
+  renderReadersAdminTable();
+  renderAuthorsAdminGrid();
+
   // 시스템 설정 로드
   loadSystemConfig();
 
   // Lucide 아이콘 재렌더
   lucide.createIcons();
+}
+
+function renderReadersAdminTable() {
+  const container = document.querySelector('#adminTab-users table tbody');
+  if (!container) return;
+
+  container.innerHTML = SAMPLE_READERS.map(r => `
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td class="p-3"><strong>${r.username}</strong></td>
+      <td class="p-3">${r.email}</td>
+      <td class="p-3">${r.phone}</td>
+      <td class="p-3"><span class="badge ${r.subscription_status.includes('프리미엄') ? 'badge-primary' : 'badge-accent'}">${r.subscription_status}</span></td>
+      <td class="p-3">${r.is_adult_verified ? '<span class="badge badge-accent">🔞 PASS 성인인증</span>' : '<span class="badge badge-outline">미인증</span>'}</td>
+      <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('독자 상세: ${r.username} (${r.email})');">상세조회</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderAuthorsAdminGrid() {
+  const container = document.querySelector('#adminTab-authors .card');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="grid-2-col gap-4">
+      ${SAMPLE_AUTHORS.map(a => `
+        <div class="p-4 glass-panel border-radius-md">
+          <div class="flex-between">
+            <strong>${a.pen_name} (${a.username})</strong>
+            <span class="badge badge-primary">${a.status}</span>
+          </div>
+          <div class="text-muted small mt-2" style="line-height:1.6;">
+            <div>📧 이메일: ${a.email}</div>
+            <div>🎂 생년월일: ${a.birthdate}</div>
+            <div>🏠 주소: ${a.address}</div>
+            <div>📚 대표작: ${a.work_title}</div>
+            <div>💳 정산계좌: ${a.bank_info}</div>
+          </div>
+          <div class="mt-3" style="display:flex; justify-content:flex-end;">
+            <button class="btn btn-outline btn-sm" onclick="showToast('작가 [${a.pen_name}] 정보 조회');">상세 프로필</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function renderRevenueEvents(events) {

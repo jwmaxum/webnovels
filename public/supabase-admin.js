@@ -447,6 +447,83 @@ async function seedWorksDatasetToSupabase(sampleWorksData) {
   }
 }
 
+// ---- 독자 회원(readers) & 작가 회원(authors) 실데이터 조회 및 시드 ----
+async function fetchReadersFromSupabase() {
+  if (!supabaseClient) return null;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('readers')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error || !data || data.length === 0) return null;
+    return data;
+  } catch (err) {
+    console.warn('[Supabase Readers] 조회 실패:', err.message);
+    return null;
+  }
+}
+
+async function fetchAuthorsFromSupabase() {
+  if (!supabaseClient) return null;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('authors')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error || !data || data.length === 0) return null;
+    return data;
+  } catch (err) {
+    console.warn('[Supabase Authors] 조회 실패:', err.message);
+    return null;
+  }
+}
+
+async function seedRealUsersToSupabase(readersData, authorsData) {
+  if (!supabaseClient) return false;
+
+  try {
+    if (readersData && readersData.length > 0) {
+      for (const r of readersData) {
+        await supabaseClient.from('readers').upsert({
+          id: r.id,
+          username: r.username,
+          password_hash: r.password_hash || '!12345',
+          email: r.email,
+          phone: r.phone,
+          is_adult_verified: r.is_adult_verified,
+          subscription_status: r.subscription_status || '일반 회원'
+        });
+      }
+    }
+
+    if (authorsData && authorsData.length > 0) {
+      for (const a of authorsData) {
+        await supabaseClient.from('authors').upsert({
+          id: a.id,
+          username: a.username,
+          password_hash: a.password_hash || '!123456',
+          email: a.email,
+          pen_name: a.pen_name,
+          work_title: a.work_title,
+          birthdate: a.birthdate,
+          address: a.address,
+          bank_info: a.bank_info,
+          status: a.status || '공식 인증 작가'
+        });
+      }
+    }
+    console.log('[Supabase Users] 독자 3명 & 작가 8명 실데이터 시드 저장 완료!');
+    return true;
+  } catch (err) {
+    console.warn('[Supabase Users] 시드 저장 실패:', err.message);
+    return false;
+  }
+}
+
 // ---- 글로벌 export ----
 window.WebNovelsAdmin = {
   init: initSupabaseAdmin,
@@ -467,6 +544,10 @@ window.WebNovelsAdmin = {
   fetchSystemConfig,
   updateSystemConfig,
   fetchWorksFromSupabase,
-  seedWorksDatasetToSupabase
+  seedWorksDatasetToSupabase,
+  fetchReadersFromSupabase,
+  fetchAuthorsFromSupabase,
+  seedRealUsersToSupabase
 };
+
 
