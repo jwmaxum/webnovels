@@ -313,183 +313,509 @@
         </div>
       </section>
 
-      <!-- View 7: Admin CMS Integration (Supabase Connected, Cloudflare Edge Ready) -->
+      <!-- View 7: Admin CMS Integration (Sidebar + 16 Panel Content Area) -->
       <section id="view-admin-cms" class="main-view">
         <div class="container section-padding">
-          <div class="panel-header">
-            <div>
-              <h2><i data-lucide="shield-check" class="icon-indigo"></i> WebNovels 관리자 CMS 관제탑</h2>
-              <p class="text-muted">Supabase 연동 실시간 관리 · 16개 메뉴 통합 관제 · 수익배분 Engine · 정산 승인 · PG/PASS 설정</p>
-            </div>
-            <div class="admin-login-status" style="display:flex; align-items:center; gap:10px;">
-              <span class="badge badge-accent" id="adminRoleBadge">미로그인</span>
-              <button class="btn btn-ghost btn-sm" id="btnAdminLogout" style="display:none;" onclick="handleAdminLogoutProcess()">로그아웃</button>
-            </div>
-          </div>
-
-          <!-- 16-Menu Navigation Sub-Bar -->
-          <div class="admin-16menu-nav-bar mb-6 p-4 glass-panel">
-            <h4 class="mb-3 text-indigo"><i data-lucide="layout-grid"></i> 관리자 16개 메뉴 통합 관제 센터</h4>
-            <div class="menu-16-grid">
-              <button class="menu-16-item active" onclick="switchAdminSubTab('dashboard')"><i data-lucide="layout-dashboard"></i> 1. DASHBOARD</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('USER_MGMT')"><i data-lucide="users"></i> 2. USER_MGMT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('AUTHOR_MGMT')"><i data-lucide="feather"></i> 3. AUTHOR_MGMT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('WORK_MGMT')"><i data-lucide="book-open"></i> 4. WORK_MGMT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('EPISODE_MGMT')"><i data-lucide="file-text"></i> 5. EPISODE_MGMT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('CONTENT_REVIEW')"><i data-lucide="check-square"></i> 6. CONTENT_REVIEW</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('COMMENT_REPORT')"><i data-lucide="message-square"></i> 7. COMMENT_REPORT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('AD_MGMT')"><i data-lucide="tv"></i> 8. AD_MGMT</button>
-              <button class="menu-16-item" onclick="switchAdminSubTab('revenue')"><i data-lucide="calculator"></i> 9. AD_REVENUE</button>
-              <button class="menu-16-item" onclick="switchAdminSubTab('settlements')"><i data-lucide="wallet"></i> 10. SETTLEMENT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('FAN_MEETING')"><i data-lucide="smile"></i> 11. FAN_MEETING</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('GOODS_MGMT')"><i data-lucide="shopping-bag"></i> 12. GOODS_MGMT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('EVENT_MGMT')"><i data-lucide="gift"></i> 13. EVENT_MGMT</button>
-              <button class="menu-16-item" onclick="showAdminMenuNotice('ANALYTICS')"><i data-lucide="line-chart"></i> 14. ANALYTICS</button>
-              <button class="menu-16-item" onclick="switchAdminSubTab('pgconfig')"><i data-lucide="settings"></i> 15. SYSTEM_MGMT</button>
-              <button class="menu-16-item" onclick="switchAdminSubTab('subadmins')"><i data-lucide="shield"></i> 16. SECURITY_MGMT</button>
-            </div>
-          </div>
-
-          <!-- Sub-Tab 0: Dashboard KPI (기본 탭) -->
-          <div id="adminTab-dashboard" class="admin-subtab active">
-            <div class="kpi-grid">
-              <div class="kpi-card glass-panel">
-                <div class="kpi-icon" style="background: rgba(109,94,245,0.15);"><i data-lucide="users"></i></div>
-                <div class="kpi-value" id="kpiTotalUsers">--</div>
-                <div class="kpi-label">총 회원수</div>
-              </div>
-              <div class="kpi-card glass-panel">
-                <div class="kpi-icon" style="background: rgba(236,72,153,0.15);"><i data-lucide="feather"></i></div>
-                <div class="kpi-value" id="kpiTotalAuthors">--</div>
-                <div class="kpi-label">등록 작가</div>
-              </div>
-              <div class="kpi-card glass-panel">
-                <div class="kpi-icon" style="background: rgba(34,197,94,0.15);"><i data-lucide="book-open"></i></div>
-                <div class="kpi-value" id="kpiTotalWorks">--</div>
-                <div class="kpi-label">연재 작품</div>
-              </div>
-              <div class="kpi-card glass-panel">
-                <div class="kpi-icon" style="background: rgba(251,146,60,0.15);"><i data-lucide="file-text"></i></div>
-                <div class="kpi-value" id="kpiTotalEpisodes">--</div>
-                <div class="kpi-label">총 에피소드</div>
-              </div>
-              <div class="kpi-card glass-panel">
-                <div class="kpi-icon" style="background: rgba(56,189,248,0.15);"><i data-lucide="tv"></i></div>
-                <div class="kpi-value" id="kpiTotalAdViews">--</div>
-                <div class="kpi-label">광고 조회수</div>
-              </div>
-            </div>
-
-            <!-- 최근 수익 이벤트 -->
-            <div class="card glass-panel p-6 mt-6">
-              <h3><i data-lucide="activity" class="icon-indigo"></i> 최근 수익 이벤트</h3>
-              <div id="revenueEventsContainer" class="mt-4">
-                <p class="text-muted">Supabase 연동 후 실시간 수익 이벤트가 표시됩니다.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sub-Tab 1: Sub-Admin Management -->
-          <div id="adminTab-subadmins" class="admin-subtab" style="display: none;">
-            <div class="card glass-panel p-6">
-              <div class="section-header">
-                <div>
-                  <h3>서브 관리자 계정 & 16개 메뉴 접근 권한 제어판</h3>
-                  <p class="text-muted small mt-1">최고 관리자가 서브 관리자를 생성하고, 권한 수정, 비밀번호 변경, 삭제를 관리합니다.</p>
+          
+          <div class="admin-cms-layout">
+            <!-- Left Sidebar Navigation -->
+            <aside class="admin-sidebar glass-panel">
+              <div class="admin-sidebar-header">
+                <div class="admin-brand">
+                  <i data-lucide="shield-check" class="icon-indigo"></i>
+                  <span>WebNovels 관제탑</span>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="openModal('modalAddSubAdmin')">
-                  <i data-lucide="user-plus"></i> 신규 서브 관리자 생성
-                </button>
-              </div>
-              
-              <div class="subadmin-card-grid mt-6" id="adminSubAdminContainer">
-                <div class="admin-loading-placeholder">
-                  <div class="spinner"></div>
-                  <p class="text-muted">서브 관리자 목록 로딩 중...</p>
+                <div class="admin-login-status" style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
+                  <span class="badge badge-accent" id="adminRoleBadge">미로그인</span>
+                  <button class="btn btn-ghost btn-sm" id="btnAdminLogout" style="display:none;" onclick="handleAdminLogoutProcess()">로그아웃</button>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Sub-Tab 2: Revenue Engine -->
-          <div id="adminTab-revenue" class="admin-subtab" style="display: none;">
-            <div class="grid-2-col gap-6">
-              <div class="card glass-panel p-6">
-                <h3><i data-lucide="calculator"></i> 월 광고 매출 입력 & 수익배분 집계</h3>
-                <form id="formRevenueCalcAdmin" onsubmit="event.preventDefault(); handleRevenueCalculation();">
-                  <div class="form-group mt-4">
-                    <label>정산 귀속 월 (YYYY-MM)</label>
-                    <input type="text" id="revPeriodMonth" class="admin-input" value="2026-08" required>
-                  </div>
-                  <div class="form-group mt-3">
-                    <label>광고 총매출 (원)</label>
-                    <input type="number" id="revGrossRevenue" class="admin-input" value="10000000" required>
-                  </div>
-                  <div class="form-group mt-3">
-                    <label>플랫폼 수수료 (원)</label>
-                    <input type="number" id="revAdNetworkFee" class="admin-input" value="2000000" required>
-                  </div>
-                  <div class="form-group mt-3">
-                    <label>작가 Pool 배분 비율 (기본 0.625 = 62.5%)</label>
-                    <input type="number" step="0.001" id="revWriterPoolRatio" class="admin-input" value="0.625" required>
-                  </div>
-                  <button type="submit" class="btn btn-primary w-full mt-4">수익배분 집계 실행 (Supabase 저장)</button>
-                </form>
-              </div>
-              <div class="card glass-panel p-6">
-                <h3><i data-lucide="check-circle-2"></i> 월 정산 마감/확정 (Confirmed)</h3>
-                <p class="text-muted mt-2">수집된 광고 매출을 마감하여 예상수익(Estimated)을 확정수익(Confirmed)으로 정산 전환합니다.</p>
-                <div class="form-group mt-4">
-                  <label>마감 대상 월</label>
-                  <input type="text" id="revConfirmMonth" class="admin-input" value="2026-08">
-                </div>
-                <button class="btn btn-success w-full mt-4" onclick="handleRevenueConfirm()">정산 최종 마감 및 Confirmed 승인</button>
-              </div>
-            </div>
-          </div>
+              <nav class="admin-sidebar-menu">
+                <div class="sidebar-category">통합 16개 메뉴 센터</div>
+                <button class="admin-nav-item active" data-subtab="dashboard" onclick="switchAdminSubTab('dashboard')"><i data-lucide="layout-dashboard"></i> 1. 대시보드</button>
+                <button class="admin-nav-item" data-subtab="users" onclick="switchAdminSubTab('users')"><i data-lucide="users"></i> 2. 회원 관리</button>
+                <button class="admin-nav-item" data-subtab="authors" onclick="switchAdminSubTab('authors')"><i data-lucide="feather"></i> 3. 작가 관리</button>
+                <button class="admin-nav-item" data-subtab="works" onclick="switchAdminSubTab('works')"><i data-lucide="book-open"></i> 4. 작품 연재</button>
+                <button class="admin-nav-item" data-subtab="episodes" onclick="switchAdminSubTab('episodes')"><i data-lucide="file-text"></i> 5. 회차 관리</button>
+                <button class="admin-nav-item" data-subtab="review" onclick="switchAdminSubTab('review')"><i data-lucide="check-square"></i> 6. 콘텐츠 심사</button>
+                <button class="admin-nav-item" data-subtab="comments" onclick="switchAdminSubTab('comments')"><i data-lucide="message-square"></i> 7. 댓글/신고</button>
+                <button class="admin-nav-item" data-subtab="admgmt" onclick="switchAdminSubTab('admgmt')"><i data-lucide="tv"></i> 8. 광고 플랫폼</button>
+                <button class="admin-nav-item" data-subtab="revenue" onclick="switchAdminSubTab('revenue')"><i data-lucide="calculator"></i> 9. 수익배분 Engine</button>
+                <button class="admin-nav-item" data-subtab="settlements" onclick="switchAdminSubTab('settlements')"><i data-lucide="wallet"></i> 10. 작가 정산</button>
+                <button class="admin-nav-item" data-subtab="fanmeeting" onclick="switchAdminSubTab('fanmeeting')"><i data-lucide="smile"></i> 11. 팬미팅 관리</button>
+                <button class="admin-nav-item" data-subtab="goods" onclick="switchAdminSubTab('goods')"><i data-lucide="shopping-bag"></i> 12. 굿즈 커머스</button>
+                <button class="admin-nav-item" data-subtab="events" onclick="switchAdminSubTab('events')"><i data-lucide="gift"></i> 13. 이벤트 프로모션</button>
+                <button class="admin-nav-item" data-subtab="analytics" onclick="switchAdminSubTab('analytics')"><i data-lucide="line-chart"></i> 14. 매출 통계</button>
+                <button class="admin-nav-item" data-subtab="pgconfig" onclick="switchAdminSubTab('pgconfig')"><i data-lucide="settings"></i> 15. 시스템/PG 설정</button>
+                <button class="admin-nav-item" data-subtab="subadmins" onclick="switchAdminSubTab('subadmins')"><i data-lucide="shield"></i> 16. 서브관리자 권한</button>
+              </nav>
+            </aside>
 
-          <!-- Sub-Tab 3: Author Settlements -->
-          <div id="adminTab-settlements" class="admin-subtab" style="display: none;">
-            <div class="card glass-panel p-6">
-              <h3>작가 정산 신청 및 입금 처리 승인</h3>
-              <div id="settlementsContainer" class="mt-4">
-                <div class="admin-loading-placeholder">
-                  <div class="spinner"></div>
-                  <p class="text-muted">정산 신청 목록 로딩 중...</p>
+            <!-- Right Main Content Panel Container -->
+            <main class="admin-main-content">
+
+              <!-- Menu 1: Dashboard -->
+              <div id="adminTab-dashboard" class="admin-subtab active">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="layout-dashboard" class="icon-indigo"></i> DASHBOARD (통합 대시보드)</h2>
+                    <p class="text-muted">실시간 플랫폼 현황 · 주요 5대 KPI · 수익 이벤트 관제</p>
+                  </div>
+                </div>
+
+                <div class="kpi-grid">
+                  <div class="kpi-card glass-panel">
+                    <div class="kpi-icon" style="background: rgba(109,94,245,0.15);"><i data-lucide="users"></i></div>
+                    <div class="kpi-value" id="kpiTotalUsers">--</div>
+                    <div class="kpi-label">총 회원수</div>
+                  </div>
+                  <div class="kpi-card glass-panel">
+                    <div class="kpi-icon" style="background: rgba(236,72,153,0.15);"><i data-lucide="feather"></i></div>
+                    <div class="kpi-value" id="kpiTotalAuthors">--</div>
+                    <div class="kpi-label">등록 작가</div>
+                  </div>
+                  <div class="kpi-card glass-panel">
+                    <div class="kpi-icon" style="background: rgba(34,197,94,0.15);"><i data-lucide="book-open"></i></div>
+                    <div class="kpi-value" id="kpiTotalWorks">--</div>
+                    <div class="kpi-label">연재 작품</div>
+                  </div>
+                  <div class="kpi-card glass-panel">
+                    <div class="kpi-icon" style="background: rgba(251,146,60,0.15);"><i data-lucide="file-text"></i></div>
+                    <div class="kpi-value" id="kpiTotalEpisodes">--</div>
+                    <div class="kpi-label">총 에피소드</div>
+                  </div>
+                  <div class="kpi-card glass-panel">
+                    <div class="kpi-icon" style="background: rgba(56,189,248,0.15);"><i data-lucide="tv"></i></div>
+                    <div class="kpi-value" id="kpiTotalAdViews">--</div>
+                    <div class="kpi-label">광고 조회수</div>
+                  </div>
+                </div>
+
+                <div class="grid-2-col gap-6 mt-6">
+                  <div class="card glass-panel p-6">
+                    <h3><i data-lucide="activity" class="icon-indigo"></i> 최근 수익배분 이벤트</h3>
+                    <div id="revenueEventsContainer" class="mt-4">
+                      <p class="text-muted">Supabase 연동 후 실시간 수익 이벤트가 표시됩니다.</p>
+                    </div>
+                  </div>
+                  <div class="card glass-panel p-6">
+                    <h3><i data-lucide="shield" class="icon-indigo"></i> 서브 관리자 현황</h3>
+                    <p class="text-muted mt-2">등록된 서브 관리자 수 및 RBAC 권한 배정 상태를 확인합니다.</p>
+                    <button class="btn btn-outline btn-sm mt-4" onclick="switchAdminSubTab('subadmins')">서브 관리자 권한 관리 바로가기 →</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Sub-Tab 4: PG & PASS Config -->
-          <div id="adminTab-pgconfig" class="admin-subtab" style="display: none;">
-            <div class="card glass-panel p-6">
-              <h3>PG 및 PASS/KCP 성인인증 시스템 설정</h3>
-              <form id="formPgConfig" onsubmit="event.preventDefault(); handleSaveSystemConfig();">
-                <div class="grid-2-col gap-4 mt-4">
-                  <div class="form-group">
-                    <label>토스페이먼츠 Client Key</label>
-                    <input type="text" id="cfgTossClientKey" class="admin-input" value="" placeholder="로딩 중...">
+              <!-- Menu 2: User Management -->
+              <div id="adminTab-users" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="users" class="icon-indigo"></i> USER_MGMT (회원 관리)</h2>
+                    <p class="text-muted">독자 회원 정보 조회 · 권한 변경 · 제재 및 이용 정지 관리</p>
                   </div>
-                  <div class="form-group">
-                    <label>토스페이먼츠 Secret Key</label>
-                    <input type="password" id="cfgTossSecretKey" class="admin-input" value="" placeholder="로딩 중...">
-                  </div>
-                  <div class="form-group">
-                    <label>KCP Site Code</label>
-                    <input type="text" id="cfgKcpSiteCode" class="admin-input" value="" placeholder="로딩 중...">
-                  </div>
-                  <div class="form-group">
-                    <label>토스 모드</label>
-                    <select id="cfgTossMode" class="admin-input"><option value="TEST">TEST</option><option value="LIVE">LIVE</option></select>
+                  <button class="btn btn-outline btn-sm" onclick="showToast('회원 목록 조회가 갱신되었습니다.');">🔄 목록 갱신</button>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="table-responsive">
+                    <table class="w-full text-left" style="border-collapse: collapse; width: 100%;">
+                      <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                          <th class="p-3">회원 ID</th>
+                          <th class="p-3">닉네임</th>
+                          <th class="p-3">이메일</th>
+                          <th class="p-3">구독 상태</th>
+                          <th class="p-3">가입일</th>
+                          <th class="p-3">조치</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                          <td class="p-3">usr_98124</td>
+                          <td class="p-3">웹소설마니아</td>
+                          <td class="p-3">user01@webnovel.kr</td>
+                          <td class="p-3"><span class="badge badge-primary">프리미엄 구독중</span></td>
+                          <td class="p-3">2026-08-01</td>
+                          <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 조회가 열립니다.');">상세</button></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                          <td class="p-3">usr_98125</td>
+                          <td class="p-3">달빛독자</td>
+                          <td class="p-3">moon@webnovel.kr</td>
+                          <td class="p-3"><span class="badge badge-accent">일반 회원</span></td>
+                          <td class="p-3">2026-08-05</td>
+                          <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 조회가 열립니다.');">상세</button></td>
+                        </tr>
+                        <tr>
+                          <td class="p-3">usr_98126</td>
+                          <td class="p-3">판타지러버</td>
+                          <td class="p-3">fan@webnovel.kr</td>
+                          <td class="p-3"><span class="badge badge-primary">프리미엄 구독중</span></td>
+                          <td class="p-3">2026-08-10</td>
+                          <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 조회가 열립니다.');">상세</button></td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-                <div style="display:flex; gap:12px; margin-top:16px;">
-                  <button type="submit" class="btn btn-primary">설정 저장 (Supabase)</button>
-                  <button type="button" class="btn btn-outline" onclick="handlePgPingTest()">🔌 연동 핑 테스트</button>
+              </div>
+
+              <!-- Menu 3: Author Management -->
+              <div id="adminTab-authors" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="feather" class="icon-indigo"></i> AUTHOR_MGMT (작가 관리)</h2>
+                    <p class="text-muted">등록 작가 승인 · 작가 등급 관리 · 정산 계좌 상태 조회</p>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="showToast('신규 작가 승인 신청 모달이 열립니다.');">➕ 작가 신청 승인</button>
                 </div>
-              </form>
-            </div>
+                <div class="card glass-panel p-6">
+                  <div class="grid-2-col gap-4">
+                    <div class="p-4 glass-panel border-radius-md">
+                      <strong>판타지마스터 (master@fantasy.com)</strong>
+                      <p class="text-muted small mt-1">대표작: 차원 이동 마법사 | 정산계좌: 국민은행 999-***-777</p>
+                      <div class="mt-3" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge badge-primary">공식 인증 작가</span>
+                        <button class="btn btn-outline btn-sm" onclick="showToast('작가 정산 프로필 조회');">프로필</button>
+                      </div>
+                    </div>
+                    <div class="p-4 glass-panel border-radius-md">
+                      <strong>로맨스퀸 (queen@romance.kr)</strong>
+                      <p class="text-muted small mt-1">대표작: 공작가의 비밀 하녀 | 정산계좌: 신한은행 110-***-888</p>
+                      <div class="mt-3" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge badge-primary">공식 인증 작가</span>
+                        <button class="btn btn-outline btn-sm" onclick="showToast('작가 정산 프로필 조회');">프로필</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 4: Work Management -->
+              <div id="adminTab-works" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="book-open" class="icon-indigo"></i> WORK_MGMT (작품 연재 관리)</h2>
+                    <p class="text-muted">전체 연재 작품 검수 · 추천작 등록 · 장르 및 성인 등급 관리</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="grid-2-col gap-4">
+                    <div class="flex-between p-3 glass-panel">
+                      <div>
+                        <strong>[판타지] 차원 이동 마법사의 전설</strong>
+                        <div class="text-muted small">총 120화 연재중 | 작가: 판타지마스터 | 뷰: 1.2M</div>
+                      </div>
+                      <span class="badge badge-primary">연재중</span>
+                    </div>
+                    <div class="flex-between p-3 glass-panel">
+                      <div>
+                        <strong>[로맨스판타지] 공작가의 비밀 하녀</strong>
+                        <div class="text-muted small">총 85화 연재중 | 작가: 로맨스퀸 | 뷰: 980K</div>
+                      </div>
+                      <span class="badge badge-primary">연재중</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 5: Episode Management -->
+              <div id="adminTab-episodes" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="file-text" class="icon-indigo"></i> EPISODE_MGMT (회차 관리)</h2>
+                    <p class="text-muted">작품별 등록 회차 조회 · 유료/무료 회차 전환 · 열람 통계 확인</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="form-group mb-4">
+                    <label>대상 작품 선택</label>
+                    <select class="admin-input"><option>차원 이동 마법사의 전설</option><option>공작가의 비밀 하녀</option></select>
+                  </div>
+                  <div class="episode-row">
+                    <div><strong>제 1화: 마법의 시작</strong> <span class="badge badge-accent">무료회차</span></div>
+                    <button class="btn btn-outline btn-sm" onclick="showToast('회차 상태가 변경되었습니다.');">유료로 변경</button>
+                  </div>
+                  <div class="episode-row mt-2">
+                    <div><strong>제 2화: 기사단과의 만남</strong> <span class="badge badge-primary">유료 (100P / 광고)</span></div>
+                    <button class="btn btn-outline btn-sm" onclick="showToast('회차 상태가 변경되었습니다.');">무료로 변경</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 6: Content Review -->
+              <div id="adminTab-review" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="check-square" class="icon-indigo"></i> CONTENT_REVIEW (콘텐츠 심사)</h2>
+                    <p class="text-muted">신규 등록 작품 및 회차 심사 대기목록 · 승인 및 반려 처리</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="episode-row">
+                    <div>
+                      <strong>[신규 연재 신청] 무림 대공의 환생 (작가: 검신)</strong>
+                      <div class="text-muted small">신청일: 2026-08-12 | 장르: 무협</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                      <button class="btn btn-success btn-sm" onclick="showToast('작품 연재가 승인되었습니다.');">승인</button>
+                      <button class="btn btn-outline btn-sm style-danger" onclick="showToast('작품 연재가 반려되었습니다.');">반려</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 7: Comment Report -->
+              <div id="adminTab-comments" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="message-square" class="icon-indigo"></i> COMMENT_REPORT (댓글 / 신고)</h2>
+                    <p class="text-muted">유저 신고 댓글 및 부적절한 게시글 블라인드/삭제 제재 센터</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="episode-row">
+                    <div>
+                      <strong>신고 사유: 부적절한 스포일러 및 비방 (신고 5건)</strong>
+                      <div class="text-muted small">댓글: "100화에서 주인공 죽습니다 ㅋㅋ" | 작성자: usr_98124</div>
+                    </div>
+                    <button class="btn btn-outline btn-sm style-danger" onclick="showToast('댓글이 블라인드 처리되었습니다.');">🗑️ 블라인드 처리</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 8: Ad Platform Management -->
+              <div id="adminTab-admgmt" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="tv" class="icon-indigo"></i> AD_MGMT (광고 플랫폼)</h2>
+                    <p class="text-muted">광고 구좌(Banner, Episode End Video) 관리 · 단가(CPM/CPC) 설정</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="grid-2-col gap-4">
+                    <div class="p-4 glass-panel">
+                      <h4>📺 회차 종료 후 동영상 광고</h4>
+                      <p class="text-muted small mt-1">평균 ECPM: ₩15,000 | 일 평균 노출: 120,000회</p>
+                      <button class="btn btn-outline btn-sm mt-3" onclick="showToast('광고 구좌 설정 모달');">구좌 설정</button>
+                    </div>
+                    <div class="p-4 glass-panel">
+                      <h4>🖼️ 홈 메인 띠 배너 광고</h4>
+                      <p class="text-muted small mt-1">평균 CPC: ₩350 | 일 평균 클릭: 8,500회</p>
+                      <button class="btn btn-outline btn-sm mt-3" onclick="showToast('광고 구좌 설정 모달');">구좌 설정</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 9: Revenue Engine -->
+              <div id="adminTab-revenue" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="calculator" class="icon-indigo"></i> AD_REVENUE (수익배분 Engine)</h2>
+                    <p class="text-muted">월 광고 매출 입력 · 수수료 차감 · 작가 Pool 배분 집계 및 확정</p>
+                  </div>
+                </div>
+                <div class="grid-2-col gap-6">
+                  <div class="card glass-panel p-6">
+                    <h3><i data-lucide="calculator"></i> 월 광고 매출 입력 & 수익배분 집계</h3>
+                    <form id="formRevenueCalcAdmin" onsubmit="event.preventDefault(); handleRevenueCalculation();">
+                      <div class="form-group mt-4">
+                        <label>정산 귀속 월 (YYYY-MM)</label>
+                        <input type="text" id="revPeriodMonth" class="admin-input" value="2026-08" required>
+                      </div>
+                      <div class="form-group mt-3">
+                        <label>광고 총매출 (원)</label>
+                        <input type="number" id="revGrossRevenue" class="admin-input" value="10000000" required>
+                      </div>
+                      <div class="form-group mt-3">
+                        <label>플랫폼 수수료 (원)</label>
+                        <input type="number" id="revAdNetworkFee" class="admin-input" value="2000000" required>
+                      </div>
+                      <div class="form-group mt-3">
+                        <label>작가 Pool 배분 비율 (기본 0.625 = 62.5%)</label>
+                        <input type="number" step="0.001" id="revWriterPoolRatio" class="admin-input" value="0.625" required>
+                      </div>
+                      <button type="submit" class="btn btn-primary w-full mt-4">수익배분 집계 실행 (Supabase 저장)</button>
+                    </form>
+                  </div>
+                  <div class="card glass-panel p-6">
+                    <h3><i data-lucide="check-circle-2"></i> 월 정산 마감/확정 (Confirmed)</h3>
+                    <p class="text-muted mt-2">수집된 광고 매출을 마감하여 예상수익(Estimated)을 확정수익(Confirmed)으로 정산 전환합니다.</p>
+                    <div class="form-group mt-4">
+                      <label>마감 대상 월</label>
+                      <input type="text" id="revConfirmMonth" class="admin-input" value="2026-08">
+                    </div>
+                    <button class="btn btn-success w-full mt-4" onclick="handleRevenueConfirm()">정산 최종 마감 및 Confirmed 승인</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 10: Author Settlements -->
+              <div id="adminTab-settlements" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="wallet" class="icon-indigo"></i> SETTLEMENT (작가 정산 승인)</h2>
+                    <p class="text-muted">작가 정산 신청 검수 · 계좌 조회 · PAID 입금 승인 처리</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <h3>미처리 정산 신청 목록</h3>
+                  <div id="settlementsContainer" class="mt-4">
+                    <div class="admin-loading-placeholder">
+                      <div class="spinner"></div>
+                      <p class="text-muted">정산 신청 목록 로딩 중...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 11: Fan Meeting Management -->
+              <div id="adminTab-fanmeeting" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="smile" class="icon-indigo"></i> FAN_MEETING (팬미팅 관리)</h2>
+                    <p class="text-muted">인기 작가 온/오프라인 팬미팅 개설 · 신청 현황 및 티케팅 관리</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="episode-row">
+                    <div>
+                      <strong>[8월] 판타지마스터 작가 100만뷰 기념 온라인 팬미팅</strong>
+                      <div class="text-muted small">일시: 2026-08-25 19:00 | 정원: 500명 (신청 420명)</div>
+                    </div>
+                    <span class="badge badge-primary">모집중</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 12: Goods Commerce -->
+              <div id="adminTab-goods" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="shopping-bag" class="icon-indigo"></i> GOODS_MGMT (굿즈 커머스)</h2>
+                    <p class="text-muted">웹소설 IP 굿즈 상품 등록 · 재고 관리 · 주문 및 배송 현황</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="grid-2-col gap-4">
+                    <div class="p-3 glass-panel flex-between">
+                      <div>
+                        <strong>차원 이동 마법사 한정판 장패드</strong>
+                        <div class="text-muted small">판매가: ₩25,000 | 재고: 150개</div>
+                      </div>
+                      <span class="badge badge-primary">판매중</span>
+                    </div>
+                    <div class="p-3 glass-panel flex-between">
+                      <div>
+                        <strong>공작가의 비밀 하녀 아크릴 스탠드</strong>
+                        <div class="text-muted small">판매가: ₩18,000 | 재고: 80개</div>
+                      </div>
+                      <span class="badge badge-primary">판매중</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 13: Event Management -->
+              <div id="adminTab-events" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="gift" class="icon-indigo"></i> EVENT_MGMT (이벤트 프로모션)</h2>
+                    <p class="text-muted">신규 가입 프로모션 · 무료 이용권 쿠폰 발급 · 출석체크 이벤트</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="episode-row">
+                    <div>
+                      <strong>[여름 특별] 신규 가입 3,000 코인 지급 프로모션</strong>
+                      <div class="text-muted small">기간: 2026-08-01 ~ 2026-08-31</div>
+                    </div>
+                    <span class="badge badge-primary">진행중</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 14: Analytics -->
+              <div id="adminTab-analytics" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="line-chart" class="icon-indigo"></i> ANALYTICS (매출 및 트래픽 통계)</h2>
+                    <p class="text-muted">월별 매출 성장 추이 · 장르별 매출 비중 · 일일 트래픽 집계</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="grid-2-col gap-4">
+                    <div class="p-4 glass-panel text-center">
+                      <div class="text-muted small">이번 달 총 플랫폼 광고 매출</div>
+                      <div class="kpi-value mt-2" style="color: var(--color-brand-primary);">₩10,000,000</div>
+                    </div>
+                    <div class="p-4 glass-panel text-center">
+                      <div class="text-muted small">이번 달 작가 정산 지급 예정 총액</div>
+                      <div class="kpi-value mt-2" style="color: #34d399;">₩5,000,000</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu 15: System Management (PG & PASS Config) -->
+              <div id="adminTab-pgconfig" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="settings" class="icon-indigo"></i> SYSTEM_MGMT (시스템 & PG 설정)</h2>
+                    <p class="text-muted">토스페이먼츠 PG 결제 연동 · PASS/KCP 성인인증 키 관리</p>
+                  </div>
+                </div>
+                <div class="card glass-panel p-6">
+                  <form id="formPgConfig" onsubmit="event.preventDefault(); handleSaveSystemConfig();">
+                    <div class="grid-2-col gap-4">
+                      <div class="form-group">
+                        <label>토스페이먼츠 Client Key</label>
+                        <input type="text" id="cfgTossClientKey" class="admin-input" value="" placeholder="로딩 중...">
+                      </div>
+                      <div class="form-group">
+                        <label>토스페이먼츠 Secret Key</label>
+                        <input type="password" id="cfgTossSecretKey" class="admin-input" value="" placeholder="로딩 중...">
+                      </div>
+                      <div class="form-group">
+                        <label>KCP Site Code</label>
+                        <input type="text" id="cfgKcpSiteCode" class="admin-input" value="" placeholder="로딩 중...">
+                      </div>
+                      <div class="form-group">
+                        <label>토스 모드</label>
+                        <select id="cfgTossMode" class="admin-input"><option value="TEST">TEST</option><option value="LIVE">LIVE</option></select>
+                      </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                      <button type="submit" class="btn btn-primary">설정 저장 (Supabase DB)</button>
+                      <button type="button" class="btn btn-outline" onclick="handlePgPingTest()">🔌 연동 핑 테스트</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Menu 16: Security Management (Sub-Admin RBAC) -->
+              <div id="adminTab-subadmins" class="admin-subtab" style="display: none;">
+                <div class="panel-header mb-4">
+                  <div>
+                    <h2><i data-lucide="shield" class="icon-indigo"></i> SECURITY_MGMT (서브 관리자 RBAC 제어판)</h2>
+                    <p class="text-muted">최고 관리자가 서브 관리자를 생성하고 16개 메뉴 접근 권한을 제어합니다.</p>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="openModal('modalAddSubAdmin')">
+                    <i data-lucide="user-plus"></i> 신규 서브 관리자 생성
+                  </button>
+                </div>
+                <div class="card glass-panel p-6">
+                  <div class="subadmin-card-grid" id="adminSubAdminContainer">
+                    <div class="admin-loading-placeholder">
+                      <div class="spinner"></div>
+                      <p class="text-muted">서브 관리자 목록 로딩 중...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </main>
           </div>
 
         </div>
