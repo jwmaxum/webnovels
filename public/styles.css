@@ -938,7 +938,112 @@ body {
 .text-emerald { color: #34d399; }
 .text-amber { color: #fbbf24; }
 
+/* ---- Admin CMS Layout (Sidebar + Main Content) ---- */
+.admin-cms-layout {
+  display: flex;
+  gap: 24px;
+  min-height: 750px;
+}
+
+.admin-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  position: sticky;
+  top: 90px;
+}
+
+.admin-sidebar-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.admin-sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin: 12px 0 6px 10px;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-size: 0.86rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.admin-nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.admin-nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.admin-nav-item.active {
+  background: var(--color-brand-gradient);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(109, 94, 245, 0.35);
+}
+
+.admin-main-content {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Responsive Breakpoints (design.md Section 5) */
+@media (max-width: 992px) {
+  .admin-cms-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+    position: static;
+  }
+  .admin-sidebar-menu {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .desktop-nav { display: none; }
   .mobile-bottom-nav { display: flex; }
@@ -950,6 +1055,7 @@ body {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .menu-16-grid { grid-template-columns: repeat(2, 1fr); }
   .grid-2-col { grid-template-columns: 1fr; }
+  .admin-sidebar-menu { grid-template-columns: 1fr; }
 }
 
 /* ---- Admin Dashboard KPI Cards ---- */

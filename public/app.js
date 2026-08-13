@@ -566,24 +566,23 @@ function showToast(msg) {
   }, 3000);
 }
 
-// Admin Sub-Tab Switcher
+// Admin Sub-Tab Switcher (Left Sidebar Navigation)
 window.switchAdminSubTab = function(tabName) {
   document.querySelectorAll('.admin-subtab').forEach(t => t.style.display = 'none');
   const target = document.getElementById(`adminTab-${tabName}`);
   if (target) target.style.display = 'block';
 
-  // Update menu 16 navbar active status
-  document.querySelectorAll('.menu-16-item').forEach(btn => btn.classList.remove('active'));
-  const clickedBtn = Array.from(document.querySelectorAll('.menu-16-item')).find(btn => btn.getAttribute('onclick')?.includes(tabName));
-  if (clickedBtn) clickedBtn.classList.add('active');
+  // Update sidebar menu active state
+  document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.remove('active'));
+  const activeNavBtn = document.querySelector(`.admin-nav-item[data-subtab="${tabName}"]`);
+  if (activeNavBtn) activeNavBtn.classList.add('active');
+
+  // Re-render Lucide icons if present
+  if (window.lucide) window.lucide.createIcons();
 };
 
-// 16개 메뉴 클릭 통합 토스트 및 안내 헬퍼
 window.showAdminMenuNotice = function(menuKey) {
   showToast(`📌 [${menuKey}] 관리자 메뉴로 진입했습니다.`);
-  document.querySelectorAll('.menu-16-item').forEach(btn => btn.classList.remove('active'));
-  const clickedBtn = Array.from(document.querySelectorAll('.menu-16-item')).find(btn => btn.getAttribute('onclick')?.includes(menuKey));
-  if (clickedBtn) clickedBtn.classList.add('active');
 };
 
 // 신규 서브 관리자 생성 (Supabase 연동)
