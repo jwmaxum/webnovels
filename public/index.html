@@ -21,28 +21,28 @@
   <div id="app" class="app-shell">
 
     <!-- Top Navigation Header (Desktop & Mobile Header) -->
-    <header class="webnovels-header" id="mainHeader">
+    <header class="webnovels-header nav" id="mainHeader">
       <div class="header-inner">
-        <a href="#home" class="brand-link" id="brandLink">
-          <div class="brand-symbol">
-            <i data-lucide="book-open"></i>
-          </div>
-          <span class="brand-text">Web<span class="brand-highlight">Novels</span></span>
+        <a href="#home" class="brand-link cp-brand" id="brandLink">
+          <svg viewBox="0 0 28 28" aria-hidden="true"><defs><linearGradient id="cp-demo-mark" x1="3" y1="3" x2="25" y2="25" gradientUnits="userSpaceOnUse"><stop stop-color="#25D1FF"/><stop offset=".42" stop-color="#5488FF"/><stop offset=".7" stop-color="#9C65FF"/><stop offset="1" stop-color="#FF4F9A"/></linearGradient></defs><path d="M5.8 4.1c0-1.2 1.4-1.9 2.4-1.3l14 9c1 .6 1 2.1 0 2.7l-14 9c-1 .7-2.4-.1-2.4-1.3V4.1Z" fill="url(#cp-demo-mark)"/><path d="M9.3 8.2v11.6l8.9-5.8-8.9-5.8Z" fill="#fff"/></svg>
+          <span class="brand-text" style="font-weight: 800;">webnovels</span>
         </a>
 
         <!-- Desktop Navigation Menu -->
         <nav class="desktop-nav">
-          <a href="#home" class="nav-link active" data-target="view-home">홈</a>
-          <a href="#discover" class="nav-link" data-target="view-discover">탐색</a>
-          <a href="#ranking" class="nav-link" data-target="view-discover">랭킹</a>
-          <a href="#library" class="nav-link" data-target="view-mypage">보관함</a>
-          <a href="#creator" class="nav-link nav-highlight" data-target="view-creator">
-            <i data-lucide="feather"></i> Creator Studio
+          <a href="#home" class="nav-link cp-nav-link active" data-target="view-home">홈</a>
+          <a href="#discover" class="nav-link cp-nav-link" data-target="view-discover">탐색</a>
+          <a href="#ranking" class="nav-link cp-nav-link" data-target="view-discover">랭킹</a>
+          <a href="#library" class="nav-link cp-nav-link" data-target="view-mypage">보관함</a>
+          <a href="#creator" class="nav-link cp-nav-link nav-highlight" data-target="view-creator">
+            Creator Studio
           </a>
-          <a href="#admin" class="nav-link nav-admin" data-target="view-admin-cms">
-            <i data-lucide="shield-check"></i> Admin CMS
+          <a href="#admin" class="nav-link cp-nav-link nav-admin" data-target="view-admin-cms">
+            Admin CMS
           </a>
         </nav>
+
+        <span class="cp-nav-spacer"></span>
 
         <!-- Header Actions -->
         <div class="header-actions">
@@ -61,27 +61,37 @@
 
       <!-- View 1: Home View (design.md Section 16) -->
       <section id="view-home" class="main-view active">
-        <!-- Hero Carousel Section -->
-        <div class="hero-carousel-wrapper">
-          <div class="hero-slide active">
-            <div class="hero-bg" style="background-image: url('/images/cover_fantasy.png');"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-              <span class="badge badge-accent mb-2">🔥 실시간 1위 판타지</span>
-              <h1 class="hero-title">대적자: 신을 삼킨 기사</h1>
-              <p class="hero-desc">신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!</p>
-              <div class="hero-tags mb-4">
-                <span>#회귀</span> <span>#판타지</span> <span>#성장물</span> <span>#독점연재</span>
-              </div>
-              <div class="hero-cta">
-                <button class="btn btn-hero btn-lg" onclick="openWorkDetailDirect('w-fantasy')">
-                  <i data-lucide="play-circle"></i> 첫 화 무료 읽기
-                </button>
-                <button class="btn btn-outline btn-lg" onclick="openWorkDetailDirect('w-fantasy')">
-                  <i data-lucide="info"></i> 작품 정보
-                </button>
-              </div>
+        <!-- Hero Section (Coupang Play Style) -->
+        <div class="cp-hero">
+          <div class="cp-copy">
+            <div class="cp-kicker"><span class="cp-live-dot"></span> WEBNOVELS EXCLUSIVE · HOT</div>
+            <h1>대적자:<br/><em>신을 삼킨 기사</em></h1>
+            <p>신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!</p>
+            <div class="cp-actions">
+              <button class="btn btn-primary" onclick="openWorkDetailDirect('w-fantasy')">▶ 첫 화 읽기 (무료)</button>
+              <button class="btn btn-secondary" onclick="openWorkDetailDirect('w-fantasy')">＋ 작품 정보</button>
             </div>
+          </div>
+          <div class="cp-stage" aria-hidden="true">
+            <svg viewBox="0 0 760 430">
+              <defs>
+                <linearGradient id="cp-speed" x1="40" y1="390" x2="700" y2="40" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#00D1FF" stop-opacity="0"/><stop offset=".38" stop-color="#25D1FF"/><stop offset=".68" stop-color="#7B71FF"/><stop offset="1" stop-color="#FF4F9A"/>
+                </linearGradient>
+                <linearGradient id="cp-car" x1="300" y1="180" x2="600" y2="300" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#F7F9FC"/><stop offset=".55" stop-color="#77C9FF"/><stop offset="1" stop-color="#3263FF"/>
+                </linearGradient>
+              </defs>
+              <path d="M30 395C180 250 320 380 418 205 480 94 567 74 730 54" fill="none" stroke="url(#cp-speed)" stroke-width="8" stroke-linecap="round"/>
+              <path d="M90 426c141-112 270-51 360-193 66-104 132-128 276-131" fill="none" stroke="#fff" stroke-opacity=".2" stroke-width="3"/>
+              <path d="M292 278 445 220l116 33-58 55-189 24-55-20Z" fill="url(#cp-car)"/>
+              <path d="m405 232 53-65 82 16 34 69-119-32Z" fill="#172039" stroke="#86D9FF" stroke-width="4"/>
+              <path d="m503 308 104-15 61 23-26 28-151 8Z" fill="#5E73FF"/>
+              <circle cx="345" cy="328" r="34" fill="#050609" stroke="#7A8497" stroke-width="8"/>
+              <circle cx="559" cy="321" r="36" fill="#050609" stroke="#7A8497" stroke-width="8"/>
+              <circle cx="345" cy="328" r="10" fill="#00A8FF"/>
+              <circle cx="559" cy="321" r="10" fill="#00A8FF"/>
+            </svg>
           </div>
         </div>
 
@@ -103,14 +113,14 @@
           </div>
         </div>
 
-        <!-- Today's Updates (design.md Section 18) -->
-        <div class="container section-padding">
-          <div class="section-header">
-            <h3><i data-lucide="sparkles" class="icon-amber"></i> 오늘 업데이트된 작품</h3>
-            <a href="#discover" class="link-more">전체보기 <i data-lucide="chevron-right"></i></a>
+        <!-- Today's Updates (Coupang Play Style Features) -->
+        <div class="cp-features">
+          <div class="cp-section-head">
+            <h2>웹노블에서 지금 뜨는 작품</h2>
+            <span onclick="document.querySelector('[data-target=\'view-discover\']').click()" style="cursor:pointer;">전체보기 ›</span>
           </div>
 
-          <div class="works-grid" id="homeWorksGrid">
+          <div class="cp-grid" id="homeWorksGrid">
             <!-- Dynamic Work Cards -->
           </div>
         </div>

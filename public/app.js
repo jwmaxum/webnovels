@@ -557,23 +557,17 @@ function renderHomeWorks() {
 
   container.innerHTML = SAMPLE_WORKS.map(w => {
     const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+    const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
+    const tagText = isAdult ? '19+ 성인' : w.genre;
     return `
-      <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
-        <div class="cover-wrapper">
-          <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
-          <span class="card-badge ${isAdult ? 'card-badge-adult' : ''}">${isAdult ? '🔞 19+ 성인' : w.genre}</span>
+      <article class="feature-card" onclick="openWorkDetailDirect(${w.id})">
+        <div class="art" style="background-image: url('${w.coverUrl}');"></div>
+        <div class="copy">
+          <span class="tag ${tagClass}">${tagText}</span>
+          <h3>${w.title}</h3>
+          <p>${w.author} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
         </div>
-        <div class="card-info">
-          <div>
-            <h4 class="card-title">${w.title}</h4>
-            <p class="card-author">${w.author}</p>
-          </div>
-          <div class="card-meta">
-            <span style="color:#FBBF24;">★ 4.9</span>
-            <span style="color:#60A5FA;">조회 ${(w.viewCount / 1000).toFixed(1)}K</span>
-          </div>
-        </div>
-      </div>
+      </article>
     `;
   }).join('');
 }
@@ -590,23 +584,17 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
 
   container.innerHTML = filtered.map(w => {
     const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+    const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
+    const tagText = isAdult ? '19+ 성인' : w.genre;
     return `
-      <div class="work-card" onclick="openWorkDetailDirect(${w.id})">
-        <div class="cover-wrapper">
-          <img src="${w.coverUrl}" alt="${w.title}" class="cover-img">
-          <span class="card-badge ${isAdult ? 'card-badge-adult' : ''}">${isAdult ? '🔞 19+ 성인' : w.genre}</span>
+      <article class="feature-card" onclick="openWorkDetailDirect(${w.id})">
+        <div class="art" style="background-image: url('${w.coverUrl}');"></div>
+        <div class="copy">
+          <span class="tag ${tagClass}">${tagText}</span>
+          <h3>${w.title}</h3>
+          <p>${w.author} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
         </div>
-        <div class="card-info">
-          <div>
-            <h4 class="card-title">${w.title}</h4>
-            <p class="card-author">${w.author}</p>
-          </div>
-          <div class="card-meta">
-            <span style="color:${isAdult ? '#F472B6' : '#34D399'}; font-weight:600;">${isAdult ? '🔞 19세 이상' : '🌱 전체이용가'}</span>
-            <span style="color:#94A3B8;">${w.episodesCount}화 연재</span>
-          </div>
-        </div>
-      </div>
+      </article>
     `;
   }).join('');
 }
