@@ -68,12 +68,10 @@
             <div class="cp-actions">
               <button class="btn btn-primary" onclick="openReaderDirect(1, 1)"><i data-lucide="play-circle"></i> 무료로 읽기</button>
               <button class="btn btn-outline" onclick="document.getElementById('btnSearchOpen').click()"><i data-lucide="search"></i> 작품 찾기</button>
-              <button class="btn btn-secondary" onclick="document.querySelector('[data-target=\'view-creator\']').click()"><i data-lucide="feather"></i> 작품 등록하기</button>
             </div>
-            <div class="hero-service-strip" aria-label="핵심 서비스">
+            <div class="hero-service-strip" aria-label="핵심 서비스" style="grid-template-columns: repeat(2, 1fr);">
               <button onclick="openReaderDirect(1, 1)"><strong>무료 열람</strong><span>광고 보고 다음 화 해금</span></button>
               <button onclick="document.getElementById('btnSearchOpen').click()"><strong>작품 탐색</strong><span>장르, 인기작, 작가 검색</span></button>
-              <button onclick="document.querySelector('[data-target=\'view-creator\']').click()"><strong>작가 연재</strong><span>작품 등록과 정산 관리</span></button>
             </div>
           </div>
           <div class="cp-stage" aria-hidden="true">
@@ -100,7 +98,7 @@
         </div>
 
         <!-- Continue Reading Section (design.md Section 17) -->
-        <div class="container section-padding" id="sectionContinueReading">
+        <div class="container section-padding" id="sectionContinueReading" style="display: none;">
           <div class="section-header">
             <h3><i data-lucide="history" class="icon-indigo"></i> 최근 읽던 작품 (이어보기)</h3>
           </div>
@@ -117,8 +115,18 @@
           </div>
         </div>
 
+        <!-- Real-time Top 4 Recommended Works -->
+        <div class="cp-features" id="topRecommendedSection">
+          <div class="cp-section-head">
+            <h2>실시간 상위 4개 작품</h2>
+          </div>
+          <div class="cp-grid" id="topWorksGrid" style="grid-template-columns: repeat(4, 1fr); gap: 10px;">
+            <!-- Dynamic Half Size Cards -->
+          </div>
+        </div>
+
         <!-- Today's Updates (Coupang Play Style Features) -->
-        <div class="cp-features">
+        <div class="cp-features" style="padding-top: 1rem;">
           <div class="cp-section-head">
             <h2>웹노블에서 지금 뜨는 작품</h2>
             <span onclick="document.querySelector('[data-target=\'view-discover\']').click()" style="cursor:pointer;">전체보기 ›</span>
@@ -545,21 +553,8 @@
                   </div>
                 </div>
                 <div class="card glass-panel p-6">
-                  <div class="grid-2-col gap-4">
-                    <div class="flex-between p-3 glass-panel">
-                      <div>
-                        <strong>[판타지] 차원 이동 마법사의 전설</strong>
-                        <div class="text-muted small">총 120화 연재중 | 작가: 판타지마스터 | 뷰: 1.2M</div>
-                      </div>
-                      <span class="badge badge-primary">연재중</span>
-                    </div>
-                    <div class="flex-between p-3 glass-panel">
-                      <div>
-                        <strong>[로맨스판타지] 공작가의 비밀 하녀</strong>
-                        <div class="text-muted small">총 85화 연재중 | 작가: 로맨스퀸 | 뷰: 980K</div>
-                      </div>
-                      <span class="badge badge-primary">연재중</span>
-                    </div>
+                  <div class="grid-2-col gap-4" id="adminWorksGrid">
+                    <!-- Dynamic Works List will be rendered here by JS -->
                   </div>
                 </div>
               </div>
