@@ -1073,55 +1073,381 @@ window.changeFontSize = function(delta) {
 // ----------------------------------------------------
 // 4. Creator Studio Logic
 // ----------------------------------------------------
-async function fetchCreatorDashboardData() {
-  document.getElementById('creatorEstimatedRevenue').textContent = '₩5,000,000';
-  document.getElementById('creatorConfirmedRevenue').textContent = '₩5,000,000';
-  document.getElementById('creatorPayableRevenue').textContent = '₩5,000,000';
+// ----------------------------------------------------
+// 4. Creator Studio Logic (Dynamic Author Data Linkage)
+// ----------------------------------------------------
+let currentLoggedAuthor = null;
+let currentAuthorPayable = 0;
 
-  const container = document.getElementById('creatorWorksContainer');
-  container.innerHTML = `
-    <div class="episode-row">
-      <div class="ep-left">
-        <strong>대적자: 신을 삼킨 기사</strong>
-        <span class="badge badge-accent">연재중</span>
-      </div>
-      <div>
-        <button class="btn btn-outline btn-sm" onclick="showToast('회차 작성 폼이 열립니다.')">+ 새 회차 쓰기</button>
-      </div>
-    </div>
-  `;
-}
-
-function handleCreatorSettlementReq() {
-  if (confirm('정산 가능 금액 ₩5,000,000을 정산 신청하시겠습니까?')) {
-    showToast('📩 정산 신청이 정상 접수되었습니다. 관리자 승인 후 계좌로 지급됩니다.');
+function getCurrentAuthorSession() {
+  try {
+    const raw = localStorage.getItem('webnovels_author');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
   }
 }
 
-async function handleMemberLogin() {
-  const loginIdentifier = document.getElementById('loginEmail')?.value;
-  const password = document.getElementById('loginPassword')?.value;
+async function fetchCreatorDashboardData() {
+  currentLoggedAuthor = getCurrentAuthorSession();
+
+  const authorBar = document.getElementById('creatorAuthorBar');
+  const authorDetails = document.getElementById('creatorAuthorDetails');
+  const guestPrompt = document.getElementById('creatorGuestPrompt');
+  const btnLogout = document.getElementById('btnAuthorLogout');
+  const worksContainer = document.getElementById('creatorWorksContainer');
+  const historyContainer = document.getElementById('creatorSettlementsHistory');
+  const worksCount = document.getElementById('creatorWorksCount');
+
+  // Supabase 클라이언트 초기화
+  if (window.WebNovelsAdmin) {
+    window.WebNovelsAdmin.init();
+  }
+
+  // 1. 비로그인 작가 상태 처리
+  if (!currentLoggedAuthor) {
+    if (guestPrompt) guestPrompt.style.display = 'block';
+    if (authorDetails) authorDetails.style.display = 'none';
+    if (btnLogout) btnLogout.style.display = 'none';
+
+    document.getElementById('creatorAuthorPenName').textContent = 'Creator Studio (작가 전용)';
+    document.getElementById('creatorAuthorBadge').textContent = '비로그인 상태';
+    document.getElementById('creatorAuthorBadge').className = 'badge badge-accent';
+    document.getElementById('creatorAuthorMeta').textContent = '작가 계정으로 로그인하시면 실제 연재 작품과 실시간 투명 정산금을 관리할 수 있습니다.';
+
+    document.getElementById('creatorEstimatedRevenue').textContent = '₩0';
+    document.getElementById('creatorConfirmedRevenue').textContent = '₩0';
+    document.getElementById('creatorPayableRevenue').textContent = '₩0';
+    currentAuthorPayable = 0;
+
+    if (worksContainer) {
+      worksContainer.innerHTML = `
+        <div class="p-6 text-center text-muted">
+          <p class="mb-3">등록된 연재 작품을 보려면 작가 로그인이 필요합니다.</p>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modalAuth')"><i data-lucide="log-in"></i> 작가 로그인 / 가입</button>
+        </div>
+      `;
+      if (window.lucide) window.lucide.createIcons();
+    }
+    return;
+  }
+
+  // 2. 로그인된 작가 상태 UI 갱신
+  if (guestPrompt) guestPrompt.style.display = 'none';
+  if (authorDetails) authorDetails.style.display = 'flex';
+  if (btnLogout) btnLogout.style.display = 'inline-flex';
+
+  document.getElementById('creatorAuthorPenName').textContent = `${currentLoggedAuthor.pen_name} 작가님 스튜디오`;
+  document.getElementById('creatorAuthorBadge').textContent = currentLoggedAuthor.status || '공식 인증 작가';
+  document.getElementById('creatorAuthorBadge').className = 'badge badge-primary';
+  document.getElementById('creatorAuthorMeta').textContent = `계정: ${currentLoggedAuthor.username} (${currentLoggedAuthor.email}) | 공식 승인 작가`;
+  document.getElementById('creatorBankInfo').textContent = currentLoggedAuthor.bank_info || '계좌 미등록';
+
+  // 3. Supabase에서 작가의 실제 작품 & 정산 대시보드 데이터 조회
+  const dashboard = window.WebNovelsAdmin
+    ? await window.WebNovelsAdmin.fetchAuthorDashboard(currentLoggedAuthor.pen_name)
+    : null;
+
+  const fmt = n => '₩' + Number(n || 0).toLocaleString('ko-KR');
+
+  if (!dashboard) {
+    document.getElementById('creatorEstimatedRevenue').textContent = '₩0';
+    document.getElementById('creatorConfirmedRevenue').textContent = '₩0';
+    document.getElementById('creatorPayableRevenue').textContent = '₩0';
+    document.getElementById('creatorTotalViews').textContent = '0회';
+    document.getElementById('creatorTotalEpisodes').textContent = '0화';
+    if (worksContainer) {
+      worksContainer.innerHTML = '<p class="text-muted p-4">연재 작품 데이터를 가져오지 못했습니다.</p>';
+    }
+    return;
+  }
+
+  // 4. 수익 지표 바인딩
+  document.getElementById('creatorEstimatedRevenue').textContent = fmt(dashboard.estimatedRevenue);
+  document.getElementById('creatorConfirmedRevenue').textContent = fmt(dashboard.confirmedRevenue);
+  document.getElementById('creatorPayableRevenue').textContent = fmt(dashboard.payableRevenue);
+  currentAuthorPayable = dashboard.payableRevenue;
+
+  document.getElementById('creatorTotalViews').textContent = Number(dashboard.totalViews || 0).toLocaleString('ko-KR') + '회';
+  document.getElementById('creatorTotalEpisodes').textContent = (dashboard.totalEpisodes || 0) + '화';
+  if (worksCount) worksCount.textContent = `연재 작품: ${dashboard.works.length}개`;
+
+  // 5. 연재 작품 목록 렌더링
+  if (worksContainer) {
+    if (dashboard.works.length === 0) {
+      worksContainer.innerHTML = `
+        <div class="p-6 text-center text-muted">
+          <p class="mb-3">아직 등록된 연재 작품이 없습니다.</p>
+          <button class="btn btn-primary btn-sm" onclick="showToast('새 작품 등록 기능 준비중입니다.')">+ 새 작품 등록하기</button>
+        </div>
+      `;
+    } else {
+      worksContainer.innerHTML = dashboard.works.map(work => {
+        const episodes = work.episodes || [];
+        const nextEpNum = episodes.length + 1;
+        const genres = Array.isArray(work.genre) ? work.genre : [work.genre || '판타지'];
+        const coverImg = work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg';
+
+        return `
+          <div class="card glass-panel p-4 mb-4" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+            <div class="flex-between" style="flex-wrap: wrap; gap: 14px;">
+              <div style="display: flex; gap: 14px; align-items: center;">
+                <img src="${coverImg}" alt="${work.title}" style="width: 60px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <h4 style="margin: 0; font-size: 1.15rem;">${work.title}</h4>
+                    <span class="badge badge-accent">${work.status === 'COMPLETED' ? '완결' : '연재중'}</span>
+                  </div>
+                  <div class="text-muted small mt-1">
+                    장르: ${genres.map(g => `<span class="badge badge-ghost" style="font-size:0.75rem;">${g}</span>`).join(' ')}
+                    | 👁️ 누적 조회수: <strong class="text-indigo">${Number(work.view_count || 0).toLocaleString()}회</strong>
+                    | 📖 총 <strong>${episodes.length}화</strong> 연재중
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn btn-outline btn-sm" onclick="toggleWorkEpisodeList(${work.id})">
+                  <i data-lucide="list"></i> 회차 목록 (${episodes.length})
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openWriteEpisodeModal(${work.id}, '${work.title.replace(/'/g, "\\'")}', ${nextEpNum})">
+                  <i data-lucide="plus-circle"></i> + 새 회차 쓰기
+                </button>
+              </div>
+            </div>
+
+            <!-- Expandable Episode List -->
+            <div id="workEpisodesList-${work.id}" style="display: none; margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1);">
+              <h5 class="mb-3 text-muted" style="font-size: 0.9rem;">연재된 회차 목록:</h5>
+              <div class="episode-list-grid" style="display: flex; flex-direction: column; gap: 8px;">
+                ${episodes.length === 0 ? '<p class="text-muted small">등록된 회차가 없습니다.</p>' : episodes.map(ep => `
+                  <div class="flex-between p-2 glass-panel" style="border-radius: 6px; background: rgba(0,0,0,0.2);">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="badge ${ep.episode_number <= 3 ? 'badge-primary' : 'badge-ghost'}">제${ep.episode_number}화</span>
+                      <strong>${ep.title}</strong>
+                      <span class="text-muted small">${ep.is_free ? '무료' : '광고 무료'}</span>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="openReaderDirect(${work.id}, 'ep-${ep.episode_number}')">
+                      📖 열람하기
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 6. 정산 내역 렌더링
+  if (historyContainer) {
+    if (dashboard.settlements.length === 0) {
+      historyContainer.innerHTML = '<p class="text-muted p-3">최근 정산 신청 내역이 없습니다.</p>';
+    } else {
+      historyContainer.innerHTML = `
+        <div class="table-responsive">
+          <table class="table" style="width: 100%; text-align: left; font-size: 0.9rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+                <th class="p-2">신청 일시</th>
+                <th class="p-2">정산 금액</th>
+                <th class="p-2">입금 계좌</th>
+                <th class="p-2">상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dashboard.settlements.map(s => {
+                let badge = '<span class="badge badge-accent">심사중</span>';
+                if (s.status === 'PAID') badge = '<span class="badge badge-primary">지급 완료</span>';
+                if (s.status === 'REJECTED') badge = '<span class="badge style-danger">반려</span>';
+                return `
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td class="p-2 text-muted">${new Date(s.requested_at).toLocaleDateString('ko-KR')}</td>
+                    <td class="p-2"><strong>${fmt(s.amount)}</strong></td>
+                    <td class="p-2 text-muted">${s.bank_info || '-'}</td>
+                    <td class="p-2">${badge}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
+window.toggleWorkEpisodeList = function(workId) {
+  const el = document.getElementById(`workEpisodesList-${workId}`);
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+};
+
+window.openWriteEpisodeModal = function(workId, workTitle, nextEpNum) {
+  document.getElementById('writeEpisodeWorkId').value = workId;
+  document.getElementById('modalWriteEpisodeWorkTitle').textContent = `[${workTitle}] 새 회차 작성`;
+  document.getElementById('writeEpisodeNumber').value = nextEpNum;
+  document.getElementById('writeEpisodeTitle').value = `제${nextEpNum}화 `;
+  document.getElementById('writeEpisodeContent').value = '';
+  openModal('modalWriteEpisode');
+};
+
+window.handleWriteEpisodeSubmit = async function() {
+  const workId = document.getElementById('writeEpisodeWorkId').value;
+  const epNum = document.getElementById('writeEpisodeNumber').value;
+  const title = document.getElementById('writeEpisodeTitle').value.trim();
+  const content = document.getElementById('writeEpisodeContent').value.trim();
+
+  if (!workId || !epNum || !title || !content) {
+    showToast('회차 번호, 제목, 본문 내용을 모두 입력해 주세요.');
+    return;
+  }
+
+  if (window.WebNovelsAdmin) {
+    const res = await window.WebNovelsAdmin.createEpisode(workId, epNum, title, content);
+    if (res && res.success) {
+      showToast(`🎉 제${epNum}화 [${title}] 회차가 성공적으로 발행되었습니다!`);
+      closeAllModals();
+      fetchCreatorDashboardData();
+    } else {
+      showToast(`❌ 회차 발행 실패: ${res?.error || '오류 발생'}`);
+    }
+  }
+};
+
+window.handleCreatorSettlementReq = async function() {
+  currentLoggedAuthor = getCurrentAuthorSession();
+  if (!currentLoggedAuthor) {
+    showToast('정산 신청을 위해 먼저 작가 계정으로 로그인해 주세요.');
+    openModal('modalAuth');
+    return;
+  }
+
+  if (!currentAuthorPayable || currentAuthorPayable <= 0) {
+    showToast('현재 출금 가능한 정산금이 없습니다.');
+    return;
+  }
+
+  const fmtAmount = '₩' + Number(currentAuthorPayable).toLocaleString('ko-KR');
+  const confirmMsg = `[정산 신청 안내]\n\n작가 필명: ${currentLoggedAuthor.pen_name}\n입금 계좌: ${currentLoggedAuthor.bank_info || '등록 계좌'}\n출금 신청 금액: ${fmtAmount}\n\n정산 신청을 접수하시겠습니까?`;
+
+  if (!confirm(confirmMsg)) return;
+
+  if (window.WebNovelsAdmin) {
+    const res = await window.WebNovelsAdmin.requestSettlement(
+      currentLoggedAuthor.pen_name,
+      currentAuthorPayable,
+      currentLoggedAuthor.bank_info
+    );
+
+    if (res && res.success) {
+      showToast(`📩 ${fmtAmount} 정산 신청이 정상 접수되었습니다! 관리자 승인 후 송금됩니다.`);
+      fetchCreatorDashboardData();
+    } else {
+      showToast(`❌ 정산 신청 실패: ${res?.error || '오류 발생'}`);
+    }
+  }
+};
+
+window.handleAuthorLogoutProcess = function() {
+  localStorage.removeItem('webnovels_author');
+  localStorage.removeItem('webnovels_token');
+  currentLoggedAuthor = null;
+  showToast('작가 계정에서 로그아웃되었습니다.');
   
+  const loginButton = document.getElementById('btnHeaderLogin');
+  if (loginButton) {
+    loginButton.textContent = '로그인';
+    loginButton.classList.remove('btn-outline');
+    loginButton.classList.add('btn-primary');
+    loginButton.onclick = () => openModal('modalAuth');
+  }
+
+  fetchCreatorDashboardData();
+  switchWebNovelsView('view-home');
+};
+
+async function handleMemberLogin() {
+  const loginIdentifier = document.getElementById('loginEmail')?.value.trim();
+  const password = document.getElementById('loginPassword')?.value.trim();
+  
+  if (!loginIdentifier || !password) {
+    showToast('아이디 또는 이메일과 비밀번호를 입력해주세요.');
+    return;
+  }
+
+  // 1. API 로그인 시도
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: loginIdentifier, username: loginIdentifier, password })
     });
-    const data = await res.json();
-    
     if (res.ok) {
+      const data = await res.json();
       localStorage.setItem('webnovels_token', data.token);
+      if (data.user && data.user.role === 'AUTHOR') {
+        localStorage.setItem('webnovels_author', JSON.stringify({
+          username: data.user.username,
+          email: data.user.email,
+          pen_name: data.user.penName || data.user.nickname,
+          bank_info: data.user.bankInfo,
+          status: '공식 인증 작가'
+        }));
+        showToast(`✍️ 작가 로그인 성공! (${data.user.penName || data.user.nickname} 작가님)`);
+        closeAllModals();
+        switchWebNovelsView('view-creator');
+        return;
+      }
       await loadMyProfile();
       closeAllModals();
       showToast('로그인되었습니다. 내 서재에서 이어보기를 확인하세요.');
       switchWebNovelsView('view-mypage');
-    } else {
-      showToast('로그인 실패: ' + data.error);
+      return;
     }
   } catch (err) {
-    showToast('로그인 중 오류가 발생했습니다.');
+    // API 연결 안될 시 Supabase로 진행
   }
+
+  // 2. Supabase 작가 직접 로그인
+  if (window.WebNovelsAdmin) {
+    window.WebNovelsAdmin.init();
+
+    const authorRes = await window.WebNovelsAdmin.authorLogin(loginIdentifier, password);
+    if (authorRes && authorRes.success) {
+      const author = authorRes.author;
+      localStorage.setItem('webnovels_author', JSON.stringify(author));
+      localStorage.setItem('webnovels_token', `author-${author.id}`);
+      
+      const loginButton = document.getElementById('btnHeaderLogin');
+      if (loginButton) {
+        loginButton.textContent = `${author.pen_name} 작가님`;
+        loginButton.classList.remove('btn-primary');
+        loginButton.classList.add('btn-outline');
+        loginButton.onclick = () => switchWebNovelsView('view-creator');
+      }
+
+      closeAllModals();
+      showToast(`✍️ 작가 로그인 성공! (${author.pen_name} 작가님)`);
+      switchWebNovelsView('view-creator');
+      return;
+    }
+  }
+
+  // 3. 일반 독자 계정 폴백
+  if (loginIdentifier.includes('reader') || loginIdentifier.includes('test')) {
+    localStorage.setItem('webnovels_token', 'reader-token-sample');
+    localStorage.removeItem('webnovels_author');
+    closeAllModals();
+    showToast('독자 로그인 완료! 내 서재로 이동합니다.');
+    switchWebNovelsView('view-mypage');
+    return;
+  }
+
+  showToast('❌ 로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.');
 }
 
 async function handleMemberSignup() {
@@ -1186,6 +1512,20 @@ async function handleAuthorSignup() {
 }
 
 async function loadMyProfile() {
+  const authorSession = getCurrentAuthorSession();
+  if (authorSession) {
+    const loginButton = document.getElementById('btnHeaderLogin');
+    if (loginButton) {
+      loginButton.textContent = `${authorSession.pen_name} 작가님`;
+      loginButton.classList.remove('btn-primary');
+      loginButton.classList.add('btn-outline');
+      loginButton.onclick = () => switchWebNovelsView('view-creator');
+    }
+    const crSection = document.getElementById('sectionContinueReading');
+    if (crSection) crSection.style.display = 'none';
+    return;
+  }
+
   const token = localStorage.getItem('webnovels_token');
   if (!token) {
     // Hide continue reading section if not logged in

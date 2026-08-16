@@ -224,32 +224,60 @@
       <!-- View 5: Creator Studio (design.md Section 39~45) -->
       <section id="view-creator" class="main-view">
         <div class="container section-padding">
-          <div class="panel-header">
-            <div>
-              <h2>Creator Studio (작가 전용 스튜디오)</h2>
-              <p class="text-muted">작품 연재 및 독자 반응, 3단계 투명 광고 수익 대시보드와 정산 신청을 관리합니다.</p>
+          <!-- Author Info Bar -->
+          <div class="card glass-panel p-4 mb-6" id="creatorAuthorBar" style="border-left: 4px solid var(--primary-color);">
+            <div class="flex-between" style="flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="avatar" id="creatorAuthorAvatar" style="width: 48px; height: 48px; font-size: 1.3rem; background: linear-gradient(135deg, var(--primary-color), #818cf8); display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-weight: bold;">✍️</div>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <h3 id="creatorAuthorPenName" style="margin: 0;">작가 전용 스튜디오</h3>
+                    <span class="badge badge-primary" id="creatorAuthorBadge">공식 인증 작가</span>
+                  </div>
+                  <div class="text-muted small mt-1" id="creatorAuthorMeta">
+                    작품 연재, 독자 반응, 3단계 투명 광고 수익 정산 대시보드
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="btn btn-outline btn-sm" id="btnAuthorLogout" style="display: none;" onclick="handleAuthorLogoutProcess()">
+                  <i data-lucide="log-out"></i> 작가 로그아웃
+                </button>
+                <button class="btn btn-primary" id="btnOpenCreateWork">
+                  <i data-lucide="plus-circle"></i> 새 작품 등록
+                </button>
+              </div>
             </div>
-            <button class="btn btn-primary" id="btnOpenCreateWork">
-              <i data-lucide="plus-circle"></i> 새 작품 등록
-            </button>
+            <!-- Bank & Stats Quick Bar -->
+            <div id="creatorAuthorDetails" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; gap: 20px; font-size: 0.88rem;">
+              <div>🏦 <span class="text-muted">등록 정산 계좌:</span> <strong id="creatorBankInfo" class="text-white">-</strong></div>
+              <div>📈 <span class="text-muted">내 작품 총 조회수:</span> <strong id="creatorTotalViews" class="text-indigo">0회</strong></div>
+              <div>📖 <span class="text-muted">총 연재 회차수:</span> <strong id="creatorTotalEpisodes" class="text-emerald">0화</strong></div>
+            </div>
+          </div>
+
+          <!-- Non-logged in banner prompt -->
+          <div class="card glass-panel p-4 mb-6 text-center" id="creatorGuestPrompt" style="display: none; background: rgba(99, 102, 241, 0.08); border: 1px dashed var(--primary-color);">
+            <p class="mb-2">⚠️ 현재 작가 계정으로 로그인되어 있지 않습니다. 등록된 작가(예: <code>writer1@webnovels.com</code> / <code>!123456</code>)로 로그인하시면 실제 연재 작품과 실시간 수익을 확인할 수 있습니다.</p>
+            <button class="btn btn-primary btn-sm" onclick="openModal('modalAuth')"><i data-lucide="log-in"></i> 작가 계정으로 로그인</button>
           </div>
 
           <!-- 3-Stage Transparent Revenue Dashboard (design.md Section 40, 42) -->
-          <div class="grid-3-col gap-6 mt-6">
+          <div class="grid-3-col gap-6 mt-4">
             <div class="card glass-panel text-center">
               <small class="text-muted">실시간 예상 수익 (Estimated)</small>
               <h2 class="amount-title text-indigo" id="creatorEstimatedRevenue">₩0</h2>
-              <small class="text-muted">이번 달 실시간 광고 발생 추정치</small>
+              <small class="text-muted">작품 총 조회수 기반 실시간 광고 발생 추정치</small>
             </div>
             <div class="card glass-panel text-center">
               <small class="text-muted">마감 확정 수익 (Confirmed)</small>
               <h2 class="amount-title text-emerald" id="creatorConfirmedRevenue">₩0</h2>
-              <small class="text-muted">월말 마감 승인 완료된 확정 정산금</small>
+              <small class="text-muted">창작자 정산풀(62.5%) 확정 정산금</small>
             </div>
             <div class="card glass-panel text-center">
               <small class="text-muted">출금 가능 정산금 (Payable)</small>
               <h2 class="amount-title text-amber" id="creatorPayableRevenue">₩0</h2>
-              <button class="btn btn-success btn-sm w-full mt-3" id="btnRequestSettlement">
+              <button class="btn btn-success btn-sm w-full mt-3" id="btnRequestSettlement" onclick="handleCreatorSettlementReq()">
                 <i data-lucide="wallet"></i> 정산 신청하기
               </button>
             </div>
@@ -257,12 +285,27 @@
 
           <!-- Creator Works & Episodes Management -->
           <div class="card glass-panel mt-6">
-            <div class="card-header">
-              <h3><i data-lucide="book-open"></i> 내 연재 작품 및 회차 작성</h3>
+            <div class="card-header flex-between" style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;"><i data-lucide="book-open"></i> 내 연재 작품 및 회차 관리</h3>
+              <small class="text-muted" id="creatorWorksCount">연재 작품: 0개</small>
             </div>
             <div class="card-body">
               <div id="creatorWorksContainer">
-                <!-- Creator Works List -->
+                <div class="text-center p-6 text-muted">
+                  <i data-lucide="loader" class="spin"></i> 연재 작품 데이터를 불러오는 중입니다...
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settlement History Table -->
+          <div class="card glass-panel mt-6">
+            <div class="card-header">
+              <h3 style="margin: 0;"><i data-lucide="history"></i> 최근 정산 신청 내역</h3>
+            </div>
+            <div class="card-body">
+              <div id="creatorSettlementsHistory">
+                <p class="text-muted p-3">정산 신청 내역이 없습니다.</p>
               </div>
             </div>
           </div>
@@ -1146,12 +1189,47 @@
       </div>
     </div>
 
+    <!-- Modal: Write New Episode (Creator Studio) -->
+    <div class="modal-backdrop" id="modalWriteEpisode">
+      <div class="modal-dialog glass-panel dialog-lg" style="max-width: 650px;">
+        <div class="modal-header">
+          <h3><i data-lucide="edit-3"></i> <span id="modalWriteEpisodeWorkTitle">새 회차 작성</span></h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <form id="formWriteEpisodeSubmit" onsubmit="event.preventDefault(); handleWriteEpisodeSubmit();">
+            <input type="hidden" id="writeEpisodeWorkId" value="">
+            <div class="grid-2-col gap-4 mb-3">
+              <div class="form-group">
+                <label>회차 번호</label>
+                <input type="number" id="writeEpisodeNumber" class="form-control" placeholder="예: 5" min="1" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              </div>
+              <div class="form-group">
+                <label>회차 제목</label>
+                <input type="text" id="writeEpisodeTitle" class="form-control" placeholder="예: 제5화 결전의 서막" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              </div>
+            </div>
+            <div class="form-group mb-3">
+              <label>회차 본문 내용</label>
+              <textarea id="writeEpisodeContent" class="form-control" rows="10" placeholder="소설 본문 내용을 입력하세요..." required style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color); font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
+            </div>
+            <div class="small text-muted mb-4">
+              💡 1~3화는 독자 유입을 위해 무료로 즉시 공개되며, 4화부터는 광고 보고 연속 무료 열람 모델이 자동 적용됩니다.
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-full">
+              <i data-lucide="upload"></i> 회차 즉시 발행하기
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification Overlay -->
     <div class="toast-container" id="toastContainer"></div>
 
   </div>
 
-  <script src="/supabase-admin.js?v=9"></script>
-  <script src="/app.js?v=9"></script>
+  <script src="/supabase-admin.js?v=10"></script>
+  <script src="/app.js?v=10"></script>
 </body>
 </html>
