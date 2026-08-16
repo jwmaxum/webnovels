@@ -624,14 +624,37 @@ async function loadSystemConfig() {
 // 1. Home & Discover Views
 // ----------------------------------------------------
 async function renderHomeWorks() {
+  let topWorks = [];
+  let popularWorks = [];
+
   try {
     const res = await fetch('/api/works/home');
+    if (!res.ok) throw new Error('API Not Available');
     const data = await res.json();
+    topWorks = data.topWorks || [];
+    popularWorks = data.popularWorks || [];
+  } catch (error) {
+    console.warn('Backend API unavailable (likely static deployment). Falling back to SAMPLE_WORKS.');
     
+    // Fallback logic using SAMPLE_WORKS (which is synced with Supabase on load)
+    topWorks = SAMPLE_WORKS.filter(w => w.isTopRecommended).slice(0, 4);
+    if (topWorks.length < 4) {
+      const fb = SAMPLE_WORKS.filter(w => !w.isTopRecommended);
+      topWorks = [...topWorks, ...fb].slice(0, 4);
+    }
+    
+    popularWorks = SAMPLE_WORKS.filter(w => w.isPopularWork);
+    if (popularWorks.length < 10) {
+      const fb = SAMPLE_WORKS.filter(w => !w.isPopularWork);
+      popularWorks = [...popularWorks, ...fb].slice(0, 10);
+    }
+  }
+
+  try {
     // Top 4 Works
     const topContainer = document.getElementById('topWorksGrid');
-    if (topContainer && data.topWorks) {
-      topContainer.innerHTML = data.topWorks.map(w => {
+    if (topContainer && topWorks) {
+      topContainer.innerHTML = topWorks.map(w => {
         const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
         const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
         const tagText = isAdult ? '19+ 성인' : w.genre;
@@ -650,8 +673,8 @@ async function renderHomeWorks() {
 
     // Now Trending Works (using popularWorks + newWorks mixed or just popularWorks for now)
     const container = document.getElementById('homeWorksGrid');
-    if (container && data.popularWorks) {
-      container.innerHTML = data.popularWorks.map(w => {
+    if (container && popularWorks) {
+      container.innerHTML = popularWorks.map(w => {
         const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
         const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
         const tagText = isAdult ? '19+ 성인' : w.genre;
