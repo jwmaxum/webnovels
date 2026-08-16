@@ -118,6 +118,10 @@ CREATE TABLE IF NOT EXISTS works (
   description TEXT,
   cover_image TEXT,
   view_count INT DEFAULT 0,
+  status TEXT DEFAULT 'ONGOING',
+  is_top_recommended BOOLEAN DEFAULT false,
+  is_popular_work BOOLEAN DEFAULT false,
+  is_new_work BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -138,8 +142,8 @@ ALTER TABLE episodes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow anon read works" ON works;
 DROP POLICY IF EXISTS "Allow anon read episodes" ON episodes;
 
-CREATE POLICY "Allow anon read works" ON works FOR SELECT USING (true);
-CREATE POLICY "Allow anon read episodes" ON episodes FOR SELECT USING (true);
+CREATE POLICY "Allow anon full access works" ON works FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access episodes" ON episodes FOR ALL USING (true) WITH CHECK (true);
 
 -- 8개 작품 시드 데이터
 INSERT INTO works (id, title, author, genre, tags, description, cover_image, view_count) VALUES

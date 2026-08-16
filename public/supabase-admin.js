@@ -390,6 +390,10 @@ async function fetchWorksFromSupabase() {
         coverUrl: w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg',
         description: w.description,
         viewCount: w.view_count || 100000,
+        status: w.status || 'ONGOING',
+        isTopRecommended: !!w.is_top_recommended,
+        isPopularWork: !!w.is_popular_work,
+        isNewWork: !!w.is_new_work,
         episodesCount: workEps.length || 4,
         episodes: workEps.map(e => ({
           episodeNumber: e.episode_number,
@@ -423,7 +427,11 @@ async function seedWorksDatasetToSupabase(sampleWorksData) {
         tags: tagsArr,
         description: w.description,
         cover_image: coverFileName,
-        view_count: w.viewCount
+        view_count: w.viewCount || 0,
+        status: w.status || 'ONGOING',
+        is_top_recommended: !!w.isTopRecommended,
+        is_popular_work: !!w.isPopularWork,
+        is_new_work: !!w.isNewWork
       });
 
       if (w.episodes && w.episodes.length > 0) {
@@ -545,6 +553,7 @@ window.WebNovelsAdmin = {
   updateSystemConfig,
   fetchWorksFromSupabase,
   seedWorksDatasetToSupabase,
+  updateWorkAdminSetting,
   fetchReadersFromSupabase,
   fetchAuthorsFromSupabase,
   seedRealUsersToSupabase

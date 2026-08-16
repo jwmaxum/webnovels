@@ -702,14 +702,22 @@ async function renderAdminWorks() {
   const container = document.getElementById('adminWorksGrid');
   if (!container) return;
 
+  let worksList = [];
   try {
     const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
     const res = await fetch('/api/works', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
+    if (!res.ok) throw new Error('API fetch failed');
     const { works } = await res.json();
+    worksList = works;
+  } catch(error) {
+    console.warn('CMS API unavailable, falling back to SAMPLE_WORKS');
+    worksList = SAMPLE_WORKS;
+  }
 
-    container.innerHTML = works.map(w => {
+  try {
+    container.innerHTML = worksList.map(w => {
       return `
         <div class="flex-between p-3 glass-panel" style="flex-direction: column; align-items: stretch; gap: 10px;">
           <div class="flex-between">
@@ -746,8 +754,9 @@ async function renderAdminWorks() {
 }
 
 async function toggleAdminSetting(workId, field, value) {
-  const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
+  let success = false;
   try {
+    const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
     const res = await fetch(`/api/works/${workId}/admin-settings`, {
       method: 'PATCH',
       headers: { 
@@ -756,14 +765,28 @@ async function toggleAdminSetting(workId, field, value) {
       },
       body: JSON.stringify({ [field]: value })
     });
-    if (res.ok) {
-      showToast('설정이 변경되었습니다.');
-      renderHomeWorks(); // Refresh landing page
-    } else {
-      showToast('설정 변경에 실패했습니다.');
-    }
+    if (!res.ok) throw new Error('API update failed');
+    success = true;
   } catch(e) {
-    showToast('오류가 발생했습니다.');
+    console.warn('API update failed, trying Supabase fallback');
+    if (window.WebNovelsAdmin) {
+      // Handle ID types correctly for Supabase (integer) vs Prisma (UUID)
+      const parsedId = isNaN(parseInt(workId)) ? workId : parseInt(workId);
+      const result = await window.WebNovelsAdmin.updateWorkAdminSetting(parsedId, field, value);
+      if (result && result.success) {
+        success = true;
+        // Update local SAMPLE_WORKS to reflect the change
+        const target = SAMPLE_WORKS.find(w => w.id == workId); // loose equality for string vs int
+        if (target) target[field] = value;
+      }
+    }
+  }
+
+  if (success) {
+    showToast('설정이 변경되었습니다.');
+    renderHomeWorks(); // Refresh landing page
+  } else {
+    showToast('설정 변경에 실패했습니다.');
   }
 }
 
