@@ -18,8 +18,8 @@ workRouter.get('/home', optionalAuthenticateToken, async (req: AuthRequest, res:
     });
 
     const popularWorks = await db.work.findMany({
-      take: 6,
-      orderBy: { viewCount: 'desc' },
+      take: 10,
+      orderBy: { updatedAt: 'desc' },
       include: { author: { select: { penName: true } } }
     });
 
