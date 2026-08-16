@@ -294,6 +294,11 @@ function bindWebNovelsEvents() {
     handleMemberSignup();
   });
 
+  document.getElementById('authForm-signup-author')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    handleAuthorSignup();
+  });
+
   document.getElementById('btnAuthCreator')?.addEventListener('click', () => {
     closeAllModals();
     switchWebNovelsView('view-creator');
@@ -942,37 +947,151 @@ function handleCreatorSettlementReq() {
   }
 }
 
-function handleMemberLogin() {
-  const email = document.getElementById('loginEmail')?.value || 'reader@webnovels.com';
-  const nickname = email.split('@')[0] || '열혈독자';
-  updateMemberHeader(nickname, email);
-  closeAllModals();
-  showToast('로그인되었습니다. 내 서재에서 이어보기를 확인하세요.');
-  switchWebNovelsView('view-mypage');
+async function handleMemberLogin() {
+  const loginIdentifier = document.getElementById('loginEmail')?.value;
+  const password = document.getElementById('loginPassword')?.value;
+  
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: loginIdentifier, username: loginIdentifier, password })
+    });
+    const data = await res.json();
+    
+    if (res.ok) {
+      localStorage.setItem('webnovels_token', data.token);
+      await loadMyProfile();
+      closeAllModals();
+      showToast('로그인되었습니다. 내 서재에서 이어보기를 확인하세요.');
+      switchWebNovelsView('view-mypage');
+    } else {
+      showToast('로그인 실패: ' + data.error);
+    }
+  } catch (err) {
+    showToast('로그인 중 오류가 발생했습니다.');
+  }
 }
 
-function handleMemberSignup() {
-  const nickname = document.getElementById('signupNickname')?.value || '새 독자';
-  const email = document.getElementById('signupEmail')?.value || 'reader@example.com';
-  updateMemberHeader(nickname, email);
-  closeAllModals();
-  showToast('회원가입이 완료되었습니다. 무료 작품을 바로 읽을 수 있습니다.');
-  switchWebNovelsView('view-mypage');
+async function handleMemberSignup() {
+  const nickname = document.getElementById('signupNickname')?.value;
+  const username = document.getElementById('signupUsername')?.value;
+  const email = document.getElementById('signupEmail')?.value;
+  const password = document.getElementById('signupPassword')?.value;
+  const phone = document.getElementById('signupPhone')?.value;
+
+  try {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname, username, email, password, phone, role: 'READER' })
+    });
+    const data = await res.json();
+    
+    if (res.ok) {
+      localStorage.setItem('webnovels_token', data.token);
+      await loadMyProfile();
+      closeAllModals();
+      showToast('회원가입이 완료되었습니다. 무료 작품을 바로 읽을 수 있습니다.');
+      switchWebNovelsView('view-mypage');
+    } else {
+      showToast('회원가입 실패: ' + data.error);
+    }
+  } catch (err) {
+    showToast('회원가입 중 오류가 발생했습니다.');
+  }
 }
 
-function updateMemberHeader(nickname, email) {
+async function handleAuthorSignup() {
+  const penName = document.getElementById('authorPenName')?.value;
+  const username = document.getElementById('authorUsername')?.value;
+  const email = document.getElementById('authorEmail')?.value;
+  const password = document.getElementById('authorPassword')?.value;
+  const workTitle = document.getElementById('authorWorkTitle')?.value;
+  const birthDate = document.getElementById('authorBirthDate')?.value;
+  const address = document.getElementById('authorAddress')?.value;
+  const bankInfo = document.getElementById('authorBankInfo')?.value;
+
+  try {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname: penName, username, email, password, penName, workTitle, birthDate, address, bankInfo, role: 'AUTHOR' })
+    });
+    const data = await res.json();
+    
+    if (res.ok) {
+      localStorage.setItem('webnovels_token', data.token);
+      await loadMyProfile();
+      closeAllModals();
+      showToast('작가 회원가입이 완료되었습니다. 내 연재 작품 관리를 시작하세요.');
+      switchWebNovelsView('view-creator');
+    } else {
+      showToast('회원가입 실패: ' + data.error);
+    }
+  } catch (err) {
+    showToast('회원가입 중 오류가 발생했습니다.');
+  }
+}
+
+async function loadMyProfile() {
+  const token = localStorage.getItem('webnovels_token');
+  if (!token) return;
+
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const { user } = await res.json();
+      updateMemberHeader(user);
+    }
+  } catch(err) {
+    console.error('프로필 로드 실패', err);
+  }
+}
+
+function updateMemberHeader(user) {
   const loginButton = document.getElementById('btnHeaderLogin');
   if (loginButton) {
-    loginButton.textContent = nickname;
+    loginButton.textContent = user.nickname || user.username;
     loginButton.classList.remove('btn-primary');
     loginButton.classList.add('btn-outline');
+    // onclick behavior is still modalAuth, we could change it to view-mypage or logout
+    loginButton.onclick = () => switchWebNovelsView('view-mypage');
   }
+  
   const myNickname = document.getElementById('myNickname');
   const myEmail = document.getElementById('myEmail');
   const myAvatar = document.getElementById('myAvatar');
-  if (myNickname) myNickname.textContent = nickname;
-  if (myEmail) myEmail.textContent = email;
-  if (myAvatar) myAvatar.textContent = nickname.slice(0, 1).toUpperCase();
+  const myAdultBadge = document.getElementById('myAdultBadge');
+
+  if (myNickname) myNickname.textContent = user.nickname || user.username;
+  if (myEmail) myEmail.textContent = user.email;
+  if (myAvatar) myAvatar.textContent = (user.nickname || user.username).slice(0, 1).toUpperCase();
+  
+  if (myAdultBadge) {
+    if (user.isAdultVerified) {
+      myAdultBadge.textContent = '🔞 인증완료';
+      myAdultBadge.className = 'badge badge-primary mt-2';
+    } else {
+      myAdultBadge.textContent = '성인 인증 미완료';
+      myAdultBadge.className = 'badge badge-accent mt-2';
+    }
+  }
+
+  // Update library stats
+  const libraryStats = document.querySelector('.library-stats');
+  if (libraryStats) {
+    const readingCount = user.readingHistories?.length || 0;
+    const favoriteCount = user.workFavorites?.length || 0;
+    const subCount = user.subscriptions?.length || 0;
+    libraryStats.innerHTML = `
+      <div><strong>${readingCount}</strong><span>읽는 중</span></div>
+      <div><strong>${favoriteCount}</strong><span>관심작</span></div>
+      <div><strong>${subCount}</strong><span>구독 작가</span></div>
+    `;
+  }
 }
 
 // ----------------------------------------------------

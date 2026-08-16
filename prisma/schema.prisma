@@ -13,6 +13,7 @@ model User {
   username        String               @unique
   passwordHash    String
   nickname        String
+  phone           String?
   role            String               @default("READER") // READER, AUTHOR, SUB_ADMIN, SUPER_ADMIN, ADMIN
   permissions     String?              // JSON array string of allowed menu keys for SUB_ADMIN
   isAdultVerified Boolean              @default(false)
@@ -38,6 +39,9 @@ model UserProfile {
   profileImageUrl String?
   favoriteGenre  String?
   notificationOn Boolean  @default(true)
+  subscriptionStatus String @default("일반 회원")
+  birthDate      String?
+  address        String?
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

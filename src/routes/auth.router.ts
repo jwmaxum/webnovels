@@ -14,7 +14,7 @@ export const authRouter = Router();
  */
 authRouter.post('/signup', async (req: Request, res: Response) => {
   try {
-    const { email, username, password, nickname } = req.body;
+    const { email, username, password, nickname, role, phone, birthDate, address, penName, workTitle, bankInfo } = req.body;
 
     if (!email || !password || !nickname) {
       return res.status(400).json({ error: '필수 입력 항목이 누락되었습니다 (email, password, nickname).' });
@@ -31,6 +31,15 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const userRole = role === 'AUTHOR' ? 'AUTHOR' : 'READER';
+    
+    // 프로필 데이터 준비
+    const profileData: any = {
+      notificationOn: true,
+      subscriptionStatus: '일반 회원',
+    };
+    if (birthDate) profileData.birthDate = birthDate;
+    if (address) profileData.address = address;
 
     const user = await db.user.create({
       data: {
@@ -38,16 +47,47 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
         username: effectiveUsername,
         passwordHash,
         nickname,
-        role: 'READER',
-        isAdultVerified: false,
+        phone: phone || null,
+        role: userRole,
+        isAdultVerified: userRole === 'AUTHOR', // 작가는 기본 성인인증 간주 (예시)
         profile: {
-          create: {
-            notificationOn: true
-          }
+          create: profileData
         }
       },
       select: { id: true, email: true, username: true, nickname: true, role: true, isAdultVerified: true }
     });
+
+    if (userRole === 'AUTHOR' && penName) {
+      const bankName = bankInfo ? bankInfo.split(' ')[0] : '미등록은행';
+      const accountNumber = bankInfo ? bankInfo.split(' ').slice(1).join(' ') : '미등록계좌';
+      
+      const author = await db.author.create({
+        data: {
+          userId: user.id,
+          penName: penName,
+          account: {
+            create: {
+              bankName: bankName,
+              accountNumber: accountNumber,
+              accountHolder: penName
+            }
+          }
+        }
+      });
+      
+      if (workTitle) {
+        await db.work.create({
+          data: {
+            authorId: author.id,
+            title: workTitle,
+            description: `${workTitle} 소개글입니다.`,
+            genre: '판타지',
+            tags: '신작',
+            rating: 'ALL'
+          }
+        });
+      }
+    }
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role, isAdultVerified: user.isAdultVerified },
@@ -238,9 +278,13 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
         username: true,
         nickname: true,
         role: true,
+        phone: true,
         isAdultVerified: true,
         profile: true,
-        author: { select: { id: true, penName: true } }
+        author: { select: { id: true, penName: true } },
+        subscriptions: { select: { authorId: true } },
+        workFavorites: { select: { workId: true } },
+        readingHistories: { select: { workId: true } }
       }
     });
 
