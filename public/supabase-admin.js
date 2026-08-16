@@ -50,9 +50,22 @@ async function adminLogin(email, password) {
       return { success: true, admin: adminUser };
     }
 
-    if (data && data.length > 0) {
-      currentAdmin = data[0];
-      return { success: true, admin: data[0] };
+    if (data) {
+      if (data.success && data.admin) {
+        currentAdmin = data.admin;
+        return { success: true, admin: data.admin };
+      }
+      if (Array.isArray(data) && data.length > 0) {
+        currentAdmin = data[0];
+        return { success: true, admin: data[0] };
+      }
+      if (data.id && data.email) {
+        currentAdmin = data;
+        return { success: true, admin: data };
+      }
+      if (data.success === false) {
+        return { success: false, error: data.error || '이메일 또는 비밀번호가 일치하지 않습니다.' };
+      }
     }
 
     return { success: false, error: '이메일 또는 비밀번호가 일치하지 않습니다.' };
