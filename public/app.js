@@ -366,6 +366,15 @@ function switchWebNovelsView(viewId, activeLink) {
     return;
   }
 
+  if (viewId === 'view-mypage') {
+    const token = localStorage.getItem('webnovels_token');
+    if (!token) {
+      showToast('로그인이 필요한 서비스입니다.');
+      openModal('modalAuth');
+      return;
+    }
+  }
+
   document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(l => l.classList.remove('active'));
 
