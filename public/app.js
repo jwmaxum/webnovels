@@ -214,6 +214,8 @@ async function initWebNovelsApp() {
 
   renderHomeWorks();
   renderDiscoverWorks();
+  renderLibraryContent();
+  renderSearchResults();
 }
 
 
@@ -232,8 +234,69 @@ function bindWebNovelsEvents() {
 
   // Header login button
   document.getElementById('btnHeaderLogin')?.addEventListener('click', () => {
-    window.location.hash = '#admin';
-    switchWebNovelsView('view-admin-cms');
+    openModal('modalAuth');
+  });
+
+  document.getElementById('btnSearchOpen')?.addEventListener('click', () => {
+    openModal('modalSearch');
+    renderSearchResults();
+    setTimeout(() => document.getElementById('globalSearchInput')?.focus(), 50);
+  });
+
+  document.getElementById('btnDiscoverSearch')?.addEventListener('click', () => {
+    document.getElementById('btnSearchOpen')?.click();
+  });
+
+  document.getElementById('globalSearchInput')?.addEventListener('input', (event) => {
+    renderSearchResults(event.target.value);
+  });
+
+  document.getElementById('searchSortSelect')?.addEventListener('change', () => {
+    renderSearchResults(document.getElementById('globalSearchInput')?.value || '');
+  });
+
+  document.querySelectorAll('[data-search-term]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById('globalSearchInput');
+      input.value = btn.dataset.searchTerm;
+      renderSearchResults(input.value);
+      input.focus();
+    });
+  });
+
+  document.querySelectorAll('[data-library-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.libraryTab;
+      document.querySelectorAll('[data-library-tab]').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.library-tab-panel').forEach(panel => panel.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`libraryTab-${tabName}`)?.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('[data-auth-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.authTab;
+      document.querySelectorAll('[data-auth-tab]').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`authForm-${tabName}`)?.classList.add('active');
+    });
+  });
+
+  document.getElementById('authForm-login')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    handleMemberLogin();
+  });
+
+  document.getElementById('authForm-signup')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    handleMemberSignup();
+  });
+
+  document.getElementById('btnAuthCreator')?.addEventListener('click', () => {
+    closeAllModals();
+    switchWebNovelsView('view-creator');
   });
 
   // Genre Filter Pills Event
@@ -310,6 +373,10 @@ function switchWebNovelsView(viewId, activeLink) {
   // Load Creator Studio data if opening creator
   if (viewId === 'view-creator') {
     fetchCreatorDashboardData();
+  }
+
+  if (viewId === 'view-mypage') {
+    renderLibraryContent();
   }
 
   // 관리자 CMS 진입 시 대시보드 KPI 로드
@@ -599,6 +666,110 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
   }).join('');
 }
 
+function renderSearchResults(query = '') {
+  const container = document.getElementById('searchResults');
+  if (!container) return;
+
+  const normalized = normalizeSearchText(query);
+  let results = SAMPLE_WORKS.filter(work => {
+    if (!normalized) return true;
+    const haystack = normalizeSearchText(`${work.title} ${work.author} ${work.genre} ${work.description}`);
+    return haystack.includes(normalized) || hasLooseMatch(haystack, normalized);
+  });
+
+  const sort = document.getElementById('searchSortSelect')?.value || 'popular';
+  if (sort === 'popular') {
+    results = results.sort((a, b) => b.viewCount - a.viewCount);
+  } else if (sort === 'title') {
+    results = results.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+  } else {
+    results = results.sort((a, b) => Number(b.id) - Number(a.id));
+  }
+
+  if (results.length === 0) {
+    const fallback = SAMPLE_WORKS.slice().sort((a, b) => b.viewCount - a.viewCount).slice(0, 3);
+    container.innerHTML = `
+      <div class="empty-search">
+        <h4>검색 결과가 없습니다</h4>
+        <p class="text-muted">띄어쓰기를 줄이거나 장르명으로 다시 검색해 보세요. 지금 많이 읽는 작품도 추천드립니다.</p>
+      </div>
+      ${fallback.map(renderSearchResultItem).join('')}
+    `;
+    if (window.lucide) window.lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = results.slice(0, 6).map(renderSearchResultItem).join('');
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function renderSearchResultItem(work) {
+  const isAdult = work.rating === 'AGE_19' || work.genre === '성인';
+  return `
+    <button class="search-result-item" onclick="closeAllModals(); openWorkDetailDirect(${work.id});">
+      <img src="${work.coverUrl}" alt="${work.title} 표지">
+      <span>
+        <strong>${work.title}</strong>
+        <small>${work.author} · ${isAdult ? '19+ 성인' : work.genre} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</small>
+      </span>
+      <i data-lucide="chevron-right"></i>
+    </button>
+  `;
+}
+
+function normalizeSearchText(text) {
+  return String(text || '').toLowerCase().replace(/\s+/g, '');
+}
+
+function hasLooseMatch(haystack, query) {
+  if (query.length < 2) return false;
+  return query.split('').every(char => haystack.includes(char));
+}
+
+function renderLibraryContent() {
+  const continueContainer = document.getElementById('libraryContinueList');
+  const favoriteContainer = document.getElementById('libraryFavoritesList');
+  const authorContainer = document.getElementById('libraryAuthorsList');
+
+  if (continueContainer) {
+    continueContainer.innerHTML = SAMPLE_WORKS.slice(1, 4).map((work, index) => `
+      <button class="library-row" onclick="openReaderDirect(${work.id}, 1)">
+        <img src="${work.coverUrl}" alt="${work.title} 표지">
+        <span>
+          <strong>${work.title}</strong>
+          <small>${index + 1}화 읽는 중 · ${work.genre} · ${(work.viewCount / 1000).toFixed(1)}K</small>
+        </span>
+        <i data-lucide="play-circle"></i>
+      </button>
+    `).join('');
+  }
+
+  if (favoriteContainer) {
+    favoriteContainer.innerHTML = SAMPLE_WORKS.slice(0, 5).map(work => `
+      <button class="library-row" onclick="openWorkDetailDirect(${work.id})">
+        <img src="${work.coverUrl}" alt="${work.title} 표지">
+        <span>
+          <strong>${work.title}</strong>
+          <small>${work.author} · 새 회차 확인하기</small>
+        </span>
+        <i data-lucide="chevron-right"></i>
+      </button>
+    `).join('');
+  }
+
+  if (authorContainer) {
+    authorContainer.innerHTML = SAMPLE_AUTHORS.slice(0, 4).map(author => `
+      <button class="library-author-card" onclick="showToast('${author.pen_name} 작가의 작품 목록으로 이동합니다.')">
+        <span>${author.pen_name.slice(0, 1)}</span>
+        <strong>${author.pen_name}</strong>
+        <small>${author.work_title}</small>
+      </button>
+    `).join('');
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
 // ----------------------------------------------------
 // 2. Work Detail & Episode List
 // ----------------------------------------------------
@@ -771,6 +942,39 @@ function handleCreatorSettlementReq() {
   }
 }
 
+function handleMemberLogin() {
+  const email = document.getElementById('loginEmail')?.value || 'reader@webnovels.com';
+  const nickname = email.split('@')[0] || '열혈독자';
+  updateMemberHeader(nickname, email);
+  closeAllModals();
+  showToast('로그인되었습니다. 내 서재에서 이어보기를 확인하세요.');
+  switchWebNovelsView('view-mypage');
+}
+
+function handleMemberSignup() {
+  const nickname = document.getElementById('signupNickname')?.value || '새 독자';
+  const email = document.getElementById('signupEmail')?.value || 'reader@example.com';
+  updateMemberHeader(nickname, email);
+  closeAllModals();
+  showToast('회원가입이 완료되었습니다. 무료 작품을 바로 읽을 수 있습니다.');
+  switchWebNovelsView('view-mypage');
+}
+
+function updateMemberHeader(nickname, email) {
+  const loginButton = document.getElementById('btnHeaderLogin');
+  if (loginButton) {
+    loginButton.textContent = nickname;
+    loginButton.classList.remove('btn-primary');
+    loginButton.classList.add('btn-outline');
+  }
+  const myNickname = document.getElementById('myNickname');
+  const myEmail = document.getElementById('myEmail');
+  const myAvatar = document.getElementById('myAvatar');
+  if (myNickname) myNickname.textContent = nickname;
+  if (myEmail) myEmail.textContent = email;
+  if (myAvatar) myAvatar.textContent = nickname.slice(0, 1).toUpperCase();
+}
+
 // ----------------------------------------------------
 // 5. PASS Adult Verification
 // ----------------------------------------------------
@@ -778,6 +982,7 @@ async function handlePassAdultVerify() {
   if (confirm('PASS / KCP 본인인증 팝업을 실행하시겠습니까? (성인 19세 이상 확인)')) {
     showToast('📲 PASS 인증 검증 중...');
     setTimeout(() => {
+      window._isAdultVerified = true;
       document.getElementById('myAdultBadge').textContent = '🔞 19+ 성인 인증 완료';
       document.getElementById('myAdultBadge').className = 'badge badge-primary';
       showToast('🎉 PASS 성인 본인인증이 완료되었습니다!');
@@ -944,4 +1149,3 @@ window.handleSaveSystemConfig = async function() {
 window.handlePgPingTest = function() {
   showToast('🔌 토스페이먼츠 및 KCP PASS API 연동 핑 테스트 성공!');
 };
-

@@ -7,6 +7,7 @@
   <!-- SEO Meta Tags -->
   <meta name="description" content="WebNovels - 돈을 내지 않아도 광고를 시청하면 다음 회차를 무료로 즐길 수 있는 작가 상생 웹소설 플랫폼">
   <meta name="theme-color" content="#6D5EF5">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='3' y1='3' x2='25' y2='25'%3E%3Cstop stop-color='%2325D1FF'/%3E%3Cstop offset='.6' stop-color='%239C65FF'/%3E%3Cstop offset='1' stop-color='%23FF4F9A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M5.8 4.1c0-1.2 1.4-1.9 2.4-1.3l14 9c1 .6 1 2.1 0 2.7l-14 9c-1 .7-2.4-.1-2.4-1.3V4.1Z' fill='url(%23g)'/%3E%3Cpath d='M9.3 8.2v11.6l8.9-5.8-8.9-5.8Z' fill='%23fff'/%3E%3C/svg%3E">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,15 +32,12 @@
         <!-- Desktop Navigation Menu -->
         <nav class="desktop-nav">
           <a href="#home" class="nav-link cp-nav-link active" data-target="view-home">홈</a>
-          <a href="#discover" class="nav-link cp-nav-link" data-target="view-discover">탐색</a>
-          <a href="#ranking" class="nav-link cp-nav-link" data-target="view-discover">랭킹</a>
-          <a href="#library" class="nav-link cp-nav-link" data-target="view-mypage">보관함</a>
-          <a href="#creator" class="nav-link cp-nav-link nav-highlight" data-target="view-creator">
-            Creator Studio
-          </a>
-          <a href="#admin" class="nav-link cp-nav-link nav-admin" data-target="view-admin-cms">
-            Admin CMS
-          </a>
+          <a href="#discover" class="nav-link cp-nav-link" data-target="view-discover">웹소설</a>
+          <a href="#ranking" class="nav-link cp-nav-link" data-target="view-discover">인기작</a>
+          <a href="#new" class="nav-link cp-nav-link" data-target="view-discover">신작</a>
+          <a href="#library" class="nav-link cp-nav-link" data-target="view-mypage">내 서재</a>
+          <a href="#creator" class="nav-link cp-nav-link nav-highlight" data-target="view-creator">작품 등록</a>
+          <a href="#admin" class="nav-link cp-nav-link nav-admin" data-target="view-admin-cms">관리자</a>
         </nav>
 
         <span class="cp-nav-spacer"></span>
@@ -64,12 +62,18 @@
         <!-- Hero Section (Coupang Play Style) -->
         <div class="cp-hero">
           <div class="cp-copy">
-            <div class="cp-kicker"><span class="cp-live-dot"></span> WEBNOVELS EXCLUSIVE · HOT</div>
-            <h1>대적자:<br/><em>신을 삼킨 기사</em></h1>
-            <p>신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!</p>
+            <div class="cp-kicker"><span class="cp-live-dot"></span> 광고 보고 무료로 읽는 웹소설 플랫폼</div>
+            <h1>무료로 읽고,<br/><em>작가를 응원하세요</em></h1>
+            <p>1~3화는 바로 읽고, 다음 회차는 광고 시청으로 무료 해금됩니다. 좋아하는 작품은 내 서재에서 이어보고 작가는 등록 즉시 연재를 시작할 수 있습니다.</p>
             <div class="cp-actions">
-              <button class="btn btn-primary" onclick="openWorkDetailDirect('w-fantasy')">▶ 첫 화 읽기 (무료)</button>
-              <button class="btn btn-secondary" onclick="openWorkDetailDirect('w-fantasy')">＋ 작품 정보</button>
+              <button class="btn btn-primary" onclick="openReaderDirect(1, 1)"><i data-lucide="play-circle"></i> 무료로 읽기</button>
+              <button class="btn btn-outline" onclick="document.getElementById('btnSearchOpen').click()"><i data-lucide="search"></i> 작품 찾기</button>
+              <button class="btn btn-secondary" onclick="document.querySelector('[data-target=\'view-creator\']').click()"><i data-lucide="feather"></i> 작품 등록하기</button>
+            </div>
+            <div class="hero-service-strip" aria-label="핵심 서비스">
+              <button onclick="openReaderDirect(1, 1)"><strong>무료 열람</strong><span>광고 보고 다음 화 해금</span></button>
+              <button onclick="document.getElementById('btnSearchOpen').click()"><strong>작품 탐색</strong><span>장르, 인기작, 작가 검색</span></button>
+              <button onclick="document.querySelector('[data-target=\'view-creator\']').click()"><strong>작가 연재</strong><span>작품 등록과 정산 관리</span></button>
             </div>
           </div>
           <div class="cp-stage" aria-hidden="true">
@@ -100,8 +104,8 @@
           <div class="section-header">
             <h3><i data-lucide="history" class="icon-indigo"></i> 최근 읽던 작품 (이어보기)</h3>
           </div>
-          <div class="continue-reading-card glass-panel" onclick="openReaderDirect('w-fantasy', 'ep-1')">
-            <img src="/images/cover_fantasy.png" alt="대적자" class="continue-thumb">
+          <div class="continue-reading-card glass-panel" onclick="openReaderDirect(1, 1)">
+            <img src="/images/stormqueen_oath.jpg" alt="대적자" class="continue-thumb">
             <div class="continue-info">
               <h4>대적자: 신을 삼킨 기사</h4>
               <div class="progress-bar-bg">
@@ -138,8 +142,12 @@
       <!-- View 2: Discover View (design.md Section 20) -->
       <section id="view-discover" class="main-view">
         <div class="container section-padding">
-          <div class="section-header">
-            <h2>작품 탐색 & 랭킹</h2>
+          <div class="section-header discover-header">
+            <div>
+              <h2>작품 탐색</h2>
+              <p class="text-muted">검색, 장르 필터, 정렬로 다음에 읽을 작품을 빠르게 찾으세요.</p>
+            </div>
+            <button class="btn btn-outline" id="btnDiscoverSearch"><i data-lucide="search"></i> 작품/작가 검색</button>
           </div>
 
           <!-- Genre Filter Pills -->
@@ -291,33 +299,60 @@
       <!-- View 6: My Page (design.md Section 47) -->
       <section id="view-mypage" class="main-view">
         <div class="container section-padding">
-          <div class="panel-header">
+          <div class="panel-header library-panel-header">
             <div>
-              <h2>My Page (마이페이지)</h2>
-              <p class="text-muted">독서 이력, 관심 작품, 구독 작가 및 PASS 성인 본인인증 상태 관리</p>
+              <h2>내 서재</h2>
+              <p class="text-muted">읽던 작품, 관심 작품, 구독 작가와 성인 인증 상태를 한 화면에서 관리합니다.</p>
             </div>
+            <button class="btn btn-outline" onclick="document.getElementById('btnSearchOpen').click()"><i data-lucide="search"></i> 새 작품 찾기</button>
           </div>
 
-          <div class="card glass-panel mt-6">
-            <div class="card-body">
+          <div class="library-layout mt-6">
+            <aside class="library-profile glass-panel">
               <div class="user-profile-summary">
-                <div class="profile-avatar-lg" id="myAvatar">M</div>
+                <div class="profile-avatar-lg" id="myAvatar">R</div>
                 <div>
                   <h3 id="myNickname">열혈독자</h3>
-                  <p id="myEmail" class="text-muted">reader@webnovel.com</p>
-                  <div class="mt-2">
-                    <span class="badge badge-accent" id="myAdultBadge">성인 인증 미완료</span>
-                  </div>
+                  <p id="myEmail" class="text-muted">reader@webnovels.com</p>
+                  <span class="badge badge-accent mt-2" id="myAdultBadge">성인 인증 미완료</span>
                 </div>
               </div>
-
-              <hr class="divider">
-
-              <h4><i data-lucide="shield-check"></i> PASS 성인 본인인증 (KCP 연동)</h4>
-              <p class="text-muted small">18+ 성인 콘텐츠를 열람하기 위해서는 만 19세 이상 본인확인이 필요합니다.</p>
-              <button class="btn btn-primary mt-3" id="btnStartPassVerify">
-                <i data-lucide="smartphone"></i> PASS / KCP 성인 인증 시작
+              <div class="library-stats">
+                <div><strong>3</strong><span>읽는 중</span></div>
+                <div><strong>5</strong><span>관심작</span></div>
+                <div><strong>2</strong><span>구독 작가</span></div>
+              </div>
+              <button class="btn btn-primary w-full" id="btnStartPassVerify">
+                <i data-lucide="smartphone"></i> PASS 성인 인증
               </button>
+              <p class="text-muted small">19+ 작품은 인증 완료 후 열람할 수 있습니다.</p>
+            </aside>
+
+            <div class="library-main">
+              <div class="library-tabs" role="tablist" aria-label="내 서재 탭">
+                <button class="active" data-library-tab="continue">이어보기</button>
+                <button data-library-tab="favorites">관심 작품</button>
+                <button data-library-tab="authors">구독 작가</button>
+              </div>
+              <div class="library-tab-panel active" id="libraryTab-continue">
+                <div class="library-reading-card glass-panel">
+                  <img src="/images/stormqueen_oath.jpg" alt="대적자 표지">
+                  <div>
+                    <span class="badge badge-accent">75% 읽음</span>
+                    <h3>대적자: 신을 삼킨 기사</h3>
+                    <p class="text-muted">1화 읽는 중 · 다음 행동: 이어서 읽거나 회차 목록 보기</p>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:75%"></div></div>
+                  </div>
+                  <button class="btn btn-primary" onclick="openReaderDirect(1, 1)">계속 읽기</button>
+                </div>
+                <div class="library-list" id="libraryContinueList"></div>
+              </div>
+              <div class="library-tab-panel" id="libraryTab-favorites">
+                <div class="library-list" id="libraryFavoritesList"></div>
+              </div>
+              <div class="library-tab-panel" id="libraryTab-authors">
+                <div class="library-author-grid" id="libraryAuthorsList"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -910,6 +945,87 @@
       </div>
     </div>
 
+    <!-- Modal: Search -->
+    <div class="modal-backdrop" id="modalSearch">
+      <div class="modal-dialog glass-panel dialog-search">
+        <div class="modal-header">
+          <h3><i data-lucide="search"></i> 작품/작가 검색</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="search-control">
+            <i data-lucide="search"></i>
+            <input type="search" id="globalSearchInput" placeholder="제목, 작가, 장르를 입력하세요" autocomplete="off">
+          </div>
+          <div class="search-suggest-row" id="searchQuickTags">
+            <button data-search-term="판타지">판타지</button>
+            <button data-search-term="무협">무협</button>
+            <button data-search-term="로맨스">로맨스</button>
+            <button data-search-term="천마">천마</button>
+          </div>
+          <div class="search-meta-row">
+            <span>인기 검색어: 대적자, 서울 마왕, 황제</span>
+            <select id="searchSortSelect" aria-label="검색 결과 정렬">
+              <option value="popular">인기순</option>
+              <option value="title">제목순</option>
+              <option value="new">신작순</option>
+            </select>
+          </div>
+          <div class="search-results" id="searchResults"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Member Login / Signup -->
+    <div class="modal-backdrop" id="modalAuth">
+      <div class="modal-dialog glass-panel">
+        <div class="modal-header">
+          <h3><i data-lucide="user-circle"></i> 로그인 / 회원가입</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="auth-tabs" role="tablist" aria-label="인증 탭">
+            <button class="active" data-auth-tab="login">로그인</button>
+            <button data-auth-tab="signup">회원가입</button>
+          </div>
+          <form class="auth-form active" id="authForm-login">
+            <label>이메일</label>
+            <input type="email" id="loginEmail" class="form-control" value="reader@webnovels.com" autocomplete="email" required>
+            <label>비밀번호</label>
+            <input type="password" id="loginPassword" class="form-control" value="demo1234" autocomplete="current-password" required>
+            <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="log-in"></i> 로그인하고 내 서재로</button>
+          </form>
+          <form class="auth-form" id="authForm-signup">
+            <label>닉네임</label>
+            <input type="text" id="signupNickname" class="form-control" placeholder="예: 새벽독자" autocomplete="nickname" required>
+            <label>이메일</label>
+            <input type="email" id="signupEmail" class="form-control" placeholder="reader@example.com" autocomplete="email" required>
+            <label>비밀번호</label>
+            <input type="password" id="signupPassword" class="form-control" placeholder="8자 이상" autocomplete="new-password" required>
+            <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="user-plus"></i> 무료 회원가입</button>
+          </form>
+          <button class="btn btn-ghost w-full mt-3" id="btnAuthCreator">작가로 작품 등록하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Adult Verification Gate -->
+    <div class="modal-backdrop" id="modalPassAdultVerify">
+      <div class="modal-dialog glass-panel">
+        <div class="modal-header">
+          <h3><i data-lucide="shield-check"></i> 성인 본인인증 필요</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-4">19+ 작품을 읽으려면 PASS/KCP 본인인증을 먼저 완료해야 합니다.</p>
+          <button class="btn btn-primary btn-lg w-full" onclick="closeAllModals(); handlePassAdultVerify();">
+            <i data-lucide="smartphone"></i> PASS 인증 시작
+          </button>
+          <button class="btn btn-ghost w-full mt-3" onclick="closeAllModals(); switchWebNovelsView('view-mypage');">내 서재에서 인증 관리</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal: Super Admin Login Modal -->
     <div class="modal-backdrop" id="modalAdminLogin">
       <div class="modal-dialog glass-panel">
@@ -922,11 +1038,11 @@
           <form id="formAdminLoginSubmit" onsubmit="event.preventDefault(); handleAdminLoginProcess();">
             <div class="form-group mb-3">
               <label>관리자 ID / 이메일</label>
-              <input type="text" id="adminLoginId" class="form-control" placeholder="예: jwmaxum@gmail.com" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="text" id="adminLoginId" class="form-control" placeholder="예: jwmaxum@gmail.com" autocomplete="username" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
             </div>
             <div class="form-group mb-4">
               <label>비밀번호</label>
-              <input type="password" id="adminLoginPw" class="form-control" placeholder="비밀번호 입력" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="password" id="adminLoginPw" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-full">
               <i data-lucide="lock"></i> 관리자 인증 로그인
@@ -951,11 +1067,11 @@
             <div class="grid-2-col gap-4 mb-3">
               <div class="form-group">
                 <label>서브 관리자 Username / ID</label>
-                <input type="text" id="newSubAdminId" class="form-control" value="sub_admin_02" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <input type="text" id="newSubAdminId" class="form-control" value="sub_admin_02" autocomplete="username" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
               </div>
               <div class="form-group">
                 <label>초기 비밀번호</label>
-                <input type="password" id="newSubAdminPw" class="form-control" value="subpass1234!" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <input type="password" id="newSubAdminPw" class="form-control" value="subpass1234!" autocomplete="new-password" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
               </div>
             </div>
             <div class="form-group mb-4">
@@ -1037,7 +1153,7 @@
           <form onsubmit="event.preventDefault(); showToast('🔑 서브 관리자 비밀번호가 성공적으로 변경되었습니다.'); closeAllModals();">
             <div class="form-group mb-4">
               <label>새 비밀번호 입력</label>
-              <input type="password" class="form-control" placeholder="새 비밀번호 입력" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="password" class="form-control" placeholder="새 비밀번호 입력" autocomplete="new-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-full">비밀번호 즉시 변경</button>
           </form>
