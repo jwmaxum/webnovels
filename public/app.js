@@ -694,12 +694,24 @@ async function renderAdminWorks() {
               <strong>[${w.genre}] ${w.title}</strong>
               <div class="text-muted small">작가: ${w.author?.penName} | 뷰: ${w.viewCount}</div>
             </div>
-            <span class="badge badge-primary">${w.status}</span>
+            <select class="form-input" style="padding: 2px 5px; font-size: 0.8rem; width: auto;" onchange="toggleAdminSetting('${w.id}', 'status', this.value)">
+              <option value="ONGOING" ${w.status === 'ONGOING' ? 'selected' : ''}>연재중</option>
+              <option value="PAUSED" ${w.status === 'PAUSED' ? 'selected' : ''}>휴재</option>
+              <option value="COMPLETED" ${w.status === 'COMPLETED' ? 'selected' : ''}>연재완료</option>
+            </select>
           </div>
-          <div class="flex-between" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
-              <input type="checkbox" onchange="toggleTopRecommended('${w.id}', this.checked)" ${w.isTopRecommended ? 'checked' : ''} style="width: 16px; height: 16px;">
-              ⭐ 실시간 상위 작품 (랜딩페이지 노출)
+          <div style="display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem;">
+              <input type="checkbox" onchange="toggleAdminSetting('${w.id}', 'isTopRecommended', this.checked)" ${w.isTopRecommended ? 'checked' : ''}>
+              ⭐ 실시간 Hot (Top 4)
+            </label>
+            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem;">
+              <input type="checkbox" onchange="toggleAdminSetting('${w.id}', 'isPopularWork', this.checked)" ${w.isPopularWork ? 'checked' : ''}>
+              🔥 인기작
+            </label>
+            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem;">
+              <input type="checkbox" onchange="toggleAdminSetting('${w.id}', 'isNewWork', this.checked)" ${w.isNewWork ? 'checked' : ''}>
+              🆕 신작
             </label>
           </div>
         </div>
@@ -710,19 +722,19 @@ async function renderAdminWorks() {
   }
 }
 
-async function toggleTopRecommended(workId, isTopRecommended) {
+async function toggleAdminSetting(workId, field, value) {
   const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
   try {
-    const res = await fetch(`/api/works/${workId}/top-recommend`, {
+    const res = await fetch(`/api/works/${workId}/admin-settings`, {
       method: 'PATCH',
       headers: { 
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
       },
-      body: JSON.stringify({ isTopRecommended })
+      body: JSON.stringify({ [field]: value })
     });
     if (res.ok) {
-      showToast('상위 작품 설정이 변경되었습니다.');
+      showToast('설정이 변경되었습니다.');
       renderHomeWorks(); // Refresh landing page
     } else {
       showToast('설정 변경에 실패했습니다.');
@@ -1249,6 +1261,10 @@ window.switchAdminSubTab = function(tabName) {
 
   // Re-render Lucide icons if present
   if (window.lucide) window.lucide.createIcons();
+
+  if (tabName === 'works') {
+    renderAdminWorks();
+  }
 };
 
 window.showAdminMenuNotice = function(menuKey) {
