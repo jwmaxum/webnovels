@@ -246,4 +246,71 @@ INSERT INTO authors (id, username, password_hash, email, pen_name, work_title, b
 (8, 'writer8', '!123456', 'writer8@webnovels.com', '검성', '검의 전설: 천하제일인', '1987-12-25', '대구광역시 수성구 달구벌대로 500', '대구은행 508-12-345678', '공식 인증 작가')
 ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, address = EXCLUDED.address, bank_info = EXCLUDED.bank_info;
 
+-- 14. 관리자용 RPC 함수 (보안 검증 및 생성)
+CREATE OR REPLACE FUNCTION verify_admin_login(p_email TEXT, p_password TEXT)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_admin admin_users;
+BEGIN
+  SELECT * INTO v_admin FROM admin_users WHERE email = p_email OR username = p_email;
+  
+  IF v_admin IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid credentials');
+  END IF;
+
+  -- 1. Bcrypt 해시 검증 (SUPER_ADMIN 및 신규 생성된 SUB_ADMIN)
+  IF v_admin.password_hash = crypt(p_password, v_admin.password_hash) THEN
+    RETURN jsonb_build_object(
+      'success', true,
+      'admin', jsonb_build_object(
+        'id', v_admin.id,
+        'email', v_admin.email,
+        'username', v_admin.username,
+        'nickname', v_admin.nickname,
+        'role', v_admin.role,
+        'permissions', v_admin.permissions
+      )
+    );
+  END IF;
+  
+  -- 2. 평문 암호 검증 (RPC 적용 전 과거에 생성된 호환성 SUB_ADMIN)
+  IF v_admin.password_hash = p_password THEN
+    RETURN jsonb_build_object(
+      'success', true,
+      'admin', jsonb_build_object(
+        'id', v_admin.id,
+        'email', v_admin.email,
+        'username', v_admin.username,
+        'nickname', v_admin.nickname,
+        'role', v_admin.role,
+        'permissions', v_admin.permissions
+      )
+    );
+  END IF;
+
+  RETURN jsonb_build_object('success', false, 'error', 'Invalid credentials');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION create_admin_user(p_username TEXT, p_password TEXT, p_email TEXT, p_nickname TEXT, p_permissions TEXT)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  INSERT INTO admin_users (username, email, password_hash, nickname, permissions, role)
+  VALUES (p_username, p_email, crypt(p_password, gen_salt('bf')), p_nickname, p_permissions::jsonb, 'SUB_ADMIN')
+  RETURNING id INTO v_id;
+
+  RETURN jsonb_build_object('success', true, 'id', v_id);
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$;
+
 
