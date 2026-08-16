@@ -100,9 +100,9 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- 10. 최고 관리자 계정 시드
 INSERT INTO admin_users (email, username, password_hash, nickname, role, permissions)
 VALUES (
-  'admin@webnovels.com',
+  'jwmaxum@gmail.com',
   'super_admin',
-  crypt('admin1234!', gen_salt('bf')),
+  crypt('sang@4478000', gen_salt('bf')),
   '최고관리자',
   'SUPER_ADMIN',
   '["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]'::jsonb
