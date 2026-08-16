@@ -426,15 +426,9 @@ window.handleAdminLoginProcess = async function() {
     document.getElementById('adminRoleBadge').className = 'badge badge-primary';
     document.getElementById('btnAdminLogout').style.display = 'inline-block';
   } else {
-    // Supabase 미연동 시 폴백 (개발/데모용)
-    isAdminLoggedIn = true;
-    closeAllModals();
-    showToast(`🔑 관리자 로그인 성공! (${idInput}) [오프라인 모드]`);
-    document.getElementById('adminRoleBadge').textContent = 'SUPER_ADMIN (오프라인)';
-    document.getElementById('adminRoleBadge').className = 'badge badge-accent';
-    if (document.getElementById('btnAdminLogout')) {
-      document.getElementById('btnAdminLogout').style.display = 'inline-block';
-    }
+    // 로그인 실패
+    showToast('❌ 로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.');
+    return;
   }
   
   // 관리자 관제탑 활성화
