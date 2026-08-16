@@ -83,6 +83,7 @@ model Work {
   aiUsageType   String          @default("NONE") // NONE, ASSISTED, FULL
   status        String          @default("ONGOING") // ONGOING, PAUSED, COMPLETED
   publishDays   String          @default("MON,WED,FRI")
+  isTopRecommended Boolean      @default(false)
   viewCount     Int             @default(0)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt

@@ -623,25 +623,113 @@ async function loadSystemConfig() {
 // ----------------------------------------------------
 // 1. Home & Discover Views
 // ----------------------------------------------------
-function renderHomeWorks() {
-  const container = document.getElementById('homeWorksGrid');
+async function renderHomeWorks() {
+  try {
+    const res = await fetch('/api/works/home');
+    const data = await res.json();
+    
+    // Top 4 Works
+    const topContainer = document.getElementById('topWorksGrid');
+    if (topContainer && data.topWorks) {
+      topContainer.innerHTML = data.topWorks.map(w => {
+        const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+        const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
+        const tagText = isAdult ? '19+ 성인' : w.genre;
+        return `
+          <article class="feature-card" onclick="openWorkDetailDirect('${w.id}')" style="min-height: 200px;">
+            <div class="art" style="background-image: url('${w.coverImageUrl || '/images/default_cover.jpg'}'); padding-top: 100%;"></div>
+            <div class="copy" style="padding: 10px;">
+              <span class="tag ${tagClass} btn-sm" style="font-size: 0.6rem;">${tagText}</span>
+              <h3 style="font-size: 0.9rem; margin: 4px 0;">${w.title}</h3>
+              <p style="font-size: 0.7rem;">${w.author?.penName || '작자미상'} · 뷰 ${(w.viewCount / 1000).toFixed(1)}K</p>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Now Trending Works (using popularWorks + newWorks mixed or just popularWorks for now)
+    const container = document.getElementById('homeWorksGrid');
+    if (container && data.popularWorks) {
+      container.innerHTML = data.popularWorks.map(w => {
+        const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+        const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
+        const tagText = isAdult ? '19+ 성인' : w.genre;
+        return `
+          <article class="feature-card" onclick="openWorkDetailDirect('${w.id}')">
+            <div class="art" style="background-image: url('${w.coverImageUrl || '/images/default_cover.jpg'}');"></div>
+            <div class="copy">
+              <span class="tag ${tagClass}">${tagText}</span>
+              <h3>${w.title}</h3>
+              <p>${w.author?.penName || '작자미상'} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+  } catch (error) {
+    console.error('홈 작품 로드 실패:', error);
+  }
+}
+
+// ----------------------------------------------------
+// CMS: 작품 연재 관리
+// ----------------------------------------------------
+async function renderAdminWorks() {
+  const container = document.getElementById('adminWorksGrid');
   if (!container) return;
 
-  container.innerHTML = SAMPLE_WORKS.map(w => {
-    const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
-    const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
-    const tagText = isAdult ? '19+ 성인' : w.genre;
-    return `
-      <article class="feature-card" onclick="openWorkDetailDirect(${w.id})">
-        <div class="art" style="background-image: url('${w.coverUrl}');"></div>
-        <div class="copy">
-          <span class="tag ${tagClass}">${tagText}</span>
-          <h3>${w.title}</h3>
-          <p>${w.author} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
+  try {
+    const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
+    const res = await fetch('/api/works', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const { works } = await res.json();
+
+    container.innerHTML = works.map(w => {
+      return `
+        <div class="flex-between p-3 glass-panel" style="flex-direction: column; align-items: stretch; gap: 10px;">
+          <div class="flex-between">
+            <div>
+              <strong>[${w.genre}] ${w.title}</strong>
+              <div class="text-muted small">작가: ${w.author?.penName} | 뷰: ${w.viewCount}</div>
+            </div>
+            <span class="badge badge-primary">${w.status}</span>
+          </div>
+          <div class="flex-between" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" onchange="toggleTopRecommended('${w.id}', this.checked)" ${w.isTopRecommended ? 'checked' : ''} style="width: 16px; height: 16px;">
+              ⭐ 실시간 상위 작품 (랜딩페이지 노출)
+            </label>
+          </div>
         </div>
-      </article>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  } catch(error) {
+    console.error('CMS 작품 로드 실패:', error);
+  }
+}
+
+async function toggleTopRecommended(workId, isTopRecommended) {
+  const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
+  try {
+    const res = await fetch(`/api/works/${workId}/top-recommend`, {
+      method: 'PATCH',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ isTopRecommended })
+    });
+    if (res.ok) {
+      showToast('상위 작품 설정이 변경되었습니다.');
+      renderHomeWorks(); // Refresh landing page
+    } else {
+      showToast('설정 변경에 실패했습니다.');
+    }
+  } catch(e) {
+    showToast('오류가 발생했습니다.');
+  }
 }
 
 function renderDiscoverWorks(genreFilter = 'ALL') {
@@ -1036,7 +1124,12 @@ async function handleAuthorSignup() {
 
 async function loadMyProfile() {
   const token = localStorage.getItem('webnovels_token');
-  if (!token) return;
+  if (!token) {
+    // Hide continue reading section if not logged in
+    const crSection = document.getElementById('sectionContinueReading');
+    if (crSection) crSection.style.display = 'none';
+    return;
+  }
 
   try {
     const res = await fetch('/api/auth/me', {
@@ -1045,6 +1138,14 @@ async function loadMyProfile() {
     if (res.ok) {
       const { user } = await res.json();
       updateMemberHeader(user);
+      
+      // Handle continue reading visibility
+      const crSection = document.getElementById('sectionContinueReading');
+      if (crSection && user.role !== 'AUTHOR') {
+        crSection.style.display = 'block'; // Show if logged in as reader
+      } else if (crSection) {
+        crSection.style.display = 'none'; // Hide for authors or if empty
+      }
     }
   } catch(err) {
     console.error('프로필 로드 실패', err);

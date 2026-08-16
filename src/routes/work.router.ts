@@ -44,13 +44,40 @@ workRouter.get('/home', optionalAuthenticateToken, async (req: AuthRequest, res:
       });
     }
 
+    const topWorks = await db.work.findMany({
+      where: { isTopRecommended: true },
+      take: 4,
+      orderBy: { updatedAt: 'desc' },
+      include: { author: { select: { penName: true } } }
+    });
+
     return res.json({
+      topWorks,
       newWorks,
       popularWorks,
       completedWorks,
       adUnlockableWorks,
       myRecentReads
     });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * CMS 토글용: 상위 작품 추천 상태 변경
+ */
+workRouter.patch('/:id/top-recommend', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const workId = req.params.id;
+    const { isTopRecommended } = req.body;
+
+    const updatedWork = await db.work.update({
+      where: { id: workId },
+      data: { isTopRecommended: Boolean(isTopRecommended) }
+    });
+
+    return res.json({ message: '상위 작품 상태가 변경되었습니다.', work: updatedWork });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
