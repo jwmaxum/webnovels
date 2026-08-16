@@ -597,20 +597,46 @@ async function loadSettlementsList() {
   const settlements = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchPendingSettlements() : [];
 
   if (settlements.length === 0) {
-    container.innerHTML = '<p class="text-muted">미처리 정산 신청이 없습니다.</p>';
+    container.innerHTML = `
+      <div class="p-6 text-center text-muted">
+        <p style="margin: 0;">✨ 현재 대기 중인 미처리 작가 정산 신청이 없습니다.</p>
+      </div>
+    `;
     return;
   }
 
-  container.innerHTML = settlements.map(s => `
-    <div class="episode-row">
-      <div>
-        <strong>신청 ID: ${s.id.substring(0, 8).toUpperCase()}</strong>
-        <div>작가명: ${s.author_name} | 신청금액: ₩${Number(s.amount).toLocaleString()}</div>
-        <div class="text-muted small">계좌: ${s.bank_info || '미등록'}</div>
-      </div>
-      <button class="btn btn-success btn-sm" onclick="handleApproveSettlement('${s.id}')">지급 승인 (PAID)</button>
+  container.innerHTML = `
+    <div class="table-responsive">
+      <table class="table" style="width: 100%; text-align: left; font-size: 0.92rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+            <th class="p-3">신청 번호</th>
+            <th class="p-3">신청 작가 (필명)</th>
+            <th class="p-3">신청 정산 금액</th>
+            <th class="p-3">입금 계좌 정보</th>
+            <th class="p-3">신청 일시</th>
+            <th class="p-3" style="text-align: right;">관리자 승인 처리</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${settlements.map(s => `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <td class="p-3"><code>#${s.id.substring(0, 8).toUpperCase()}</code></td>
+              <td class="p-3"><strong class="text-white">${s.author_name}</strong></td>
+              <td class="p-3"><strong class="text-emerald" style="font-size: 1.05rem;">₩${Number(s.amount).toLocaleString()}</strong></td>
+              <td class="p-3"><span class="badge badge-accent">🏦 ${s.bank_info || '계좌 미등록'}</span></td>
+              <td class="p-3 text-muted small">${new Date(s.requested_at).toLocaleString('ko-KR')}</td>
+              <td class="p-3" style="text-align: right;">
+                <button class="btn btn-success btn-sm" onclick="handleApproveSettlement('${s.id}')">
+                  💳 즉시 입금 승인 (PAID)
+                </button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     </div>
-  `).join('');
+  `;
 }
 
 // ---- 시스템 설정 로드 ----
@@ -1655,6 +1681,12 @@ window.switchAdminSubTab = function(tabName) {
 
   if (tabName === 'works') {
     renderAdminWorks();
+  }
+  if (tabName === 'settlements') {
+    loadSettlementsList();
+  }
+  if (tabName === 'security') {
+    loadSubAdminList();
   }
 };
 
