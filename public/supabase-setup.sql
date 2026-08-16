@@ -141,6 +141,8 @@ ALTER TABLE episodes ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow anon read works" ON works;
 DROP POLICY IF EXISTS "Allow anon read episodes" ON episodes;
+DROP POLICY IF EXISTS "Allow anon full access works" ON works;
+DROP POLICY IF EXISTS "Allow anon full access episodes" ON episodes;
 
 CREATE POLICY "Allow anon full access works" ON works FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow anon full access episodes" ON episodes FOR ALL USING (true) WITH CHECK (true);
