@@ -1341,7 +1341,8 @@ window.handleCreateSubAdminSubmit = async function() {
   if (result && result.success) {
     showToast(`👤 서브 관리자 (${newId} / ${newName}) 생성 완료! (부여 권한: ${checkedPerms.length}개 메뉴)`);
   } else {
-    showToast(`👤 서브 관리자 (${newId}) 생성됨 [오프라인 모드]`);
+    showToast(`❌ 서브 관리자 생성 실패: ${result?.error || 'DB 저장 실패'}`);
+    return;
   }
 
   closeAllModals();
