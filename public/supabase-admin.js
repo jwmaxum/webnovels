@@ -455,6 +455,21 @@ async function seedWorksDatasetToSupabase(sampleWorksData) {
   }
 }
 
+async function updateWorkAdminSetting(workId, updateData) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('works')
+      .update(updateData)
+      .eq('id', workId);
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.warn('[Admin Works] Update error:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 // ---- 독자 회원(readers) & 작가 회원(authors) 실데이터 조회 및 시드 ----
 async function fetchReadersFromSupabase() {
   if (!supabaseClient) return null;
