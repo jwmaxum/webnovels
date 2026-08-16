@@ -401,8 +401,8 @@ function switchWebNovelsView(viewId, activeLink) {
 
 // 관리자 로그인 로직 처리 (Supabase 연동)
 window.handleAdminLoginProcess = async function() {
-  const idInput = document.getElementById('adminLoginId').value;
-  const pwInput = document.getElementById('adminLoginPw').value;
+  const idInput = document.getElementById('adminLoginId').value.trim();
+  const pwInput = document.getElementById('adminLoginPw').value.trim();
 
   if (!idInput || !pwInput) {
     showToast('관리자 ID와 비밀번호를 모두 입력해주세요.');
@@ -427,7 +427,9 @@ window.handleAdminLoginProcess = async function() {
     document.getElementById('btnAdminLogout').style.display = 'inline-block';
   } else {
     // 로그인 실패
-    showToast('❌ 로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.');
+    const errMsg = result ? (result.error || '정보 불일치') : '시스템 오류 (관리자 모듈 미로드)';
+    showToast(`❌ 로그인 실패: ${errMsg}`);
+    console.error('[Admin Login Failed]', result);
     return;
   }
   
