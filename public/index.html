@@ -62,9 +62,6 @@
         <!-- Hero Section (Coupang Play Style) -->
         <div class="cp-hero">
           <div class="cp-copy">
-            <div class="cp-kicker"><span class="cp-live-dot"></span> 광고 보고 무료로 읽는 웹소설 플랫폼</div>
-            <h1>무료로 읽고,<br/><em>작가를 응원하세요</em></h1>
-            <p>1~3화는 바로 읽고, 다음 회차는 광고 시청으로 무료 해금됩니다. 좋아하는 작품은 내 서재에서 이어보고 작가는 등록 즉시 연재를 시작할 수 있습니다.</p>
             <div class="cp-actions">
               <button class="btn btn-primary" onclick="openReaderDirect(1, 1)"><i data-lucide="play-circle"></i> 무료로 읽기</button>
               <button class="btn btn-outline" onclick="document.getElementById('btnSearchOpen').click()"><i data-lucide="search"></i> 작품 찾기</button>
@@ -133,7 +130,7 @@
             <span onclick="document.querySelector('[data-target=\'view-discover\']').click()" style="cursor:pointer;">전체보기 ›</span>
           </div>
 
-          <div class="cp-grid" id="homeWorksGrid">
+          <div class="cp-grid" id="homeWorksGrid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
             <!-- Dynamic Work Cards -->
           </div>
         </div>

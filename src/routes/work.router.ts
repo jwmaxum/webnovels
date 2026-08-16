@@ -11,17 +11,37 @@ workRouter.get('/home', optionalAuthenticateToken, async (req: AuthRequest, res:
   try {
     const userId = req.user?.userId;
 
-    const newWorks = await db.work.findMany({
+    let newWorks = await db.work.findMany({
+      where: { isNewWork: true },
       take: 6,
       orderBy: { createdAt: 'desc' },
       include: { author: { select: { penName: true } } }
     });
+    if (newWorks.length < 6) {
+      const fallback = await db.work.findMany({
+        where: { isNewWork: false },
+        take: 6 - newWorks.length,
+        orderBy: { createdAt: 'desc' },
+        include: { author: { select: { penName: true } } }
+      });
+      newWorks = [...newWorks, ...fallback];
+    }
 
-    const popularWorks = await db.work.findMany({
+    let popularWorks = await db.work.findMany({
+      where: { isPopularWork: true },
       take: 10,
       orderBy: { updatedAt: 'desc' },
       include: { author: { select: { penName: true } } }
     });
+    if (popularWorks.length < 10) {
+      const fallback = await db.work.findMany({
+        where: { isPopularWork: false },
+        take: 10 - popularWorks.length,
+        orderBy: { updatedAt: 'desc' },
+        include: { author: { select: { penName: true } } }
+      });
+      popularWorks = [...popularWorks, ...fallback];
+    }
 
     const completedWorks = await db.work.findMany({
       where: { status: 'COMPLETED' },
@@ -65,19 +85,25 @@ workRouter.get('/home', optionalAuthenticateToken, async (req: AuthRequest, res:
 });
 
 /**
- * CMS 토글용: 상위 작품 추천 상태 변경
+ * CMS 토글용: 관리자 설정 통합 변경
  */
-workRouter.patch('/:id/top-recommend', authenticateToken, async (req: AuthRequest, res: Response) => {
+workRouter.patch('/:id/admin-settings', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const workId = req.params.id;
-    const { isTopRecommended } = req.body;
+    const { isTopRecommended, isPopularWork, isNewWork, status } = req.body;
+
+    const data: any = {};
+    if (isTopRecommended !== undefined) data.isTopRecommended = Boolean(isTopRecommended);
+    if (isPopularWork !== undefined) data.isPopularWork = Boolean(isPopularWork);
+    if (isNewWork !== undefined) data.isNewWork = Boolean(isNewWork);
+    if (status !== undefined) data.status = String(status);
 
     const updatedWork = await db.work.update({
       where: { id: workId },
-      data: { isTopRecommended: Boolean(isTopRecommended) }
+      data
     });
 
-    return res.json({ message: '상위 작품 상태가 변경되었습니다.', work: updatedWork });
+    return res.json({ message: '관리자 설정이 변경되었습니다.', work: updatedWork });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

@@ -84,6 +84,8 @@ model Work {
   status        String          @default("ONGOING") // ONGOING, PAUSED, COMPLETED
   publishDays   String          @default("MON,WED,FRI")
   isTopRecommended Boolean      @default(false)
+  isPopularWork Boolean         @default(false)
+  isNewWork     Boolean         @default(false)
   viewCount     Int             @default(0)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
