@@ -682,6 +682,10 @@ async function renderHomeWorks() {
   }
 
   try {
+    // Helper function for cover and author
+    const getWorkCover = (w) => w.coverUrl || w.coverImageUrl || (w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg');
+    const getAuthorName = (w) => (typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상';
+
     // Top 4 Works
     const topContainer = document.getElementById('topWorksGrid');
     if (topContainer && topWorks) {
@@ -689,13 +693,15 @@ async function renderHomeWorks() {
         const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
         const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
         const tagText = isAdult ? '19+ 성인' : w.genre;
+        const cover = getWorkCover(w);
+        const authorName = getAuthorName(w);
         return `
           <article class="feature-card" onclick="openWorkDetailDirect('${w.id}')" style="min-height: 200px;">
-            <div class="art" style="background-image: url('${w.coverImageUrl || '/images/default_cover.jpg'}'); padding-top: 100%;"></div>
+            <div class="art" style="background-image: url('${cover}'); padding-top: 100%;"></div>
             <div class="copy" style="padding: 10px;">
               <span class="tag ${tagClass} btn-sm" style="font-size: 0.6rem;">${tagText}</span>
               <h3 style="font-size: 0.9rem; margin: 4px 0;">${w.title}</h3>
-              <p style="font-size: 0.7rem;">${w.author?.penName || '작자미상'} · 뷰 ${(w.viewCount / 1000).toFixed(1)}K</p>
+              <p style="font-size: 0.7rem;">${authorName} · 뷰 ${(w.viewCount / 1000).toFixed(1)}K</p>
             </div>
           </article>
         `;
@@ -709,13 +715,15 @@ async function renderHomeWorks() {
         const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
         const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
         const tagText = isAdult ? '19+ 성인' : w.genre;
+        const cover = getWorkCover(w);
+        const authorName = getAuthorName(w);
         return `
           <article class="feature-card" onclick="openWorkDetailDirect('${w.id}')">
-            <div class="art" style="background-image: url('${w.coverImageUrl || '/images/default_cover.jpg'}');"></div>
+            <div class="art" style="background-image: url('${cover}');"></div>
             <div class="copy">
               <span class="tag ${tagClass}">${tagText}</span>
               <h3>${w.title}</h3>
-              <p>${w.author?.penName || '작자미상'} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
+              <p>${authorName} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
             </div>
           </article>
         `;
@@ -754,7 +762,7 @@ async function renderAdminWorks() {
           <div class="flex-between">
             <div>
               <strong>[${w.genre}] ${w.title}</strong>
-              <div class="text-muted small">작가: ${w.author?.penName} | 뷰: ${w.viewCount}</div>
+              <div class="text-muted small">작가: ${(typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상'} | 뷰: ${w.viewCount}</div>
             </div>
             <select class="form-input" style="padding: 2px 5px; font-size: 0.8rem; width: auto;" onchange="toggleAdminSetting('${w.id}', 'status', this.value)">
               <option value="ONGOING" ${w.status === 'ONGOING' ? 'selected' : ''}>연재중</option>
@@ -960,9 +968,12 @@ window.openWorkDetailDirect = function(workId) {
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetId) || SAMPLE_WORKS[0];
   activeWork = work;
 
-  document.getElementById('detailCoverImg').src = work.coverUrl;
+  const cover = work.coverUrl || work.coverImageUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+  const authorName = (typeof work.author === 'object' ? work.author?.penName : work.author) || '작자미상';
+
+  document.getElementById('detailCoverImg').src = cover;
   document.getElementById('detailTitle').textContent = work.title;
-  document.getElementById('detailAuthor').textContent = `작가: ${work.author}`;
+  document.getElementById('detailAuthor').textContent = `작가: ${authorName}`;
   document.getElementById('detailGenreBadge').textContent = work.genre;
   document.getElementById('detailRatingBadge').textContent = work.rating === 'ALL' ? '전체이용가' : '19세 이상 성인';
   document.getElementById('detailAiBadge').textContent = `AI ${work.aiUsageType}`;
