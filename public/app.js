@@ -1257,19 +1257,25 @@ function renderLibraryContent() {
       });
 
       authorContainer.innerHTML = authorsData.map(author => `
-        <button class="library-author-card glass-panel" onclick="openAuthorWorksDirect('${author.pen_name}')" style="cursor: pointer; text-align: left; transition: all 0.2s; padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; align-items: flex-start; gap: 8px;" title="작가 연재 소설 목록 보기">
-          <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-            <span style="width: 38px; height: 38px; min-width: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem;">${author.pen_name.slice(0, 1)}</span>
-            <div style="flex: 1; overflow: hidden;">
-              <strong style="display: block; font-size: 1rem; color: #fff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${author.pen_name}</strong>
-              <small class="text-muted" style="font-size: 0.8rem; display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${author.work_title}</small>
+        <div class="library-author-card glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; width: 100%;">
+            <div class="library-author-avatar" style="width: 42px; height: 42px; min-width: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.05rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+              ${author.pen_name.slice(0, 1)}
+            </div>
+            <div style="flex: 1; min-width: 0; text-align: left;">
+              <strong style="display: block; font-size: 1.05rem; color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;">
+                ${author.pen_name}
+              </strong>
+              <small class="text-muted" style="display: block; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${author.work_title}
+              </small>
             </div>
           </div>
-          <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
-            <span class="text-muted small" style="font-size: 0.78rem;">연재작 목록</span>
-            <span class="badge badge-accent" style="font-size: 0.72rem;">소설 리스트 보기 →</span>
-          </div>
-        </button>
+          <button type="button" class="btn btn-outline btn-sm w-full" onclick="openAuthorWorksDirect('${author.pen_name}')" style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 14px; border-radius: 8px; background: rgba(109, 94, 245, 0.12); border: 1px solid rgba(109, 94, 245, 0.35); color: #a5b4fc; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+            <i data-lucide="book-open" style="width: 15px; height: 15px;"></i>
+            <span>작품보기</span>
+          </button>
+        </div>
       `).join('');
     } else {
       authorContainer.innerHTML = `
