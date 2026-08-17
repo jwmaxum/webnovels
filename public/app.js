@@ -184,6 +184,9 @@ async function initWebNovelsApp() {
     }
   }
 
+  // 로그인 프로필 세션 복원 및 헤더 동기화
+  await loadMyProfile();
+
   renderHomeWorks();
   renderDiscoverWorks();
   renderLibraryContent();
@@ -304,7 +307,7 @@ function bindWebNovelsEvents() {
     toggleFavoriteWork(activeWork.id);
   });
   document.getElementById('btnDetailSubscribe')?.addEventListener('click', () => {
-    showToast('👤 작가를 구독했습니다.');
+    toggleSubscribeAuthor(activeWork.author);
   });
 
   // Reader Events
@@ -921,7 +924,7 @@ function hasLooseMatch(haystack, query) {
   return query.split('').every(char => haystack.includes(char));
 }
 
-// ---- 읽기 기록 및 관심작품 관리 (내 서재 실시간 연동) ----
+// ---- 읽기 기록 및 관심작품 / 구독 작가 관리 (내 서재 실시간 연동) ----
 function saveReadingProgress(workId, epNum) {
   try {
     let history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
@@ -984,6 +987,56 @@ function updateFavoriteButtons(workId) {
   if (window.lucide) window.lucide.createIcons();
 }
 
+function toggleSubscribeAuthor(authorData) {
+  try {
+    const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name) : authorData) || '작자미상';
+    let subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '["판타지마스터", "무협의신"]');
+    
+    if (subAuthors.includes(authorName)) {
+      subAuthors = subAuthors.filter(a => a !== authorName);
+      showToast(`👤 ${authorName} 작가 구독을 취소했습니다.`);
+    } else {
+      subAuthors.push(authorName);
+      showToast(`🎉 ${authorName} 작가를 구독했습니다! 내 서재에서 확인하세요.`);
+    }
+    
+    localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(subAuthors));
+    updateSubscribeButtons(authorName);
+    renderLibraryContent();
+  } catch (err) {
+    console.warn('[Subscribe Toggle Error]', err);
+  }
+}
+
+function updateSubscribeButtons(authorData) {
+  const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name) : authorData) || '작자미상';
+  const subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '["판타지마스터", "무협의신"]');
+  const isSubbed = subAuthors.includes(authorName);
+  const btnSub = document.getElementById('btnDetailSubscribe');
+
+  if (btnSub) {
+    btnSub.innerHTML = isSubbed
+      ? '<i data-lucide="user-check" style="color: var(--primary-color);"></i> 작가 구독중'
+      : '<i data-lucide="user-plus"></i> 작가 구독';
+  }
+  if (window.lucide) window.lucide.createIcons();
+}
+
+// 구독 작가 클릭 시 해당 작가의 대표 작품 상세 화면으로 이동
+window.openAuthorWorksDirect = function(authorName) {
+  const work = SAMPLE_WORKS.find(w => {
+    const aName = (typeof w.author === 'object' ? (w.author.penName || w.author.pen_name) : w.author) || '';
+    return aName.toLowerCase() === String(authorName).toLowerCase();
+  }) || SAMPLE_WORKS[0];
+
+  if (work) {
+    showToast(`📖 ${authorName} 작가의 대표작 [${work.title}] 상세 페이지로 이동합니다.`);
+    openWorkDetailDirect(work.id);
+  } else {
+    showToast(`해당 작가의 등록된 작품을 찾을 수 없습니다.`);
+  }
+};
+
 function renderLibraryContent() {
   const continueContainer = document.getElementById('libraryContinueList');
   const favoriteContainer = document.getElementById('libraryFavoritesList');
@@ -1006,10 +1059,17 @@ function renderLibraryContent() {
     favs = [];
   }
 
+  let subAuthors = [];
+  try {
+    subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '["판타지마스터", "무협의신"]');
+  } catch (e) {
+    subAuthors = ["판타지마스터", "무협의신"];
+  }
+
   // 좌측 프로필 통계 숫자 실시간 반영
   if (statReadingEl) statReadingEl.textContent = String(history.length);
   if (statFavEl) statFavEl.textContent = String(favs.length);
-  if (statAuthorEl) statAuthorEl.textContent = '2';
+  if (statAuthorEl) statAuthorEl.textContent = String(subAuthors.length);
 
   // 1. 실제 읽었던 실시간 내역 렌더링 (진행도 % 및 프로그레스 바 적용)
   if (continueContainer) {
@@ -1130,15 +1190,39 @@ function renderLibraryContent() {
     }
   }
 
-  // 3. 작가 목록
+  // 3. 구독 작가 목록 실시간 렌더링
   if (authorContainer) {
-    authorContainer.innerHTML = SAMPLE_AUTHORS.slice(0, 4).map(author => `
-      <button class="library-author-card" onclick="showToast('${author.pen_name} 작가의 작품 목록으로 이동합니다.')">
-        <span>${author.pen_name.slice(0, 1)}</span>
-        <strong>${author.pen_name}</strong>
-        <small>${author.work_title}</small>
-      </button>
-    `).join('');
+    if (subAuthors.length > 0) {
+      const authorsData = subAuthors.map(aName => {
+        const found = SAMPLE_AUTHORS.find(a => a.pen_name === aName);
+        if (found) return found;
+        const workFound = SAMPLE_WORKS.find(w => {
+          const wAuthor = typeof w.author === 'object' ? (w.author.penName || w.author.pen_name) : w.author;
+          return wAuthor === aName;
+        });
+        return {
+          pen_name: aName,
+          work_title: workFound ? workFound.title : '대표 연재작'
+        };
+      });
+
+      authorContainer.innerHTML = authorsData.map(author => `
+        <button class="library-author-card" onclick="openAuthorWorksDirect('${author.pen_name}')" style="cursor: pointer; text-align: left; transition: all 0.2s;" title="클릭하여 작가 작품 보기">
+          <span>${author.pen_name.slice(0, 1)}</span>
+          <strong>${author.pen_name}</strong>
+          <small class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">대표작: ${author.work_title}</small>
+          <span class="badge badge-accent mt-2" style="font-size: 0.72rem; align-self: flex-start;">작품 보기 →</span>
+        </button>
+      `).join('');
+    } else {
+      authorContainer.innerHTML = `
+        <div class="p-6 text-center text-muted" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+          <i data-lucide="users" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 1rem; color: #fff;">구독 중인 작가가 없습니다.</p>
+          <small class="text-muted">작품 상세페이지에서 '작가 구독'을 눌러보세요.</small>
+        </div>
+      `;
+    }
   }
 
   if (window.lucide) window.lucide.createIcons();
@@ -1168,8 +1252,9 @@ window.openWorkDetailDirect = function(workId) {
   document.getElementById('detailAiBadge').textContent = `AI ${work.aiUsageType}`;
   document.getElementById('detailDescription').textContent = work.description;
 
-  // 관심등록 상태 버튼 업데이트
+  // 관심등록 및 작가 구독 상태 버튼 업데이트
   updateFavoriteButtons(work.id);
+  updateSubscribeButtons(work.author);
 
   // Render Episode List
   const epList = document.getElementById('detailEpisodeList');
@@ -1671,26 +1756,42 @@ async function handleMemberLogin() {
       const data = await res.json();
       localStorage.setItem('webnovels_token', data.token);
       if (data.user && data.user.role === 'AUTHOR') {
-        localStorage.setItem('webnovels_author', JSON.stringify({
+        const authorObj = {
           username: data.user.username,
           email: data.user.email,
           pen_name: data.user.penName || data.user.nickname,
           bank_info: data.user.bankInfo,
           status: '공식 인증 작가'
-        }));
-        showToast(`✍️ 작가 로그인 성공! (${data.user.penName || data.user.nickname} 작가님)`);
+        };
+        localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
+        localStorage.removeItem('webnovels_user');
+        updateMemberHeader({ ...data.user, role: 'AUTHOR' });
+        showToast(`✍️ 작가 로그인 성공! (${authorObj.pen_name} 작가님)`);
         closeAllModals();
         switchWebNovelsView('view-creator');
         return;
       }
-      await loadMyProfile();
+      
+      const userObj = {
+        id: data.user.id,
+        username: data.user.username,
+        nickname: data.user.nickname || data.user.username,
+        email: data.user.email,
+        phone: data.user.phone,
+        isAdultVerified: !!data.user.isAdultVerified,
+        role: 'READER'
+      };
+      localStorage.setItem('webnovels_user', JSON.stringify(userObj));
+      localStorage.removeItem('webnovels_author');
+      updateMemberHeader(userObj);
+      renderLibraryContent();
       closeAllModals();
-      showToast('로그인되었습니다. 내 서재에서 이어보기를 확인하세요.');
+      showToast(`🎉 ${userObj.nickname}님 환영합니다! 로그인되었습니다.`);
       switchWebNovelsView('view-mypage');
       return;
     }
   } catch (err) {
-    // API 연결 안될 시 Supabase로 진행
+    // API 연결 안될 시 Supabase / 로컬 스토어 모드로 진행
   }
 
   // 2. Supabase 작가 직접 로그인
@@ -1702,15 +1803,9 @@ async function handleMemberLogin() {
       const author = authorRes.author;
       localStorage.setItem('webnovels_author', JSON.stringify(author));
       localStorage.setItem('webnovels_token', `author-${author.id}`);
+      localStorage.removeItem('webnovels_user');
       
-      const loginButton = document.getElementById('btnHeaderLogin');
-      if (loginButton) {
-        loginButton.textContent = `${author.pen_name} 작가님`;
-        loginButton.classList.remove('btn-primary');
-        loginButton.classList.add('btn-outline');
-        loginButton.onclick = () => switchWebNovelsView('view-creator');
-      }
-
+      updateMemberHeader({ ...author, role: 'AUTHOR' });
       closeAllModals();
       showToast(`✍️ 작가 로그인 성공! (${author.pen_name} 작가님)`);
       switchWebNovelsView('view-creator');
@@ -1718,18 +1813,53 @@ async function handleMemberLogin() {
     }
   }
 
-  // 3. 일반 독자 계정 폴백
-  if (loginIdentifier.includes('reader') || loginIdentifier.includes('test')) {
-    localStorage.setItem('webnovels_token', 'reader-token-sample');
-    localStorage.removeItem('webnovels_author');
-    closeAllModals();
-    showToast('독자 로그인 완료! 내 서재로 이동합니다.');
-    switchWebNovelsView('view-mypage');
-    return;
+  // 3. 일반 독자 계정 (SAMPLE_READERS 및 입력값 매칭)
+  const lowerIdent = loginIdentifier.toLowerCase();
+  const matchedReader = SAMPLE_READERS.find(r => 
+    (r.email && r.email.toLowerCase() === lowerIdent) || 
+    (r.username && r.username.toLowerCase() === lowerIdent)
+  );
+
+  let nick = loginIdentifier.split('@')[0];
+  if (matchedReader) {
+    if (matchedReader.username === 'reader1') nick = '열혈독자 1호';
+    else if (matchedReader.username === 'reader2') nick = '소설마니아';
+    else if (matchedReader.username === 'reader3') nick = '판타지러버';
   }
 
-  showToast('❌ 로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.');
+  const userObj = {
+    id: matchedReader ? matchedReader.id : 'reader-' + Date.now(),
+    username: matchedReader ? matchedReader.username : loginIdentifier.split('@')[0],
+    nickname: nick,
+    email: matchedReader ? matchedReader.email : (loginIdentifier.includes('@') ? loginIdentifier : `${loginIdentifier}@webnovels.com`),
+    phone: matchedReader?.phone || '010-1234-5678',
+    isAdultVerified: matchedReader ? !!matchedReader.is_adult_verified : false,
+    role: 'READER'
+  };
+
+  localStorage.setItem('webnovels_user', JSON.stringify(userObj));
+  localStorage.setItem('webnovels_token', `reader-token-${userObj.id}`);
+  localStorage.removeItem('webnovels_author');
+
+  updateMemberHeader(userObj);
+  renderLibraryContent();
+  closeAllModals();
+  showToast(`🎉 ${userObj.nickname}님 환영합니다! 로그인되었습니다.`);
+  switchWebNovelsView('view-mypage');
 }
+
+window.handleMemberLogout = function() {
+  localStorage.removeItem('webnovels_token');
+  localStorage.removeItem('webnovels_user');
+  localStorage.removeItem('webnovels_author');
+  currentLoggedAuthor = null;
+  window._isAdultVerified = false;
+
+  updateMemberHeader(null);
+  renderLibraryContent();
+  showToast('로그아웃되었습니다.');
+  switchWebNovelsView('view-home');
+};
 
 async function handleMemberSignup() {
   const nickname = document.getElementById('signupNickname')?.value;
@@ -1738,26 +1868,25 @@ async function handleMemberSignup() {
   const password = document.getElementById('signupPassword')?.value;
   const phone = document.getElementById('signupPhone')?.value;
 
-  try {
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nickname, username, email, password, phone, role: 'READER' })
-    });
-    const data = await res.json();
-    
-    if (res.ok) {
-      localStorage.setItem('webnovels_token', data.token);
-      await loadMyProfile();
-      closeAllModals();
-      showToast('회원가입이 완료되었습니다. 무료 작품을 바로 읽을 수 있습니다.');
-      switchWebNovelsView('view-mypage');
-    } else {
-      showToast('회원가입 실패: ' + data.error);
-    }
-  } catch (err) {
-    showToast('회원가입 중 오류가 발생했습니다.');
-  }
+  const userObj = {
+    id: 'user-' + Date.now(),
+    username: username || email.split('@')[0],
+    nickname: nickname || username || '독자',
+    email: email,
+    phone: phone || '',
+    isAdultVerified: false,
+    role: 'READER'
+  };
+
+  localStorage.setItem('webnovels_token', `token-${userObj.id}`);
+  localStorage.setItem('webnovels_user', JSON.stringify(userObj));
+  localStorage.removeItem('webnovels_author');
+
+  updateMemberHeader(userObj);
+  renderLibraryContent();
+  closeAllModals();
+  showToast('회원가입이 완료되었습니다. 내 서재로 이동합니다.');
+  switchWebNovelsView('view-mypage');
 }
 
 async function handleAuthorSignup() {
@@ -1766,117 +1895,135 @@ async function handleAuthorSignup() {
   const email = document.getElementById('authorEmail')?.value;
   const password = document.getElementById('authorPassword')?.value;
   const workTitle = document.getElementById('authorWorkTitle')?.value;
-  const birthDate = document.getElementById('authorBirthDate')?.value;
-  const address = document.getElementById('authorAddress')?.value;
   const bankInfo = document.getElementById('authorBankInfo')?.value;
 
-  try {
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nickname: penName, username, email, password, penName, workTitle, birthDate, address, bankInfo, role: 'AUTHOR' })
-    });
-    const data = await res.json();
-    
-    if (res.ok) {
-      localStorage.setItem('webnovels_token', data.token);
-      await loadMyProfile();
-      closeAllModals();
-      showToast('작가 회원가입이 완료되었습니다. 내 연재 작품 관리를 시작하세요.');
-      switchWebNovelsView('view-creator');
-    } else {
-      showToast('회원가입 실패: ' + data.error);
-    }
-  } catch (err) {
-    showToast('회원가입 중 오류가 발생했습니다.');
-  }
+  const authorObj = {
+    id: Date.now(),
+    username: username || email.split('@')[0],
+    pen_name: penName || '신규작가',
+    email: email,
+    work_title: workTitle || '신규 등록작품',
+    bank_info: bankInfo || '',
+    status: '공식 인증 작가'
+  };
+
+  localStorage.setItem('webnovels_token', `author-${authorObj.id}`);
+  localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
+  localStorage.removeItem('webnovels_user');
+
+  updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
+  closeAllModals();
+  showToast('작가 회원가입이 완료되었습니다. 작가 스튜디오로 이동합니다.');
+  switchWebNovelsView('view-creator');
 }
 
 async function loadMyProfile() {
   const authorSession = getCurrentAuthorSession();
   if (authorSession) {
-    const loginButton = document.getElementById('btnHeaderLogin');
-    if (loginButton) {
-      loginButton.textContent = `${authorSession.pen_name} 작가님`;
-      loginButton.classList.remove('btn-primary');
-      loginButton.classList.add('btn-outline');
-      loginButton.onclick = () => switchWebNovelsView('view-creator');
-    }
-    const crSection = document.getElementById('sectionContinueReading');
-    if (crSection) crSection.style.display = 'none';
+    updateMemberHeader({ ...authorSession, role: 'AUTHOR' });
     return;
+  }
+
+  const savedUser = localStorage.getItem('webnovels_user');
+  if (savedUser) {
+    try {
+      const user = JSON.parse(savedUser);
+      updateMemberHeader(user);
+      return;
+    } catch (e) {
+      console.warn('저장된 사용자 파싱 실패', e);
+    }
   }
 
   const token = localStorage.getItem('webnovels_token');
-  if (!token) {
-    // Hide continue reading section if not logged in
-    const crSection = document.getElementById('sectionContinueReading');
-    if (crSection) crSection.style.display = 'none';
-    return;
+  if (token && !token.startsWith('reader-token')) {
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const { user } = await res.json();
+        localStorage.setItem('webnovels_user', JSON.stringify(user));
+        updateMemberHeader(user);
+        return;
+      }
+    } catch (err) {}
   }
 
-  try {
-    const res = await fetch('/api/auth/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (res.ok) {
-      const { user } = await res.json();
-      updateMemberHeader(user);
-      
-      // Handle continue reading visibility
-      const crSection = document.getElementById('sectionContinueReading');
-      if (crSection && user.role !== 'AUTHOR') {
-        crSection.style.display = 'block'; // Show if logged in as reader
-      } else if (crSection) {
-        crSection.style.display = 'none'; // Hide for authors or if empty
-      }
-    }
-  } catch(err) {
-    console.error('프로필 로드 실패', err);
-  }
+  // 비로그인 상태
+  updateMemberHeader(null);
 }
 
 function updateMemberHeader(user) {
-  const loginButton = document.getElementById('btnHeaderLogin');
-  if (loginButton) {
-    loginButton.textContent = user.nickname || user.username;
-    loginButton.classList.remove('btn-primary');
-    loginButton.classList.add('btn-outline');
-    // onclick behavior is still modalAuth, we could change it to view-mypage or logout
-    loginButton.onclick = () => switchWebNovelsView('view-mypage');
-  }
-  
-  const myNickname = document.getElementById('myNickname');
-  const myEmail = document.getElementById('myEmail');
-  const myAvatar = document.getElementById('myAvatar');
-  const myAdultBadge = document.getElementById('myAdultBadge');
+  const profileMenu = document.getElementById('userProfileMenu');
 
-  if (myNickname) myNickname.textContent = user.nickname || user.username;
-  if (myEmail) myEmail.textContent = user.email;
-  if (myAvatar) myAvatar.textContent = (user.nickname || user.username).slice(0, 1).toUpperCase();
-  
-  if (myAdultBadge) {
-    if (user.isAdultVerified) {
-      myAdultBadge.textContent = '🔞 인증완료';
-      myAdultBadge.className = 'badge badge-primary mt-2';
-    } else {
+  if (user) {
+    // 로그인 상태 UI
+    const isAuthor = user.role === 'AUTHOR' || !!user.pen_name;
+    const displayName = isAuthor ? `${user.pen_name || user.nickname} 작가님` : `${user.nickname || user.username}님`;
+    const targetView = isAuthor ? 'view-creator' : 'view-mypage';
+
+    if (profileMenu) {
+      profileMenu.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('${targetView}')" style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="${isAuthor ? 'feather' : 'user'}"></i>
+            <span>${displayName}</span>
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="handleMemberLogout()" title="로그아웃" style="color: var(--text-muted); padding: 4px 8px;">
+            <i data-lucide="log-out"></i>
+          </button>
+        </div>
+      `;
+    }
+
+    // 내 서재 프로필 정보 동기화
+    const myNickname = document.getElementById('myNickname');
+    const myEmail = document.getElementById('myEmail');
+    const myAvatar = document.getElementById('myAvatar');
+    const myAdultBadge = document.getElementById('myAdultBadge');
+
+    if (myNickname) myNickname.textContent = user.nickname || user.username || '열혈독자';
+    if (myEmail) myEmail.textContent = user.email || 'reader@webnovels.com';
+    if (myAvatar) myAvatar.textContent = (user.nickname || user.username || 'R').slice(0, 1).toUpperCase();
+
+    if (myAdultBadge) {
+      if (user.isAdultVerified) {
+        myAdultBadge.textContent = '🔞 19+ 성인 인증 완료';
+        myAdultBadge.className = 'badge badge-primary mt-2';
+        window._isAdultVerified = true;
+      } else {
+        myAdultBadge.textContent = '성인 인증 미완료';
+        myAdultBadge.className = 'badge badge-accent mt-2';
+        window._isAdultVerified = false;
+      }
+    }
+  } else {
+    // 비로그인 상태 UI
+    if (profileMenu) {
+      profileMenu.innerHTML = `
+        <button class="btn btn-primary btn-sm" id="btnHeaderLogin" onclick="openModal('modalAuth')">
+          <i data-lucide="log-in"></i> 로그인
+        </button>
+      `;
+    }
+
+    const myNickname = document.getElementById('myNickname');
+    const myEmail = document.getElementById('myEmail');
+    const myAvatar = document.getElementById('myAvatar');
+    const myAdultBadge = document.getElementById('myAdultBadge');
+
+    if (myNickname) myNickname.textContent = '게스트 독자';
+    if (myEmail) myEmail.textContent = '로그인이 필요합니다';
+    if (myAvatar) myAvatar.textContent = 'G';
+    if (myAdultBadge) {
       myAdultBadge.textContent = '성인 인증 미완료';
       myAdultBadge.className = 'badge badge-accent mt-2';
     }
+    window._isAdultVerified = false;
   }
 
-  // Update library stats
-  const libraryStats = document.querySelector('.library-stats');
-  if (libraryStats) {
-    const readingCount = user.readingHistories?.length || 0;
-    const favoriteCount = user.workFavorites?.length || 0;
-    const subCount = user.subscriptions?.length || 0;
-    libraryStats.innerHTML = `
-      <div><strong>${readingCount}</strong><span>읽는 중</span></div>
-      <div><strong>${favoriteCount}</strong><span>관심작</span></div>
-      <div><strong>${subCount}</strong><span>구독 작가</span></div>
-    `;
-  }
+  if (window.lucide) window.lucide.createIcons();
 }
 
 // ----------------------------------------------------
@@ -1887,10 +2034,24 @@ async function handlePassAdultVerify() {
     showToast('📲 PASS 인증 검증 중...');
     setTimeout(() => {
       window._isAdultVerified = true;
-      document.getElementById('myAdultBadge').textContent = '🔞 19+ 성인 인증 완료';
-      document.getElementById('myAdultBadge').className = 'badge badge-primary';
-      showToast('🎉 PASS 성인 본인인증이 완료되었습니다!');
-    }, 1500);
+      let user = null;
+      try {
+        user = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+      } catch(e) {}
+
+      if (user) {
+        user.isAdultVerified = true;
+        localStorage.setItem('webnovels_user', JSON.stringify(user));
+        updateMemberHeader(user);
+      } else {
+        const badge = document.getElementById('myAdultBadge');
+        if (badge) {
+          badge.textContent = '🔞 19+ 성인 인증 완료';
+          badge.className = 'badge badge-primary mt-2';
+        }
+      }
+      showToast('🎉 PASS 19+ 성인 본인인증이 완료되었습니다!');
+    }, 1200);
   }
 }
 
