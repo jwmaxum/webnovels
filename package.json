@@ -5,8 +5,9 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "prisma generate && tsc",
+    "postinstall": "prisma generate",
+    "start": "node dist/src/server.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "test": "tsx scripts/verify_backend.ts"
