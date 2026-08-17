@@ -988,44 +988,112 @@ function renderLibraryContent() {
   const continueContainer = document.getElementById('libraryContinueList');
   const favoriteContainer = document.getElementById('libraryFavoritesList');
   const authorContainer = document.getElementById('libraryAuthorsList');
+  const statReadingEl = document.getElementById('statReadingCount');
+  const statFavEl = document.getElementById('statFavoriteCount');
+  const statAuthorEl = document.getElementById('statAuthorCount');
 
-  // 1. 실제 읽었던 실시간 내역 렌더링
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+  } catch (e) {
+    history = [];
+  }
+
+  let favs = [];
+  try {
+    favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
+  } catch (e) {
+    favs = [];
+  }
+
+  // 좌측 프로필 통계 숫자 실시간 반영
+  if (statReadingEl) statReadingEl.textContent = String(history.length);
+  if (statFavEl) statFavEl.textContent = String(favs.length);
+  if (statAuthorEl) statAuthorEl.textContent = '2';
+
+  // 1. 실제 읽었던 실시간 내역 렌더링 (진행도 % 및 프로그레스 바 적용)
   if (continueContainer) {
-    let history = [];
-    try {
-      history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
-    } catch (e) {
-      history = [];
-    }
-
     if (history.length > 0) {
-      continueContainer.innerHTML = history.map(item => {
+      const validHistoryItems = history.map(item => {
         const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(item.workId));
-        if (!work) return '';
+        if (!work) return null;
+        const totalEps = work.episodes?.length || 6;
+        const readEpNum = Number(item.episodeNumber) || 1;
+        const pct = Math.min(100, Math.round((readEpNum / totalEps) * 100));
         const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
-        return `
-          <button class="library-row" onclick="openReaderDirect(${work.id}, ${item.episodeNumber})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <img src="${cover}" alt="${work.title} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
-              <div>
-                <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${work.title}</strong>
-                <small class="text-muted" style="font-size: 0.85rem;">
-                  <span style="color: var(--primary-color); font-weight: 600;">제 ${item.episodeNumber}화</span> 읽는 중 · ${work.genre}
-                </small>
+        return { work, totalEps, readEpNum, pct, cover };
+      }).filter(Boolean);
+
+      if (validHistoryItems.length > 0) {
+        const topItem = validHistoryItems[0];
+        const restItems = validHistoryItems.slice(1);
+
+        let html = `
+          <!-- 최신 읽은 대표 작품 (상단 하이라이트 카드) -->
+          <div class="library-reading-card glass-panel mb-4" style="border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 16px;">
+            <img src="${topItem.cover}" alt="${topItem.work.title} 표지">
+            <div>
+              <span class="badge badge-accent" style="font-weight: 600;">${topItem.pct}% 읽음</span>
+              <h3 style="margin: 6px 0 4px; font-size: 1.15rem; color: #fff;">${topItem.work.title}</h3>
+              <p class="text-muted small" style="margin-bottom: 8px;">
+                제 ${topItem.readEpNum}화 읽는 중 (총 ${topItem.totalEps}화) · ${topItem.work.genre}
+              </p>
+              <div class="progress-bar-bg" style="height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden;">
+                <div class="progress-bar-fill" style="width: ${topItem.pct}%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--primary-color), #818cf8);"></div>
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 6px; color: var(--primary-color); font-weight: 500; font-size: 0.9rem;">
-              <span>이어보기</span>
-              <i data-lucide="play-circle"></i>
-            </div>
-          </button>
+            <button class="btn btn-primary" onclick="openReaderDirect(${topItem.work.id}, ${topItem.readEpNum})" style="white-space: nowrap;">
+              계속 읽기 <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
         `;
-      }).filter(Boolean).join('');
+
+        // 2번째 이후의 읽은 작품 목록
+        if (restItems.length > 0) {
+          html += `
+            <div class="rest-history-list" style="display: flex; flex-direction: column; gap: 8px;">
+              ${restItems.map(item => `
+                <button class="library-row" onclick="openReaderDirect(${item.work.id}, ${item.readEpNum})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                  <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                    <img src="${item.cover}" alt="${item.work.title} 표지" style="width: 48px; height: 64px; object-fit: cover; border-radius: 6px;">
+                    <div style="flex: 1; max-width: 400px;">
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <strong style="font-size: 0.95rem; color: #fff;">${item.work.title}</strong>
+                        <span class="badge" style="font-size: 0.75rem; padding: 2px 6px; background: rgba(255,255,255,0.08); color: var(--primary-color);">${item.pct}%</span>
+                      </div>
+                      <small class="text-muted" style="display: block; font-size: 0.82rem; margin-bottom: 4px;">
+                        제 ${item.readEpNum}화 읽는 중 · ${item.work.genre}
+                      </small>
+                      <div class="progress-bar-bg" style="height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); width: 100%; overflow: hidden;">
+                        <div class="progress-bar-fill" style="width: ${item.pct}%; height: 100%; background: var(--primary-color);"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px; color: var(--primary-color); font-weight: 500; font-size: 0.9rem; margin-left: 12px;">
+                    <span>이어보기</span>
+                    <i data-lucide="play-circle"></i>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        continueContainer.innerHTML = html;
+      } else {
+        continueContainer.innerHTML = `
+          <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+            <i data-lucide="book-open" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+            <p style="margin: 0; font-size: 1rem; color: #fff;">아직 읽은 작품이 없습니다.</p>
+            <small class="text-muted">웹소설 회차를 감상하면 이곳에 실시간으로 기록됩니다.</small>
+          </div>
+        `;
+      }
     } else {
       continueContainer.innerHTML = `
-        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 24px;">
-          <i data-lucide="book-open" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.6;"></i>
-          <p style="margin: 0; font-size: 0.95rem;">아직 읽은 작품이 없습니다.</p>
+        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+          <i data-lucide="book-open" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 1rem; color: #fff;">아직 읽은 작품이 없습니다.</p>
           <small class="text-muted">웹소설 회차를 감상하면 이곳에 실시간으로 기록됩니다.</small>
         </div>
       `;
@@ -1034,13 +1102,6 @@ function renderLibraryContent() {
 
   // 2. 관심 작품 실시간 렌더링
   if (favoriteContainer) {
-    let favs = [];
-    try {
-      favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
-    } catch (e) {
-      favs = [];
-    }
-
     if (favs.length > 0) {
       const favWorks = SAMPLE_WORKS.filter(w => favs.includes(Number(w.id)));
       favoriteContainer.innerHTML = favWorks.map(work => {
@@ -1060,9 +1121,9 @@ function renderLibraryContent() {
       }).join('');
     } else {
       favoriteContainer.innerHTML = `
-        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 24px;">
-          <i data-lucide="heart" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.6;"></i>
-          <p style="margin: 0; font-size: 0.95rem;">등록된 관심 작품이 없습니다.</p>
+        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+          <i data-lucide="heart" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 1rem; color: #fff;">등록된 관심 작품이 없습니다.</p>
           <small class="text-muted">작품 상세페이지에서 '관심등록'을 눌러보세요.</small>
         </div>
       `;

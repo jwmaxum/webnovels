@@ -342,9 +342,9 @@
                 </div>
               </div>
               <div class="library-stats">
-                <div><strong>3</strong><span>읽는 중</span></div>
-                <div><strong>5</strong><span>관심작</span></div>
-                <div><strong>2</strong><span>구독 작가</span></div>
+                <div><strong id="statReadingCount">0</strong><span>읽는 중</span></div>
+                <div><strong id="statFavoriteCount">0</strong><span>관심작</span></div>
+                <div><strong id="statAuthorCount">0</strong><span>구독 작가</span></div>
               </div>
               <button class="btn btn-primary w-full" id="btnStartPassVerify">
                 <i data-lucide="smartphone"></i> PASS 성인 인증
@@ -359,16 +359,6 @@
                 <button data-library-tab="authors">구독 작가</button>
               </div>
               <div class="library-tab-panel active" id="libraryTab-continue">
-                <div class="library-reading-card glass-panel">
-                  <img src="/images/stormqueen_oath.jpg" alt="대적자 표지">
-                  <div>
-                    <span class="badge badge-accent">75% 읽음</span>
-                    <h3>대적자: 신을 삼킨 기사</h3>
-                    <p class="text-muted">1화 읽는 중 · 다음 행동: 이어서 읽거나 회차 목록 보기</p>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:75%"></div></div>
-                  </div>
-                  <button class="btn btn-primary" onclick="openReaderDirect(1, 1)">계속 읽기</button>
-                </div>
                 <div class="library-list" id="libraryContinueList"></div>
               </div>
               <div class="library-tab-panel" id="libraryTab-favorites">
