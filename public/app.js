@@ -1862,12 +1862,58 @@ window.handleMemberLogout = function() {
 };
 
 async function handleMemberSignup() {
-  const nickname = document.getElementById('signupNickname')?.value;
-  const username = document.getElementById('signupUsername')?.value;
-  const email = document.getElementById('signupEmail')?.value;
-  const password = document.getElementById('signupPassword')?.value;
-  const phone = document.getElementById('signupPhone')?.value;
+  const nickname = document.getElementById('signupNickname')?.value.trim();
+  const username = document.getElementById('signupUsername')?.value.trim();
+  const email = document.getElementById('signupEmail')?.value.trim();
+  const password = document.getElementById('signupPassword')?.value.trim();
+  const phone = document.getElementById('signupPhone')?.value.trim();
 
+  if (!email || !password || !nickname) {
+    showToast('닉네임, 이메일, 비밀번호는 필수 입력 항목입니다.');
+    return;
+  }
+
+  // 1. 백엔드 API 회원가입 시도
+  try {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        nickname, 
+        username: username || email.split('@')[0], 
+        email, 
+        password, 
+        phone, 
+        role: 'READER' 
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const userObj = {
+        id: data.user?.id || 'user-' + Date.now(),
+        username: data.user?.username || username || email.split('@')[0],
+        nickname: data.user?.nickname || nickname,
+        email: data.user?.email || email,
+        phone: phone || '',
+        isAdultVerified: false,
+        role: 'READER'
+      };
+      localStorage.setItem('webnovels_token', data.token || `token-${userObj.id}`);
+      localStorage.setItem('webnovels_user', JSON.stringify(userObj));
+      localStorage.removeItem('webnovels_author');
+
+      updateMemberHeader(userObj);
+      renderLibraryContent();
+      closeAllModals();
+      showToast(`🎉 ${userObj.nickname}님 회원가입이 완료되었습니다!`);
+      switchWebNovelsView('view-mypage');
+      return;
+    }
+  } catch (err) {
+    // Cloudflare Pages 등 정적 호스팅 환경에서는 로컬 세션으로 자동 처리
+  }
+
+  // 2. 로컬/정적 환경 회원가입 처리
   const userObj = {
     id: 'user-' + Date.now(),
     username: username || email.split('@')[0],
@@ -1885,7 +1931,7 @@ async function handleMemberSignup() {
   updateMemberHeader(userObj);
   renderLibraryContent();
   closeAllModals();
-  showToast('회원가입이 완료되었습니다. 내 서재로 이동합니다.');
+  showToast(`🎉 ${userObj.nickname}님 회원가입이 완료되었습니다!`);
   switchWebNovelsView('view-mypage');
 }
 
