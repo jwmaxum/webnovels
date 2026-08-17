@@ -287,14 +287,21 @@ function bindWebNovelsEvents() {
   });
 
   // Detail Page Action Buttons
+  // Work Detail Buttons
+  document.getElementById('btnWorkDetailBack')?.addEventListener('click', () => {
+    switchWebNovelsView(lastMainView || 'view-home');
+  });
   document.getElementById('btnDetailReadFirst')?.addEventListener('click', () => {
-    openReaderDirect(activeWork.id, 'ep-1');
+    openReaderDirect(activeWork.id, 1);
   });
   document.getElementById('btnStickyRead')?.addEventListener('click', () => {
-    openReaderDirect(activeWork.id, 'ep-1');
+    openReaderDirect(activeWork.id, 1);
   });
   document.getElementById('btnDetailFavorite')?.addEventListener('click', () => {
-    showToast('❤️ 관심 작품에 등록되었습니다.');
+    toggleFavoriteWork(activeWork.id);
+  });
+  document.getElementById('btnStickyHeart')?.addEventListener('click', () => {
+    toggleFavoriteWork(activeWork.id);
   });
   document.getElementById('btnDetailSubscribe')?.addEventListener('click', () => {
     showToast('👤 작가를 구독했습니다.');
@@ -308,10 +315,25 @@ function bindWebNovelsEvents() {
     openModal('modalReaderSettings');
   });
   document.getElementById('btnPrevEp')?.addEventListener('click', () => {
-    showToast('첫 번째 회차입니다.');
+    const curEp = parseInt(activeEpisodeId, 10) || 1;
+    if (curEp <= 1) {
+      showToast('첫 번째 회차입니다.');
+    } else {
+      openReaderDirect(activeWork.id, curEp - 1);
+    }
   });
   document.getElementById('btnNextEp')?.addEventListener('click', () => {
-    openReaderDirect(activeWork.id, 'ep-4'); // Attempt 4th episode (Requires Ad Unlock)
+    const curEp = parseInt(activeEpisodeId, 10) || 1;
+    const nextEp = curEp + 1;
+    const work = activeWork || SAMPLE_WORKS[0];
+    const availableEpisodes = work.episodes || [];
+    const maxEp = availableEpisodes.length > 0 ? Math.max(...availableEpisodes.map(e => e.episodeNumber)) : 6;
+
+    if (nextEp <= maxEp) {
+      openReaderDirect(activeWork.id, nextEp);
+    } else {
+      handleComingSoonEpisode(nextEp);
+    }
   });
 
   // Ad Unlock Events
@@ -330,6 +352,8 @@ function bindWebNovelsEvents() {
 }
 
 let isAdminLoggedIn = false;
+let currentActiveView = 'view-home';
+let lastMainView = 'view-home';
 
 function switchWebNovelsView(viewId, activeLink) {
   // 관리자 메뉴 접근 시 로그인 검증
@@ -346,6 +370,12 @@ function switchWebNovelsView(viewId, activeLink) {
       return;
     }
   }
+
+  // 이전 메인 뷰 기억 (상세 화면이나 뷰어에서 뒤로가기용)
+  if (currentActiveView !== 'view-work-detail' && currentActiveView !== 'view-reader') {
+    lastMainView = currentActiveView;
+  }
+  currentActiveView = viewId;
 
   document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(l => l.classList.remove('active'));
@@ -369,6 +399,9 @@ function switchWebNovelsView(viewId, activeLink) {
   if (viewId === 'view-admin-cms' && isAdminLoggedIn) {
     loadAdminDashboard();
   }
+
+  // 페이지 상단으로 스크롤 이동
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 // 관리자 로그인 로직 처리 (Supabase 연동)
@@ -888,37 +921,155 @@ function hasLooseMatch(haystack, query) {
   return query.split('').every(char => haystack.includes(char));
 }
 
+// ---- 읽기 기록 및 관심작품 관리 (내 서재 실시간 연동) ----
+function saveReadingProgress(workId, epNum) {
+  try {
+    let history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+    const id = Number(workId);
+    const num = Number(epNum);
+
+    // 기존 해당 작품 기록 제거 후 최신 순으로 상단에 추가
+    history = history.filter(item => Number(item.workId) !== id);
+    history.unshift({
+      workId: id,
+      episodeNumber: num,
+      updatedAt: new Date().toISOString()
+    });
+
+    // 최대 20개까지만 보관
+    if (history.length > 20) history = history.slice(0, 20);
+    localStorage.setItem('webnovels_reading_history', JSON.stringify(history));
+
+    console.log(`[Reading Progress Saved] Work ${id}, Episode ${num}`);
+  } catch (err) {
+    console.warn('[Reading Progress Error]', err);
+  }
+}
+
+function toggleFavoriteWork(workId) {
+  try {
+    let favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
+    const id = Number(workId);
+    if (favs.includes(id)) {
+      favs = favs.filter(f => f !== id);
+      showToast('💔 관심 작품에서 해제되었습니다.');
+    } else {
+      favs.push(id);
+      showToast('💖 관심 작품에 등록되었습니다.');
+    }
+    localStorage.setItem('webnovels_favorites', JSON.stringify(favs));
+    updateFavoriteButtons(id);
+    renderLibraryContent();
+  } catch (err) {
+    console.warn('[Favorite Toggle Error]', err);
+  }
+}
+
+function updateFavoriteButtons(workId) {
+  const favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
+  const isFav = favs.includes(Number(workId));
+  const btnDetailFav = document.getElementById('btnDetailFavorite');
+  const btnStickyFav = document.getElementById('btnStickyHeart');
+
+  if (btnDetailFav) {
+    btnDetailFav.innerHTML = isFav 
+      ? '<i data-lucide="heart" style="fill: #ef4444; color: #ef4444;"></i> 관심등록 완료' 
+      : '<i data-lucide="heart"></i> 관심등록';
+  }
+  if (btnStickyFav) {
+    btnStickyFav.innerHTML = isFav 
+      ? '<i data-lucide="heart" style="fill: #ef4444; color: #ef4444;"></i>' 
+      : '<i data-lucide="heart"></i>';
+  }
+  if (window.lucide) window.lucide.createIcons();
+}
+
 function renderLibraryContent() {
   const continueContainer = document.getElementById('libraryContinueList');
   const favoriteContainer = document.getElementById('libraryFavoritesList');
   const authorContainer = document.getElementById('libraryAuthorsList');
 
+  // 1. 실제 읽었던 실시간 내역 렌더링
   if (continueContainer) {
-    continueContainer.innerHTML = SAMPLE_WORKS.slice(1, 4).map((work, index) => `
-      <button class="library-row" onclick="openReaderDirect(${work.id}, 1)">
-        <img src="${work.coverUrl}" alt="${work.title} 표지">
-        <span>
-          <strong>${work.title}</strong>
-          <small>${index + 1}화 읽는 중 · ${work.genre} · ${(work.viewCount / 1000).toFixed(1)}K</small>
-        </span>
-        <i data-lucide="play-circle"></i>
-      </button>
-    `).join('');
+    let history = [];
+    try {
+      history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+    } catch (e) {
+      history = [];
+    }
+
+    if (history.length > 0) {
+      continueContainer.innerHTML = history.map(item => {
+        const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(item.workId));
+        if (!work) return '';
+        const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+        return `
+          <button class="library-row" onclick="openReaderDirect(${work.id}, ${item.episodeNumber})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="${cover}" alt="${work.title} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
+              <div>
+                <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${work.title}</strong>
+                <small class="text-muted" style="font-size: 0.85rem;">
+                  <span style="color: var(--primary-color); font-weight: 600;">제 ${item.episodeNumber}화</span> 읽는 중 · ${work.genre}
+                </small>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; color: var(--primary-color); font-weight: 500; font-size: 0.9rem;">
+              <span>이어보기</span>
+              <i data-lucide="play-circle"></i>
+            </div>
+          </button>
+        `;
+      }).filter(Boolean).join('');
+    } else {
+      continueContainer.innerHTML = `
+        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 24px;">
+          <i data-lucide="book-open" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 0.95rem;">아직 읽은 작품이 없습니다.</p>
+          <small class="text-muted">웹소설 회차를 감상하면 이곳에 실시간으로 기록됩니다.</small>
+        </div>
+      `;
+    }
   }
 
+  // 2. 관심 작품 실시간 렌더링
   if (favoriteContainer) {
-    favoriteContainer.innerHTML = SAMPLE_WORKS.slice(0, 5).map(work => `
-      <button class="library-row" onclick="openWorkDetailDirect(${work.id})">
-        <img src="${work.coverUrl}" alt="${work.title} 표지">
-        <span>
-          <strong>${work.title}</strong>
-          <small>${work.author} · 새 회차 확인하기</small>
-        </span>
-        <i data-lucide="chevron-right"></i>
-      </button>
-    `).join('');
+    let favs = [];
+    try {
+      favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
+    } catch (e) {
+      favs = [];
+    }
+
+    if (favs.length > 0) {
+      const favWorks = SAMPLE_WORKS.filter(w => favs.includes(Number(w.id)));
+      favoriteContainer.innerHTML = favWorks.map(work => {
+        const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+        return `
+          <button class="library-row" onclick="openWorkDetailDirect(${work.id})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="${cover}" alt="${work.title} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
+              <div>
+                <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${work.title}</strong>
+                <small class="text-muted">${work.author} · ${work.genre}</small>
+              </div>
+            </div>
+            <i data-lucide="chevron-right"></i>
+          </button>
+        `;
+      }).join('');
+    } else {
+      favoriteContainer.innerHTML = `
+        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 24px;">
+          <i data-lucide="heart" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 0.95rem;">등록된 관심 작품이 없습니다.</p>
+          <small class="text-muted">작품 상세페이지에서 '관심등록'을 눌러보세요.</small>
+        </div>
+      `;
+    }
   }
 
+  // 3. 작가 목록
   if (authorContainer) {
     authorContainer.innerHTML = SAMPLE_AUTHORS.slice(0, 4).map(author => `
       <button class="library-author-card" onclick="showToast('${author.pen_name} 작가의 작품 목록으로 이동합니다.')">
@@ -955,6 +1106,9 @@ window.openWorkDetailDirect = function(workId) {
   document.getElementById('detailRatingBadge').textContent = work.rating === 'ALL' ? '전체이용가' : '19세 이상 성인';
   document.getElementById('detailAiBadge').textContent = `AI ${work.aiUsageType}`;
   document.getElementById('detailDescription').textContent = work.description;
+
+  // 관심등록 상태 버튼 업데이트
+  updateFavoriteButtons(work.id);
 
   // Render Episode List
   const epList = document.getElementById('detailEpisodeList');
@@ -1061,6 +1215,9 @@ window.openReaderDirect = function(workId, epNumber) {
   document.getElementById('readerWorkTitle').textContent = work.title;
   document.getElementById('readerEpTitle').textContent = ep.title;
   document.getElementById('readerHeading').textContent = `${ep.title} (${ep.episodeNumber}화)`;
+
+  // 실시간 읽기 내역 저장 (내 서재 연동)
+  saveReadingProgress(work.id, epNum);
 
   // 본문 텍스트 렌더링
   const rawContent = ep.content || `본 회차는 ${ep.episodeNumber}회차 입니다.\n\n[${work.title} - ${ep.title}]\n광고를 보면 다음 회차가 연속으로 해금되어 계속 읽을 수 있습니다.`;
