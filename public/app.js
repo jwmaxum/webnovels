@@ -1145,11 +1145,11 @@ function renderLibraryContent() {
             <div>
               <span class="badge badge-accent" style="font-weight: 600;">${topItem.pct}% 읽음</span>
               <h3 style="margin: 6px 0 4px; font-size: 1.15rem; color: #fff;">${topItem.work.title}</h3>
-              <p class="text-muted small" style="margin-bottom: 8px;">
+              <p class="text-muted small" style="margin-bottom: 10px;">
                 제 ${topItem.readEpNum}화 읽는 중 (총 ${topItem.totalEps}화) · ${topItem.work.genre}
               </p>
-              <div class="progress-bar-bg" style="height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden;">
-                <div class="progress-bar-fill" style="width: ${topItem.pct}%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--primary-color), #818cf8);"></div>
+              <div class="progress-bar-bg" style="height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); overflow: hidden; width: 100%;">
+                <div class="progress-bar-fill" style="width: ${topItem.pct}%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #6D5EF5 0%, #8B5CF6 50%, #25D1FF 100%); box-shadow: 0 0 12px rgba(109, 94, 245, 0.7);"></div>
               </div>
             </div>
             <button class="btn btn-primary" onclick="openReaderDirect(${topItem.work.id}, ${topItem.readEpNum})" style="white-space: nowrap;">
@@ -1169,13 +1169,13 @@ function renderLibraryContent() {
                     <div style="flex: 1; max-width: 400px;">
                       <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
                         <strong style="font-size: 0.95rem; color: #fff;">${item.work.title}</strong>
-                        <span class="badge" style="font-size: 0.75rem; padding: 2px 6px; background: rgba(255,255,255,0.08); color: var(--primary-color);">${item.pct}%</span>
+                        <span class="badge" style="font-size: 0.75rem; padding: 2px 6px; background: rgba(109, 94, 245, 0.2); color: #a5b4fc;">${item.pct}%</span>
                       </div>
-                      <small class="text-muted" style="display: block; font-size: 0.82rem; margin-bottom: 4px;">
+                      <small class="text-muted" style="display: block; font-size: 0.82rem; margin-bottom: 6px;">
                         제 ${item.readEpNum}화 읽는 중 · ${item.work.genre}
                       </small>
-                      <div class="progress-bar-bg" style="height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); width: 100%; overflow: hidden;">
-                        <div class="progress-bar-fill" style="width: ${item.pct}%; height: 100%; background: var(--primary-color);"></div>
+                      <div class="progress-bar-bg" style="height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); width: 100%; overflow: hidden;">
+                        <div class="progress-bar-fill" style="width: ${item.pct}%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6D5EF5, #818cf8, #25D1FF);"></div>
                       </div>
                     </div>
                   </div>
