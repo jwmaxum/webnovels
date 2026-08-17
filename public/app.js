@@ -1271,6 +1271,7 @@ function renderLibraryContent() {
           </div>
         </button>
       `).join('');
+    } else {
       authorContainer.innerHTML = `
         <div class="p-6 text-center text-muted" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
           <i data-lucide="users" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
