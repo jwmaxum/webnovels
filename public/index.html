@@ -998,29 +998,47 @@
             <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="log-in"></i> 로그인하고 내 서재로</button>
           </form>
           
-          <form class="auth-form" id="authForm-signup" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-            <label>닉네임</label>
-            <input type="text" id="signupNickname" class="form-control" placeholder="예: 새벽독자" required>
-            <label>아이디</label>
-            <input type="text" id="signupUsername" class="form-control" placeholder="아이디" required>
-            <label>이메일</label>
-            <input type="email" id="signupEmail" class="form-control" placeholder="reader@example.com" required>
-            <label>비밀번호</label>
+          <form class="auth-form" id="authForm-signup" style="max-height: 440px; overflow-y: auto; padding-right: 5px;">
+            <label>Nickname(별명)</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <input type="text" id="signupNickname" class="form-control" style="margin-bottom: 0;" placeholder="예: 새벽독자" required>
+              <button type="button" class="btn btn-outline btn-sm" id="btnCheckNickname" style="white-space: nowrap; padding: 0 14px;">중복확인</button>
+            </div>
+            <div id="nicknameCheckMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
+
+            <label>email ID :</label>
+            <input type="email" id="signupEmail" class="form-control" placeholder="reader@webnovels.com" required>
+
+            <label>Password (비밀번호) :</label>
             <input type="password" id="signupPassword" class="form-control" placeholder="8자 이상" required>
+
+            <label>Password 확인 :</label>
+            <input type="password" id="signupPasswordConfirm" class="form-control" placeholder="비밀번호 재입력" required>
+            <div id="pwMatchMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
+
             <label>전화번호</label>
             <input type="text" id="signupPhone" class="form-control" placeholder="+82-010-1111-2222" required>
             <button type="submit" class="btn btn-primary btn-lg w-full mt-3"><i data-lucide="user-plus"></i> 일반 독자 회원가입</button>
           </form>
 
-          <form class="auth-form" id="authForm-signup-author" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-            <label>필명 (작가명)</label>
-            <input type="text" id="authorPenName" class="form-control" placeholder="예: 판타지마스터" required>
-            <label>아이디</label>
-            <input type="text" id="authorUsername" class="form-control" placeholder="아이디" required>
-            <label>이메일</label>
-            <input type="email" id="authorEmail" class="form-control" placeholder="writer@example.com" required>
-            <label>비밀번호</label>
+          <form class="auth-form" id="authForm-signup-author" style="max-height: 440px; overflow-y: auto; padding-right: 5px;">
+            <label>Nickname / 필명 (별명)</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <input type="text" id="authorPenName" class="form-control" style="margin-bottom: 0;" placeholder="예: 판타지마스터" required>
+              <button type="button" class="btn btn-outline btn-sm" id="btnCheckAuthorPenName" style="white-space: nowrap; padding: 0 14px;">중복확인</button>
+            </div>
+            <div id="authorPenNameCheckMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
+
+            <label>email ID :</label>
+            <input type="email" id="authorEmail" class="form-control" placeholder="writer@webnovels.com" required>
+
+            <label>Password (비밀번호) :</label>
             <input type="password" id="authorPassword" class="form-control" placeholder="8자 이상" required>
+
+            <label>Password 확인 :</label>
+            <input type="password" id="authorPasswordConfirm" class="form-control" placeholder="비밀번호 재입력" required>
+            <div id="authorPwMatchMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
+
             <label>대표 작품명</label>
             <input type="text" id="authorWorkTitle" class="form-control" placeholder="예: 신을 삼킨 기사" required>
             <label>생년월일</label>

@@ -274,6 +274,16 @@ function bindWebNovelsEvents() {
     handleAuthorSignup();
   });
 
+  document.getElementById('btnCheckNickname')?.addEventListener('click', () => {
+    checkNicknameDuplicate();
+  });
+
+  document.getElementById('btnCheckAuthorPenName')?.addEventListener('click', () => {
+    checkAuthorPenNameDuplicate();
+  });
+
+  setupPasswordMatchCheckers();
+
   document.getElementById('btnAuthCreator')?.addEventListener('click', () => {
     closeAllModals();
     switchWebNovelsView('view-creator');
@@ -1861,17 +1871,132 @@ window.handleMemberLogout = function() {
   switchWebNovelsView('view-home');
 };
 
-async function handleMemberSignup() {
+// ----------------------------------------------------
+// 중복확인 및 비밀번호 일치 실시간 검증
+// ----------------------------------------------------
+window.checkNicknameDuplicate = function() {
   const nickname = document.getElementById('signupNickname')?.value.trim();
-  const username = document.getElementById('signupUsername')?.value.trim();
-  const email = document.getElementById('signupEmail')?.value.trim();
-  const password = document.getElementById('signupPassword')?.value.trim();
-  const phone = document.getElementById('signupPhone')?.value.trim();
-
-  if (!email || !password || !nickname) {
-    showToast('닉네임, 이메일, 비밀번호는 필수 입력 항목입니다.');
+  const msgEl = document.getElementById('nicknameCheckMsg');
+  if (!nickname) {
+    showToast('검사할 Nickname(별명)을 입력해주세요.');
     return;
   }
+  
+  const isDuplicated = SAMPLE_READERS.some(r => 
+    (r.nickname && r.nickname.toLowerCase() === nickname.toLowerCase()) || 
+    (r.username && r.username.toLowerCase() === nickname.toLowerCase())
+  );
+
+  if (msgEl) {
+    msgEl.style.display = 'block';
+    if (isDuplicated) {
+      msgEl.style.color = '#ef4444';
+      msgEl.innerHTML = `❌ <strong>${nickname}</strong> 은(는) 이미 사용 중인 별명입니다.`;
+    } else {
+      msgEl.style.color = '#10b981';
+      msgEl.innerHTML = `✓ <strong>${nickname}</strong> 은(는) 사용 가능한 멋진 별명입니다!`;
+    }
+  }
+  showToast(isDuplicated ? '❌ 이미 사용 중인 Nickname입니다.' : '✓ 사용 가능한 Nickname(별명)입니다!');
+};
+
+window.checkAuthorPenNameDuplicate = function() {
+  const penName = document.getElementById('authorPenName')?.value.trim();
+  const msgEl = document.getElementById('authorPenNameCheckMsg');
+  if (!penName) {
+    showToast('검사할 Nickname/필명을 입력해주세요.');
+    return;
+  }
+  
+  const isDuplicated = SAMPLE_AUTHORS.some(a => 
+    (a.pen_name && a.pen_name.toLowerCase() === penName.toLowerCase())
+  );
+
+  if (msgEl) {
+    msgEl.style.display = 'block';
+    if (isDuplicated) {
+      msgEl.style.color = '#ef4444';
+      msgEl.innerHTML = `❌ <strong>${penName}</strong> 은(는) 이미 등록된 필명입니다.`;
+    } else {
+      msgEl.style.color = '#10b981';
+      msgEl.innerHTML = `✓ <strong>${penName}</strong> 은(는) 등록 가능한 작가 필명입니다!`;
+    }
+  }
+  showToast(isDuplicated ? '❌ 이미 등록된 필명입니다.' : '✓ 등록 가능한 작가 필명입니다!');
+};
+
+function setupPasswordMatchCheckers() {
+  const pw1 = document.getElementById('signupPassword');
+  const pw2 = document.getElementById('signupPasswordConfirm');
+  const msg = document.getElementById('pwMatchMsg');
+
+  function check() {
+    if (!pw2 || !msg) return;
+    if (!pw2.value) {
+      msg.style.display = 'none';
+      return;
+    }
+    msg.style.display = 'block';
+    if (pw1.value === pw2.value) {
+      msg.style.color = '#10b981';
+      msg.textContent = '✓ 비밀번호가 일치합니다.';
+    } else {
+      msg.style.color = '#ef4444';
+      msg.textContent = '✗ 비밀번호가 일치하지 않습니다.';
+    }
+  }
+
+  pw1?.addEventListener('input', check);
+  pw2?.addEventListener('input', check);
+
+  const aPw1 = document.getElementById('authorPassword');
+  const aPw2 = document.getElementById('authorPasswordConfirm');
+  const aMsg = document.getElementById('authorPwMatchMsg');
+
+  function aCheck() {
+    if (!aPw2 || !aMsg) return;
+    if (!aPw2.value) {
+      aMsg.style.display = 'none';
+      return;
+    }
+    aMsg.style.display = 'block';
+    if (aPw1.value === aPw2.value) {
+      aMsg.style.color = '#10b981';
+      aMsg.textContent = '✓ 비밀번호가 일치합니다.';
+    } else {
+      aMsg.style.color = '#ef4444';
+      aMsg.textContent = '✗ 비밀번호가 일치하지 않습니다.';
+    }
+  }
+
+  aPw1?.addEventListener('input', aCheck);
+  aPw2?.addEventListener('input', aCheck);
+}
+
+async function handleMemberSignup() {
+  const nickname = document.getElementById('signupNickname')?.value.trim();
+  const email = document.getElementById('signupEmail')?.value.trim();
+  const password = document.getElementById('signupPassword')?.value.trim();
+  const passwordConfirm = document.getElementById('signupPasswordConfirm')?.value.trim();
+  const phone = document.getElementById('signupPhone')?.value.trim();
+
+  if (!nickname || !email || !password) {
+    showToast('Nickname(별명), email ID, 비밀번호는 필수 입력 항목입니다.');
+    return;
+  }
+
+  if (password.length < 6) {
+    showToast('비밀번호는 최소 6자 이상이어야 합니다.');
+    return;
+  }
+
+  if (password !== passwordConfirm) {
+    showToast('❌ 입력하신 두 비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+    document.getElementById('signupPasswordConfirm')?.focus();
+    return;
+  }
+
+  const effectiveUsername = nickname;
 
   // 1. 백엔드 API 회원가입 시도
   try {
@@ -1880,7 +2005,7 @@ async function handleMemberSignup() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         nickname, 
-        username: username || email.split('@')[0], 
+        username: effectiveUsername, 
         email, 
         password, 
         phone, 
@@ -1891,7 +2016,7 @@ async function handleMemberSignup() {
       const data = await res.json();
       const userObj = {
         id: data.user?.id || 'user-' + Date.now(),
-        username: data.user?.username || username || email.split('@')[0],
+        username: data.user?.username || effectiveUsername,
         nickname: data.user?.nickname || nickname,
         email: data.user?.email || email,
         phone: phone || '',
@@ -1916,8 +2041,8 @@ async function handleMemberSignup() {
   // 2. 로컬/정적 환경 회원가입 처리
   const userObj = {
     id: 'user-' + Date.now(),
-    username: username || email.split('@')[0],
-    nickname: nickname || username || '독자',
+    username: effectiveUsername,
+    nickname: nickname,
     email: email,
     phone: phone || '',
     isAdultVerified: false,
@@ -1936,17 +2061,33 @@ async function handleMemberSignup() {
 }
 
 async function handleAuthorSignup() {
-  const penName = document.getElementById('authorPenName')?.value;
-  const username = document.getElementById('authorUsername')?.value;
-  const email = document.getElementById('authorEmail')?.value;
-  const password = document.getElementById('authorPassword')?.value;
-  const workTitle = document.getElementById('authorWorkTitle')?.value;
-  const bankInfo = document.getElementById('authorBankInfo')?.value;
+  const penName = document.getElementById('authorPenName')?.value.trim();
+  const email = document.getElementById('authorEmail')?.value.trim();
+  const password = document.getElementById('authorPassword')?.value.trim();
+  const passwordConfirm = document.getElementById('authorPasswordConfirm')?.value.trim();
+  const workTitle = document.getElementById('authorWorkTitle')?.value.trim();
+  const bankInfo = document.getElementById('authorBankInfo')?.value.trim();
+
+  if (!penName || !email || !password) {
+    showToast('Nickname/필명, email ID, 비밀번호는 필수 입력 항목입니다.');
+    return;
+  }
+
+  if (password.length < 6) {
+    showToast('비밀번호는 최소 6자 이상이어야 합니다.');
+    return;
+  }
+
+  if (password !== passwordConfirm) {
+    showToast('❌ 입력하신 두 비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+    document.getElementById('authorPasswordConfirm')?.focus();
+    return;
+  }
 
   const authorObj = {
     id: Date.now(),
-    username: username || email.split('@')[0],
-    pen_name: penName || '신규작가',
+    username: penName,
+    pen_name: penName,
     email: email,
     work_title: workTitle || '신규 등록작품',
     bank_info: bankInfo || '',
@@ -1959,7 +2100,7 @@ async function handleAuthorSignup() {
 
   updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
   closeAllModals();
-  showToast('작가 회원가입이 완료되었습니다. 작가 스튜디오로 이동합니다.');
+  showToast(`✍️ ${penName} 작가님 회원가입이 완료되었습니다!`);
   switchWebNovelsView('view-creator');
 }
 
