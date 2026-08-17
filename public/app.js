@@ -2,7 +2,19 @@
 
 const API_BASE = '/api';
 
-// Sample Works Seed Data (8 Full Works with 4 Episodes each)
+// Helper to generate 6 default episodes for each work
+function createDefault6Episodes(workTitle) {
+  return [
+    { episodeNumber: 1, title: "제 1 화", isFree: true, isAdFree: false, content: `본 회차는 1회차 입니다.\n\n[${workTitle} - 제 1 화]\n주인공은 불길하게 타오르는 붉은 하늘을 바라보며 검 자루를 쥐었다. 바람이 부는 순간, 차가운 강철의 감촉이 손바닥에 선명하게 전해졌다.\n\n"끝을 낼 시간이군."\n\n그의 짧은 읊조림과 함께 수많은 전장의 함성이 울려 퍼지기 시작했다. 1~3화는 무료로 즉시 열람하실 수 있습니다.` },
+    { episodeNumber: 2, title: "제 2 화", isFree: true, isAdFree: false, content: `본 회차는 2회차 입니다.\n\n[${workTitle} - 제 2 화]\n폐허가 된 고대 성채에서 미지의 봉인이 풀렸다. 주인공은 어둠 속에서 빛나는 고대의 유물을 마주하고 숨을 죽였다.\n\n"이것이 전설로 전해지던 힘인가..."\n\n새로운 운명이 그의 앞에 펼쳐지고 있었다.` },
+    { episodeNumber: 3, title: "제 3 화", isFree: true, isAdFree: false, content: `본 회차는 3회차 입니다.\n\n[${workTitle} - 제 3 화]\n동료들과 함께 나선 첫 번째 원정길. 예기치 못한 적들의 기습 속에서 주인공은 자신의 잠재된 능력을 각성시킨다.\n\n"물러서지 마라! 우리가 길을 열 것이다!"\n\n치열한 혈투 끝에 드러난 배후의 진실은 무엇일까?` },
+    { episodeNumber: 4, title: "제 4 화", isFree: false, isAdFree: true, content: `본 회차는 4회차 입니다.\n\n[${workTitle} - 제 4 화]\n💡 광고를 시청하여 성공적으로 해금된 4회차 본문입니다.\n\n적들의 숨겨진 요새에 도달한 주인공 일행. 그러나 그곳을 지키는 문지기는 상상을 초월하는 위력을 뿜어내고 있었다.\n\n"여기까지 온 자는 아무도 살아 돌아가지 못했다."\n\n운명을 건 사투가 시작된다.` },
+    { episodeNumber: 5, title: "제 5 화", isFree: false, isAdFree: true, content: `본 회차는 5회차 입니다.\n\n[${workTitle} - 제 5 화]\n💡 광고를 시청하여 성공적으로 해금된 5회차 본문입니다.\n\n위기의 순간, 주인공의 가슴 속에서 잠들어 있던 비전의 힘이 폭발했다. 빛과 어둠이 교차하는 격렬한 격돌 속에서 진실의 열쇠를 손에 쥔다.\n\n"포기할 수 없다. 아직 지켜야 할 이들이 있으니까!"` },
+    { episodeNumber: 6, title: "제 6 화", isFree: false, isAdFree: true, content: `본 회차는 6회차 입니다.\n\n[${workTitle} - 제 6 화]\n💡 광고를 시청하여 성공적으로 해금된 6회차 본문입니다.\n\n마침내 모습을 드러낸 거대한 흑막. 대륙 전체를 뒤흔들 음모의 전모가 밝혀지고, 주인공은 세계의 운명을 짊어진 최후의 결전을 준비한다.\n\n7화 이후의 이야기는 작가 연재 예정(Coming Soon)입니다.` }
+  ];
+}
+
+// Sample Works Seed Data (8 Full Works with 6 Episodes each)
 const SAMPLE_WORKS = [
   {
     id: 1,
@@ -12,15 +24,10 @@ const SAMPLE_WORKS = [
     rating: "ALL",
     aiUsageType: "NONE",
     coverUrl: "/images/stormqueen_oath.jpg",
-    description: "신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 154000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "신의 저주로 멸망한 왕국에서 한 기사가 깨어나 처음으로 자신의 힘을 깨닫는다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "기사는 폐허가 된 성에서 고대의 검을 발견하고 신의 잔당과 첫 전투를 벌인다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "동료를 잃은 기사는 복수를 다짐하며 신의 사도가 숨은 탑으로 향한다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "탑 정상에서 마주한 신은 기사에게 충격적인 진실을 알려준다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("대적자: 신을 삼킨 기사")
   },
   {
     id: 2,
@@ -30,15 +37,10 @@ const SAMPLE_WORKS = [
     rating: "ALL",
     aiUsageType: "NONE",
     coverUrl: "/images/sword_dao_supreme.jpg",
-    description: "천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 231000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "천마는 수백 년의 봉인에서 깨어나 자신이 누구인지 기억해 내기 시작한다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "옛 제자들의 후손을 만난 천마는 무림의 변화를 확인하고 첫 번째 적을 쓰러뜨린다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "천마는 잃어버린 검법을 되찾기 위해 금지된 동굴로 들어간다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "동굴 안에서 천마는 자신을 봉인한 자의 후예와 운명적인 대면을 한다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("천마의 귀환")
   },
   {
     id: 3,
@@ -48,15 +50,10 @@ const SAMPLE_WORKS = [
     rating: "AGE_19",
     aiUsageType: "NONE",
     coverUrl: "/images/velvet_and_thorns.jpg",
-    description: "금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 189000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "여주인공은 빚을 갚기 위해 정체불명의 남자와 위험한 계약을 맺는다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "계약의 첫 번째 조건이 실행되고, 두 사람 사이에 묘한 긴장감이 흐른다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "남자의 정체가 조금씩 드러나며 여주인공은 빠져나올 수 없는 감정에 휩싸인다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "계약의 진짜 목적이 밝혀지고, 두 사람의 관계는 돌이킬 수 없는 방향으로 흐른다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("금기의 계약")
   },
   {
     id: 4,
@@ -66,15 +63,10 @@ const SAMPLE_WORKS = [
     rating: "ALL",
     aiUsageType: "NONE",
     coverUrl: "/images/flower_blooming.jpg",
-    description: "황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 312000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "평범한 처녀가 황제의 간택을 받아 궁에 들어가며 새로운 삶을 시작한다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "황제와의 첫 대면에서 그녀는 그의 차가운 눈빛 속에 숨겨진 외로움을 느낀다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "후궁들의 시기 속에서 그녀는 황제의 유일한 관심을 받게 된다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "황제가 그녀에게만 보여 주는 부드러운 모습에 마음이 흔들리기 시작한다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("황제의 유일한 후궁")
   },
   {
     id: 5,
@@ -84,15 +76,10 @@ const SAMPLE_WORKS = [
     rating: "ALL",
     aiUsageType: "NONE",
     coverUrl: "/images/stellar_horizon.jpg",
-    description: "인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 97000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "마지막 항해사는 지구가 멸망한 후 남은 인류를 태우고 미지의 별로 출발한다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "항해 중 발견한 고대 외계 유물에서 충격적인 메시지가 해독된다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "함선에 침입한 미지의 존재가 승무원들을 하나씩 사라지게 만든다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "항해사는 함선의 AI와 함께 적의 정체를 밝혀내고 생존을 위한 결단을 내린다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("성간 항로: 마지막 항해사")
   },
   {
     id: 6,
@@ -102,15 +89,10 @@ const SAMPLE_WORKS = [
     rating: "ALL",
     aiUsageType: "NONE",
     coverUrl: "/images/seoul_sorcerer.jpg",
-    description: "현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 278000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "평범한 회사원 김현우는 퇴근길에 마왕의 힘이 자신에게 깃드는 것을 느낀다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "처음으로 마법을 사용한 현우는 우연히 마족을 쓰러뜨리고 자신의 정체를 숨기려 한다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "마법사 협회가 그를 추적하기 시작하고, 현우는 도망치며 힘을 다스리는 법을 배운다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "현우는 자신을 노리는 진짜 적이 마족이 아닌 인간이라는 사실을 알게 된다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("서울에 나타난 마왕")
   },
   {
     id: 7,
@@ -120,15 +102,10 @@ const SAMPLE_WORKS = [
     rating: "ALL",
     aiUsageType: "NONE",
     coverUrl: "/images/darkness_swallowed_classroom.jpg",
-    description: "폐교에 남은 것들. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 84000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "폐교 탐사를 온 학생들은 이상한 발소리와 함께 문이 저절로 닫히는 것을 경험한다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "한 명이 사라지고, 남은 학생들은 복도 끝에서 교복을 입은 그림자를 목격한다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "학교 지하실에서 발견된 일기장은 과거에 일어난 참극을 상세히 기록하고 있다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "일기장의 주인공이 눈앞에 나타나며, 학생들은 자신들이 이미 죽은 존재일지도 모른다는 공포에 휩싸인다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("죽은 자들의 학교")
   },
   {
     id: 8,
@@ -138,15 +115,10 @@ const SAMPLE_WORKS = [
     rating: "ALL",
     aiUsageType: "NONE",
     coverUrl: "/images/sword_dao_defies_heavens.jpg",
-    description: "천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4화부터 광고 보고 연속 무료 열람!",
+    description: "천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 195000,
-    episodesCount: 4,
-    episodes: [
-      { episodeNumber: 1, title: "제1화", isFree: true, isAdFree: false, content: "하급 무사 이천은 우연히 전설의 검을 손에 넣고 자신의 운명이 바뀌는 것을 느낀다." },
-      { episodeNumber: 2, title: "제2화", isFree: true, isAdFree: false, content: "검을 노리는 암살자들을 물리친 이천은 검에 깃든 고대 검성의 기억을 일부 받아들인다." },
-      { episodeNumber: 3, title: "제3화", isFree: true, isAdFree: false, content: "이천은 무림맹의 초대를 받아 처음으로 강호에 자신의 이름을 알리기 시작한다." },
-      { episodeNumber: 4, title: "제4화", isFree: false, isAdFree: true, content: "천하제일인 자리에서 마주한 강자는 이천에게 검의 진짜 주인에 대한 비밀을 암시한다." }
-    ]
+    episodesCount: 6,
+    episodes: createDefault6Episodes("검의 전설: 천하제일인")
   }
 ];
 
@@ -968,6 +940,11 @@ window.openWorkDetailDirect = function(workId) {
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetId) || SAMPLE_WORKS[0];
   activeWork = work;
 
+  // 만약 회차가 없거나 비어있는 경우 1~6회차 기본 생성
+  if (!work.episodes || work.episodes.length === 0) {
+    work.episodes = createDefault6Episodes(work.title);
+  }
+
   const cover = work.coverUrl || work.coverImageUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
   const authorName = (typeof work.author === 'object' ? work.author?.penName : work.author) || '작자미상';
 
@@ -982,10 +959,21 @@ window.openWorkDetailDirect = function(workId) {
   // Render Episode List
   const epList = document.getElementById('detailEpisodeList');
   let epHtml = '';
+
+  // 중복 회차 번호 제거 및 정렬
+  const uniqueEpisodesMap = new Map();
   work.episodes.forEach(ep => {
+    if (!uniqueEpisodesMap.has(ep.episodeNumber)) {
+      uniqueEpisodesMap.set(ep.episodeNumber, ep);
+    }
+  });
+  const sortedEpisodes = Array.from(uniqueEpisodesMap.values()).sort((a, b) => a.episodeNumber - b.episodeNumber);
+
+  // 1~6회차 (실제 연재 회차) 렌더링
+  sortedEpisodes.forEach(ep => {
     const isUnlocked = ep.isFree || unlockedEpisodes.has(`${work.id}-${ep.episodeNumber}`);
     epHtml += `
-      <div class="episode-row" onclick="openReaderDirect(${work.id}, ${ep.episodeNumber})">
+      <div class="episode-row" onclick="openReaderDirect(${work.id}, ${ep.episodeNumber})" style="transition: background 0.2s ease;">
         <div class="ep-left">
           <span class="ep-number">${ep.episodeNumber}화</span>
           <span class="ep-title">${ep.title}</span>
@@ -998,9 +986,37 @@ window.openWorkDetailDirect = function(workId) {
       </div>
     `;
   });
-  epList.innerHTML = epHtml;
 
+  // 7회차부터 10회차까지 "연재예정 Coming Soon" UI 추가
+  const maxAvailableEp = sortedEpisodes.length > 0 ? Math.max(...sortedEpisodes.map(e => e.episodeNumber)) : 6;
+  const comingSoonStart = Math.max(7, maxAvailableEp + 1);
+  const comingSoonEnd = Math.max(comingSoonStart + 3, 10);
+
+  for (let epNum = comingSoonStart; epNum <= comingSoonEnd; epNum++) {
+    epHtml += `
+      <div class="episode-row coming-soon-row" onclick="handleComingSoonEpisode(${epNum})" style="opacity: 0.55; cursor: pointer; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+        <div class="ep-left">
+          <span class="ep-number" style="color: var(--text-muted);">${epNum}화</span>
+          <span class="ep-title" style="color: var(--text-muted);">제 ${epNum} 화</span>
+        </div>
+        <div class="ep-right">
+          <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #aaa; border: 1px solid rgba(255,255,255,0.15);">🔒 연재예정 Coming Soon</span>
+        </div>
+      </div>
+    `;
+  }
+
+  epList.innerHTML = epHtml;
   switchWebNovelsView('view-work-detail');
+};
+
+// 연재예정 회차 클릭 시 알림 핸들러
+window.handleComingSoonEpisode = function(epNum) {
+  if (window.showToast) {
+    showToast(`🔒 제 ${epNum}화는 작가 연재 예정 (Coming Soon) 상태입니다.`);
+  } else {
+    alert(`🔒 제 ${epNum}화는 작가 연재 예정 (Coming Soon) 상태입니다.`);
+  }
 };
 
 // ----------------------------------------------------
@@ -1011,7 +1027,18 @@ window.openReaderDirect = function(workId, epNumber) {
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetWorkId) || SAMPLE_WORKS[0];
   activeWork = work;
 
+  if (!work.episodes || work.episodes.length === 0) {
+    work.episodes = createDefault6Episodes(work.title);
+  }
+
   const epNum = Number(epNumber);
+
+  // 7회차 이상일 경우 연재예정 안내
+  if (epNum >= 7 && !work.episodes.find(e => e.episodeNumber === epNum)) {
+    handleComingSoonEpisode(epNum);
+    return;
+  }
+
   const ep = work.episodes.find(e => e.episodeNumber === epNum) || work.episodes[0];
   const unlockKey = `${work.id}-${epNum}`;
 
@@ -1021,7 +1048,7 @@ window.openReaderDirect = function(workId, epNumber) {
     return;
   }
 
-  // 광고 시청 해금 필요 체크
+  // 광고 시청 해금 필요 체크 (4화 이상 유료 회차)
   if (!ep.isFree && !unlockedEpisodes.has(unlockKey)) {
     window._pendingAdUnlockEpKey = unlockKey;
     window._pendingAdUnlockWorkId = work.id;
@@ -1033,15 +1060,14 @@ window.openReaderDirect = function(workId, epNumber) {
   activeEpisodeId = String(epNum);
   document.getElementById('readerWorkTitle').textContent = work.title;
   document.getElementById('readerEpTitle').textContent = ep.title;
-  document.getElementById('readerHeading').textContent = ep.title;
+  document.getElementById('readerHeading').textContent = `${ep.title} (${ep.episodeNumber}화)`;
 
-  const bodyContent = `
-    <p>주인공은 불길하게 타오르는 붉은 하늘을 바라보며 검 자루를 쥐었다. 바람이 부는 순간, 차가운 강철의 감촉이 손바닥에 선명하게 전해졌다.</p>
-    <p>"끝을 낼 시간이군."</p>
-    <p>그의 짧은 읊조림과 함께 수많은 몬스터들이 함성을 지르며 전장으로 쏟아져 들어왔다. 광고를 보면 다음 회차가 연속으로 해금되어 계속 읽을 수 있습니다.</p>
-  `;
+  // 본문 텍스트 렌더링
+  const rawContent = ep.content || `본 회차는 ${ep.episodeNumber}회차 입니다.\n\n[${work.title} - ${ep.title}]\n광고를 보면 다음 회차가 연속으로 해금되어 계속 읽을 수 있습니다.`;
+  const paragraphs = rawContent.split('\n\n').filter(p => p.trim().length > 0);
+  const bodyContent = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+
   document.getElementById('readerBody').innerHTML = bodyContent;
-
   switchWebNovelsView('view-reader');
 };
 

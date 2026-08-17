@@ -371,6 +371,17 @@ async function updateSystemConfig(config) {
 }
 
 // ---- 작품(works) 및 회차(episodes) Supabase DB 실시간 조회 & 자동 시드 ----
+function getFallback6Episodes(workTitle) {
+  return [
+    { episodeNumber: 1, title: "제 1 화", isFree: true, isAdFree: false, content: `본 회차는 1회차 입니다.\n\n[${workTitle} - 제 1 화]\n주인공은 불길하게 타오르는 붉은 하늘을 바라보며 검 자루를 쥐었다. 바람이 부는 순간, 차가운 강철의 감촉이 손바닥에 선명하게 전해졌다.\n\n"끝을 낼 시간이군."\n\n그의 짧은 읊조림과 함께 수많은 전장의 함성이 울려 퍼지기 시작했다. 1~3화는 무료로 즉시 열람하실 수 있습니다.` },
+    { episodeNumber: 2, title: "제 2 화", isFree: true, isAdFree: false, content: `본 회차는 2회차 입니다.\n\n[${workTitle} - 제 2 화]\n폐허가 된 고대 성채에서 미지의 봉인이 풀렸다. 주인공은 어둠 속에서 빛나는 고대의 유물을 마주하고 숨을 죽였다.\n\n"이것이 전설로 전해지던 힘인가..."\n\n새로운 운명이 그의 앞에 펼쳐지고 있었다.` },
+    { episodeNumber: 3, title: "제 3 화", isFree: true, isAdFree: false, content: `본 회차는 3회차 입니다.\n\n[${workTitle} - 제 3 화]\n동료들과 함께 나선 첫 번째 원정길. 예기치 못한 적들의 기습 속에서 주인공은 자신의 잠재된 능력을 각성시킨다.\n\n"물러서지 마라! 우리가 길을 열 것이다!"\n\n치열한 혈투 끝에 드러난 배후의 진실은 무엇일까?` },
+    { episodeNumber: 4, title: "제 4 화", isFree: false, isAdFree: true, content: `본 회차는 4회차 입니다.\n\n[${workTitle} - 제 4 화]\n💡 광고를 시청하여 성공적으로 해금된 4회차 본문입니다.\n\n적들의 숨겨진 요새에 도달한 주인공 일행. 그러나 그곳을 지키는 문지기는 상상을 초월하는 위력을 뿜어내고 있었다.\n\n"여기까지 온 자는 아무도 살아 돌아가지 못했다."\n\n운명을 건 사투가 시작된다.` },
+    { episodeNumber: 5, title: "제 5 화", isFree: false, isAdFree: true, content: `본 회차는 5회차 입니다.\n\n[${workTitle} - 제 5 화]\n💡 광고를 시청하여 성공적으로 해금된 5회차 본문입니다.\n\n위기의 순간, 주인공의 가슴 속에서 잠들어 있던 비전의 힘이 폭발했다. 빛과 어둠이 교차하는 격렬한 격돌 속에서 진실의 열쇠를 손에 쥔다.\n\n"포기할 수 없다. 아직 지켜야 할 이들이 있으니까!"` },
+    { episodeNumber: 6, title: "제 6 화", isFree: false, isAdFree: true, content: `본 회차는 6회차 입니다.\n\n[${workTitle} - 제 6 화]\n💡 광고를 시청하여 성공적으로 해금된 6회차 본문입니다.\n\n마침내 모습을 드러낸 거대한 흑막. 대륙 전체를 뒤흔들 음모의 전모가 밝혀지고, 주인공은 세계의 운명을 짊어진 최후의 결전을 준비한다.\n\n7화 이후의 이야기는 작가 연재 예정(Coming Soon)입니다.` }
+  ];
+}
+
 async function fetchWorksFromSupabase() {
   if (!supabaseClient) return null;
 
@@ -392,7 +403,29 @@ async function fetchWorksFromSupabase() {
 
     // Supabase DB 데이터를 프론트엔드 포맷으로 바인딩
     return works.map(w => {
-      const workEps = (episodes || []).filter(e => e.work_id === w.id);
+      const rawWorkEps = (episodes || []).filter(e => Number(e.work_id) === Number(w.id));
+
+      // 중복 회차 번호 제거 (deduplication)
+      const epMap = new Map();
+      rawWorkEps.forEach(e => {
+        if (!epMap.has(e.episode_number)) {
+          epMap.set(e.episode_number, {
+            episodeNumber: e.episode_number,
+            title: e.title || `제 ${e.episode_number} 화`,
+            isFree: e.is_free,
+            isAdFree: e.is_ad_free,
+            content: e.content || `본 회차는 ${e.episode_number}회차 입니다.`
+          });
+        }
+      });
+
+      let finalEps = Array.from(epMap.values()).sort((a, b) => a.episodeNumber - b.episodeNumber);
+
+      // 회차가 없거나 비어있는 경우 기본 1~6회차 자동 주입
+      if (finalEps.length === 0) {
+        finalEps = getFallback6Episodes(w.title);
+      }
+
       return {
         id: w.id,
         title: w.title,
@@ -407,14 +440,8 @@ async function fetchWorksFromSupabase() {
         isTopRecommended: !!w.is_top_recommended,
         isPopularWork: !!w.is_popular_work,
         isNewWork: !!w.is_new_work,
-        episodesCount: workEps.length || 4,
-        episodes: workEps.map(e => ({
-          episodeNumber: e.episode_number,
-          title: e.title,
-          isFree: e.is_free,
-          isAdFree: e.is_ad_free,
-          content: e.content
-        }))
+        episodesCount: finalEps.length,
+        episodes: finalEps
       };
     });
   } catch (err) {
@@ -430,12 +457,12 @@ async function seedWorksDatasetToSupabase(sampleWorksData) {
     for (const w of sampleWorksData) {
       const genreArr = [w.genre, w.rating === 'AGE_19' ? '19세 이상' : '전체이용가'];
       const tagsArr = [w.aiUsageType || 'AI NONE'];
-      const coverFileName = w.coverUrl.replace('/images/', '');
+      const coverFileName = (w.coverUrl || '').replace('/images/', '');
 
       await supabaseClient.from('works').upsert({
-        id: w.id,
+        id: Number(w.id),
         title: w.title,
-        author: w.author,
+        author: typeof w.author === 'object' ? w.author?.penName : w.author,
         genre: genreArr,
         tags: tagsArr,
         description: w.description,
@@ -447,20 +474,19 @@ async function seedWorksDatasetToSupabase(sampleWorksData) {
         is_new_work: !!w.isNewWork
       });
 
-      if (w.episodes && w.episodes.length > 0) {
-        for (const ep of w.episodes) {
-          await supabaseClient.from('episodes').upsert({
-            work_id: w.id,
-            episode_number: ep.episodeNumber,
-            title: ep.title,
-            is_free: ep.isFree,
-            is_ad_free: ep.isAdFree,
-            content: ep.content
-          }, { onConflict: 'work_id,episode_number' });
-        }
+      const epsToSeed = (w.episodes && w.episodes.length > 0) ? w.episodes : getFallback6Episodes(w.title);
+      for (const ep of epsToSeed) {
+        await supabaseClient.from('episodes').upsert({
+          work_id: Number(w.id),
+          episode_number: Number(ep.episodeNumber),
+          title: ep.title,
+          is_free: ep.isFree,
+          is_ad_free: ep.isAdFree,
+          content: ep.content
+        }, { onConflict: 'work_id,episode_number' });
       }
     }
-    console.log('[Supabase Works] 8개 더미 작품 & 32개 에피소드 DB 시드 저장 완료!');
+    console.log('[Supabase Works] 8개 작품 & 각 6개 에피소드(총 48개) DB 시드 저장 완료!');
     return true;
   } catch (err) {
     console.warn('[Supabase Works] 시드 저장 실패:', err.message);
