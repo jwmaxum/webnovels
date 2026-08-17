@@ -1000,7 +1000,7 @@ function updateFavoriteButtons(workId) {
 function toggleSubscribeAuthor(authorData) {
   try {
     const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name) : authorData) || '작자미상';
-    let subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '["판타지마스터", "무협의신"]');
+    let subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
     
     if (subAuthors.includes(authorName)) {
       subAuthors = subAuthors.filter(a => a !== authorName);
@@ -1020,7 +1020,7 @@ function toggleSubscribeAuthor(authorData) {
 
 function updateSubscribeButtons(authorData) {
   const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name) : authorData) || '작자미상';
-  const subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '["판타지마스터", "무협의신"]');
+  const subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
   const isSubbed = subAuthors.includes(authorName);
   const btnSub = document.getElementById('btnDetailSubscribe');
 
@@ -1032,19 +1032,59 @@ function updateSubscribeButtons(authorData) {
   if (window.lucide) window.lucide.createIcons();
 }
 
-// 구독 작가 클릭 시 해당 작가의 대표 작품 상세 화면으로 이동
+// 구독 작가 클릭 시 해당 작가의 모든 연재 소설 리스트를 모달로 표시
 window.openAuthorWorksDirect = function(authorName) {
-  const work = SAMPLE_WORKS.find(w => {
+  const matchedWorks = SAMPLE_WORKS.filter(w => {
     const aName = (typeof w.author === 'object' ? (w.author.penName || w.author.pen_name) : w.author) || '';
     return aName.toLowerCase() === String(authorName).toLowerCase();
-  }) || SAMPLE_WORKS[0];
+  });
 
-  if (work) {
-    showToast(`📖 ${authorName} 작가의 대표작 [${work.title}] 상세 페이지로 이동합니다.`);
-    openWorkDetailDirect(work.id);
-  } else {
-    showToast(`해당 작가의 등록된 작품을 찾을 수 없습니다.`);
+  // 해당 작가로 등록된 작품이 있으면 표시하고, 없으면 전체 연재작 중 관련 작품 매핑
+  let worksToShow = [...matchedWorks];
+  if (worksToShow.length === 0) {
+    const defaultWork = SAMPLE_WORKS.find(w => Number(w.id) === 1) || SAMPLE_WORKS[0];
+    worksToShow.push(defaultWork);
   }
+
+  // 모달 헤더 정보 업데이트
+  const avatarEl = document.getElementById('modalAuthorAvatar');
+  const nameEl = document.getElementById('modalAuthorName');
+  const statsEl = document.getElementById('modalAuthorStats');
+  const listContainer = document.getElementById('modalAuthorWorksList');
+
+  if (avatarEl) avatarEl.textContent = authorName.slice(0, 1);
+  if (nameEl) nameEl.textContent = `${authorName} 작가님의 연재 소설 목록`;
+  if (statsEl) statsEl.textContent = `총 ${worksToShow.length}개 작품 연재 중 · 작가 구독 중`;
+
+  if (listContainer) {
+    listContainer.innerHTML = worksToShow.map((work) => {
+      const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+      const epCount = work.episodes?.length || 6;
+      return `
+        <div class="author-work-item glass-panel" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s;">
+          <div style="display: flex; align-items: center; gap: 14px; flex: 1;">
+            <img src="${cover}" alt="${work.title} 표지" style="width: 56px; height: 76px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <span class="badge badge-accent" style="font-size: 0.75rem;">${work.genre || '판타지'}</span>
+                <span class="badge" style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: #fff;">총 ${epCount}화 연재</span>
+              </div>
+              <h4 style="margin: 0 0 4px; font-size: 1.05rem; color: #fff; font-weight: 700;">${work.title}</h4>
+              <p class="text-muted small" style="margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 320px;">
+                ${work.description || '작품 소개글이 준비 중입니다.'}
+              </p>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="closeAllModals(); openWorkDetailDirect(${work.id});" style="white-space: nowrap; margin-left: 12px; padding: 8px 14px;">
+            작품 읽기 <i data-lucide="chevron-right"></i>
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+  openModal('modalAuthorWorks');
 };
 
 function renderLibraryContent() {
@@ -1071,9 +1111,9 @@ function renderLibraryContent() {
 
   let subAuthors = [];
   try {
-    subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '["판타지마스터", "무협의신"]');
+    subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
   } catch (e) {
-    subAuthors = ["판타지마스터", "무협의신"];
+    subAuthors = [];
   }
 
   // 좌측 프로필 통계 숫자 실시간 반영
@@ -1140,6 +1180,110 @@ function renderLibraryContent() {
                     </div>
                   </div>
                   <div style="display: flex; align-items: center; gap: 6px; color: var(--primary-color); font-weight: 500; font-size: 0.9rem; margin-left: 12px;">
+                    <span>이어보기</span>
+                    <i data-lucide="play-circle"></i>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        continueContainer.innerHTML = html;
+      } else {
+        continueContainer.innerHTML = `
+          <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+            <i data-lucide="book-open" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+            <p style="margin: 0; font-size: 1rem; color: #fff;">아직 읽은 작품이 없습니다.</p>
+            <small class="text-muted">웹소설 회차를 감상하면 이곳에 실시간으로 기록됩니다.</small>
+          </div>
+        `;
+      }
+    } else {
+      continueContainer.innerHTML = `
+        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+          <i data-lucide="book-open" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 1rem; color: #fff;">아직 읽은 작품이 없습니다.</p>
+          <small class="text-muted">웹소설 회차를 감상하면 이곳에 실시간으로 기록됩니다.</small>
+        </div>
+      `;
+    }
+  }
+
+  // 2. 관심 작품 실시간 렌더링
+  if (favoriteContainer) {
+    if (favs.length > 0) {
+      const favWorks = SAMPLE_WORKS.filter(w => favs.includes(Number(w.id)));
+      favoriteContainer.innerHTML = favWorks.map(work => {
+        const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+        return `
+          <button class="library-row" onclick="openWorkDetailDirect(${work.id})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="${cover}" alt="${work.title} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
+              <div>
+                <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${work.title}</strong>
+                <small class="text-muted">${work.author} · ${work.genre}</small>
+              </div>
+            </div>
+            <i data-lucide="chevron-right"></i>
+          </button>
+        `;
+      }).join('');
+    } else {
+      favoriteContainer.innerHTML = `
+        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+          <i data-lucide="heart" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 1rem; color: #fff;">등록된 관심 작품이 없습니다.</p>
+          <small class="text-muted">작품 상세페이지에서 '관심등록'을 눌러보세요.</small>
+        </div>
+      `;
+    }
+  }
+
+  // 3. 실제 구독한 작가 목록 실시간 렌더링
+  if (authorContainer) {
+    if (subAuthors.length > 0) {
+      const authorsData = subAuthors.map(aName => {
+        const found = SAMPLE_AUTHORS.find(a => a.pen_name === aName);
+        if (found) return found;
+        const workFound = SAMPLE_WORKS.find(w => {
+          const wAuthor = typeof w.author === 'object' ? (w.author.penName || w.author.pen_name) : w.author;
+          return wAuthor === aName;
+        });
+        return {
+          pen_name: aName,
+          work_title: workFound ? `대표작: ${workFound.title}` : '연재 작품 보유'
+        };
+      });
+
+      authorContainer.innerHTML = authorsData.map(author => `
+        <button class="library-author-card glass-panel" onclick="openAuthorWorksDirect('${author.pen_name}')" style="cursor: pointer; text-align: left; transition: all 0.2s; padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; align-items: flex-start; gap: 8px;" title="작가 연재 소설 목록 보기">
+          <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+            <span style="width: 38px; height: 38px; min-width: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem;">${author.pen_name.slice(0, 1)}</span>
+            <div style="flex: 1; overflow: hidden;">
+              <strong style="display: block; font-size: 1rem; color: #fff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${author.pen_name}</strong>
+              <small class="text-muted" style="font-size: 0.8rem; display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${author.work_title}</small>
+            </div>
+          </div>
+          <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <span class="text-muted small" style="font-size: 0.78rem;">연재작 목록</span>
+            <span class="badge badge-accent" style="font-size: 0.72rem;">소설 리스트 보기 →</span>
+          </div>
+        </button>
+      `).join('');
+    } else {
+      authorContainer.innerHTML = `
+        <div class="p-6 text-center text-muted" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+          <i data-lucide="users" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
+          <p style="margin: 0; font-size: 1rem; color: #fff;">구독 중인 작가가 없습니다.</p>
+          <small class="text-muted">작품 상세페이지에서 '작가 구독'을 눌러보세요.</small>
+        </div>
+      `;
+    }
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+}"display: flex; align-items: center; gap: 6px; color: var(--primary-color); font-weight: 500; font-size: 0.9rem; margin-left: 12px;">
                     <span>이어보기</span>
                     <i data-lucide="play-circle"></i>
                   </div>

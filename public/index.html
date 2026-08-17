@@ -1053,6 +1053,28 @@
       </div>
     </div>
 
+    <!-- Modal: Author Works List (구독 작가 연재 소설 리스트) -->
+    <div class="modal-backdrop" id="modalAuthorWorks">
+      <div class="modal-dialog glass-panel" style="max-width: 680px; width: 92%;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div id="modalAuthorAvatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem;">작</div>
+            <div>
+              <h3 id="modalAuthorName" style="margin: 0; font-size: 1.15rem;">작가 연재 작품 목록</h3>
+              <p id="modalAuthorStats" class="text-muted small" style="margin: 0;">총 0편 연재 중 · 구독 중인 작가</p>
+            </div>
+          </div>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body" style="padding-top: 10px;">
+          <p class="text-muted small mb-3">연재 중인 소설을 선택하면 해당 작품의 상세 회차 목록으로 이동합니다.</p>
+          <div id="modalAuthorWorksList" style="display: flex; flex-direction: column; gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+            <!-- 소설 리스트가 동적으로 렌더링됩니다 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal: Adult Verification Gate -->
     <div class="modal-backdrop" id="modalPassAdultVerify">
       <div class="modal-dialog glass-panel">
