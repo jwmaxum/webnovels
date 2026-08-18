@@ -2144,6 +2144,9 @@ window.handleMemberLogout = function() {
   localStorage.removeItem('webnovels_user');
   localStorage.removeItem('webnovels_author');
   localStorage.removeItem('webnovels_admin_token');
+  localStorage.removeItem('webnovels_reading_history');
+  localStorage.removeItem('webnovels_favorites');
+  localStorage.removeItem('webnovels_subscribed_authors');
   isAdminLoggedIn = false;
   currentLoggedAuthor = null;
   window._isAdultVerified = false;
@@ -2153,6 +2156,7 @@ window.handleMemberLogout = function() {
   showToast('로그아웃되었습니다.');
   switchWebNovelsView('view-home');
 };
+
 
 
 // ----------------------------------------------------
