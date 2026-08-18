@@ -1,3 +1,23 @@
+// ============================================================
+// [Router] Creator Studio Router (/api/creator)
+//
+// [Purpose]
+// - 작가 등록, 크리에이터 스튜디오 대시보드 통계 및 3대 수익 지표(Estimated/Confirmed/Payable) 조회, 신규 작품/회차 등록, 정산 신청(출금), 정산 계좌 관리
+//
+// [Creator Revenue 3대 지표 정의]
+// 1. Estimated Revenue (예상 수익): 당월 실시간 집계 중인 미마감 추정 수익 (PENDING)
+// 2. Confirmed Revenue (확정 수익): 월말 마감 심사를 통과하여 공식 확정된 누적 정산금 (CONFIRMED)
+// 3. Payable Revenue (정산 가능 금액): 확정 수익에서 기지급액 및 신청 대기액을 제외한 실제 출금 신청 가능 잔액 (최소 10,000원 이상 신청 가능)
+//
+// [Endpoints]
+// - POST /api/creator/register : 일반 독자 -> 작가 전환 등록
+// - GET  /api/creator/dashboard : 스튜디오 통계 및 3대 수익 대시보드 조회
+// - POST /api/creator/works : 신규 웹소설 작품 등록
+// - POST /api/creator/works/:workId/episodes : 작품 회차 등록 (1~3화 무료 기본, 4화부터 광고 필수)
+// - POST /api/creator/settlement/request : 정산 가능 금액 출금 신청 (최소 10,000원)
+// - PUT  /api/creator/profile : 작가 필명/소개 및 정산 계좌 수정
+// ============================================================
+
 import { Router, Response } from 'express';
 import { db } from '../config/db.js';
 import { authenticateToken, AuthRequest } from '../middlewares/auth.middleware.js';
@@ -5,9 +25,14 @@ import { RevenueEngineService } from '../services/revenueEngine.service.js';
 
 export const creatorRouter = Router();
 
-/**
- * 작가 등록 API
- */
+// ============================================================
+// [Route] POST /api/creator/register
+// [Purpose] 작가 등록 및 정산 계좌 연동
+// [Business Logic]
+// 1. 중복 작가 등록 방지
+// 2. `Author` 및 `AuthorAccount` 레코드 생성
+// 3. `User.role`을 'AUTHOR'로 변경
+// ============================================================
 creatorRouter.post('/register', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -54,9 +79,11 @@ creatorRouter.post('/register', authenticateToken, async (req: AuthRequest, res:
   }
 });
 
-/**
- * Creator Studio 수익 Dashboard (Section 16~18)
- */
+// ============================================================
+// [Route] GET /api/creator/dashboard
+// [Purpose] 크리에이터 스튜디오 메인 대시보드 데이터 (작품수, 총 열람수, 광고 뷰수, 3대 수익 지표) 조회
+// [API Integration] RevenueEngineService.getAuthorRevenueDashboard(authorId) 호출
+// ============================================================
 creatorRouter.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -97,9 +124,11 @@ creatorRouter.get('/dashboard', authenticateToken, async (req: AuthRequest, res:
   }
 });
 
-/**
- * 작품 등록 API (Section 20)
- */
+// ============================================================
+// [Route] POST /api/creator/works
+// [Purpose] 신규 웹소설 작품 등록
+// [Parameters] title, coverImageUrl, description, genre, tags, rating(ALL/AGE_15/AGE_18), aiUsageType(NONE/ASSISTED/FULL), publishDays
+// ============================================================
 creatorRouter.post('/works', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -136,9 +165,13 @@ creatorRouter.post('/works', authenticateToken, async (req: AuthRequest, res: Re
   }
 });
 
-/**
- * 회차 등록 API (Section 20~21)
- */
+// ============================================================
+// [Route] POST /api/creator/works/:workId/episodes
+// [Purpose] 특정 작품의 신규 회차 등록
+// [Business Logic]
+// - 회차 번호(`episodeNumber`) 자동 증분 계산
+// - 기본적으로 1~3화는 무료(`isFree: true, adUnlockRequired: false`), 4화부터 광고 필수(`adUnlockRequired: true`)로 자동 기본값 부여
+// ============================================================
 creatorRouter.post('/works/:workId/episodes', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -188,9 +221,13 @@ creatorRouter.post('/works/:workId/episodes', authenticateToken, async (req: Aut
   }
 });
 
-/**
- * 정산 신청 API (Section 19)
- */
+// ============================================================
+// [Route] POST /api/creator/settlement/request
+// [Purpose] 작가의 수익금 정산(출금) 신청
+// [Business Rules]
+// - 정산 가능 잔액(`payableRevenue`)이 10,000원 이상이어야 신청 가능
+// - 신청 시 `AuthorSettlement` 테이블에 PENDING 상태로 등록되고, 정산 계좌 스냅샷 저장
+// ============================================================
 creatorRouter.post('/settlement/request', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -230,10 +267,11 @@ creatorRouter.post('/settlement/request', authenticateToken, async (req: AuthReq
   }
 });
 
-/**
- * 작가 프로필 및 정산 계좌 정보 수정 API
- * 보안: 본인 작가 계정만 수정 가능
- */
+// ============================================================
+// [Route] PUT /api/creator/profile
+// [Purpose] 작가 프로필(필명, 소개) 및 정산 계좌 정보 수정
+// [Security] 본인 작가 계정만 수정 가능
+// ============================================================
 creatorRouter.put('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -296,3 +334,4 @@ creatorRouter.put('/profile', authenticateToken, async (req: AuthRequest, res: R
     return res.status(500).json({ error: error.message || '작가 정보 수정 실패' });
   }
 });
+

@@ -1,12 +1,22 @@
+// ============================================================
+// [Service] Demo Data Seed Service (데모 데이터 초기 시딩 서비스)
+//
+// [Purpose]
+// - 개발 및 테스트 환경에서 즉시 동작 가능한 3명의 독자, 8명의 작가, 8개의 대표 웹소설 작품 및 각 4개 회차(1~3화 무료, 4화 광고 언락 필수)를 DB에 초기 주입
+// - 독서 이력, 보관함(관심등록), 작가 팬 구독 데이터 생성
+// ============================================================
+
 import bcrypt from 'bcrypt';
 import { db } from '../config/db.js';
 
+// 기본 테스트 독자 계정 (reader1, reader2, reader3)
 const readers = [
   { username: 'reader1', password: '!12345', email: 'reader1@webnovels.com', phone: '+82-010-111-1111', isAdultVerified: false, subscriptionStatus: '일반 회원' },
   { username: 'reader2', password: '!12345', email: 'reader2@webnovels.com', phone: '+82-010-111-1112', isAdultVerified: true, subscriptionStatus: '프리미엄 구독중' },
   { username: 'reader3', password: '!12345', email: 'reader3@webnovels.com', phone: '+82-010-111-1113', isAdultVerified: true, subscriptionStatus: '프리미엄 구독중' }
 ];
 
+// 기본 테스트 작가 계정 및 대표 작품 정보 (판타지, 무협, 성인AGE_18, 로맨스, SF, 현대판타지, 호러 등)
 const authors = [
   { username: 'writer1', password: '!123456', email: 'writer1@webnovels.com', penName: '판타지마스터', workTitle: '대적자: 신을 삼킨 기사', birthDate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bankInfo: '국민은행 999-888-777666', coverImageUrl: '/images/stormqueen_oath.jpg', genre: '판타지', viewCount: 154000 },
   { username: 'writer2', password: '!123456', email: 'writer2@webnovels.com', penName: '무협의신', workTitle: '천마의 귀환', birthDate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bankInfo: '신한은행 110-222-333444', coverImageUrl: '/images/sword_dao_supreme.jpg', genre: '무협', viewCount: 231000 },
@@ -18,6 +28,7 @@ const authors = [
   { username: 'writer8', password: '!123456', email: 'writer8@webnovels.com', penName: '검성', workTitle: '검의 전설: 천하제일인', birthDate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bankInfo: '대구은행 508-12-345678', coverImageUrl: '/images/sword_dao_defies_heavens.jpg', genre: '무협', viewCount: 195000 }
 ];
 
+// 회차별 본문 샘플 데이터
 const episodeContent = [
   ['신의 저주로 멸망한 왕국에서 한 기사가 깨어나 처음으로 자신의 힘을 깨닫는다.', '기사는 폐허가 된 성에서 고대의 검을 발견하고 신의 잔당과 첫 전투를 벌인다.', '동료를 잃은 기사는 복수를 다짐하며 신의 사도가 숨은 탑으로 향한다.', '탑 정상에서 마주한 신은 기사에게 충격적인 진실을 알려준다.'],
   ['천마는 수백 년의 봉인에서 깨어나 자신이 누구인지 기억해 내기 시작한다.', '옛 제자들의 후손을 만난 천마는 무림의 변화를 확인하고 첫 번째 적을 쓰러뜨린다.', '천마는 잃어버린 검법을 되찾기 위해 금지된 동굴로 들어간다.', '동굴 안에서 천마는 자신을 봉인한 자의 후예와 운명적인 대면을 한다.'],
@@ -35,6 +46,10 @@ function splitBankInfo(bankInfo: string) {
 }
 
 export class DemoDataSeedService {
+  // ============================================================
+  // [Function] seed
+  // [Purpose] 전체 데모 데이터(독자, 작가, 작품, 회차, 정산계좌) DB upsert 실행
+  // ============================================================
   static async seed() {
     const passwordHashes = new Map<string, string>();
     for (const password of ['!12345', '!123456']) {
@@ -169,6 +184,10 @@ export class DemoDataSeedService {
     console.log(`✅ [DemoDataSeed] 독자 ${seededReaders.length}명, 작가 ${seededAuthors.length}명, 작품 ${seededWorks.length}개 DB 시드 완료`);
   }
 
+  // ============================================================
+  // [Function] seedLibraryData
+  // [Purpose] 독자별 독서 이력(UserReadingHistory), 보관함(WorkFavorite), 구독(AuthorSubscription) 시딩
+  // ============================================================
   private static async seedLibraryData(readersData: Array<{ id: string }>, worksData: Array<{ id: string; authorId: string }>, authorsData: Array<{ id: string }>) {
     const readerPlans = [
       { reading: [0, 1, 3], favorites: [0, 1, 3, 5, 7], subscriptions: [0, 1] },
@@ -214,3 +233,4 @@ export class DemoDataSeedService {
     }
   }
 }
+

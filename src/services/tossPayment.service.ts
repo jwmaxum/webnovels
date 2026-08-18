@@ -1,3 +1,15 @@
+// ============================================================
+// [Service] Toss Payments 연동 결제 서비스
+//
+// [Purpose]
+// - 토스페이먼츠(Toss Payments) v1 REST API 연동
+// - 작가 후원(Donation), 굿즈 구매(Order), 팬미팅 티켓 구매 등의 결제 승인(Confirm) 및 결제 취소(Cancel) 처리
+//
+// [Authentication]
+// - Secret Key를 `Basic Base64(secretKey + ":")`로 인코딩하여 HTTP Authorization Header에 전달
+// - `test_sk_docs_`로 시작하는 테스트 키인 경우 Sandbox 모의 응답 자동 반환 지원
+// ============================================================
+
 import { ConfigService } from './config.service.js';
 
 export interface TossPaymentConfirmInput {
@@ -12,9 +24,13 @@ export interface TossPaymentCancelInput {
 }
 
 export class TossPaymentService {
-  /**
-   * 토스페이먼츠 결제 승인 요청 (POST /v1/payments/confirm)
-   */
+  // ============================================================
+  // [Function] confirmPayment
+  // [Purpose] 토스페이먼츠 결제 승인 요청 (POST https://api.tosspayments.com/v1/payments/confirm)
+  // [Flow]
+  // 1. 프론트엔드 Toss SDK 결제창 인증 완료 후 `paymentKey`, `orderId`, `amount` 수신
+  // 2. 백엔드에서 결제 승인 API 호출하여 최종 결제 완료 처리
+  // ============================================================
   static async confirmPayment(input: TossPaymentConfirmInput) {
     const config = await ConfigService.getConfig();
     const secretKey = config.tossSecretKey || 'test_sk_docs_O7l2mZ1N3p81A2jL3b5z';
@@ -64,9 +80,10 @@ export class TossPaymentService {
     }
   }
 
-  /**
-   * 토스페이먼츠 결제 취소 요청 (POST /v1/payments/{paymentKey}/cancel)
-   */
+  // ============================================================
+  // [Function] cancelPayment
+  // [Purpose] 토스페이먼츠 결제 취소/환불 요청 (POST https://api.tosspayments.com/v1/payments/{paymentKey}/cancel)
+  // ============================================================
   static async cancelPayment(input: TossPaymentCancelInput) {
     const config = await ConfigService.getConfig();
     const secretKey = config.tossSecretKey || 'test_sk_docs_O7l2mZ1N3p81A2jL3b5z';
@@ -106,9 +123,10 @@ export class TossPaymentService {
     }
   }
 
-  /**
-   * 관리자 연동 테스트용 API 호출
-   */
+  // ============================================================
+  // [Function] testConnection
+  // [Purpose] 관리자 설정 페이지에서 토스페이먼츠 키 설정 상태 테스트
+  // ============================================================
   static async testConnection() {
     const config = await ConfigService.getConfig();
     const secretKey = config.tossSecretKey || '';
@@ -121,3 +139,4 @@ export class TossPaymentService {
     };
   }
 }
+

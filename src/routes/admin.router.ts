@@ -1,3 +1,18 @@
+// ============================================================
+// [Router] Admin CMS Router (/api/admin)
+//
+// [Purpose]
+// - 통합 관리자(CMS) 전용 API 라우터
+// - 최고 관리자(SUPER_ADMIN)의 서브 관리자 계정 생성/메뉴 권한(permissions) 부여/삭제
+// - PG(Toss Payments) 및 본인인증(KCP/PASS) 설정 저장 및 연동 테스트
+// - 관리자 KPI 대시보드 (총 회원, 작가, 작품, 회차, 광고 시청수, 대기 정산건수)
+// - 월 광고 총매출 입력 및 작가 풀 기여도 수익배분(Estimated) 집계, 월 정산 마감(Confirmed), 정산금 출금 승인(PAID) 처리
+//
+// [Security & Authorization]
+// - `authenticateToken` 및 `requireRole(['ADMIN'])` 적용 (SUPER_ADMIN, SUB_ADMIN, ADMIN 모두 1차 통과)
+// - 개별 메뉴 엔드포인트는 `requirePermission(menuKey)` 미들웨어로 세부 권한 검증
+// ============================================================
+
 import { Router, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { db } from '../config/db.js';
@@ -17,10 +32,11 @@ adminRouter.use(requireRole(['ADMIN']));
 // [SUPER_ADMIN 전용] 서브 관리자 생성/권한부여/비밀번호변경 API
 // ----------------------------------------------------
 
-/**
- * 서브 관리자 계정 생성 (SUPER_ADMIN 전용)
- * Body: { username, password, email, nickname, permissions }
- */
+// ============================================================
+// [Route] POST /api/admin/sub-admins
+// [Purpose] 서브 관리자(SUB_ADMIN) 계정 생성 및 메뉴별 접근 권한(JSON 배열) 부여
+// [Security] 최고 관리자(SUPER_ADMIN) 전용
+// ============================================================
 adminRouter.post('/sub-admins', async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -79,9 +95,11 @@ adminRouter.post('/sub-admins', async (req: AuthRequest, res: Response) => {
   }
 });
 
-/**
- * 서브 관리자 목록 및 메뉴 권한 조회 (SUPER_ADMIN 전용)
- */
+// ============================================================
+// [Route] GET /api/admin/sub-admins
+// [Purpose] 등록된 모든 서브 관리자 목록 및 메뉴 권한 조회
+// [Security] 최고 관리자(SUPER_ADMIN) 전용
+// ============================================================
 adminRouter.get('/sub-admins', async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -114,10 +132,11 @@ adminRouter.get('/sub-admins', async (req: AuthRequest, res: Response) => {
   }
 });
 
-/**
- * 서브 관리자의 메뉴 접근 권한 수정/변경 (SUPER_ADMIN 전용)
- * Body: { permissions: ["DASHBOARD", "USER_MGMT", "WORK_MGMT"] }
- */
+// ============================================================
+// [Route] PUT /api/admin/sub-admins/:id/permissions
+// [Purpose] 서브 관리자의 메뉴 접근 권한(permissions) 변경
+// [Security] 최고 관리자(SUPER_ADMIN) 전용
+// ============================================================
 adminRouter.put('/sub-admins/:id/permissions', async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -154,10 +173,11 @@ adminRouter.put('/sub-admins/:id/permissions', async (req: AuthRequest, res: Res
   }
 });
 
-/**
- * 서브 관리자의 비밀번호 변경 (SUPER_ADMIN 전용)
- * Body: { newPassword }
- */
+// ============================================================
+// [Route] PUT /api/admin/sub-admins/:id/password
+// [Purpose] 특정 서브 관리자의 비밀번호 강제 변경
+// [Security] 최고 관리자(SUPER_ADMIN) 전용
+// ============================================================
 adminRouter.put('/sub-admins/:id/password', async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -188,9 +208,11 @@ adminRouter.put('/sub-admins/:id/password', async (req: AuthRequest, res: Respon
   }
 });
 
-/**
- * 서브 관리자 계정 삭제 (SUPER_ADMIN 전용)
- */
+// ============================================================
+// [Route] DELETE /api/admin/sub-admins/:id
+// [Purpose] 서브 관리자 계정 삭제
+// [Security] 최고 관리자(SUPER_ADMIN) 전용
+// ============================================================
 adminRouter.delete('/sub-admins/:id', async (req: AuthRequest, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -215,9 +237,11 @@ adminRouter.delete('/sub-admins/:id', async (req: AuthRequest, res: Response) =>
 // 메뉴별 접근 권한 미들웨어 적용 API
 // ----------------------------------------------------
 
-/**
- * PG 및 PASS/KCP 본인인증 설정 조회 (Section 33 - 시스템관리)
- */
+// ============================================================
+// [Route] GET /api/admin/config/pg
+// [Purpose] PG(토스페이먼츠) 및 본인인증(KCP/PASS) 설정 조회 (시크릿 키 마스킹 처리됨)
+// [Security] requirePermission('SYSTEM_MGMT')
+// ============================================================
 adminRouter.get('/config/pg', requirePermission('SYSTEM_MGMT'), async (req: AuthRequest, res: Response) => {
   try {
     const maskedConfig = await ConfigService.getMaskedConfig();
@@ -227,9 +251,11 @@ adminRouter.get('/config/pg', requirePermission('SYSTEM_MGMT'), async (req: Auth
   }
 });
 
-/**
- * PG 및 PASS/KCP 본인인증 설정 저장/업데이트
- */
+// ============================================================
+// [Route] PUT /api/admin/config/pg
+// [Purpose] PG 및 본인인증 API 키, 모드(TEST/LIVE) 설정 저장 및 갱신
+// [Security] requirePermission('SYSTEM_MGMT')
+// ============================================================
 adminRouter.put('/config/pg', requirePermission('SYSTEM_MGMT'), async (req: AuthRequest, res: Response) => {
   try {
     const updated = await ConfigService.updateConfig(req.body);
@@ -243,9 +269,11 @@ adminRouter.put('/config/pg', requirePermission('SYSTEM_MGMT'), async (req: Auth
   }
 });
 
-/**
- * PG 및 PASS/KCP 연동 상태 테스트
- */
+// ============================================================
+// [Route] POST /api/admin/config/pg/test-connection
+// [Purpose] 토스페이먼츠 및 KCP 본인인증 실시간 연동 상태 테스트
+// [Security] requirePermission('SYSTEM_MGMT')
+// ============================================================
 adminRouter.post('/config/pg/test-connection', requirePermission('SYSTEM_MGMT'), async (req: AuthRequest, res: Response) => {
   try {
     const tossTest = await TossPaymentService.testConnection();
@@ -261,9 +289,11 @@ adminRouter.post('/config/pg/test-connection', requirePermission('SYSTEM_MGMT'),
   }
 });
 
-/**
- * 관리자 Dashboard KPI 통계 (Section 32, 33)
- */
+// ============================================================
+// [Route] GET /api/admin/dashboard
+// [Purpose] 관리자 메인 대시보드 KPI (회원/작가/작품/회차/광고 수, 대기 중인 정산 신청 목록, 최근 정산 이력)
+// [Security] requirePermission('DASHBOARD')
+// ============================================================
 adminRouter.get('/dashboard', requirePermission('DASHBOARD'), async (req: AuthRequest, res: Response) => {
   try {
     const totalUsers = await db.user.count();
@@ -298,9 +328,11 @@ adminRouter.get('/dashboard', requirePermission('DASHBOARD'), async (req: AuthRe
   }
 });
 
-/**
- * 광고 총매출 입력 및 작가 Pool 수익배분 집계 실행 (Section 13, 14, 15)
- */
+// ============================================================
+// [Route] POST /api/admin/revenue/calculate
+// [Purpose] 월 광고 총매출액(grossRevenue) 및 수수료 입력 후 작가 Pool 기여도 배분(Estimated) 계산 실행
+// [Security] requirePermission('AD_REVENUE')
+// ============================================================
 adminRouter.post('/revenue/calculate', requirePermission('AD_REVENUE'), async (req: AuthRequest, res: Response) => {
   try {
     const { periodMonth, grossRevenue, adNetworkFee, writerPoolRatio } = req.body;
@@ -325,9 +357,11 @@ adminRouter.post('/revenue/calculate', requirePermission('AD_REVENUE'), async (r
   }
 });
 
-/**
- * 월 정산 마감 승인 (Estimated -> Confirmed 변환)
- */
+// ============================================================
+// [Route] POST /api/admin/revenue/confirm
+// [Purpose] 해당 월의 정산을 공식 마감하고 작가별 예상수익(Estimated)을 확정수익(Confirmed)으로 전환
+// [Security] requirePermission('AD_REVENUE')
+// ============================================================
 adminRouter.post('/revenue/confirm', requirePermission('AD_REVENUE'), async (req: AuthRequest, res: Response) => {
   try {
     const { periodMonth } = req.body;
@@ -347,9 +381,11 @@ adminRouter.post('/revenue/confirm', requirePermission('AD_REVENUE'), async (req
   }
 });
 
-/**
- * 작가 정산 신청 승인/지급 완료 처리 (Section 19)
- */
+// ============================================================
+// [Route] POST /api/admin/settlement/:id/approve
+// [Purpose] 작가의 정산 신청건을 승인하고 송금 완료(PAID) 처리
+// [Security] requirePermission('AUTHOR_SETTLEMENT')
+// ============================================================
 adminRouter.post('/settlement/:id/approve', requirePermission('AUTHOR_SETTLEMENT'), async (req: AuthRequest, res: Response) => {
   try {
     const settlementId = req.params.id;
@@ -375,4 +411,5 @@ adminRouter.post('/settlement/:id/approve', requirePermission('AUTHOR_SETTLEMENT
     return res.status(500).json({ error: error.message });
   }
 });
+
 

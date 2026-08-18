@@ -1,3 +1,12 @@
+// ============================================================
+// [Service] System Configuration Service (시스템 & 결제/인증 설정 관리)
+//
+// [Purpose]
+// - DB `SystemConfig` 테이블을 기반으로 Toss Payments API 키, KCP 본인인증 키, 모드(TEST/LIVE)를 동적으로 관리
+// - 관리자 화면(CMS) 노출 시 보안을 위해 Secret Key를 마스킹(`test****3b5z`) 처리
+// - 설정 변경 시 마스킹된 문자열이 그대로 DB에 덮어써지지 않도록 방어 로직 내장
+// ============================================================
+
 import { db } from '../config/db.js';
 
 export interface PgConfigInput {
@@ -16,9 +25,10 @@ export interface PgConfigInput {
 export class ConfigService {
   private static readonly DEFAULT_ID = 'default';
 
-  /**
-   * DB에서 SystemConfig를 조회하며, 없으면 기본 레코드 생성
-   */
+  // ============================================================
+  // [Function] getConfig
+  // [Purpose] DB에서 SystemConfig 단일 레코드를 조회하며, 없으면 기본 테스트 키로 자동 초기화
+  // ============================================================
   static async getConfig() {
     let config = await db.systemConfig.findUnique({
       where: { id: this.DEFAULT_ID }
@@ -43,9 +53,10 @@ export class ConfigService {
     return config;
   }
 
-  /**
-   * UI 출력용 시크릿 키 마스킹 처리된 PG 설정 조회
-   */
+  // ============================================================
+  // [Function] getMaskedConfig
+  // [Purpose] 관리자 화면(CMS) 표시용으로 비밀키(Secret Key)를 마스킹 처리하여 반환
+  // ============================================================
   static async getMaskedConfig() {
     const config = await this.getConfig();
     return {
@@ -63,9 +74,12 @@ export class ConfigService {
     };
   }
 
-  /**
-   * 관리자 CMS에서 PG 및 본인인증 설정 갱신
-   */
+  // ============================================================
+  // [Function] updateConfig
+  // [Purpose] 관리자 콘솔에서 결제 PG 및 KCP 본인인증 설정을 저장/업데이트
+  // [Business Exception Rule]
+  // - 전달된 비밀키에 `***` 마스킹이 포함되어 있으면 변경하지 않고 기존 키를 유지
+  // ============================================================
   static async updateConfig(input: PgConfigInput) {
     await this.getConfig(); // ensure default config exists
 
@@ -97,9 +111,14 @@ export class ConfigService {
     return updated;
   }
 
+  // ============================================================
+  // [Helper] maskSecret
+  // [Purpose] 비밀키 앞 4자리와 뒤 4자리만 남기고 중간을 `****`로 치환
+  // ============================================================
   private static maskSecret(secret?: string | null): string {
     if (!secret) return '';
     if (secret.length <= 8) return '****';
     return `${secret.substring(0, 4)}****${secret.substring(secret.length - 4)}`;
   }
 }
+

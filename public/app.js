@@ -1,8 +1,31 @@
-// WebNovels Platform Frontend JavaScript Logic
+// ============================================================
+// [Frontend SPA Application Engine] public/app.js
+//
+// [Purpose]
+// - 단일 페이지 애플리케이션(SPA) 프론트엔드 코어 엔진
+// - 라우팅/View 전환(홈, 탐색, 보관함, 마이페이지, 작품상세, 독서뷰어, 크리에이터 스튜디오, 관리자 CMS)
+// - 보상형 광고 Unlock 시뮬레이션 및 백엔드 SSV 연동
+// - 웹소설 텍스트 뷰어(Reader) 엔진 (폰트 크기, 줄간격, 다크/라이트/세피아 테마, 이전/다음 화 이동)
+// - 작가 스튜디오(Creator Studio) 대시보드 (Estimated/Confirmed/Payable 3대 수익 지표)
+// - PASS / KCP 성인 본인인증 모달 인터랙션
+//
+// [Global State Management (클라이언트 상태 관리)]
+// - activeWork: 현재 상세 화면 또는 리더에서 열람 중인 작품 객체
+// - activeEpisodeId: 현재 뷰어에서 렌더링 중인 회차 번호/ID
+// - unlockedEpisodes: 광고 시청을 통해 해금된 회차 번호 Set (Client/LocalStorage)
+// - currentTheme: 뷰어 색상 테마 ('theme-dark' | 'theme-light' | 'theme-sepia')
+// - currentFontSize: 뷰어 글자 크기 (기본 18px)
+// - isAdminLoggedIn: 관리자 콘솔 로그인 성공 여부
+// - currentActiveView / lastMainView: SPA 뷰 히스토리 및 뒤로가기 스택
+// ============================================================
 
 const API_BASE = '/api';
 
-// Helper to generate 6 default episodes for each work
+// ============================================================
+// [Helper] createDefault6Episodes
+// [Purpose] 각 작품별 1~6회차 기본 에피소드 본문 데이터 생성
+// [Business Rule] 1~3화는 무료(`isFree: true`), 4~6화는 광고 언락 회차(`isFree: false, isAdFree: true`)
+// ============================================================
 function createDefault6Episodes(workTitle) {
   return [
     { episodeNumber: 1, title: "제 1 화", isFree: true, isAdFree: false, content: `본 회차는 1회차 입니다.\n\n[${workTitle} - 제 1 화]\n주인공은 불길하게 타오르는 붉은 하늘을 바라보며 검 자루를 쥐었다. 바람이 부는 순간, 차가운 강철의 감촉이 손바닥에 선명하게 전해졌다.\n\n"끝을 낼 시간이군."\n\n그의 짧은 읊조림과 함께 수많은 전장의 함성이 울려 퍼지기 시작했다. 1~3화는 무료로 즉시 열람하실 수 있습니다.` },
@@ -14,7 +37,9 @@ function createDefault6Episodes(workTitle) {
   ];
 }
 
-// Sample Works Seed Data (8 Full Works with 6 Episodes each)
+// ------------------------------------------------------------
+// [State] SAMPLE_WORKS (대표 8개 작품 시드 데이터)
+// ------------------------------------------------------------
 const SAMPLE_WORKS = [
   {
     id: 1,
@@ -122,12 +147,18 @@ const SAMPLE_WORKS = [
   }
 ];
 
+// ------------------------------------------------------------
+// [State] SAMPLE_READERS (샘플 독자 계정)
+// ------------------------------------------------------------
 const SAMPLE_READERS = [
   { id: 1, username: 'reader1', password_hash: '!12345', email: 'reader1@webnovels.com', phone: '+82-010-111-1111', is_adult_verified: false, subscription_status: '일반 회원' },
   { id: 2, username: 'reader2', password_hash: '!12345', email: 'reader2@webnovels.com', phone: '+82-010-111-1112', is_adult_verified: true, subscription_status: '프리미엄 구독중' },
   { id: 3, username: 'reader3', password_hash: '!12345', email: 'reader3@webnovels.com', phone: '+82-010-111-1113', is_adult_verified: true, subscription_status: '프리미엄 구독중' }
 ];
 
+// ------------------------------------------------------------
+// [State] SAMPLE_AUTHORS (샘플 작가 계정)
+// ------------------------------------------------------------
 const SAMPLE_AUTHORS = [
   { id: 1, username: 'writer1', password_hash: '!123456', email: 'writer1@webnovels.com', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666', status: '공식 인증 작가' },
   { id: 2, username: 'writer2', password_hash: '!123456', email: 'writer2@webnovels.com', pen_name: '무협의신', work_title: '천마의 귀환', birthdate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bank_info: '신한은행 110-222-333444', status: '공식 인증 작가' },
@@ -139,16 +170,26 @@ const SAMPLE_AUTHORS = [
   { id: 8, username: 'writer8', password_hash: '!123456', email: 'writer8@webnovels.com', pen_name: '검성', work_title: '검의 전설: 천하제일인', birthdate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bank_info: '대구은행 508-12-345678', status: '공식 인증 작가' }
 ];
 
+// ------------------------------------------------------------
+// [Client State] 활성 세션 변수
+// ------------------------------------------------------------
 let activeWork = SAMPLE_WORKS[0];
 let activeEpisodeId = 'ep-1';
 let unlockedEpisodes = new Set();
 let currentTheme = 'theme-dark';
 let currentFontSize = 18;
 
+// ============================================================
+// [Entry] DOMContentLoaded
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   initWebNovelsApp();
 });
 
+// ============================================================
+// [Function] initWebNovelsApp
+// [Purpose] Lucide 아이콘 렌더링, 이벤트 리스너 바인딩, Supabase/API 실시간 데이터 로드, 세션 복원 및 메인 홈 렌더링
+// ============================================================
 async function initWebNovelsApp() {
   lucide.createIcons();
   bindWebNovelsEvents();
@@ -192,6 +233,7 @@ async function initWebNovelsApp() {
   renderLibraryContent();
   renderSearchResults();
 }
+
 
 
 
@@ -417,7 +459,9 @@ function switchWebNovelsView(viewId, activeLink) {
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
-// 관리자 로그인 로직 처리 (Supabase 연동)
+// ============================================================
+// [Admin Auth] 관리자 로그인 로직 처리 (Supabase 및 세션 동기화)
+// ============================================================
 window.handleAdminLoginProcess = async function() {
   const idInput = document.getElementById('adminLoginId').value.trim();
   const pwInput = document.getElementById('adminLoginPw').value.trim();
@@ -438,9 +482,26 @@ window.handleAdminLoginProcess = async function() {
   if (result && result.success) {
     isAdminLoggedIn = true;
     closeAllModals();
-    const admin = result.admin;
-    showToast(`🔑 관리자 로그인 성공! (${admin.nickname || idInput})`);
-    document.getElementById('adminRoleBadge').textContent = `${admin.role} 로그인됨`;
+    const admin = result.admin || { id: idInput, username: idInput, nickname: idInput, role: 'SUPER_ADMIN' };
+    
+    // [중요] 기존 일반회원(독자/작가) 세션을 관리자 세션으로 완전히 덮어쓰기
+    localStorage.removeItem('webnovels_author');
+    const adminUserObj = {
+      id: admin.id || 'admin-root',
+      username: admin.username || idInput,
+      nickname: admin.nickname || idInput,
+      role: admin.role || 'SUPER_ADMIN',
+      isAdultVerified: true
+    };
+    localStorage.setItem('webnovels_user', JSON.stringify(adminUserObj));
+    localStorage.setItem('webnovels_token', result.token || `admin-token-${admin.id}`);
+    localStorage.setItem('webnovels_admin_token', result.token || `admin-token-${admin.id}`);
+
+    // 헤더 프로필 영역 및 네비게이션 메뉴 즉시 관리자 모드로 동기화
+    updateMemberHeader(adminUserObj);
+
+    showToast(`🔑 관리자 로그인 성공! (${adminUserObj.nickname || idInput})`);
+    document.getElementById('adminRoleBadge').textContent = `${adminUserObj.role} 로그인됨`;
     document.getElementById('adminRoleBadge').className = 'badge badge-primary';
     document.getElementById('btnAdminLogout').style.display = 'inline-block';
   } else {
@@ -460,20 +521,34 @@ window.handleAdminLoginProcess = async function() {
   loadAdminDashboard();
 };
 
-// 관리자 로그아웃
+// ============================================================
+// [Admin Auth] 관리자 로그아웃
+// ============================================================
 window.handleAdminLogoutProcess = function() {
   isAdminLoggedIn = false;
   if (window.WebNovelsAdmin) window.WebNovelsAdmin.logout();
+  localStorage.removeItem('webnovels_admin_token');
+  localStorage.removeItem('webnovels_user');
+  localStorage.removeItem('webnovels_author');
+  localStorage.removeItem('webnovels_token');
+  currentLoggedAuthor = null;
+  window._isAdultVerified = false;
+
   document.getElementById('adminRoleBadge').textContent = '미로그인';
   document.getElementById('adminRoleBadge').className = 'badge badge-accent';
   if (document.getElementById('btnAdminLogout')) {
     document.getElementById('btnAdminLogout').style.display = 'none';
   }
+
+  // 헤더를 완전한 비로그인 상태로 복구 (메뉴도 기본 표시로 복원)
+  updateMemberHeader(null);
+
   showToast('관리자 로그아웃 되었습니다.');
   // 홈으로 이동
   document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-home')?.classList.add('active');
 };
+
 
 // ---- 관리자 대시보드 KPI 로드 ----
 async function loadAdminDashboard() {
@@ -1291,9 +1366,19 @@ function renderLibraryContent() {
   if (window.lucide) window.lucide.createIcons();
 }
 
-// ----------------------------------------------------
-// 2. Work Detail & Episode List
-// ----------------------------------------------------
+// ============================================================
+// [Section 2] Work Detail & Episode List View
+//
+// [Purpose]
+// - 작품 상세 페이지 정보(표지, 제목, 작가, 장르, 연령가, 소개글, 관심등록/작가구독 상태) 렌더링
+// - 1~6화 회차 목록(1~3화 무료 FREE, 4~6화 광고잠금) 및 7~10화 연재예정(Coming Soon) 표시
+//
+// [User Actions]
+// - 첫 화 읽기 (`openReaderDirect(workId, 1)`)
+// - 관심등록 토글 (`toggleFavoriteWork(workId)`)
+// - 작가 구독 토글 (`toggleSubscribeAuthor(author)`)
+// - 개별 회차 클릭 시 뷰어로 이동
+// ============================================================
 window.openWorkDetailDirect = function(workId) {
   const targetId = Number(workId);
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetId) || SAMPLE_WORKS[0];
@@ -1382,9 +1467,15 @@ window.handleComingSoonEpisode = function(epNum) {
   }
 };
 
-// ----------------------------------------------------
-// 3. Reader Logic & Rewarded Ad Unlock
-// ----------------------------------------------------
+// ============================================================
+// [Section 3] Web Novel Reader Engine (독서 뷰어) & Ad Unlock Gate
+//
+// [Purpose]
+// - 회차 본문 렌더링, 성인 인증(AGE_19) 가드 검증, 광고 잠금(Locked) 여부 검사
+// - LocalStorage 독서 진행률 자동 저장 (`saveReadingProgress`)
+// - 폰트 크기 조절 (14px~26px), 테마 변경 (다크/라이트/세피아)
+// - 이전 화 / 다음 화 이동 제어
+// ============================================================
 window.openReaderDirect = function(workId, epNumber) {
   const targetWorkId = Number(workId);
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetWorkId) || SAMPLE_WORKS[0];
@@ -1405,13 +1496,13 @@ window.openReaderDirect = function(workId, epNumber) {
   const ep = work.episodes.find(e => e.episodeNumber === epNum) || work.episodes[0];
   const unlockKey = `${work.id}-${epNum}`;
 
-  // 성인 콘텐츠 여부 확인
+  // 1. 성인 콘텐츠 여부 확인 (미인증 시 PASS 성인인증 모달 팝업)
   if (work.rating === 'AGE_19' && !window._isAdultVerified) {
     openModal('modalPassAdultVerify');
     return;
   }
 
-  // 광고 시청 해금 필요 체크 (4화 이상 유료 회차)
+  // 2. 광고 시청 해금 필요 체크 (4화 이상 유료/잠긴 회차)
   if (!ep.isFree && !unlockedEpisodes.has(unlockKey)) {
     window._pendingAdUnlockEpKey = unlockKey;
     window._pendingAdUnlockWorkId = work.id;
@@ -1437,7 +1528,16 @@ window.openReaderDirect = function(workId, epNumber) {
   switchWebNovelsView('view-reader');
 };
 
-// 보상형 광고 30초 시청 시뮬레이션 및 백엔드 SSV 검증
+// ============================================================
+// [Function] startAdSimulation
+// [Purpose] 보상형 광고 3초 시뮬레이션 재생 후 서버 사이드 검증(SSV) 및 회차 언락 완료 처리
+// [Complete Ad Unlock Flow]
+// 1. 광고 모달에서 '광고 보고 무료 열람' 클릭
+// 2. 광고 플레이어 카운트다운 시작
+// 3. 광고 완료 시 `POST /api/ads/verify-unlock` (or 모의 토큰 생성)
+// 4. `unlockedEpisodes.add(key)`로 권한 저장
+// 5. 즉시 다음 잠긴 회차 본문 뷰어로 이동
+// ============================================================
 async function startAdSimulation() {
   const playerBox = document.getElementById('adPlayerBox');
   const timerText = document.getElementById('adTimerText');
@@ -1499,12 +1599,14 @@ window.changeFontSize = function(delta) {
   document.getElementById('fontSizeDisplay').textContent = `${currentFontSize}px`;
 };
 
-// ----------------------------------------------------
-// 4. Creator Studio Logic
-// ----------------------------------------------------
-// ----------------------------------------------------
-// 4. Creator Studio Logic (Dynamic Author Data Linkage)
-// ----------------------------------------------------
+// ============================================================
+// [Section 4] Creator Studio (작가 스튜디오 & 3대 수익 지표)
+//
+// [Creator Revenue 3대 지표 설명]
+// 1. Estimated Revenue (예상 수익): 당월 실시간 추정 수익 (PENDING)
+// 2. Confirmed Revenue (확정 수익): 공식 마감 심사를 거친 확정 정산금 (CONFIRMED)
+// 3. Payable Revenue (정산 가능 금액): 확정 수익에서 기지급액 및 심사 대기액을 차감한 실제 출금 가능 잔액
+// ============================================================
 let currentLoggedAuthor = null;
 let currentAuthorPayable = 0;
 
@@ -1518,6 +1620,7 @@ function getCurrentAuthorSession() {
 }
 
 async function fetchCreatorDashboardData() {
+
   currentLoggedAuthor = getCurrentAuthorSession();
 
   const authorBar = document.getElementById('creatorAuthorBar');
@@ -1784,17 +1887,12 @@ window.handleCreatorSettlementReq = async function() {
 window.handleAuthorLogoutProcess = function() {
   localStorage.removeItem('webnovels_author');
   localStorage.removeItem('webnovels_token');
+  localStorage.removeItem('webnovels_admin_token');
+  isAdminLoggedIn = false;
   currentLoggedAuthor = null;
   showToast('작가 계정에서 로그아웃되었습니다.');
   
-  const loginButton = document.getElementById('btnHeaderLogin');
-  if (loginButton) {
-    loginButton.textContent = '로그인';
-    loginButton.classList.remove('btn-outline');
-    loginButton.classList.add('btn-primary');
-    loginButton.onclick = () => openModal('modalAuth');
-  }
-
+  updateMemberHeader(null);
   fetchCreatorDashboardData();
   switchWebNovelsView('view-home');
 };
@@ -1807,6 +1905,10 @@ async function handleMemberLogin() {
     showToast('아이디 또는 이메일과 비밀번호를 입력해주세요.');
     return;
   }
+
+  // 관리자 플래그 초기화
+  isAdminLoggedIn = false;
+  localStorage.removeItem('webnovels_admin_token');
 
   // 1. API 로그인 시도
   try {
@@ -1824,7 +1926,8 @@ async function handleMemberLogin() {
           email: data.user.email,
           pen_name: data.user.penName || data.user.nickname,
           bank_info: data.user.bankInfo,
-          status: '공식 인증 작가'
+          status: '공식 인증 작가',
+          role: 'AUTHOR'
         };
         localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
         localStorage.removeItem('webnovels_user');
@@ -1915,6 +2018,8 @@ window.handleMemberLogout = function() {
   localStorage.removeItem('webnovels_token');
   localStorage.removeItem('webnovels_user');
   localStorage.removeItem('webnovels_author');
+  localStorage.removeItem('webnovels_admin_token');
+  isAdminLoggedIn = false;
   currentLoggedAuthor = null;
   window._isAdultVerified = false;
 
@@ -1923,6 +2028,7 @@ window.handleMemberLogout = function() {
   showToast('로그아웃되었습니다.');
   switchWebNovelsView('view-home');
 };
+
 
 // ----------------------------------------------------
 // 중복확인 및 비밀번호 일치 실시간 검증
@@ -2160,6 +2266,7 @@ async function handleAuthorSignup() {
 async function loadMyProfile() {
   const authorSession = getCurrentAuthorSession();
   if (authorSession) {
+    isAdminLoggedIn = false;
     updateMemberHeader({ ...authorSession, role: 'AUTHOR' });
     return;
   }
@@ -2168,6 +2275,19 @@ async function loadMyProfile() {
   if (savedUser) {
     try {
       const user = JSON.parse(savedUser);
+      if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SUB_ADMIN') {
+        isAdminLoggedIn = true;
+        const badge = document.getElementById('adminRoleBadge');
+        if (badge) {
+          badge.textContent = `${user.role} 로그인됨`;
+          badge.className = 'badge badge-primary';
+        }
+        if (document.getElementById('btnAdminLogout')) {
+          document.getElementById('btnAdminLogout').style.display = 'inline-block';
+        }
+      } else {
+        isAdminLoggedIn = false;
+      }
       updateMemberHeader(user);
       return;
     } catch (e) {
@@ -2176,13 +2296,16 @@ async function loadMyProfile() {
   }
 
   const token = localStorage.getItem('webnovels_token');
-  if (token && !token.startsWith('reader-token')) {
+  if (token && !token.startsWith('reader-token') && !token.startsWith('author-')) {
     try {
       const res = await fetch('/api/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         const { user } = await res.json();
+        if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SUB_ADMIN') {
+          isAdminLoggedIn = true;
+        }
         localStorage.setItem('webnovels_user', JSON.stringify(user));
         updateMemberHeader(user);
         return;
@@ -2191,30 +2314,74 @@ async function loadMyProfile() {
   }
 
   // 비로그인 상태
+  isAdminLoggedIn = false;
   updateMemberHeader(null);
 }
 
 function updateMemberHeader(user) {
   const profileMenu = document.getElementById('userProfileMenu');
+  const navCreatorLinks = document.querySelectorAll('.desktop-nav a[data-target="view-creator"], .desktop-nav a[href="#creator"]');
+  const navAdminLinks = document.querySelectorAll('.desktop-nav a[data-target="view-admin-cms"], .desktop-nav a[href="#admin"]');
 
   if (user) {
-    // 로그인 상태 UI
-    const isAuthor = user.role === 'AUTHOR' || !!user.pen_name;
-    const displayName = isAuthor ? `${user.pen_name || user.nickname} 작가님` : `${user.nickname || user.username}님`;
-    const targetView = isAuthor ? 'view-creator' : 'view-mypage';
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'SUB_ADMIN' || isAdminLoggedIn;
+    const isAuthor = !isAdmin && (user.role === 'AUTHOR' || !!user.pen_name);
+    const isReader = !isAdmin && !isAuthor;
 
+    // [중요 요건] 일반독자 회원이 로그인하는 경우 Header의 "작품등록", "관리자" 메뉴는 로그아웃 상태까지 숨김 처리
+    if (isReader) {
+      navCreatorLinks.forEach(el => el.style.display = 'none');
+      navAdminLinks.forEach(el => el.style.display = 'none');
+    } else if (isAuthor) {
+      navCreatorLinks.forEach(el => el.style.display = '');
+      navAdminLinks.forEach(el => el.style.display = 'none');
+    } else if (isAdmin) {
+      navCreatorLinks.forEach(el => el.style.display = '');
+      navAdminLinks.forEach(el => el.style.display = '');
+    }
+
+    // 헤더 우측 상단 프로필 영역 렌더링
     if (profileMenu) {
-      profileMenu.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('${targetView}')" style="display: flex; align-items: center; gap: 6px;">
-            <i data-lucide="${isAuthor ? 'feather' : 'user'}"></i>
-            <span>${displayName}</span>
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="handleMemberLogout()" title="로그아웃" style="color: var(--text-muted); padding: 4px 8px;">
-            <i data-lucide="log-out"></i>
-          </button>
-        </div>
-      `;
+      if (isAdmin) {
+        const adminName = user.nickname || user.username || user.role || 'SUPER_ADMIN';
+        profileMenu.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-admin-cms')" style="display: flex; align-items: center; gap: 6px; border-color: var(--primary-color); color: #fff;">
+              <i data-lucide="shield" style="color: var(--primary-color);"></i>
+              <span>${adminName} (${user.role || 'ADMIN'})</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="handleAdminLogoutProcess()" title="관리자 로그아웃" style="color: var(--text-muted); padding: 4px 8px;">
+              <i data-lucide="log-out"></i>
+            </button>
+          </div>
+        `;
+      } else if (isAuthor) {
+        const displayName = `${user.pen_name || user.nickname} 작가님`;
+        profileMenu.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-creator')" style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="feather"></i>
+              <span>${displayName}</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="handleAuthorLogoutProcess()" title="로그아웃" style="color: var(--text-muted); padding: 4px 8px;">
+              <i data-lucide="log-out"></i>
+            </button>
+          </div>
+        `;
+      } else {
+        const displayName = `${user.nickname || user.username}님`;
+        profileMenu.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-mypage')" style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="user"></i>
+              <span>${displayName}</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="handleMemberLogout()" title="로그아웃" style="color: var(--text-muted); padding: 4px 8px;">
+              <i data-lucide="log-out"></i>
+            </button>
+          </div>
+        `;
+      }
     }
 
     // 내 서재 프로필 정보 동기화
@@ -2239,7 +2406,10 @@ function updateMemberHeader(user) {
       }
     }
   } else {
-    // 비로그인 상태 UI
+    // [비로그인 상태] 게스트일 때는 "작품 등록", "관리자" 메뉴를 다시 기본 표시로 복원
+    navCreatorLinks.forEach(el => el.style.display = '');
+    navAdminLinks.forEach(el => el.style.display = '');
+
     if (profileMenu) {
       profileMenu.innerHTML = `
         <button class="btn btn-primary btn-sm" id="btnHeaderLogin" onclick="openModal('modalAuth')">
@@ -2265,6 +2435,7 @@ function updateMemberHeader(user) {
 
   if (window.lucide) window.lucide.createIcons();
 }
+
 
 // ----------------------------------------------------
 // 5. PASS Adult Verification

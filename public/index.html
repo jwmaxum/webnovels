@@ -1,3 +1,25 @@
+<!--
+============================================================
+[Frontend SPA HTML Markup] public/index.html
+
+[Structure Overview]
+1. Header: 데스크톱/모바일 네비게이션, 검색 모달 트리거, 로그인/프로필 드롭다운
+2. Main Content Area (SPA Views):
+   - #view-home        : 메인 홈 화면 (실시간 Hot Top 4, 지금 뜨는 작품)
+   - #view-discover    : 웹소설 탐색 & 장르 필터링 그리드
+   - #view-mypage      : 내 서재 (최근 읽은 작품, 관심작품, 구독 작가)
+   - #view-work-detail : 작품 상세 (표지, 작가, 소개, 1~6화 회차 목록, 관심/구독)
+   - #view-reader      : 풀스크린 웹소설 텍스트 뷰어 (글자크기/테마/이전다음화)
+   - #view-creator     : 작가 스튜디오 (실시간 통계, 3대 수익 지표, 회차 등록, 정산 신청)
+   - #view-admin-cms   : 통합 관리자 콘솔 (KPI 통계, 서브관리자, PG설정, 정산 승인)
+3. Modals:
+   - #modalAuth              : 일반 독자/작가 회원가입 및 로그인 팝업
+   - #modalAdUnlock          : 보상형 광고 3초 시청 & 회차 언락 모달
+   - #modalPassAdultVerify   : PASS / KCP 19세 성인 본인인증 모달
+   - #modalSearch            : 실시간 글로벌 작품/작가 검색 모달
+   - #modalReaderSettings    : 뷰어 폰트/테마 설정 모달
+============================================================
+-->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -59,6 +81,7 @@
 
       <!-- View 1: Home View (design.md Section 16) -->
       <section id="view-home" class="main-view active">
+
 
 
         <!-- Continue Reading Section (design.md Section 17) -->

@@ -1,12 +1,26 @@
+// ============================================================
+// [Router] Community Router (/api/community)
+//
+// [Purpose]
+// - 회차별 독자 댓글 목록 조회, 댓글 등록, 댓글 좋아요(Like) 토글, 부적절한 콘텐츠/댓글 신고(Report) 접수 기능 제공
+//
+// [Endpoints]
+// - GET  /api/community/episodes/:episodeId/comments : 회차 댓글 목록 (블라인드 제외, 최신순, 좋아요수 포함)
+// - POST /api/community/episodes/:episodeId/comments : 회차 댓글 작성
+// - POST /api/community/comments/:commentId/like : 댓글 좋아요 토글 (추가 <-> 취소)
+// - POST /api/community/report : 댓글/작품/회차 신고 접수 (관리자 심사 대기)
+// ============================================================
+
 import { Router, Response } from 'express';
 import { db } from '../config/db.js';
 import { authenticateToken, AuthRequest } from '../middlewares/auth.middleware.js';
 
 export const communityRouter = Router();
 
-/**
- * 회차별 댓글 목록 조회
- */
+// ============================================================
+// [Route] GET /api/community/episodes/:episodeId/comments
+// [Purpose] 특정 회차의 공개 댓글 목록 및 각 댓글별 좋아요 개수 조회 (블라인드 처리된 `isBlocked: true` 댓글은 자동 제외)
+// ============================================================
 communityRouter.get('/episodes/:episodeId/comments', async (req: AuthRequest, res: Response) => {
   try {
     const episodeId = req.params.episodeId;
@@ -26,9 +40,11 @@ communityRouter.get('/episodes/:episodeId/comments', async (req: AuthRequest, re
   }
 });
 
-/**
- * 댓글 작성
- */
+// ============================================================
+// [Route] POST /api/community/episodes/:episodeId/comments
+// [Purpose] 회차 댓글 등록
+// [Security] authenticateToken 필수
+// ============================================================
 communityRouter.post('/episodes/:episodeId/comments', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -57,9 +73,10 @@ communityRouter.post('/episodes/:episodeId/comments', authenticateToken, async (
   }
 });
 
-/**
- * 댓글 좋아요 토글
- */
+// ============================================================
+// [Route] POST /api/community/comments/:commentId/like
+// [Purpose] 댓글 좋아요 토글 (기존 좋아요가 있으면 취소, 없으면 추가)
+// ============================================================
 communityRouter.post('/comments/:commentId/like', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -81,9 +98,11 @@ communityRouter.post('/comments/:commentId/like', authenticateToken, async (req:
   }
 });
 
-/**
- * 콘텐츠/댓글 신고 등록 (Section 26)
- */
+// ============================================================
+// [Route] POST /api/community/report
+// [Purpose] 부적절한 콘텐츠/댓글/작품 신고 접수
+// [Parameters] targetType ('COMMENT' | 'WORK' | 'EPISODE'), targetId, reason
+// ============================================================
 communityRouter.post('/report', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -111,3 +130,4 @@ communityRouter.post('/report', authenticateToken, async (req: AuthRequest, res:
     return res.status(500).json({ error: error.message });
   }
 });
+
