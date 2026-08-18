@@ -2352,6 +2352,7 @@ async function handleMemberSignup() {
       // Supabase readers 테이블 실시간 등록 동기화
       if (window.WebNovelsAdmin?.updateReaderActivity) {
         window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
+          email: userObj.email,
           nickname: userObj.nickname,
           isAdultVerified: false,
           readingHistory: [],
@@ -2389,6 +2390,7 @@ async function handleMemberSignup() {
   // Supabase readers 테이블 실시간 등록 동기화
   if (window.WebNovelsAdmin?.updateReaderActivity) {
     window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
+      email: userObj.email,
       nickname: userObj.nickname,
       isAdultVerified: false,
       readingHistory: [],
