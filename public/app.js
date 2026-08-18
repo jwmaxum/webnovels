@@ -1024,17 +1024,31 @@ function hasLooseMatch(haystack, query) {
 function syncUserActivityToStorage(data) {
   if (!data) return;
   
+  // 기존 로컬 데이터
+  const localReading = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+  const localFavs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
+  const localSubs = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
+
   if (data.readingHistory && Array.isArray(data.readingHistory)) {
-    localStorage.setItem('webnovels_reading_history', JSON.stringify(data.readingHistory));
+    // Supabase에서 가져온 데이터가 비어있고, 로컬에는 데이터가 있다면 덮어쓰지 않음
+    if (data.readingHistory.length > 0 || localReading.length === 0) {
+      localStorage.setItem('webnovels_reading_history', JSON.stringify(data.readingHistory));
+    }
   }
   if (data.favorites && Array.isArray(data.favorites)) {
-    localStorage.setItem('webnovels_favorites', JSON.stringify(data.favorites.map(Number)));
+    if (data.favorites.length > 0 || localFavs.length === 0) {
+      localStorage.setItem('webnovels_favorites', JSON.stringify(data.favorites.map(Number)));
+    }
   }
   if (data.subscribedAuthors && Array.isArray(data.subscribedAuthors)) {
-    localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(data.subscribedAuthors));
+    if (data.subscribedAuthors.length > 0 || localSubs.length === 0) {
+      localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(data.subscribedAuthors));
+    }
   }
   if (data.isAdultVerified !== undefined) {
-    window._isAdultVerified = !!data.isAdultVerified;
+    // 성인인증은 true가 된 적이 있으면 계속 유지
+    const currentVerify = window._isAdultVerified || false;
+    window._isAdultVerified = currentVerify || !!data.isAdultVerified;
   }
   renderLibraryContent();
 }
