@@ -2315,6 +2315,16 @@ async function handleMemberSignup() {
       localStorage.setItem('webnovels_user', JSON.stringify(userObj));
       localStorage.removeItem('webnovels_author');
 
+      // Supabase readers 테이블 실시간 등록 동기화
+      if (window.WebNovelsAdmin?.updateReaderActivity) {
+        window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
+          isAdultVerified: false,
+          readingHistory: [],
+          favorites: [],
+          subscribedAuthors: []
+        });
+      }
+
       updateMemberHeader(userObj);
       renderLibraryContent();
       closeAllModals();
@@ -2341,12 +2351,23 @@ async function handleMemberSignup() {
   localStorage.setItem('webnovels_user', JSON.stringify(userObj));
   localStorage.removeItem('webnovels_author');
 
+  // Supabase readers 테이블 실시간 등록 동기화
+  if (window.WebNovelsAdmin?.updateReaderActivity) {
+    window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
+      isAdultVerified: false,
+      readingHistory: [],
+      favorites: [],
+      subscribedAuthors: []
+    });
+  }
+
   updateMemberHeader(userObj);
   renderLibraryContent();
   closeAllModals();
   showToast(`🎉 ${userObj.nickname}님 회원가입이 완료되었습니다!`);
   switchWebNovelsView('view-mypage');
 }
+
 
 async function handleAuthorSignup() {
   const penName = document.getElementById('authorPenName')?.value.trim();
