@@ -1004,8 +1004,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-top: 40px;
+  flex-wrap: wrap;
 }
+
+.reader-nav-center-btns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .reader-bottom-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .reader-nav-center-btns {
+    display: contents;
+  }
+  .reader-bottom-nav button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 
 /* Reader Themes */
 .theme-light {
