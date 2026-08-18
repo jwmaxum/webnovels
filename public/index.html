@@ -38,9 +38,9 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=20">
 </head>
-<body class="theme-default">
+<body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
 
     <!-- Top Navigation Header (Desktop & Mobile Header) -->
@@ -247,8 +247,8 @@
             <div class="reader-bottom-nav">
               <button class="btn btn-outline" id="btnPrevEp"><i data-lucide="chevron-left"></i> 이전 화</button>
               <div class="reader-nav-center-btns">
-                <button class="btn btn-outline" id="btnReaderLibrary"><i data-lucide="book-marked"></i> 내 서재</button>
-                <button class="btn btn-outline" id="btnReaderHome"><i data-lucide="home"></i> 홈</button>
+                <button class="btn btn-outline" id="btnReaderLibrary" onclick="switchWebNovelsView('view-mypage')"><i data-lucide="book-marked"></i> 내 서재</button>
+                <button class="btn btn-outline" id="btnReaderHome" onclick="switchWebNovelsView('view-home')"><i data-lucide="home"></i> 홈</button>
               </div>
               <button class="btn btn-primary" id="btnNextEp">다음 화 <i data-lucide="chevron-right"></i></button>
             </div>
@@ -1295,7 +1295,7 @@
 
   </div>
 
-  <script src="/supabase-admin.js?v=11"></script>
-  <script src="/app.js?v=11"></script>
+  <script src="/supabase-admin.js?v=20"></script>
+  <script src="/app.js?v=20"></script>
 </body>
 </html>

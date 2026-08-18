@@ -2463,24 +2463,27 @@ async function loadMyProfile() {
 
 function updateMemberHeader(user) {
   const profileMenu = document.getElementById('userProfileMenu');
-  const navCreatorLinks = document.querySelectorAll('.desktop-nav a[data-target="view-creator"], .desktop-nav a[href="#creator"]');
-  const navAdminLinks = document.querySelectorAll('.desktop-nav a[data-target="view-admin-cms"], .desktop-nav a[href="#admin"]');
+  const navCreatorLinks = document.querySelectorAll('.desktop-nav a[data-target="view-creator"], .desktop-nav a[href="#creator"], .cp-nav-link.nav-highlight');
+  const navAdminLinks = document.querySelectorAll('.desktop-nav a[data-target="view-admin-cms"], .desktop-nav a[href="#admin"], .cp-nav-link.nav-admin');
 
   if (user) {
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'SUB_ADMIN' || isAdminLoggedIn;
     const isAuthor = !isAdmin && (user.role === 'AUTHOR' || !!user.pen_name);
     const isReader = !isAdmin && !isAuthor;
 
-    // [중요 요건] 일반독자 회원이 로그인하는 경우 Header의 "작품등록", "관리자" 메뉴는 로그아웃 상태까지 숨김 처리
+    // [중요 요건] body data-user-role 속성 설정 (CSS Guard 및 JS 이중 보장)
     if (isReader) {
-      navCreatorLinks.forEach(el => el.style.display = 'none');
-      navAdminLinks.forEach(el => el.style.display = 'none');
+      document.body.setAttribute('data-user-role', 'READER');
+      navCreatorLinks.forEach(el => el.style.setProperty('display', 'none', 'important'));
+      navAdminLinks.forEach(el => el.style.setProperty('display', 'none', 'important'));
     } else if (isAuthor) {
-      navCreatorLinks.forEach(el => el.style.display = '');
-      navAdminLinks.forEach(el => el.style.display = 'none');
+      document.body.setAttribute('data-user-role', 'AUTHOR');
+      navCreatorLinks.forEach(el => el.style.removeProperty('display'));
+      navAdminLinks.forEach(el => el.style.setProperty('display', 'none', 'important'));
     } else if (isAdmin) {
-      navCreatorLinks.forEach(el => el.style.display = '');
-      navAdminLinks.forEach(el => el.style.display = '');
+      document.body.setAttribute('data-user-role', 'ADMIN');
+      navCreatorLinks.forEach(el => el.style.removeProperty('display'));
+      navAdminLinks.forEach(el => el.style.removeProperty('display'));
     }
 
     // 헤더 우측 상단 프로필 영역 렌더링
@@ -2550,8 +2553,9 @@ function updateMemberHeader(user) {
     }
   } else {
     // [비로그인 상태] 게스트일 때는 "작품 등록", "관리자" 메뉴를 다시 기본 표시로 복원
-    navCreatorLinks.forEach(el => el.style.display = '');
-    navAdminLinks.forEach(el => el.style.display = '');
+    document.body.setAttribute('data-user-role', 'GUEST');
+    navCreatorLinks.forEach(el => el.style.removeProperty('display'));
+    navAdminLinks.forEach(el => el.style.removeProperty('display'));
 
     if (profileMenu) {
       profileMenu.innerHTML = `
@@ -2578,6 +2582,7 @@ function updateMemberHeader(user) {
 
   if (window.lucide) window.lucide.createIcons();
 }
+
 
 // ----------------------------------------------------
 // 5. PASS Adult Verification
