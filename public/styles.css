@@ -1000,35 +1000,70 @@ body {
   font-size: 0.9rem;
 }
 
+/* ============================================================
+   [Role-Based Header Navigation Guard]
+   일반 독자(READER) 로그인 시 작품등록, 관리자 메뉴 완전 숨김
+   작가(AUTHOR) 로그인 시 관리자 메뉴 완전 숨김
+   ============================================================ */
+body[data-user-role="READER"] .desktop-nav a[data-target="view-creator"],
+body[data-user-role="READER"] .desktop-nav a[href="#creator"],
+body[data-user-role="READER"] .desktop-nav a[data-target="view-admin-cms"],
+body[data-user-role="READER"] .desktop-nav a[href="#admin"],
+body[data-user-role="READER"] .bottom-nav a[data-target="view-creator"],
+body[data-user-role="READER"] .bottom-nav a[data-target="view-admin-cms"],
+body[data-user-role="READER"] .cp-nav-link.nav-highlight,
+body[data-user-role="READER"] .cp-nav-link.nav-admin {
+  display: none !important;
+}
+
+body[data-user-role="AUTHOR"] .desktop-nav a[data-target="view-admin-cms"],
+body[data-user-role="AUTHOR"] .desktop-nav a[href="#admin"],
+body[data-user-role="AUTHOR"] .bottom-nav a[data-target="view-admin-cms"],
+body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
+  display: none !important;
+}
+
 .reader-bottom-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 40px;
-  flex-wrap: wrap;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-top: 40px !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
 }
 
 .reader-nav-center-btns {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.reader-nav-center-btns .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
 }
 
 @media (max-width: 640px) {
   .reader-bottom-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
   }
   .reader-nav-center-btns {
-    display: contents;
+    display: contents !important;
   }
   .reader-bottom-nav button {
-    width: 100%;
-    justify-content: center;
+    width: 100% !important;
+    justify-content: center !important;
   }
 }
+
 
 
 /* Reader Themes */
