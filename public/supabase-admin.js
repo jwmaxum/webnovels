@@ -869,6 +869,7 @@ window.WebNovelsAdmin = {
   readerLogin,
   updateReaderActivity,
   fetchReaderActivity,
+  checkReaderExists,
   fetchAuthorDashboard,
   createEpisode,
   requestSettlement
