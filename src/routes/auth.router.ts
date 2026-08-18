@@ -153,7 +153,23 @@ authRouter.post('/login', async (req: Request, res: Response) => {
           { username: loginIdentifier }
         ]
       },
-      include: { author: true }
+      include: {
+        author: true,
+        subscriptions: {
+          include: {
+            author: { select: { penName: true } }
+          }
+        },
+        workFavorites: {
+          select: {
+            workId: true
+          }
+        },
+        readingHistories: {
+          orderBy: { readAt: 'desc' },
+          take: 30
+        }
+      }
     });
 
     if (!user) {
@@ -187,6 +203,15 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       { expiresIn: JWT_EXPIRES_IN }
     );
 
+    const formattedReadingHistory = user.readingHistories.map((h: any) => ({
+      workId: Number(h.workId),
+      episodeId: h.episodeId,
+      episodeNumber: Number(h.episodeId) || 1,
+      updatedAt: h.readAt ? h.readAt.toISOString() : new Date().toISOString()
+    }));
+    const formattedFavorites = user.workFavorites.map((f: any) => Number(f.workId));
+    const formattedSubscribedAuthors = user.subscriptions.map((s: any) => s.author?.penName).filter(Boolean);
+
     return res.json({
       message: '로그인 성공',
       token,
@@ -198,13 +223,17 @@ authRouter.post('/login', async (req: Request, res: Response) => {
         role: user.role,
         isAdultVerified: user.isAdultVerified,
         permissions: parsedPermissions,
-        authorId: user.author?.id
+        authorId: user.author?.id,
+        readingHistory: formattedReadingHistory,
+        favorites: formattedFavorites,
+        subscribedAuthors: formattedSubscribedAuthors
       }
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message || '로그인 실패' });
   }
 });
+
 
 // ============================================================
 // [Route] POST /api/auth/verify-adult/kcp/init
