@@ -808,7 +808,8 @@ async function updateReaderActivity(username, activityData) {
           id: nextId,
           ...updatePayload,
           password_hash: '!12345',
-          subscription_status: '일반 회원'
+          subscription_status: '일반 회원',
+          phone: '미입력'
         });
       return { success: !error, data };
     }
