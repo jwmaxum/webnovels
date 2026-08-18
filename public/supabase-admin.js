@@ -755,7 +755,7 @@ async function updateReaderActivity(username, activityData) {
     const cleanUser = String(username).trim();
     const updatePayload = {
       username: cleanUser,
-      email: cleanUser.includes('@') ? cleanUser : `${cleanUser}@webnovels.com`
+      email: activityData.email || (cleanUser.includes('@') ? cleanUser : `${cleanUser}@webnovels.com`)
     };
     if (activityData.isAdultVerified !== undefined) {
       updatePayload.is_adult_verified = activityData.isAdultVerified;
