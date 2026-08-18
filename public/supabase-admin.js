@@ -787,9 +787,25 @@ async function updateReaderActivity(username, activityData) {
         .eq('id', existing[0].id);
       return { success: !error, data };
     } else {
+      // readers 테이블의 id에 NOT NULL 제약조건이 있으므로 수동으로 다음 ID 채번
+      let nextId = Date.now() % 1000000; // fallback id
+      try {
+        const { data: maxRecord } = await supabaseClient
+          .from('readers')
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1);
+        if (maxRecord && maxRecord.length > 0) {
+          nextId = maxRecord[0].id + 1;
+        }
+      } catch (e) {
+        console.warn('최대 ID 조회 실패, fallback ID 사용');
+      }
+
       const { data, error } = await supabaseClient
         .from('readers')
         .insert({
+          id: nextId,
           ...updatePayload,
           password_hash: '!12345',
           subscription_status: '일반 회원'
