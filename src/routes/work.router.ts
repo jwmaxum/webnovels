@@ -1,12 +1,33 @@
+// ============================================================
+// [Router] Work Router (/api/works)
+//
+// [Purpose]
+// - 메인 홈 큐레이션 영역별 작품 목록, 작품 검색 및 필터링, 작품 상세 정보(회차 리스트, 북마크 상태), 관심 작품(Favorite) 토글 기능 제공
+//
+// [Endpoints]
+// - GET  /api/works/home : 메인 홈 큐레이션 목록 (상단추천, 신작, 인기작, 완결작, 최근읽은작품)
+// - PATCH /api/works/:id/admin-settings : 관리자용 작품 추천/인기/신작 플래그 및 상태 토글
+// - GET  /api/works : 장르, 검색어, 연재상태, 연령등급 조건별 작품 검색
+// - GET  /api/works/:id : 작품 상세 메타데이터, 작가 정보, 공개 회차 목록, 유저 관심/구독 여부 조회
+// - POST /api/works/:id/favorite : 작품 관심등록(북마크) 토글 (등록 <-> 해제)
+// ============================================================
+
 import { Router, Response } from 'express';
 import { db } from '../config/db.js';
 import { optionalAuthenticateToken, authenticateToken, AuthRequest } from '../middlewares/auth.middleware.js';
 
 export const workRouter = Router();
 
-/**
- * 7.1 메인 화면 영역별 작품 목록 조회
- */
+// ============================================================
+// [Route] GET /api/works/home
+// [Purpose] 메인 화면 영역별 큐레이션 작품 데이터 조회
+// [Business Logic]
+// 1. 신작 목록 (`isNewWork: true` 우선, 부족 시 최신 등록순 fallback)
+// 2. 인기 작품 목록 (`isPopularWork: true` 우선, 업데이트순 fallback)
+// 3. 완결 작품 목록 (`status: 'COMPLETED'`)
+// 4. 상단 추천작 (`isTopRecommended: true`)
+// 5. 로그인 유저인 경우 최근 읽던 작품 이력(`userReadingHistory`) 5건 조회
+// ============================================================
 workRouter.get('/home', optionalAuthenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
@@ -84,9 +105,10 @@ workRouter.get('/home', optionalAuthenticateToken, async (req: AuthRequest, res:
   }
 });
 
-/**
- * CMS 토글용: 관리자 설정 통합 변경
- */
+// ============================================================
+// [Route] PATCH /api/works/:id/admin-settings
+// [Purpose] 관리자 콘솔(CMS)에서 작품의 추천/인기/신작 노출 플래그 및 연재 상태(ONGOING/PAUSED/COMPLETED) 일괄 변경
+// ============================================================
 workRouter.patch('/:id/admin-settings', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const workId = req.params.id;
@@ -109,9 +131,10 @@ workRouter.patch('/:id/admin-settings', authenticateToken, async (req: AuthReque
   }
 });
 
-/**
- * 작품 목록 검색 및 장르 필터링
- */
+// ============================================================
+// [Route] GET /api/works
+// [Purpose] 장르별 필터링, 키워드 검색(제목/설명/태그), 연령가/연재상태 조건에 따른 작품 목록 검색
+// ============================================================
 workRouter.get('/', optionalAuthenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { genre, keyword, status, rating } = req.query;
@@ -143,9 +166,10 @@ workRouter.get('/', optionalAuthenticateToken, async (req: AuthRequest, res: Res
   }
 });
 
-/**
- * 작품 상세 페이지 정보 조회 (8번)
- */
+// ============================================================
+// [Route] GET /api/works/:id
+// [Purpose] 작품 상세 페이지 정보 (작품 메타데이터, 작가 정보, 발행된 회차 리스트, 독자의 관심등록 및 작가 구독 여부) 반환
+// ============================================================
 workRouter.get('/:id', optionalAuthenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const workId = req.params.id;
@@ -200,9 +224,10 @@ workRouter.get('/:id', optionalAuthenticateToken, async (req: AuthRequest, res: 
   }
 });
 
-/**
- * 관심 작품 토글
- */
+// ============================================================
+// [Route] POST /api/works/:id/favorite
+// [Purpose] 독자의 작품 관심등록(북마크) 토글 (기존 등록되어 있으면 삭제, 없으면 등록)
+// ============================================================
 workRouter.post('/:id/favorite', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const workId = req.params.id;
@@ -223,3 +248,4 @@ workRouter.post('/:id/favorite', authenticateToken, async (req: AuthRequest, res
     return res.status(500).json({ error: error.message });
   }
 });
+

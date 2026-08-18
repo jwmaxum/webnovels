@@ -1,3 +1,20 @@
+// ============================================================
+// [Router] Authentication & Adult Verification Router (/api/auth)
+//
+// [Purpose]
+// - 일반 독자/작가 회원가입, 로그인, JWT 토큰 발급, PASS/KCP 성인인증, 프로필 조회/수정 처리
+//
+// [Endpoints]
+// - POST /api/auth/signup : 회원가입 (독자/작가 분기 및 프로필/계좌 초기화)
+// - POST /api/auth/login : 로그인 및 JWT 발급
+// - POST /api/auth/verify-adult/kcp/init : PASS/KCP 본인인증 거래번호 발급
+// - POST /api/auth/verify-adult/kcp/confirm : PASS/KCP 본인인증 결과 수신 및 성인 승인
+// - POST /api/auth/verify-adult : 성인 인증 (테스트/일반 승인)
+// - GET  /api/auth/me : 현재 로그인한 유저 프로필 및 구독/북마크 목록 조회
+// - PUT  /api/auth/profile : 닉네임 및 비밀번호 변경
+// - POST /api/auth/logout : 로그아웃 처리
+// ============================================================
+
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -8,10 +25,16 @@ import { KcpVerificationService } from '../services/kcpVerification.service.js';
 
 export const authRouter = Router();
 
-/**
- * 일반 회원가입 (최소 개인정보 수집 원칙 준수)
- * 필수: email, password, nickname
- */
+// ============================================================
+// [Route] POST /api/auth/signup
+// [Purpose] 회원가입 처리 (독자/작가 공통)
+// [Business Logic]
+// 1. 이메일/아이디 중복 검사
+// 2. 비밀번호 bcrypt 암호화
+// 3. User 및 UserProfile 레코드 생성
+// 4. `role === 'AUTHOR'`일 경우 필명(penName), 정산 계좌(AuthorAccount), 초기 작품(Work) 자동 생성
+// 5. 즉시 로그인 상태를 위한 JWT 토큰 발급
+// ============================================================
 authRouter.post('/signup', async (req: Request, res: Response) => {
   try {
     const { email, username, password, nickname, role, phone, birthDate, address, penName, workTitle, bankInfo } = req.body;
@@ -105,9 +128,15 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
   }
 });
 
-/**
- * 로그인
- */
+// ============================================================
+// [Route] POST /api/auth/login
+// [Purpose] 사용자 로그인 및 인증 JWT 발급
+// [Business Logic]
+// 1. 이메일 또는 username으로 사용자 조회
+// 2. bcrypt 비밀번호 대조 검증
+// 3. 서브관리자인 경우 메뉴 권한(`permissions`) 파싱
+// 4. JWT 토큰(유효기간 7일) 서명 및 유저 정보 반환
+// ============================================================
 authRouter.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, username, password } = req.body;
@@ -177,9 +206,11 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   }
 });
 
-/**
- * PASS / KCP 본인인증 요청 초기화 (거래번호 발급)
- */
+// ============================================================
+// [Route] POST /api/auth/verify-adult/kcp/init
+// [Purpose] PASS / KCP 본인인증 요청 세션 생성 및 거래번호(ordr_idxx) 발급
+// [Security] authenticateToken 필수
+// ============================================================
 authRouter.post('/verify-adult/kcp/init', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -194,9 +225,14 @@ authRouter.post('/verify-adult/kcp/init', authenticateToken, async (req: AuthReq
   }
 });
 
-/**
- * PASS / KCP 본인인증 결과 수신 및 성인 승인 처리
- */
+// ============================================================
+// [Route] POST /api/auth/verify-adult/kcp/confirm
+// [Purpose] PASS / KCP 본인인증 결과 수신 및 만 19세 이상 성인 승인 처리
+// [Flow]
+// 1. KcpVerificationService에서 본인인증 결과 및 생년월일 검증
+// 2. `User.isAdultVerified = true` 업데이트
+// 3. 성인 플래그가 반영된 신규 JWT 토큰 재발급
+// ============================================================
 authRouter.post('/verify-adult/kcp/confirm', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -233,9 +269,10 @@ authRouter.post('/verify-adult/kcp/confirm', authenticateToken, async (req: Auth
   }
 });
 
-/**
- * 성인 인증 API (Content Rating System)
- */
+// ============================================================
+// [Route] POST /api/auth/verify-adult
+// [Purpose] 모의/단순 성인 인증 완료 API (개발 및 테스트 지원)
+// ============================================================
 authRouter.post('/verify-adult', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -263,9 +300,10 @@ authRouter.post('/verify-adult', authenticateToken, async (req: AuthRequest, res
   }
 });
 
-/**
- * 내 프로필 조회
- */
+// ============================================================
+// [Route] GET /api/auth/me
+// [Purpose] 현재 로그인된 유저의 상세 프로필, 북마크, 구독 목록 조회
+// ============================================================
 authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -294,10 +332,10 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
   }
 });
 
-/**
- * 독자 회원 정보수정 (닉네임 변경, 비밀번호 변경)
- * 보안: 기존 비밀번호 검증 필수
- */
+// ============================================================
+// [Route] PUT /api/auth/profile
+// [Purpose] 독자 회원 정보 수정 (닉네임 변경, 기존 비밀번호 검증 후 새 비밀번호 변경)
+// ============================================================
 authRouter.put('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -359,11 +397,13 @@ authRouter.put('/profile', authenticateToken, async (req: AuthRequest, res: Resp
   }
 });
 
-/**
- * 로그아웃
- */
+// ============================================================
+// [Route] POST /api/auth/logout
+// [Purpose] 로그아웃 (클라이언트 측 토큰 삭제 안내)
+// ============================================================
 authRouter.post('/logout', authenticateToken, async (req: AuthRequest, res: Response) => {
   return res.json({
     message: '성공적으로 로그아웃되었습니다. 클라이언트의 인증 토큰이 폐기되었습니다.'
   });
 });
+

@@ -1,3 +1,16 @@
+// ============================================================
+// [Router] Episode Router (/api/episodes)
+//
+// [Purpose]
+// - 웹소설 회차 본문 열람(Reader), 19세 성인 콘텐츠 권한 검증, 무료/광고 언락 열람 권한 체크, 독서 이력 및 조회수 통계 집계
+//
+// [Reader Access Flow]
+// 1. 요청 유저(userId, isAdultVerified) 및 회차 정보 조회
+// 2. 작품 등급이 `AGE_18`인 경우 성인인증 미완료 시 403 `ADULT_VERIFICATION_REQUIRED` 반환
+// 3. 무료 회차가 아니며 광고 언락이 안 된 경우 402 `AD_UNLOCK_REQUIRED` 반환 -> 프론트엔드 광고 시청 모달 유도
+// 4. 권한 검증 완료 시 독서 이력(`userReadingHistory`) 생성 및 작품/회차 조회수 +1 증가 후 본문 텍스트 반환
+// ============================================================
+
 import { Router, Response } from 'express';
 import { db } from '../config/db.js';
 import { optionalAuthenticateToken, authenticateToken, AuthRequest } from '../middlewares/auth.middleware.js';
@@ -5,9 +18,14 @@ import { AdUnlockService } from '../services/adUnlock.service.js';
 
 export const episodeRouter = Router();
 
-/**
- * 회차 상세 본문 읽기
- */
+// ============================================================
+// [Route] GET /api/episodes/:id
+// [Purpose] 회차 상세 본문 읽기 및 접근 제어
+// [Business Rules]
+// - 무료 회차(isFree: true 또는 1~3화): 비회원/회원 누구나 즉시 열람
+// - 잠긴 회차(adUnlockRequired: true): 보상형 광고 시청 후 DB에 `EpisodeUnlock` 레코드가 있는 유저만 본문 열람 허용
+// - 19금 작품: `isAdultVerified: true` 인증 유저만 열람 허용
+// ============================================================
 episodeRouter.get('/:id', optionalAuthenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const episodeId = req.params.id;
@@ -93,3 +111,4 @@ episodeRouter.get('/:id', optionalAuthenticateToken, async (req: AuthRequest, re
     return res.status(500).json({ error: error.message });
   }
 });
+

@@ -1,3 +1,19 @@
+// ============================================================
+// [Service] KCP / PASS 본인인증 & 성인인증 서비스
+//
+// [Purpose]
+// - NHN KCP / PASS 본인확인 서비스를 연동하여 휴대폰 실명 확인 및 성인(만 19세 이상) 여부를 검증
+// - 19금 성인 웹소설 열람 전 필수 법적 본인/성인인증 처리
+//
+// [Business Logic Flow]
+// 1. 세션 초기화 (`initVerification`): KCP 고유 주문/거래번호(`ordrIdxx`) 생성 및 요청 URL 반환
+// 2. 인증창 호출: 프론트엔드에서 PASS/KCP 팝업창 또는 Iframe 실행
+// 3. 결과 검증 (`confirmVerification`):
+//    - 응답 데이터에서 `userBirth` (YYYYMMDD) 추출
+//    - 현재 연도 기준 만 19세 이상인지 연령 계산
+//    - 미성년자일 경우 에러 발생, 성인인 경우 `User.isAdultVerified = true`로 DB 반영
+// ============================================================
+
 import { db } from '../config/db.js';
 import { ConfigService } from './config.service.js';
 import crypto from 'crypto';
@@ -19,9 +35,10 @@ export interface KcpConfirmInput {
 }
 
 export class KcpVerificationService {
-  /**
-   * KCP / PASS 본인인증 세션 및 거래번호(ordr_idxx) 생성
-   */
+  // ============================================================
+  // [Function] initVerification
+  // [Purpose] KCP / PASS 본인인증 요청용 세션 및 거래번호(ordr_idxx) 발급
+  // ============================================================
   static async initVerification(userId: string): Promise<KcpInitResult> {
     const config = await ConfigService.getConfig();
     const siteCode = config.kcpSiteCode || 'T0000';
@@ -35,9 +52,13 @@ export class KcpVerificationService {
     };
   }
 
-  /**
-   * PASS / KCP 본인인증 결과 수신 및 성인 여부 검증 (19세 이상 확인)
-   */
+  // ============================================================
+  // [Function] confirmVerification
+  // [Purpose] PASS / KCP 본인인증 결과 수신 및 성인 여부 검증 (만 19세 이상 확인)
+  // [Business Rules]
+  // - 생년월일 기준 만 19세 미만 청소년의 경우 성인 인증 차단
+  // - 성공 시 User 테이블의 `isAdultVerified` 플래그를 true로 갱신하여 19금 회차 열람 권한 획득
+  // ============================================================
   static async confirmVerification(input: KcpConfirmInput) {
     const config = await ConfigService.getConfig();
 
@@ -77,9 +98,10 @@ export class KcpVerificationService {
     };
   }
 
-  /**
-   * KCP / PASS 설정 테스트
-   */
+  // ============================================================
+  // [Function] testConnection
+  // [Purpose] 관리자 콘솔에서 KCP 설정 키 및 연동 상태 테스트
+  // ============================================================
   static async testConnection() {
     const config = await ConfigService.getConfig();
     return {
@@ -88,3 +110,4 @@ export class KcpVerificationService {
     };
   }
 }
+

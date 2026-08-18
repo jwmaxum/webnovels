@@ -1,3 +1,12 @@
+// ============================================================
+// [Prisma Database Schema]
+// 웹소설 플랫폼 데이터베이스 스키마 정의 파일
+//
+// [Purpose]
+// - 사용자, 작가, 작품, 회차, 광고, 정산, 커뮤니티, 이커머스 등 전체 데이터 모델 정의
+// - SQLite(개발/테스트) 및 PostgreSQL 호환 스키마
+// ============================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,6 +16,11 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+// ------------------------------------------------------------
+// [Model] User (회원)
+// [Purpose] 일반 독자, 작가, 관리자 계정 통합 관리
+// [Roles] READER, AUTHOR, SUB_ADMIN, SUPER_ADMIN, ADMIN
+// ------------------------------------------------------------
 model User {
   id              String               @id @default(uuid())
   email           String               @unique
@@ -14,12 +28,13 @@ model User {
   passwordHash    String
   nickname        String
   phone           String?
-  role            String               @default("READER") // READER, AUTHOR, SUB_ADMIN, SUPER_ADMIN, ADMIN
-  permissions     String?              // JSON array string of allowed menu keys for SUB_ADMIN
-  isAdultVerified Boolean              @default(false)
+  role            String               @default("READER") // 권한 구분: READER, AUTHOR, SUB_ADMIN, SUPER_ADMIN, ADMIN
+  permissions     String?              // SUB_ADMIN용 메뉴 접근 권한 JSON 문자열 (예: ["USERS", "WORKS", "SETTLEMENTS"])
+  isAdultVerified Boolean              @default(false)    // KCP 본인/성인인증 완료 여부 (19세 이상만 성인 콘텐츠 열람 가능)
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 
+  // 관계 정의
   profile         UserProfile?
   author          Author?
   readingHistories UserReadingHistory[]
@@ -33,24 +48,32 @@ model User {
   workFavorites   WorkFavorite[]
 }
 
+// ------------------------------------------------------------
+// [Model] UserProfile (회원 추가 프로필)
+// [Purpose] 프로필 이미지, 선호 장르, 알림 설정, 구독 상태 등
+// ------------------------------------------------------------
 model UserProfile {
-  id             String   @id @default(uuid())
-  userId         String   @unique
+  id              String   @id @default(uuid())
+  userId          String   @unique
   profileImageUrl String?
-  favoriteGenre  String?
-  notificationOn Boolean  @default(true)
+  favoriteGenre   String?
+  notificationOn  Boolean  @default(true)
   subscriptionStatus String @default("일반 회원")
-  birthDate      String?
-  address        String?
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  birthDate       String?
+  address         String?
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] Author (작가 프로필 & 크리에이터 스튜디오 연동)
+// [Purpose] 필명, 작가 소개, 정산 계좌, 작품 목록, 수익 데이터 연결
+// ------------------------------------------------------------
 model Author {
   id              String            @id @default(uuid())
   userId          String            @unique
   penName         String
   bio             String?
-  copyrightAgreed Boolean           @default(true)
+  copyrightAgreed Boolean           @default(true) // 저작권 및 플랫폼 약관 동의 여부
   createdAt       DateTime          @default(now())
   
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -61,34 +84,42 @@ model Author {
   subscribers     AuthorSubscription[]
 }
 
+// ------------------------------------------------------------
+// [Model] AuthorAccount (작가 정산 계좌)
+// [Purpose] 수익 정산금 송금을 위한 은행/계좌번호/예금주 정보
+// ------------------------------------------------------------
 model AuthorAccount {
   id            String   @id @default(uuid())
   authorId      String   @unique
   bankName      String
   accountNumber String
   accountHolder String
-  taxInfo       String?
+  taxInfo       String?  // 사업자번호 또는 주민등록번호 등 세무 증빙 정보
   author        Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] Work (웹소설 작품 정보)
+// [Purpose] 작품 메타데이터, 장르, 연재 요일, 연령가(ALL, AGE_15, AGE_18), 랭킹 플래그
+// ------------------------------------------------------------
 model Work {
-  id            String          @id @default(uuid())
-  authorId      String
-  title         String
-  coverImageUrl String?
-  description   String
-  genre         String
-  tags          String          // comma separated
-  rating        String          @default("ALL") // ALL, AGE_15, AGE_18
-  aiUsageType   String          @default("NONE") // NONE, ASSISTED, FULL
-  status        String          @default("ONGOING") // ONGOING, PAUSED, COMPLETED
-  publishDays   String          @default("MON,WED,FRI")
-  isTopRecommended Boolean      @default(false)
-  isPopularWork Boolean         @default(false)
-  isNewWork     Boolean         @default(false)
-  viewCount     Int             @default(0)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id               String          @id @default(uuid())
+  authorId         String
+  title            String
+  coverImageUrl    String?
+  description      String
+  genre            String          // 판타지, 로맨스, 무협, 현대판타지, SF 등
+  tags             String          // 콤마 구분 태그 문자열
+  rating           String          @default("ALL") // 연령 등급: ALL, AGE_15, AGE_18 (19금은 성인인증 필수)
+  aiUsageType      String          @default("NONE") // AI 활용 여부: NONE, ASSISTED, FULL
+  status           String          @default("ONGOING") // 연재 상태: ONGOING(연재중), PAUSED(휴재), COMPLETED(완결)
+  publishDays      String          @default("MON,WED,FRI") // 연재 요일 (콤마 구분)
+  isTopRecommended Boolean         @default(false) // 메인 상단 추천작 노출 여부
+  isPopularWork    Boolean         @default(false) // 인기 작품 배지 및 탭 노출 여부
+  isNewWork        Boolean         @default(false) // 신작 배지 및 탭 노출 여부
+  viewCount        Int             @default(0)     // 누적 조회수
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   author        Author          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   episodes      Episode[]
@@ -96,31 +127,39 @@ model Work {
   favorites     WorkFavorite[]
 }
 
+// ------------------------------------------------------------
+// [Model] WorkStatistics (작품 통계 및 수익 배분 점수)
+// [Purpose] 완독률, 체류시간, 총 조회수, 광고 뷰수 기반 기여도 점수(contributionScore) 산출
+// ------------------------------------------------------------
 model WorkStatistics {
-  id            String   @id @default(uuid())
-  workId        String   @unique
-  totalReads    Int      @default(0)
-  totalAdViews  Int      @default(0)
-  completionRate Float   @default(0.0) // 완독률 (%)
-  avgDwellTime  Float    @default(0.0) // 체류시간 (초)
-  subscriberCount Int    @default(0)
-  contributionScore Float @default(0.0) // 수익배분 기여도 점수
-  updatedAt     DateTime @updatedAt
+  id                String   @id @default(uuid())
+  workId            String   @unique
+  totalReads        Int      @default(0)     // 총 완독/열람수
+  totalAdViews      Int      @default(0)     // 해당 작품에서 발생한 광고 시청 총 횟수
+  completionRate    Float    @default(0.0)   // 완독률 (%)
+  avgDwellTime      Float    @default(0.0)   // 독서 평균 체류시간 (초)
+  subscriberCount   Int      @default(0)     // 작품/작가 구독자 수
+  contributionScore Float    @default(0.0)   // 작가 풀 수익배분 기여도 점수 (알고리즘 산출)
+  updatedAt         DateTime @updatedAt
   
   work          Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] Episode (회차 상세 정보)
+// [Purpose] 소설 본문 텍스트, 무료/유료 여부, 광고 언락 필요 여부, 예약 발행
+// ------------------------------------------------------------
 model Episode {
   id                String            @id @default(uuid())
   workId            String
-  episodeNumber     Int
+  episodeNumber     Int               // 회차 번호 (1화, 2화, ...)
   title             String
-  content           String
-  authorComment     String?
-  isFree            Boolean           @default(false)
-  adUnlockRequired  Boolean           @default(true)
-  isPublished       Boolean           @default(true)
-  scheduledAt       DateTime?
+  content           String            // 회차 본문 텍스트 (마크다운/HTML)
+  authorComment     String?           // 작가의 말
+  isFree            Boolean           @default(false) // 무료 공개 회차 여부 (true면 광고 없이 즉시 열람)
+  adUnlockRequired  Boolean           @default(true)  // 보상형 광고 시청 후 언락 필요 여부
+  isPublished       Boolean           @default(true)  // 공개/발행 여부
+  scheduledAt       DateTime?         // 예약 발행 일시
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -130,20 +169,27 @@ model Episode {
   comments          Comment[]
 }
 
+// ------------------------------------------------------------
+// [Model] EpisodeStatistics (회차별 열람 및 광고 통계)
+// ------------------------------------------------------------
 model EpisodeStatistics {
   id            String   @id @default(uuid())
   episodeId     String   @unique
-  readCount     Int      @default(0)
-  adUnlockCount Int      @default(0)
+  readCount     Int      @default(0)     // 회차 열람수
+  adUnlockCount Int      @default(0)     // 광고를 통해 언락된 횟수
   episode       Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] EpisodeUnlock (유저별 회차 언락 이력)
+// [Purpose] 광고 시청 완료 후 유저에게 부여된 회차 열람 권한 기록 (72시간 유효)
+// ------------------------------------------------------------
 model EpisodeUnlock {
   id              String   @id @default(uuid())
   userId          String
   episodeId       String
   unlockedAt      DateTime @default(now())
-  adTransactionId String?
+  adTransactionId String?  // 광고 완료 트랜잭션 ID
 
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   episode         Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
@@ -151,95 +197,127 @@ model EpisodeUnlock {
   @@unique([userId, episodeId])
 }
 
+// ------------------------------------------------------------
+// [Model] UserReadingHistory (독서 진행률 및 체류시간 이력)
+// [Purpose] 최근 읽은 작품/회차, 체류시간 측정, 통계 집계
+// ------------------------------------------------------------
 model UserReadingHistory {
   id              String   @id @default(uuid())
   userId          String
   workId          String
   episodeId       String
-  readTimeSeconds Int      @default(0)
+  readTimeSeconds Int      @default(0) // 실제 뷰어에서 머문 시간 (초)
   readAt          DateTime @default(now())
 
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] AdImpression (광고 노출 요청 이력)
+// [Purpose] 광고 노출 시작(REQUESTED) 및 보상 토큰(rewardToken) 발급
+// ------------------------------------------------------------
 model AdImpression {
   id            String   @id @default(uuid())
   userId        String?
-  adType        String   // REWARDED_VIDEO, DISPLAY, NATIVE
+  adType        String   // REWARDED_VIDEO(보상형 동영상), DISPLAY(배너), NATIVE(네이티브)
   placement     String   // EPISODE_UNLOCK, MAIN_BANNER, WORK_DETAIL
   adNetwork     String   // ADMOB, INTERNAL
-  rewardToken   String?  @unique
-  status        String   // REQUESTED, VIEWED, COMPLETED, VERIFIED
+  rewardToken   String?  @unique // 광고 검증용 난수 토큰
+  status        String   // REQUESTED(요청됨), VIEWED(노출), COMPLETED(시청완료), VERIFIED(검증완료)
   createdAt     DateTime @default(now())
 
   completions   AdCompletion[]
 }
 
+// ------------------------------------------------------------
+// [Model] AdCompletion (광고 시청 완료 및 서버 서명 검증)
+// [Purpose] 광고 시청 완료 시 서버 서명 검증 및 리워드 확정
+// ------------------------------------------------------------
 model AdCompletion {
   id              String       @id @default(uuid())
   adImpressionId  String
   userId          String
-  rewardVerified  Boolean      @default(false)
-  serverSignature String?
+  rewardVerified  Boolean      @default(false) // 백엔드 검증 통과 여부
+  serverSignature String?      // 서버 서명 해시
   completedAt     DateTime     @default(now())
 
   adImpression    AdImpression @relation(fields: [adImpressionId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] UserAdHistory (유저별 광고 시청 로그)
+// ------------------------------------------------------------
 model UserAdHistory {
-  id            String   @id @default(uuid())
-  userId        String
+  id             String   @id @default(uuid())
+  userId         String
   adImpressionId String
-  episodeId     String?
-  createdAt     DateTime @default(now())
+  episodeId      String?
+  createdAt      DateTime @default(now())
 
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] RevenueEvent (월별 플랫폼 광고 매출 및 작가 풀)
+// [Purpose] 월 단위 광고 총매출, 수수료, 작가 배분 Pool(기본 62.5%), 플랫폼 귀속액
+// ------------------------------------------------------------
 model RevenueEvent {
   id              String   @id @default(uuid())
-  periodMonth     String   // YYYY-MM
-  grossRevenue    Float    // 광고 총매출
-  adNetworkFee    Float    // 광고 플랫폼 수수료
-  netRevenue      Float    // 순광고수익 (gross - adNetworkFee)
-  writerPoolRatio Float    @default(0.625) // 작가 Pool 비율 (예: 62.5%)
-  writerPool      Float    // 작가 Pool 총액 (net * writerPoolRatio)
-  platformRevenue Float    // 플랫폼 귀속 (net - writerPool)
-  isClosed        Boolean  @default(false)
+  periodMonth     String   // 정산 대상 월 (YYYY-MM)
+  grossRevenue    Float    // 광고 총매출액
+  adNetworkFee    Float    // 애드네트워크/결제 대행 수수료
+  netRevenue      Float    // 순수익 (gross - fee)
+  writerPoolRatio Float    @default(0.625) // 작가 풀 배분율 (62.5%)
+  writerPool      Float    // 작가 정산 배분 총액
+  platformRevenue Float    // 플랫폼 영업 수익
+  isClosed        Boolean  @default(false) // 해당 월 정산 마감 여부
   createdAt       DateTime @default(now())
 
   authorRevenues AuthorRevenue[]
 }
 
+// ------------------------------------------------------------
+// [Model] AuthorRevenue (작가별 월별 수익 분배 내역)
+// [Purpose]
+// - estimatedAmount (추정 수익): 실시간/당월 예상 수익
+// - confirmedAmount (확정 수익): 월 마감 후 확정된 정산금
+// ------------------------------------------------------------
 model AuthorRevenue {
   id                String         @id @default(uuid())
   revenueEventId    String
   authorId          String
   workId            String?
-  contributionScore Float          // 작품 기여도 점수
-  contributionRatio Float          // 기여도 비중 (%)
+  contributionScore Float          // 해당 작가/작품의 기여도 점수
+  contributionRatio Float          // 전체 풀 중 기여도 비중 (%)
   estimatedAmount   Float          // 추정 정산금 (Estimated)
   confirmedAmount   Float          // 확정 정산금 (Confirmed)
-  periodMonth       String
-  status            String         @default("PENDING") // PENDING, CONFIRMED, PAID, REJECTED
+  periodMonth       String         // 대상 월 (YYYY-MM)
+  status            String         @default("PENDING") // PENDING(대기), CONFIRMED(확정), PAID(지급완료), REJECTED(반려)
   createdAt         DateTime       @default(now())
 
   revenueEvent      RevenueEvent   @relation(fields: [revenueEventId], references: [id], onDelete: Cascade)
   author            Author         @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] AuthorSettlement (작가 정산 신청 및 지급 처리 내역)
+// [Purpose] 작가가 확정 수익(Confirmed)을 바탕으로 계좌 출금(정산)을 요청한 내역
+// ------------------------------------------------------------
 model AuthorSettlement {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   authorId      String
-  amount        Float
-  status        String   @default("PENDING") // PENDING, CONFIRMED, PAID, REJECTED
-  bankInfo      String
-  requestedAt   DateTime @default(now())
-  processedAt   DateTime?
+  amount        Float     // 출금 신청 금액
+  status        String    @default("PENDING") // PENDING(심사중), CONFIRMED(승인), PAID(송금완료), REJECTED(반려)
+  bankInfo      String    // 은행명, 계좌번호, 예금주 정보 스냅샷
+  requestedAt   DateTime  @default(now())
+  processedAt   DateTime? // 관리자 처리 일시
 
   author        Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] WorkFavorite (작품 관심등록 / 북마크)
+// ------------------------------------------------------------
 model WorkFavorite {
   id        String   @id @default(uuid())
   userId    String
@@ -252,6 +330,9 @@ model WorkFavorite {
   @@unique([userId, workId])
 }
 
+// ------------------------------------------------------------
+// [Model] AuthorSubscription (작가 팬 구독)
+// ------------------------------------------------------------
 model AuthorSubscription {
   id        String   @id @default(uuid())
   userId    String
@@ -264,12 +345,15 @@ model AuthorSubscription {
   @@unique([userId, authorId])
 }
 
+// ------------------------------------------------------------
+// [Model] Comment (회차별 독자 댓글)
+// ------------------------------------------------------------
 model Comment {
   id        String   @id @default(uuid())
   userId    String
   episodeId String
   content   String
-  isBlocked Boolean  @default(false)
+  isBlocked Boolean  @default(false) // 신고/관리자에 의한 블라인드 처리 여부
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -277,6 +361,9 @@ model Comment {
   likes     Like[]
 }
 
+// ------------------------------------------------------------
+// [Model] Like (댓글 좋아요)
+// ------------------------------------------------------------
 model Like {
   id        String   @id @default(uuid())
   userId    String
@@ -287,33 +374,42 @@ model Like {
   @@unique([userId, commentId])
 }
 
+// ------------------------------------------------------------
+// [Model] Report (댓글/작품/회차 신고 내역)
+// ------------------------------------------------------------
 model Report {
-  id        String   @id @default(uuid())
-  userId    String
-  targetType String  // COMMENT, WORK, EPISODE
-  targetId  String
-  reason    String
-  status    String   @default("PENDING") // PENDING, RESOLVED, REJECTED
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  targetType String   // 신고 대상: COMMENT, WORK, EPISODE
+  targetId   String
+  reason     String
+  status     String   @default("PENDING") // PENDING, RESOLVED, REJECTED
+  createdAt  DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] FanMeeting (작가 팬미팅 티켓팅 - 부가 기능)
+// ------------------------------------------------------------
 model FanMeeting {
-  id          String   @id @default(uuid())
-  authorId    String
-  title       String
-  eventDate   DateTime
-  location    String
-  price       Float
-  totalSeats  Int
+  id             String   @id @default(uuid())
+  authorId       String
+  title          String
+  eventDate      DateTime
+  location       String
+  price          Float
+  totalSeats     Int
   availableSeats Int
-  description String
-  createdAt   DateTime @default(now())
+  description    String
+  createdAt      DateTime @default(now())
 
   tickets     Ticket[]
 }
 
+// ------------------------------------------------------------
+// [Model] Ticket (팬미팅 티켓 구매 내역)
+// ------------------------------------------------------------
 model Ticket {
   id           String     @id @default(uuid())
   fanMeetingId String
@@ -324,6 +420,9 @@ model Ticket {
   fanMeeting   FanMeeting @relation(fields: [fanMeetingId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] Product (작가 굿즈/이커머스 상품)
+// ------------------------------------------------------------
 model Product {
   id          String   @id @default(uuid())
   workId      String?
@@ -337,6 +436,9 @@ model Product {
   orders      Order[]
 }
 
+// ------------------------------------------------------------
+// [Model] Order (굿즈 주문 및 결제 내역)
+// ------------------------------------------------------------
 model Order {
   id          String   @id @default(uuid())
   userId      String
@@ -350,6 +452,10 @@ model Order {
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
+// ------------------------------------------------------------
+// [Model] SystemConfig (외부 연동 및 플랫폼 시스템 설정)
+// [Purpose] Toss Payments 결제 키, KCP 본인인증 키, 모드(TEST/LIVE) 등 동적 관리
+// ------------------------------------------------------------
 model SystemConfig {
   id               String   @id @default("default")
   tossClientKey    String?  @default("test_ck_docs_O7l2mZ1N3p81A2jL3b5z")
