@@ -769,6 +769,10 @@ async function updateReaderActivity(username, activityData) {
     if (activityData.subscribedAuthors !== undefined) {
       updatePayload.subscribed_authors = activityData.subscribedAuthors;
     }
+    if (activityData.nickname !== undefined) {
+      // readers 테이블에 nickname 컬럼이 없으면 무시될 수 있음
+      updatePayload.nickname = activityData.nickname;
+    }
 
     const { data: existing } = await supabaseClient
       .from('readers')
@@ -798,7 +802,6 @@ async function updateReaderActivity(username, activityData) {
   }
 }
 
-
 async function fetchReaderActivity(username) {
   if (!supabaseClient || !username) return null;
 
@@ -811,6 +814,7 @@ async function fetchReaderActivity(username) {
 
     if (error || !data) return null;
     return {
+      nickname: data.nickname || data.username,
       isAdultVerified: data.is_adult_verified,
       readingHistory: data.reading_history || [],
       favorites: data.favorites || [],
@@ -821,6 +825,20 @@ async function fetchReaderActivity(username) {
     return null;
   }
 }
+
+async function checkReaderExists(username, email) {
+  if (!supabaseClient) return false;
+  try {
+    const { data, error } = await supabaseClient
+      .from('readers')
+      .select('id')
+      .or(`username.eq.${username},email.eq.${email}`)
+      .limit(1);
+    if (data && data.length > 0) return true;
+    return false;
+  } catch(e) { return false; }
+}
+
 
 // ---- 글로벌 export ----
 window.WebNovelsAdmin = {
