@@ -2099,6 +2099,12 @@ async function handleMemberLogin() {
     );
   }
 
+  // [중요] 가입되지 않은 회원의 로그인 시도 차단 (무분별한 자동가입 방지)
+  if (!matchedReader) {
+    showToast('❌ 아이디 또는 비밀번호가 일치하지 않거나, 가입되지 않은 계정입니다.');
+    return;
+  }
+
   let nick = loginIdentifier.split('@')[0];
   if (matchedReader) {
     if (matchedReader.username === 'reader1') nick = '열혈독자 1호';
