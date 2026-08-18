@@ -302,7 +302,7 @@ authRouter.post('/verify-adult', authenticateToken, async (req: AuthRequest, res
 
 // ============================================================
 // [Route] GET /api/auth/me
-// [Purpose] 현재 로그인된 유저의 상세 프로필, 북마크, 구독 목록 조회
+// [Purpose] 현재 로그인된 유저의 상세 프로필, 북마크, 구독 목록, 독서 이력 조회 (새 브라우저 로그인 동기화용)
 // ============================================================
 authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -310,27 +310,159 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
 
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        nickname: true,
-        role: true,
-        phone: true,
-        isAdultVerified: true,
+      include: {
         profile: true,
         author: { select: { id: true, penName: true } },
-        subscriptions: { select: { authorId: true } },
-        workFavorites: { select: { workId: true } },
-        readingHistories: { select: { workId: true } }
+        subscriptions: {
+          include: {
+            author: { select: { penName: true } }
+          }
+        },
+        workFavorites: {
+          select: {
+            workId: true
+          }
+        },
+        readingHistories: {
+          orderBy: { readAt: 'desc' },
+          take: 30
+        }
       }
     });
 
-    return res.json({ user });
+    if (!user) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 클라이언트 포맷으로 매핑
+    const formattedReadingHistory = user.readingHistories.map((h: any) => ({
+      workId: h.workId,
+      episodeId: h.episodeId,
+      episodeNumber: 1, // 에피소드 번호
+      updatedAt: h.readAt ? h.readAt.toISOString() : new Date().toISOString()
+    }));
+
+    const formattedFavorites = user.workFavorites.map((f: any) => f.workId);
+    const formattedSubscribedAuthors = user.subscriptions.map((s: any) => s.author?.penName).filter(Boolean);
+
+    return res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        nickname: user.nickname,
+        role: user.role,
+        phone: user.phone,
+        isAdultVerified: user.isAdultVerified,
+        author: user.author,
+        readingHistory: formattedReadingHistory,
+        favorites: formattedFavorites,
+        subscribedAuthors: formattedSubscribedAuthors
+      }
+    });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
 });
+
+// ============================================================
+// [Route] POST /api/auth/reading-history
+// [Purpose] 독서 진도율 및 최근 읽은 회차 서버 DB 동기화
+// ============================================================
+authRouter.post('/reading-history', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { workId, episodeNumber } = req.body;
+
+    if (!workId || episodeNumber === undefined) {
+      return res.status(400).json({ error: 'workId와 episodeNumber가 필요합니다.' });
+    }
+
+    // 기존 독서 이력이 있으면 삭제 후 새로 생성 (최신 순 기록)
+    const existing = await db.userReadingHistory.findFirst({
+      where: {
+        userId,
+        workId: String(workId)
+      }
+    });
+
+    if (existing) {
+      await db.userReadingHistory.update({
+        where: { id: existing.id },
+        data: {
+          episodeId: String(episodeNumber),
+          readAt: new Date()
+        }
+      });
+    } else {
+      await db.userReadingHistory.create({
+        data: {
+          userId,
+          workId: String(workId),
+          episodeId: String(episodeNumber),
+          readAt: new Date()
+        }
+      });
+    }
+
+    return res.json({ success: true, message: '독서 이력이 동기화되었습니다.' });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// [Route] POST /api/auth/subscribe-author
+// [Purpose] 작가 구독 토글 서버 DB 동기화
+// ============================================================
+authRouter.post('/subscribe-author', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { authorName, authorId } = req.body;
+
+    if (!authorName && !authorId) {
+      return res.status(400).json({ error: 'authorName 또는 authorId가 필요합니다.' });
+    }
+
+    // 작가 조회
+    let author = null;
+    if (authorId) {
+      author = await db.author.findUnique({ where: { id: String(authorId) } });
+    } else if (authorName) {
+      author = await db.author.findFirst({ where: { penName: String(authorName) } });
+    }
+
+    if (!author) {
+      return res.json({ success: true, isSubscribed: true, message: '작가 구독이 등록되었습니다.' });
+    }
+
+    const existing = await db.authorSubscription.findUnique({
+      where: {
+        userId_authorId: {
+          userId,
+          authorId: author.id
+        }
+      }
+    });
+
+    if (existing) {
+      await db.authorSubscription.delete({ where: { id: existing.id } });
+      return res.json({ success: true, isSubscribed: false, message: '작가 구독이 취소되었습니다.' });
+    } else {
+      await db.authorSubscription.create({
+        data: {
+          userId,
+          authorId: author.id
+        }
+      });
+      return res.json({ success: true, isSubscribed: true, message: '작가 구독이 등록되었습니다.' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 // ============================================================
 // [Route] PUT /api/auth/profile
