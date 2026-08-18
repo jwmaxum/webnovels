@@ -391,7 +391,16 @@ function bindWebNovelsEvents() {
     }
   });
 
+  // 뷰어 하단 이동 버튼 (내 서재 / 홈)
+  document.getElementById('btnReaderLibrary')?.addEventListener('click', () => {
+    switchWebNovelsView('view-mypage');
+  });
+  document.getElementById('btnReaderHome')?.addEventListener('click', () => {
+    switchWebNovelsView('view-home');
+  });
+
   // Ad Unlock Events
+
   document.getElementById('btnWatchAdSubmit')?.addEventListener('click', startAdSimulation);
 
   // PASS Adult Verify
@@ -1610,6 +1619,7 @@ window.openReaderDirect = function(workId, epNumber) {
 
   document.getElementById('readerBody').innerHTML = bodyContent;
   switchWebNovelsView('view-reader');
+  if (window.lucide) window.lucide.createIcons();
 };
 
 // ============================================================
