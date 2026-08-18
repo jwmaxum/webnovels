@@ -374,11 +374,18 @@
                 <div><strong id="statFavoriteCount">0</strong><span>관심작</span></div>
                 <div><strong id="statAuthorCount">0</strong><span>구독 작가</span></div>
               </div>
-              <button class="btn btn-primary w-full" id="btnStartPassVerify">
-                <i data-lucide="smartphone"></i> PASS 성인 인증
+              <div id="boxPassVerify">
+                <button class="btn btn-primary w-full" id="btnStartPassVerify">
+                  <i data-lucide="smartphone"></i> PASS 성인 인증
+                </button>
+                <p class="text-muted small" id="passVerifyNotice">19+ 작품은 인증 완료 후 열람할 수 있습니다.</p>
+              </div>
+
+              <button class="btn btn-outline w-full mt-3" id="btnOpenEditProfile" onclick="openEditProfileModal()">
+                <i data-lucide="user-cog"></i> 나의 정보 수정
               </button>
-              <p class="text-muted small">19+ 작품은 인증 완료 후 열람할 수 있습니다.</p>
             </aside>
+
 
             <div class="library-main">
               <div class="library-tabs" role="tablist" aria-label="내 서재 탭">
@@ -1290,8 +1297,51 @@
       </div>
     </div>
 
+    <!-- Modal: Edit User Profile (독자 내 정보 수정) -->
+    <div class="modal-backdrop" id="modalEditProfile">
+      <div class="modal-dialog glass-panel" style="max-width: 480px;">
+        <div class="modal-header">
+          <h3><i data-lucide="user-cog" class="icon-indigo"></i> 나의 정보 수정</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <form id="formEditProfile" onsubmit="handleSaveProfile(event)">
+            <div class="form-group mb-4">
+              <label>닉네임</label>
+              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+            </div>
+
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); margin: 16px 0 14px; padding-top: 12px;">
+              <h4 style="margin: 0 0 4px; font-size: 0.95rem; color: #fff;">🔑 비밀번호 변경 (선택)</h4>
+              <p class="text-muted small mb-3">비밀번호를 변경하지 않으려면 입력란을 비워두세요.</p>
+            </div>
+
+            <div class="form-group mb-3">
+              <label>현재 비밀번호</label>
+              <input type="password" id="editProfileCurrentPassword" class="form-control" placeholder="현재 비밀번호 확인" autocomplete="current-password" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+            </div>
+
+            <div class="form-group mb-3">
+              <label>새 비밀번호 (6자 이상)</label>
+              <input type="password" id="editProfileNewPassword" class="form-control" placeholder="새 비밀번호 입력" autocomplete="new-password" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+            </div>
+
+            <div class="form-group mb-4">
+              <label>새 비밀번호 확인</label>
+              <input type="password" id="editProfileConfirmPassword" class="form-control" placeholder="새 비밀번호 다시 입력" autocomplete="new-password" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-full" id="btnSaveProfile">
+              <i data-lucide="check"></i> 변경 사항 저장
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification Overlay -->
     <div class="toast-container" id="toastContainer"></div>
+
 
   </div>
 

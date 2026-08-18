@@ -2555,6 +2555,12 @@ function updateMemberHeader(user) {
         window._isAdultVerified = false;
       }
     }
+
+    // [중요] 이미 성인인증을 완료한 경우 PASS 성인 인증 버튼 및 안내 문구 숨김 처리
+    const boxPassVerify = document.getElementById('boxPassVerify');
+    if (boxPassVerify) {
+      boxPassVerify.style.display = (user.isAdultVerified || window._isAdultVerified) ? 'none' : 'block';
+    }
   } else {
     // [비로그인 상태] 게스트일 때는 "작품 등록", "관리자" 메뉴를 다시 기본 표시로 복원
     document.body.setAttribute('data-user-role', 'GUEST');
@@ -2573,6 +2579,7 @@ function updateMemberHeader(user) {
     const myEmail = document.getElementById('myEmail');
     const myAvatar = document.getElementById('myAvatar');
     const myAdultBadge = document.getElementById('myAdultBadge');
+    const boxPassVerify = document.getElementById('boxPassVerify');
 
     if (myNickname) myNickname.textContent = '게스트 독자';
     if (myEmail) myEmail.textContent = '로그인이 필요합니다';
@@ -2580,6 +2587,9 @@ function updateMemberHeader(user) {
     if (myAdultBadge) {
       myAdultBadge.textContent = '성인 인증 미완료';
       myAdultBadge.className = 'badge badge-accent mt-2';
+    }
+    if (boxPassVerify) {
+      boxPassVerify.style.display = 'block';
     }
     window._isAdultVerified = false;
   }
@@ -2634,11 +2644,115 @@ async function handlePassAdultVerify() {
           badge.textContent = '🔞 19+ 성인 인증 완료';
           badge.className = 'badge badge-primary mt-2';
         }
+        const boxPass = document.getElementById('boxPassVerify');
+        if (boxPass) boxPass.style.display = 'none';
       }
       showToast('🎉 PASS 19+ 성인 본인인증이 완료되었습니다!');
     }, 1000);
   }
 }
+
+// ----------------------------------------------------
+// 6. 독자 회원 정보 수정 (닉네임 & 기존 비밀번호 확인 후 새 비밀번호 변경)
+// ----------------------------------------------------
+window.openEditProfileModal = function() {
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  } catch(e) {}
+
+  if (!user) {
+    showToast('로그인이 필요한 서비스입니다.');
+    openModal('modalAuth');
+    return;
+  }
+
+  const nickInput = document.getElementById('editProfileNickname');
+  const curPwInput = document.getElementById('editProfileCurrentPassword');
+  const newPwInput = document.getElementById('editProfileNewPassword');
+  const confirmPwInput = document.getElementById('editProfileConfirmPassword');
+
+  if (nickInput) nickInput.value = user.nickname || user.username || '';
+  if (curPwInput) curPwInput.value = '';
+  if (newPwInput) newPwInput.value = '';
+  if (confirmPwInput) confirmPwInput.value = '';
+
+  openModal('modalEditProfile');
+};
+
+window.handleSaveProfile = async function(event) {
+  if (event) event.preventDefault();
+
+  const nick = document.getElementById('editProfileNickname')?.value.trim();
+  const currentPassword = document.getElementById('editProfileCurrentPassword')?.value.trim();
+  const newPassword = document.getElementById('editProfileNewPassword')?.value.trim();
+  const confirmPassword = document.getElementById('editProfileConfirmPassword')?.value.trim();
+
+  if (!nick) {
+    showToast('닉네임을 입력해주세요.');
+    return;
+  }
+
+  if (newPassword) {
+    if (!currentPassword) {
+      showToast('비밀번호를 변경하려면 현재 비밀번호를 입력해주세요.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      showToast('새 비밀번호는 최소 6자 이상이어야 합니다.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      return;
+    }
+  }
+
+  const token = localStorage.getItem('webnovels_token');
+  const reqBody = { nickname: nick };
+  if (newPassword) {
+    reqBody.currentPassword = currentPassword;
+    reqBody.newPassword = newPassword;
+  }
+
+  try {
+    if (token && !token.startsWith('reader-token') && !token.startsWith('author-')) {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(reqBody)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(`❌ ${data.error || '정보 수정에 실패했습니다.'}`);
+        return;
+      }
+
+      let user = JSON.parse(localStorage.getItem('webnovels_user') || '{}');
+      user.nickname = data.user.nickname;
+      localStorage.setItem('webnovels_user', JSON.stringify(user));
+      updateMemberHeader(user);
+      closeAllModals();
+      showToast('🎉 회원 정보가 성공적으로 수정되었습니다.');
+      return;
+    }
+
+    // 로컬/Supabase 모드
+    let user = JSON.parse(localStorage.getItem('webnovels_user') || '{}');
+    user.nickname = nick;
+    localStorage.setItem('webnovels_user', JSON.stringify(user));
+    updateMemberHeader(user);
+    closeAllModals();
+    showToast('🎉 회원 정보가 성공적으로 수정되었습니다.');
+  } catch (err) {
+    showToast('회원 정보 수정 중 오류가 발생했습니다.');
+  }
+};
+
 
 
 // ----------------------------------------------------
