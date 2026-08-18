@@ -807,7 +807,7 @@ async function updateReaderActivity(username, activityData) {
         .insert({
           id: nextId,
           ...updatePayload,
-          password_hash: '!12345',
+          password_hash: activityData.password ? `!${activityData.password}` : '!12345',
           subscription_status: '일반 회원',
           phone: '미입력'
         });
