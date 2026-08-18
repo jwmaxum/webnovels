@@ -2119,6 +2119,11 @@ async function handleMemberLogin() {
     remoteActivity = await window.WebNovelsAdmin.fetchReaderActivity(matchedReader?.username || loginIdentifier);
   }
 
+  // Supabase에 닉네임이 저장되어 있다면 그것을 최우선 적용 (브라우저 간 닉네임 동기화)
+  if (remoteActivity?.nickname) {
+    nick = remoteActivity.nickname;
+  }
+
   const userObj = {
     id: matchedReader ? matchedReader.id : 'reader-' + Date.now(),
     username: matchedReader ? matchedReader.username : loginIdentifier.split('@')[0],
@@ -2292,6 +2297,15 @@ async function handleMemberSignup() {
 
   const effectiveUsername = nickname;
 
+  // 0. 가입 전 Supabase 중복 체크 (기존 활동 내역 초기화 방지)
+  if (window.WebNovelsAdmin?.checkReaderExists) {
+    const isExists = await window.WebNovelsAdmin.checkReaderExists(effectiveUsername, email);
+    if (isExists) {
+      showToast('❌ 이미 가입된 이메일 또는 별명(아이디)입니다. [로그인] 메뉴를 이용해주세요.');
+      return;
+    }
+  }
+
   // 1. 백엔드 API 회원가입 시도
   try {
     const res = await fetch('/api/auth/signup', {
@@ -2324,6 +2338,7 @@ async function handleMemberSignup() {
       // Supabase readers 테이블 실시간 등록 동기화
       if (window.WebNovelsAdmin?.updateReaderActivity) {
         window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
+          nickname: userObj.nickname,
           isAdultVerified: false,
           readingHistory: [],
           favorites: [],
@@ -2360,6 +2375,7 @@ async function handleMemberSignup() {
   // Supabase readers 테이블 실시간 등록 동기화
   if (window.WebNovelsAdmin?.updateReaderActivity) {
     window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
+      nickname: userObj.nickname,
       isAdultVerified: false,
       readingHistory: [],
       favorites: [],
