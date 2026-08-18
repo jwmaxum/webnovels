@@ -752,7 +752,11 @@ async function updateReaderActivity(username, activityData) {
   if (!supabaseClient || !username) return { success: false };
 
   try {
-    const updatePayload = {};
+    const cleanUser = String(username).trim();
+    const updatePayload = {
+      username: cleanUser,
+      email: cleanUser.includes('@') ? cleanUser : `${cleanUser}@webnovels.com`
+    };
     if (activityData.isAdultVerified !== undefined) {
       updatePayload.is_adult_verified = activityData.isAdultVerified;
     }
@@ -766,22 +770,34 @@ async function updateReaderActivity(username, activityData) {
       updatePayload.subscribed_authors = activityData.subscribedAuthors;
     }
 
-    const { data, error } = await supabaseClient
+    const { data: existing } = await supabaseClient
       .from('readers')
-      .update(updatePayload)
-      .or(`username.eq.${username},email.eq.${username}`);
+      .select('id')
+      .or(`username.eq.${cleanUser},email.eq.${cleanUser}`)
+      .limit(1);
 
-    if (error) {
-      console.warn('[Reader Activity Sync] Supabase 업데이트 실패 (컬럼 미존재 가능성):', error.message);
-      return { success: false, error: error.message };
+    if (existing && existing.length > 0) {
+      const { data, error } = await supabaseClient
+        .from('readers')
+        .update(updatePayload)
+        .eq('id', existing[0].id);
+      return { success: !error, data };
+    } else {
+      const { data, error } = await supabaseClient
+        .from('readers')
+        .insert({
+          ...updatePayload,
+          password_hash: '!12345',
+          subscription_status: '일반 회원'
+        });
+      return { success: !error, data };
     }
-
-    return { success: true, data };
   } catch (err) {
     console.warn('[Reader Activity Sync] 에러:', err.message);
     return { success: false, error: err.message };
   }
 }
+
 
 async function fetchReaderActivity(username) {
   if (!supabaseClient || !username) return null;
