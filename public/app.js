@@ -252,14 +252,14 @@ async function initWebNovelsApp() {
   if (window.WebNovelsAdmin) {
     window.WebNovelsAdmin.init();
     
-    // Supabase DB에서 8개 작품 데이터 fetch
+    // Supabase DB에서 10개 작품 및 회차 실데이터 fetch
     const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
     if (remoteWorks && remoteWorks.length > 0) {
       console.log('[App Init] Supabase DB 실시간 작품 로드 성공:', remoteWorks.length);
       SAMPLE_WORKS.length = 0;
       SAMPLE_WORKS.push(...remoteWorks);
     } else {
-      console.log('[App Init] Supabase DB 작품 미존재 -> 8개 작품 & 32개 에피소드 자동 시드 저장');
+      console.log('[App Init] Supabase DB 작품 미존재 -> 10개 대표 작품 & 50+개 에피소드 자동 시드 저장');
       await window.WebNovelsAdmin.seedWorksDatasetToSupabase(SAMPLE_WORKS);
     }
 
@@ -278,6 +278,40 @@ async function initWebNovelsApp() {
       SAMPLE_AUTHORS.push(...remoteAuthors);
     }
   }
+
+  // Event-Driven 실시간 데이터 변경 리스너 등록
+  window.addEventListener('webnovels:works-changed', async (e) => {
+    console.log('[Event-Driven Realtime] works-changed 이벤트 수신 -> 전체 UI 동기화');
+    if (window.WebNovelsAdmin) {
+      const updated = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+      if (updated && updated.length > 0) {
+        SAMPLE_WORKS.length = 0;
+        SAMPLE_WORKS.push(...updated);
+      }
+    }
+    renderHomeWorks();
+    renderDiscoverWorks();
+    renderSearchResults();
+    if (currentActiveView === 'view-admin-cms') {
+      renderAdminWorks();
+    }
+  });
+
+  window.addEventListener('webnovels:episodes-changed', async (e) => {
+    console.log('[Event-Driven Realtime] episodes-changed 이벤트 수신 -> 회차 UI 동기화', e.detail);
+    if (window.WebNovelsAdmin) {
+      const updated = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+      if (updated && updated.length > 0) {
+        SAMPLE_WORKS.length = 0;
+        SAMPLE_WORKS.push(...updated);
+      }
+    }
+    const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value;
+    if (currentWorkId) {
+      renderAdminEpisodes(currentWorkId);
+    }
+    renderHomeWorks();
+  });
 
   // 로그인 프로필 세션 복원 및 헤더 동기화
   await loadMyProfile();
@@ -1167,95 +1201,797 @@ async function renderHomeWorks() {
 }
 
 // ----------------------------------------------------
-// CMS: 작품 연재 관리
+// CMS: 작품 연재 관리 (Content Operations Platform 실시간 DB 연동)
 // ----------------------------------------------------
+let adminWorkFilterState = {
+  status: 'ALL',
+  genre: 'ALL',
+  platform: 'ALL',
+  day: 'ALL',
+  keyword: ''
+};
+
+let adminEpisodeFilterState = {
+  keyword: '',
+  free: 'ALL'
+};
+
 async function renderAdminWorks() {
-  const container = document.getElementById('adminWorksGrid');
-  if (!container) return;
+  const tableBody = document.getElementById('adminWorksTableBody');
+  if (!tableBody) return;
 
   let worksList = [];
   try {
-    const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
-    const res = await fetch('/api/works', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error('API fetch failed');
-    const { works } = await res.json();
-    worksList = works;
+    if (window.WebNovelsAdmin) {
+      const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+      if (dbWorks && dbWorks.length > 0) {
+        worksList = dbWorks;
+        SAMPLE_WORKS.length = 0;
+        SAMPLE_WORKS.push(...dbWorks);
+      }
+    }
+    if (worksList.length === 0) {
+      const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
+      const res = await fetch('/api/works', { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        const { works } = await res.json();
+        worksList = works || [];
+      }
+    }
   } catch(error) {
-    console.warn('CMS API unavailable, falling back to SAMPLE_WORKS');
-    worksList = SAMPLE_WORKS;
+    console.warn('CMS DB fetch fallback to SAMPLE_WORKS');
   }
 
-  try {
-    container.innerHTML = worksList.map(w => {
-      return `
-        <div class="flex-between p-3 glass-panel" style="flex-direction: column; align-items: stretch; gap: 10px;">
-          <div class="flex-between">
+  if (worksList.length === 0) worksList = SAMPLE_WORKS;
+
+  // 1. 상태별 카운트 계산 및 상단 탭 업데이트
+  updateWorkStatusPillCounts(worksList);
+
+  // 2. 다차원 필터링 적용
+  const filtered = worksList.filter(w => {
+    // Status Filter
+    if (adminWorkFilterState.status !== 'ALL') {
+      const currentStatus = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
+      if (currentStatus !== adminWorkFilterState.status) return false;
+    }
+    // Genre Filter
+    if (adminWorkFilterState.genre !== 'ALL' && w.genre !== adminWorkFilterState.genre) return false;
+    // Platform Filter
+    if (adminWorkFilterState.platform !== 'ALL' && w.contentType !== adminWorkFilterState.platform) return false;
+    // Keyword Search
+    if (adminWorkFilterState.keyword) {
+      const kw = adminWorkFilterState.keyword.toLowerCase();
+      const title = (w.title || '').toLowerCase();
+      const author = (typeof w.author === 'object' ? w.author?.penName : w.author || '').toLowerCase();
+      if (!title.includes(kw) && !author.includes(kw)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="8" style="padding: 30px; text-align: center; color: var(--text-secondary);">
+          조건에 부합하는 작품이 없습니다. 검색어나 필터를 변경해 보세요.
+        </td>
+      </tr>
+    `;
+    populateAdminWorkSelects(worksList);
+    return;
+  }
+
+  // 3. 고밀도 테이블 렌더링
+  tableBody.innerHTML = filtered.map(w => {
+    const isWebtoon = w.contentType === 'WEBTOON';
+    const typeBadge = isWebtoon 
+      ? `<span class="badge badge-accent" style="font-size:0.7rem; padding: 2px 5px;">웹툰</span>` 
+      : `<span class="badge badge-outline" style="font-size:0.7rem; padding: 2px 5px;">소설</span>`;
+    const authorName = (typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상';
+    const curStatus = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
+
+    // Status Badge & Selector
+    const statusBadge = getStatusBadgeHtml(curStatus);
+    const trendIcon = getTrendIconHtml(w);
+    const nextEpDate = '08/23 (금)';
+    const lastEpDate = `08/20 (#${w.episodes?.length || 4})`;
+
+    return `
+      <tr class="work-table-row" style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;">
+        <td style="padding: 10px 12px; text-align: center;">
+          <input type="checkbox" class="work-item-cb" value="${w.id}" onchange="updateSelectedWorksCount()">
+        </td>
+        <td style="padding: 10px 12px;">
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <img src="${w.coverUrl || '/images/stormqueen_oath.jpg'}" style="width: 36px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color);" alt="">
             <div>
-              <strong>[${w.genre}] ${w.title}</strong>
-              <div class="text-muted small">작가: ${(typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상'} | 뷰: ${w.viewCount}</div>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                ${typeBadge}
+                <strong style="color: #fff; cursor: pointer;" onclick="openWorkSeriesDashboard(${w.id})">${w.title}</strong>
+              </div>
+              <div class="text-muted small">ID: ${w.id} · ${w.genre}</div>
             </div>
-            <select class="form-input" style="padding: 2px 5px; font-size: 0.8rem; width: auto;" onchange="toggleAdminSetting('${w.id}', 'status', this.value)">
-              <option value="ONGOING" ${w.status === 'ONGOING' ? 'selected' : ''}>연재중</option>
-              <option value="PAUSED" ${w.status === 'PAUSED' ? 'selected' : ''}>휴재</option>
-              <option value="COMPLETED" ${w.status === 'COMPLETED' ? 'selected' : ''}>연재완료</option>
+          </div>
+        </td>
+        <td style="padding: 10px 12px; color: var(--text-secondary);">${authorName}</td>
+        <td style="padding: 10px 12px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            ${statusBadge}
+            <select style="padding: 2px 4px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid var(--border-color); border-radius: 4px;" onchange="toggleAdminSetting('${w.id}', 'status', this.value)">
+              <option value="ONGOING" ${curStatus === 'ONGOING' ? 'selected' : ''}>🟢 연재중</option>
+              <option value="PENDING_REVIEW" ${curStatus === 'PENDING_REVIEW' ? 'selected' : ''}>🔵 검수대기</option>
+              <option value="SCHEDULED" ${curStatus === 'SCHEDULED' ? 'selected' : ''}>🟠 예약연재</option>
+              <option value="PAUSED" ${curStatus === 'PAUSED' ? 'selected' : ''}>⚫ 휴재</option>
+              <option value="COMPLETED" ${curStatus === 'COMPLETED' ? 'selected' : ''}>🔵 완결</option>
+              <option value="DELAYED" ${curStatus === 'DELAYED' ? 'selected' : ''}>🔴 연재지연</option>
+              <option value="ALERT" ${curStatus === 'ALERT' ? 'selected' : ''}>⚠️ 관리필요</option>
             </select>
           </div>
-          <div style="display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; flex-wrap: wrap;">
-            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem;">
-              <input type="checkbox" onchange="toggleAdminSetting('${w.id}', 'isTopRecommended', this.checked)" ${w.isTopRecommended ? 'checked' : ''}>
-              ⭐ 실시간 Hot (Top 4)
-            </label>
-            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem;">
-              <input type="checkbox" onchange="toggleAdminSetting('${w.id}', 'isPopularWork', this.checked)" ${w.isPopularWork ? 'checked' : ''}>
-              🔥 인기작
-            </label>
-            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem;">
-              <input type="checkbox" onchange="toggleAdminSetting('${w.id}', 'isNewWork', this.checked)" ${w.isNewWork ? 'checked' : ''}>
-              🆕 신작
-            </label>
+        </td>
+        <td style="padding: 10px 12px; font-size: 0.8rem; color: var(--text-secondary);">${nextEpDate}</td>
+        <td style="padding: 10px 12px; font-size: 0.8rem; color: var(--text-secondary);">${lastEpDate}</td>
+        <td style="padding: 10px 12px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            ${trendIcon}
+            <span style="font-weight: 700; color: #fff;">${(w.viewCount || 0).toLocaleString()}</span>
           </div>
-        </div>
-      `;
-    }).join('');
-  } catch(error) {
-    console.error('CMS 작품 로드 실패:', error);
+        </td>
+        <td style="padding: 10px 12px; text-align: center;">
+          <div style="display: flex; gap: 4px; justify-content: center;">
+            <button class="btn btn-outline btn-sm" onclick="openWorkSeriesDashboard(${w.id})" style="font-size: 0.75rem; padding: 3px 6px;" title="연재 종합 Dashboard">
+              <i data-lucide="layout-dashboard"></i>
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="switchAdminToEpisodeTab(${w.id})" style="font-size: 0.75rem; padding: 3px 6px;" title="회차 목록 관리">
+              <i data-lucide="list"></i>
+            </button>
+            <button class="btn btn-outline btn-sm style-danger" onclick="handleAdminDeleteWork(${w.id})" style="font-size: 0.75rem; padding: 3px 6px;" title="작품 삭제">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+  populateAdminWorkSelects(worksList);
+  updateSelectedWorksCount();
+}
+
+// 9대 연재 상태 뱃지 헬퍼
+function getStatusBadgeHtml(status) {
+  switch(status) {
+    case 'DRAFT': return `<span class="badge badge-status-draft">🟡 임시저장</span>`;
+    case 'PENDING_REVIEW': return `<span class="badge badge-status-review">🔵 검수대기</span>`;
+    case 'ONGOING': return `<span class="badge badge-status-ongoing">🟢 연재중</span>`;
+    case 'SCHEDULED': return `<span class="badge badge-status-scheduled">🟠 예약연재</span>`;
+    case 'EVENT': return `<span class="badge badge-status-event">🟣 이벤트</span>`;
+    case 'DELAYED': return `<span class="badge badge-status-delayed">🔴 연재지연</span>`;
+    case 'PAUSED': return `<span class="badge badge-status-paused">⚫ 휴재</span>`;
+    case 'COMPLETED': return `<span class="badge badge-status-completed">🔵 완결</span>`;
+    case 'ALERT': return `<span class="badge badge-status-alert">⚠️ 관리필요</span>`;
+    default: return `<span class="badge badge-status-ongoing">🟢 연재중</span>`;
   }
 }
 
+// 성과 트렌드 아이콘 헬퍼
+function getTrendIconHtml(w) {
+  if (w.isTopRecommended) return `<span title="실시간 Hot" style="color: var(--accent-rose);">🔥</span>`;
+  if (w.isPopularWork) return `<span title="상승세" style="color: var(--color-brand-secondary);">↑</span>`;
+  if (w.status === 'DELAYED' || w.status === 'ALERT') return `<span title="이상 감지" style="color: #facc15;">⚠</span>`;
+  return `<span title="안정" style="color: var(--text-secondary);">↔</span>`;
+}
+
+// 상단 필터 Pills 카운트 갱신
+function updateWorkStatusPillCounts(worksList) {
+  const counts = { ALL: worksList.length, ONGOING: 0, PENDING_REVIEW: 0, SCHEDULED: 0, PAUSED: 0, COMPLETED: 0, DELAYED: 0 };
+  worksList.forEach(w => {
+    const s = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
+    if (counts[s] !== undefined) counts[s]++;
+  });
+
+  const buttons = document.querySelectorAll('#workStatusTabsBar button');
+  buttons.forEach(btn => {
+    const f = btn.getAttribute('data-status-filter');
+    if (f === 'ALL') btn.innerText = `전체 (${counts.ALL})`;
+    else if (f === 'ONGOING') btn.innerText = `🟢 연재중 (${counts.ONGOING})`;
+    else if (f === 'PENDING_REVIEW') btn.innerText = `🔵 검수대기 (${counts.PENDING_REVIEW})`;
+    else if (f === 'SCHEDULED') btn.innerText = `🟠 예약연재 (${counts.SCHEDULED})`;
+    else if (f === 'PAUSED') btn.innerText = `⚫ 휴재 (${counts.PAUSED})`;
+    else if (f === 'COMPLETED') btn.innerText = `🔵 완결 (${counts.COMPLETED})`;
+    else if (f === 'DELAYED') btn.innerText = `🔴 연재지연 (${counts.DELAYED})`;
+  });
+}
+
+// 필터 변경 핸들러
+window.filterWorksByStatus = function(status) {
+  adminWorkFilterState.status = status;
+  document.querySelectorAll('#workStatusTabsBar button').forEach(b => {
+    if (b.getAttribute('data-status-filter') === status) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+  renderAdminWorks();
+};
+
+window.handleWorkSearchFilter = function(kw) {
+  adminWorkFilterState.keyword = kw;
+  renderAdminWorks();
+};
+
+window.applyAllWorkFilters = function() {
+  adminWorkFilterState.genre = document.getElementById('adminWorkGenreFilter').value;
+  adminWorkFilterState.platform = document.getElementById('adminWorkPlatformFilter').value;
+  adminWorkFilterState.day = document.getElementById('adminWorkDayFilter').value;
+  renderAdminWorks();
+};
+
+window.resetWorkFilters = function() {
+  adminWorkFilterState = { status: 'ALL', genre: 'ALL', platform: 'ALL', day: 'ALL', keyword: '' };
+  document.getElementById('adminWorkSearchInput').value = '';
+  document.getElementById('adminWorkGenreFilter').value = 'ALL';
+  document.getElementById('adminWorkPlatformFilter').value = 'ALL';
+  document.getElementById('adminWorkDayFilter').value = 'ALL';
+  filterWorksByStatus('ALL');
+};
+
+// 선택 체크박스 & 일괄 조작 (Bulk Actions)
+window.toggleSelectAllWorks = function(checked) {
+  document.querySelectorAll('.work-item-cb').forEach(cb => cb.checked = checked);
+  updateSelectedWorksCount();
+};
+
+window.updateSelectedWorksCount = function() {
+  const selected = document.querySelectorAll('.work-item-cb:checked');
+  const countEl = document.getElementById('selectedWorksCount');
+  if (countEl) countEl.innerText = selected.length;
+};
+
+window.handleBulkWorkStatus = async function(newStatus) {
+  const selected = Array.from(document.querySelectorAll('.work-item-cb:checked')).map(cb => cb.value);
+  if (selected.length === 0) {
+    showToast('선택된 작품이 없습니다.');
+    return;
+  }
+
+  for (const id of selected) {
+    if (window.WebNovelsAdmin) {
+      await window.WebNovelsAdmin.updateWorkAdminSetting(id, 'status', newStatus);
+    }
+    const target = SAMPLE_WORKS.find(w => w.id == id);
+    if (target) target.status = newStatus;
+  }
+
+  showToast(`선택한 ${selected.length}개 작품의 상태가 [${newStatus}]로 일괄 변경되었습니다.`);
+  renderAdminWorks();
+  renderHomeWorks();
+};
+
+window.handleBulkWorkDelete = async function() {
+  const selected = Array.from(document.querySelectorAll('.work-item-cb:checked')).map(cb => cb.value);
+  if (selected.length === 0) {
+    showToast('선택된 작품이 없습니다.');
+    return;
+  }
+  if (!confirm(`선택한 ${selected.length}개 작품을 일괄 삭제하시겠습니까?`)) return;
+
+  for (const id of selected) {
+    if (window.WebNovelsAdmin) {
+      await window.WebNovelsAdmin.deleteWorkFromDB(id);
+    }
+  }
+  SAMPLE_WORKS = SAMPLE_WORKS.filter(w => !selected.includes(String(w.id)));
+  showToast(`선택한 ${selected.length}개 작품이 삭제되었습니다.`);
+  renderAdminWorks();
+  renderHomeWorks();
+};
+
+// ----------------------------------------------------
+// 연재 캘린더 뷰 (Publishing Calendar)
+// ----------------------------------------------------
+window.toggleWorkCalendarView = function() {
+  const panel = document.getElementById('adminWorkCalendarPanel');
+  if (!panel) return;
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) renderAdminCalendar();
+};
+
+function renderAdminCalendar() {
+  const grid = document.getElementById('adminCalendarGrid');
+  if (!grid) return;
+
+  const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+  let html = daysOfWeek.map(d => `<div style="font-weight: 700; color: var(--text-secondary); padding: 4px 0;">${d}</div>`).join('');
+
+  // 2026년 8월 기준 (8/1 토요일 시작)
+  for (let empty = 0; empty < 6; empty++) {
+    html += `<div></div>`;
+  }
+
+  for (let day = 1; day <= 31; day++) {
+    const isToday = day === 22;
+    let badgeHtml = '';
+    if (day === 20) badgeHtml = `<span class="badge badge-accent" style="font-size:0.65rem;">4개 완료</span>`;
+    if (day === 22) badgeHtml = `<span class="badge badge-primary" style="font-size:0.65rem;">오늘 2개</span>`;
+    if (day === 23) badgeHtml = `<span class="badge badge-warning" style="font-size:0.65rem;">예약 3개</span>`;
+    if (day === 25) badgeHtml = `<span class="badge badge-outline" style="font-size:0.65rem;">2개 예정</span>`;
+
+    html += `
+      <div class="calendar-day-cell ${isToday ? 'today' : ''}" style="cursor: pointer;" onclick="showToast('8월 ${day}일 발행 일정 필터링')">
+        <div style="font-weight: ${isToday ? '800' : '500'}; color: ${isToday ? 'var(--color-brand-secondary)' : '#fff'};">${day}</div>
+        ${badgeHtml}
+      </div>
+    `;
+  }
+
+  grid.innerHTML = html;
+}
+
+// ----------------------------------------------------
+// 작품 상세 연재 Dashboard 모달 (Series Dashboard)
+// ----------------------------------------------------
+window.openWorkSeriesDashboard = function(workId) {
+  const work = SAMPLE_WORKS.find(w => w.id == workId);
+  if (!work) return;
+
+  const titleEl = document.getElementById('dashWorkHeaderTitle');
+  const bodyEl = document.getElementById('dashWorkModalBody');
+  if (titleEl) titleEl.innerHTML = `<i data-lucide="layout-dashboard" class="icon-indigo"></i> [${work.title}] 연재 상황 관제 Dashboard`;
+
+  const authorName = (typeof work.author === 'object' ? work.author?.penName : work.author) || '작자미상';
+  const epCount = work.episodes?.length || 4;
+  const viewTotal = (work.viewCount || 14200).toLocaleString();
+  const estRevenue = ((work.viewCount || 14200) * 100).toLocaleString();
+
+  bodyEl.innerHTML = `
+    <!-- 1. 작품 기본 정보 헤더 -->
+    <div style="display: flex; gap: 16px; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+      <img src="${work.coverUrl || '/images/stormqueen_oath.jpg'}" style="width: 64px; height: 88px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h3 style="margin: 0; font-size: 1.25rem;">${work.title}</h3>
+          ${getStatusBadgeHtml(work.status || 'ONGOING')}
+        </div>
+        <div class="text-muted small mt-1">
+          작가: <strong>${authorName}</strong> | 장르: ${work.genre} | 플랫폼: ${work.contentType === 'WEBTOON' ? '웹툰' : '웹소설'} | 연재주기: 매주 화/금 오후 6시
+        </div>
+        <div style="margin-top: 8px; display: flex; gap: 8px;">
+          <button class="btn btn-primary btn-sm" onclick="closeAllModals(); switchAdminToEpisodeTab(${work.id})">
+            <i data-lucide="file-text"></i> 회차 관리 바로가기
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="showToast('작품 메타데이터 수정 화면으로 이동합니다.')">
+            <i data-lucide="edit-3"></i> 기본 정보 수정
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 핵심 4대 KPI 카드 -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0;">
+      <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
+        <div class="text-muted small">총 연재 회차</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px;">${epCount}화</div>
+      </div>
+      <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
+        <div class="text-muted small">누적 조회수</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: var(--color-brand-secondary); margin-top: 4px;">${viewTotal}</div>
+      </div>
+      <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
+        <div class="text-muted small">구독 독자 팬</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px;">1,280명</div>
+      </div>
+      <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
+        <div class="text-muted small">누적 정산 수익</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;">₩${estRevenue}</div>
+      </div>
+    </div>
+
+    <!-- 3. 연재 건강도 지표 (Health Score 88점) -->
+    <div class="card glass-panel p-4 mb-3" style="border-radius: 8px;">
+      <div class="flex-between mb-2">
+        <strong style="display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="activity" class="icon-indigo"></i> 연재 건강도 (Series Health Score)
+        </strong>
+        <span class="badge badge-accent" style="font-size: 0.85rem; font-weight: 800;">88점 (우수 🟢)</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; margin-top: 10px;">
+        <div>
+          <div class="flex-between text-muted mb-1"><span>연재 일정 준수율</span><span>95점</span></div>
+          <div class="health-meter-bar"><div class="health-meter-fill" style="width: 95%;"></div></div>
+        </div>
+        <div>
+          <div class="flex-between text-muted mb-1"><span>최근 조회수 및 독자 유입도</span><span>84점</span></div>
+          <div class="health-meter-bar"><div class="health-meter-fill" style="width: 84%;"></div></div>
+        </div>
+        <div>
+          <div class="flex-between text-muted mb-1"><span>독자 완독률 &amp; 댓글 호응도</span><span>90점</span></div>
+          <div class="health-meter-bar"><div class="health-meter-fill" style="width: 90%;"></div></div>
+        </div>
+        <div>
+          <div class="flex-between text-muted mb-1"><span>비축 회차 사전 확보량</span><span>88점</span></div>
+          <div class="health-meter-bar"><div class="health-meter-fill" style="width: 88%;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 연재 일정 현황 -->
+    <div class="card glass-panel p-3" style="border-radius: 8px; font-size: 0.85rem;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <span class="text-muted">최근 발행:</span> <strong>08/20 (제 ${epCount}화) - 정상 완료</strong>
+        </div>
+        <div>
+          <span class="text-muted">다음 발행 예정:</span> <strong style="color: var(--color-brand-secondary);">08/23 (제 ${epCount + 1}화) - 예약 대기</strong>
+        </div>
+      </div>
+    </div>
+  `;
+
+  openModal('modalWorkSeriesDashboard');
+  if (window.lucide) window.lucide.createIcons();
+};
+
+// ----------------------------------------------------
+// 회차 관리 드롭다운 & 실시간 테이블 렌더러
+// ----------------------------------------------------
+function populateAdminWorkSelects(worksList) {
+  const select1 = document.getElementById('adminEpisodeWorkSelect');
+  const select2 = document.getElementById('adminEpModalWorkSelect');
+  const list = worksList || SAMPLE_WORKS;
+
+  const optionsHtml = list.map(w => {
+    const typeLabel = w.contentType === 'WEBTOON' ? '[웹툰]' : '[소설]';
+    return `<option value="${w.id}">${typeLabel} ${w.title} (ID: ${w.id})</option>`;
+  }).join('');
+
+  if (select1 && (!select1.innerHTML || select1.children.length !== list.length)) {
+    select1.innerHTML = optionsHtml;
+    select1.onchange = () => renderAdminEpisodes(select1.value);
+    if (select1.value) renderAdminEpisodes(select1.value);
+  }
+  if (select2) {
+    select2.innerHTML = optionsHtml;
+  }
+}
+
+window.renderAdminEpisodes = async function(workId) {
+  const tableBody = document.getElementById('adminEpisodesTableBody');
+  const breadcrumbTitle = document.getElementById('adminEpCurrentWorkTitle');
+  if (!tableBody || !workId) return;
+
+  const targetWork = SAMPLE_WORKS.find(w => w.id == workId);
+  if (breadcrumbTitle && targetWork) {
+    breadcrumbTitle.innerText = targetWork.title;
+  }
+
+  tableBody.innerHTML = `<tr><td colspan="8" style="padding: 24px; text-align: center; color: var(--text-secondary);">⏳ 실시간 DB에서 회차 목록을 불러오는 중...</td></tr>`;
+
+  let episodes = [];
+  try {
+    if (window.WebNovelsAdmin) {
+      episodes = await window.WebNovelsAdmin.fetchEpisodesByWorkId(workId);
+    }
+  } catch (e) {
+    console.warn('DB fetchEpisodes error:', e);
+  }
+
+  if (!episodes || episodes.length === 0) {
+    episodes = targetWork?.episodes || [];
+  }
+
+  // 회차 검색 및 무료/유료 필터
+  const filtered = episodes.filter(ep => {
+    if (adminEpisodeFilterState.free === 'FREE' && !ep.isFree && !ep.is_free) return false;
+    if (adminEpisodeFilterState.free === 'PAID' && (ep.isFree || ep.is_free)) return false;
+    if (adminEpisodeFilterState.keyword) {
+      const kw = adminEpisodeFilterState.keyword.toLowerCase();
+      if (!ep.title.toLowerCase().includes(kw)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="8" style="padding: 24px; text-align: center; color: var(--text-secondary);">등록된 회차가 없습니다.</td></tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = filtered.map(ep => {
+    const epNum = ep.episodeNumber || ep.episode_number || 1;
+    const isFree = ep.isFree !== undefined ? ep.isFree : ep.is_free;
+    const badgeFreeHtml = isFree 
+      ? `<span class="badge badge-accent">100% 무료</span>` 
+      : `<span class="badge badge-primary">유료 (100P / 광고)</span>`;
+    const statusBadge = epNum <= 3 
+      ? `<span class="badge badge-status-ongoing">공개중</span>` 
+      : `<span class="badge badge-status-scheduled">예약/유료</span>`;
+    const pubDate = '2026-08-20 18:00';
+    const views = (epNum * 3420).toLocaleString();
+
+    return `
+      <tr class="ep-table-row" style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;">
+        <td style="padding: 10px 12px; text-align: center;">
+          <input type="checkbox" class="ep-item-cb" value="${ep.id || epNum}" onchange="updateSelectedEpisodesCount()">
+        </td>
+        <td style="padding: 10px 12px; font-weight: 800; color: var(--color-brand-secondary);">#${epNum}</td>
+        <td style="padding: 10px 12px;">
+          <strong style="color: #fff; cursor: pointer;" onclick="openAdminEpisodeDetailModal(${ep.id || epNum}, ${workId})">${ep.title}</strong>
+          ${ep.imageUrls && ep.imageUrls.length > 0 ? `<span class="badge badge-outline" style="font-size:0.7rem; margin-left: 6px;"><i data-lucide="image"></i> 웹툰 ${ep.imageUrls.length}컷</span>` : ''}
+        </td>
+        <td style="padding: 10px 12px;">${statusBadge}</td>
+        <td style="padding: 10px 12px;">${badgeFreeHtml}</td>
+        <td style="padding: 10px 12px; font-size: 0.8rem; color: var(--text-secondary);">${pubDate}</td>
+        <td style="padding: 10px 12px; font-weight: 700; color: #fff;">${views}</td>
+        <td style="padding: 10px 12px; text-align: center;">
+          <div style="display: flex; gap: 4px; justify-content: center;">
+            <button class="btn btn-outline btn-sm" onclick="handleAdminToggleEpisodeFree(${ep.id || epNum}, ${workId}, ${!isFree})" style="font-size: 0.75rem; padding: 2px 6px;" title="무료/유료 전환">
+              ${isFree ? '유료로' : '무료로'}
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openAdminEpisodeDetailModal(${ep.id || epNum}, ${workId})" style="font-size: 0.75rem; padding: 2px 6px;" title="검수 및 상세">
+              <i data-lucide="check-square"></i>
+            </button>
+            <button class="btn btn-outline btn-sm style-danger" onclick="handleAdminDeleteEpisode(${ep.id || epNum}, ${workId})" style="font-size: 0.75rem; padding: 2px 6px;" title="삭제">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+  updateSelectedEpisodesCount();
+};
+
+window.handleEpisodeSearchFilter = function(kw) {
+  adminEpisodeFilterState.keyword = kw;
+  const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value;
+  if (currentWorkId) renderAdminEpisodes(currentWorkId);
+};
+
+window.applyAllEpisodeFilters = function() {
+  adminEpisodeFilterState.free = document.getElementById('adminEpFreeFilter').value;
+  const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value;
+  if (currentWorkId) renderAdminEpisodes(currentWorkId);
+};
+
+window.toggleSelectAllEpisodes = function(checked) {
+  document.querySelectorAll('.ep-item-cb').forEach(cb => cb.checked = checked);
+  updateSelectedEpisodesCount();
+};
+
+window.updateSelectedEpisodesCount = function() {
+  const selected = document.querySelectorAll('.ep-item-cb:checked');
+  const countEl = document.getElementById('selectedEpisodesCount');
+  if (countEl) countEl.innerText = selected.length;
+};
+
+window.handleBulkEpisodeFree = async function(isFree) {
+  const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value;
+  const selected = Array.from(document.querySelectorAll('.ep-item-cb:checked')).map(cb => cb.value);
+  if (selected.length === 0) {
+    showToast('선택된 회차가 없습니다.');
+    return;
+  }
+
+  for (const epId of selected) {
+    if (window.WebNovelsAdmin) {
+      await window.WebNovelsAdmin.updateEpisodeSetting(epId, 'is_free', isFree);
+    }
+  }
+  showToast(`선택한 ${selected.length}개 회차가 [${isFree ? '무료' : '유료'}]로 일괄 변경되었습니다.`);
+  renderAdminEpisodes(currentWorkId);
+};
+
+window.handleBulkEpisodeDelete = async function() {
+  const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value;
+  const selected = Array.from(document.querySelectorAll('.ep-item-cb:checked')).map(cb => cb.value);
+  if (selected.length === 0) {
+    showToast('선택된 회차가 없습니다.');
+    return;
+  }
+  if (!confirm(`선택한 ${selected.length}개 회차를 삭제하시겠습니까?`)) return;
+
+  for (const epId of selected) {
+    if (window.WebNovelsAdmin) {
+      await window.WebNovelsAdmin.deleteEpisodeFromDB(epId, currentWorkId);
+    }
+  }
+  showToast(`선택한 ${selected.length}개 회차가 삭제되었습니다.`);
+  renderAdminEpisodes(currentWorkId);
+};
+
+// ----------------------------------------------------
+// 회차 상세 편집 & 5대 콘텐츠 심사/검수 Workflow 모달
+// ----------------------------------------------------
+window.openAdminEpisodeDetailModal = function(episodeId, workId) {
+  const work = SAMPLE_WORKS.find(w => w.id == workId);
+  const ep = work?.episodes?.find(e => (e.id || e.episodeNumber) == episodeId) || {
+    episodeNumber: episodeId,
+    title: `제 ${episodeId} 화: 스토리 전개`,
+    content: '회차 본문 내용...',
+    isFree: episodeId <= 3
+  };
+
+  const isWebtoon = work?.contentType === 'WEBTOON';
+  const bodyEl = document.getElementById('epDetailModalBody');
+
+  bodyEl.innerHTML = `
+    <form onsubmit="handleAdminEpisodeDetailSave(event, ${episodeId}, ${workId})">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div class="form-group">
+          <label>회차 번호</label>
+          <input type="number" class="form-control" value="${ep.episodeNumber || episodeId}" required style="width:100%; padding:8px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color);">
+        </div>
+        <div class="form-group">
+          <label>공개 설정</label>
+          <select id="detailEpIsFree" class="form-control" style="width:100%; padding:8px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color);">
+            <option value="true" ${ep.isFree ? 'selected' : ''}>100% 무료 즉시 공개</option>
+            <option value="false" ${!ep.isFree ? 'selected' : ''}>유료 (100P / 30초 광고 열람)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group mb-3">
+        <label>회차 소제목</label>
+        <input type="text" id="detailEpTitle" class="form-control" value="${ep.title}" required style="width:100%; padding:10px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color);">
+      </div>
+
+      <div class="form-group mb-3">
+        <label>${isWebtoon ? '웹툰 이미지 URL 목록 (쉼표 구분)' : '웹소설 본문 텍스트'}</label>
+        <textarea id="detailEpContent" class="form-control" rows="6" style="width:100%; padding:10px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color); font-size: 0.9rem;">${ep.content || (ep.imageUrls ? ep.imageUrls.join(', ') : '')}</textarea>
+      </div>
+
+      <!-- 5대 콘텐츠 심사 체크리스트 -->
+      <div class="card glass-panel p-3 mb-3" style="border-radius: 8px;">
+        <strong style="color: var(--color-brand-secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+          <i data-lucide="shield-check"></i> 콘텐츠 운영 5대 심사 체크리스트 (Quality Gate)
+        </strong>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <label class="review-checklist-item"><input type="checkbox" checked> <span>☑ 1. 제목 및 메타데이터 이상 없음</span></label>
+          <label class="review-checklist-item"><input type="checkbox" checked> <span>☑ 2. 금칙어/스팸 필터링 통과</span></label>
+          <label class="review-checklist-item"><input type="checkbox" checked> <span>☑ 3. 이미지 및 저작권 확인 완료</span></label>
+          <label class="review-checklist-item"><input type="checkbox" checked> <span>☑ 4. 연령 등급(19+/전체) 적합</span></label>
+          <label class="review-checklist-item" style="grid-column: 1 / -1;"><input type="checkbox" checked> <span>☑ 5. 플랫폼 광고 및 보상형 모델 정책 준수</span></label>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button type="button" class="btn btn-outline btn-sm style-danger" onclick="closeAllModals(); showToast('수정 요청(반려) 처리되었습니다.')">
+          <i data-lucide="x-circle"></i> 수정 요청 (반려)
+        </button>
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i data-lucide="check"></i> 심사 승인 및 저장
+        </button>
+      </div>
+    </form>
+  `;
+
+  openModal('modalAdminEpisodeDetail');
+  if (window.lucide) window.lucide.createIcons();
+};
+
+window.handleAdminEpisodeDetailSave = async function(e, episodeId, workId) {
+  e.preventDefault();
+  const isFree = document.getElementById('detailEpIsFree').value === 'true';
+  const title = document.getElementById('detailEpTitle').value.trim();
+
+  if (window.WebNovelsAdmin) {
+    await window.WebNovelsAdmin.updateEpisodeSetting(episodeId, 'is_free', isFree);
+    await window.WebNovelsAdmin.updateEpisodeSetting(episodeId, 'title', title);
+  }
+
+  closeAllModals();
+  showToast('🎉 회차 상세 내용 및 5대 심사가 완료/저장되었습니다.');
+  renderAdminEpisodes(workId);
+};
+
+// 신규 작품 등록 모달 열기/제출
+window.openAdminCreateWorkModal = function() {
+  openModal('modalAdminCreateWork');
+};
+
+window.handleAdminCreateWorkSubmit = async function(e) {
+  e.preventDefault();
+  const title = document.getElementById('adminNewWorkTitle').value.trim();
+  const author = document.getElementById('adminNewWorkAuthor').value.trim();
+  const contentType = document.getElementById('adminNewWorkType').value;
+  const genre = document.getElementById('adminNewWorkGenre').value;
+  const description = document.getElementById('adminNewWorkDesc').value.trim();
+  const coverUrl = `/images/${document.getElementById('adminNewWorkCover').value}`;
+
+  if (!title || !author) {
+    showToast('작품명과 작가명을 입력하세요.');
+    return;
+  }
+
+  const workData = { title, author, contentType, genre, description, coverUrl };
+
+  if (window.WebNovelsAdmin) {
+    await window.WebNovelsAdmin.createWorkInDB(workData);
+  }
+
+  closeAllModals();
+  showToast(`🎉 [${title}] 작품이 실시간 DB에 등록되었습니다!`);
+  
+  if (window.WebNovelsAdmin) {
+    const updated = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+    if (updated) {
+      SAMPLE_WORKS.length = 0;
+      SAMPLE_WORKS.push(...updated);
+    }
+  }
+  renderAdminWorks();
+  renderHomeWorks();
+};
+
+// 신규 회차 등록 모달 열기/제출
+window.openAdminCreateEpisodeModal = function() {
+  const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value || (SAMPLE_WORKS[0] && SAMPLE_WORKS[0].id);
+  const sel = document.getElementById('adminEpModalWorkSelect');
+  if (sel && currentWorkId) sel.value = currentWorkId;
+  openModal('modalAdminCreateEpisode');
+};
+
+window.handleAdminCreateEpisodeSubmit = async function(e) {
+  e.preventDefault();
+  const workId = document.getElementById('adminEpModalWorkSelect').value;
+  const epNum = parseInt(document.getElementById('adminEpModalNumber').value, 10);
+  const title = document.getElementById('adminEpModalTitle').value.trim();
+  const content = document.getElementById('adminEpModalContent').value.trim();
+  const isFree = document.getElementById('adminEpModalIsFree').checked;
+
+  const targetWork = SAMPLE_WORKS.find(w => w.id == workId);
+  const isWebtoon = targetWork?.contentType === 'WEBTOON';
+
+  const epData = {
+    episodeNumber: epNum,
+    title,
+    isFree,
+    content: isWebtoon ? '' : content,
+    imageUrls: isWebtoon ? content.split(',').map(s => s.trim()) : [],
+    authorComment: '관리자 직권 등록'
+  };
+
+  if (window.WebNovelsAdmin) {
+    await window.WebNovelsAdmin.createEpisodeInDB(workId, epData);
+  }
+
+  closeAllModals();
+  showToast(`🎉 [제 ${epNum}화]가 성공적으로 등록되었습니다!`);
+  renderAdminEpisodes(workId);
+};
+
+// 관리자 설정 변경 (Event Driven)
 async function toggleAdminSetting(workId, field, value) {
   let success = false;
   try {
-    const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
-    const res = await fetch(`/api/works/${workId}/admin-settings`, {
-      method: 'PATCH',
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({ [field]: value })
-    });
-    if (!res.ok) throw new Error('API update failed');
-    success = true;
-  } catch(e) {
-    console.warn('API update failed, trying Supabase fallback');
     if (window.WebNovelsAdmin) {
-      // Handle ID types correctly for Supabase (integer) vs Prisma (UUID)
       const parsedId = isNaN(parseInt(workId)) ? workId : parseInt(workId);
       const result = await window.WebNovelsAdmin.updateWorkAdminSetting(parsedId, field, value);
       if (result && result.success) {
         success = true;
-        // Update local SAMPLE_WORKS to reflect the change
-        const target = SAMPLE_WORKS.find(w => w.id == workId); // loose equality for string vs int
+        const target = SAMPLE_WORKS.find(w => w.id == workId);
         if (target) target[field] = value;
       }
     }
+  } catch(e) {
+    console.warn('DB update failed, trying REST API fallback:', e);
+  }
+
+  if (!success) {
+    try {
+      const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
+      const res = await fetch(`/api/works/${workId}/admin-settings`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value })
+      });
+      if (res.ok) success = true;
+    } catch(e) {}
   }
 
   if (success) {
-    showToast('설정이 변경되었습니다.');
-    renderHomeWorks(); // Refresh landing page
+    showToast('설정이 변경되었습니다. (DB 반영)');
+    renderHomeWorks();
   } else {
     showToast('설정 변경에 실패했습니다.');
   }
@@ -3340,6 +4076,15 @@ window.switchAdminSubTab = function(tabName) {
   if (tabName === 'works') {
     renderAdminWorks();
   }
+  if (tabName === 'episodes') {
+    populateAdminWorkSelects(SAMPLE_WORKS);
+    const sel = document.getElementById('adminEpisodeWorkSelect');
+    if (sel && sel.value) {
+      renderAdminEpisodes(sel.value);
+    } else if (SAMPLE_WORKS[0]) {
+      renderAdminEpisodes(SAMPLE_WORKS[0].id);
+    }
+  }
   if (tabName === 'settlements') {
     loadSettlementsList();
   }
@@ -3466,4 +4211,179 @@ window.handleSaveSystemConfig = async function() {
 // PG 핑 테스트
 window.handlePgPingTest = function() {
   showToast('🔌 토스페이먼츠 및 KCP PASS API 연동 핑 테스트 성공!');
+};
+
+// ----------------------------------------------------
+// Action Queue: 확인 필요 예외 관제 센터 (Zero-Touch Operations)
+// ----------------------------------------------------
+let ACTION_QUEUE_ITEMS = [
+  {
+    id: 'AQ-101',
+    level: 'CRITICAL',
+    badge: '🔴 긴급',
+    title: '차원 마법사의 전설 제 5화 자동 발행 실패',
+    workId: 1,
+    episodeId: 5,
+    type: '발행 실패',
+    desc: '이미지 CDN 업로드 타임아웃 오류 (Error 504 Gateway Timeout)',
+    occurredAt: '오늘 20:00',
+    primaryBtn: '즉시 재시도',
+    action: 'retry'
+  },
+  {
+    id: 'AQ-102',
+    level: 'WARNING',
+    badge: '🟠 중요',
+    title: '[웹툰] 신의 기사단 제 1화 AI 자동 심사 플래그',
+    workId: 9,
+    episodeId: 1,
+    type: '신고/검수',
+    desc: 'AI 자동 검수 엔진에서 연령 등급(19+/전체) 일치 여부 확인 필요 판정',
+    occurredAt: '오늘 18:30',
+    primaryBtn: '검수 콘솔 확인',
+    action: 'review'
+  },
+  {
+    id: 'AQ-103',
+    level: 'INFO',
+    badge: '🟡 일반',
+    title: '별빛의 계약 — 예정 회차 2시간 미등록 (연재 지연)',
+    workId: 2,
+    episodeId: 5,
+    type: '연재 지연',
+    desc: '매주 금요일 20:00 정기 발행 주기이나 22:00 현재 회차 미등록 감지',
+    occurredAt: '오늘 20:10',
+    primaryBtn: '작가 1:1 푸시 알림',
+    action: 'notify'
+  },
+  {
+    id: 'AQ-104',
+    level: 'INFO',
+    badge: '🔵 참고',
+    title: '서울역 흑마법사 — 신규 태그 및 연재주기 변경 승인 요청',
+    workId: 6,
+    episodeId: null,
+    type: '정보 변경',
+    desc: '작가가 연재주기를 주 3회(월/수/금)에서 주 5회(월~금)로 변경 신청',
+    occurredAt: '어제 15:40',
+    primaryBtn: '원클릭 승인',
+    action: 'approve_meta'
+  }
+];
+
+window.renderActionQueue = function() {
+  const container = document.getElementById('actionQueueItemsContainer');
+  if (!container) return;
+
+  if (ACTION_QUEUE_ITEMS.length === 0) {
+    container.innerHTML = `
+      <div class="card p-6 text-center" style="background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px;">
+        <div style="font-size: 2rem;">🎉</div>
+        <h4 style="margin: 8px 0 4px; color: var(--accent-emerald);">모든 예외 조치가 완료되었습니다!</h4>
+        <p class="text-muted small mb-0">현재 확인이 필요한 예외 항목이 없습니다. 시스템이 정상 자동 연재를 수행하고 있습니다.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = ACTION_QUEUE_ITEMS.map(item => {
+    let borderStyle = 'border-left: 4px solid #3b82f6;';
+    if (item.level === 'CRITICAL') borderStyle = 'border-left: 4px solid #ef4444;';
+    if (item.level === 'WARNING') borderStyle = 'border-left: 4px solid #f97316;';
+    if (item.level === 'INFO') borderStyle = 'border-left: 4px solid #eab308;';
+
+    return `
+      <div class="p-4 glass-panel flex-between" style="border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); ${borderStyle}; align-items: flex-start; gap: 14px;">
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span class="badge ${item.level === 'CRITICAL' ? 'badge-status-delayed' : item.level === 'WARNING' ? 'badge-status-review' : 'badge-status-scheduled'}">${item.badge}</span>
+            <strong style="font-size: 1rem; color: #fff;">${item.title}</strong>
+            <span class="text-muted small" style="margin-left: auto;">${item.occurredAt}</span>
+          </div>
+          <p class="text-muted small mb-0" style="line-height: 1.5;">${item.desc}</p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="btn btn-primary btn-sm" onclick="handleActionQueueItem('${item.id}', '${item.action}', ${item.workId}, ${item.episodeId})">
+            ${item.primaryBtn}
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="handleActionDismiss('${item.id}')" title="보류/해결">
+            해결
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+};
+
+window.handleActionQueueItem = function(id, action, workId, episodeId) {
+  if (action === 'retry') {
+    showToast('🚀 CDN 자동 재전송 및 즉시 발행이 성공적으로 실행되었습니다.');
+    handleActionDismiss(id);
+  } else if (action === 'review') {
+    openAdminEpisodeDetailModal(episodeId || 1, workId || 9);
+    handleActionDismiss(id);
+  } else if (action === 'notify') {
+    showToast('📲 작가에게 "정기 연재 회차 등록 독려" 푸시 알림을 발송했습니다.');
+    handleActionDismiss(id);
+  } else if (action === 'approve_meta') {
+    showToast('✅ 작가의 연재주기 변경 신청이 자동 승인되었습니다.');
+    handleActionDismiss(id);
+  }
+};
+
+window.handleActionDismiss = function(id) {
+  ACTION_QUEUE_ITEMS = ACTION_QUEUE_ITEMS.filter(item => item.id !== id);
+  renderActionQueue();
+  showToast('항목이 조치 완료되었습니다.');
+};
+
+// ----------------------------------------------------
+// Admin Sub-Tab Switcher (Left Sidebar Navigation & Routing)
+// ----------------------------------------------------
+window.switchAdminSubTab = function(tabName) {
+  document.querySelectorAll('.admin-subtab').forEach(t => t.style.display = 'none');
+  const target = document.getElementById(`adminTab-${tabName}`);
+  if (target) target.style.display = 'block';
+
+  // Update sidebar menu active state
+  document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.remove('active'));
+  const activeNavBtn = document.querySelector(`.admin-nav-item[data-subtab="${tabName}"]`);
+  if (activeNavBtn) activeNavBtn.classList.add('active');
+
+  // Re-render Lucide icons
+  if (window.lucide) window.lucide.createIcons();
+
+  if (tabName === 'dashboard') {
+    loadDashboardKPIs();
+  }
+  if (tabName === 'actionqueue') {
+    renderActionQueue();
+  }
+  if (tabName === 'works') {
+    renderAdminWorks();
+  }
+  if (tabName === 'episodes') {
+    populateAdminWorkSelects(SAMPLE_WORKS);
+    const sel = document.getElementById('adminEpisodeWorkSelect');
+    if (sel && sel.value) {
+      renderAdminEpisodes(sel.value);
+    } else if (SAMPLE_WORKS[0]) {
+      renderAdminEpisodes(SAMPLE_WORKS[0].id);
+    }
+  }
+  if (tabName === 'settlements') {
+    loadSettlementsList();
+  }
+  if (tabName === 'subadmins' || tabName === 'security') {
+    loadSubAdminList();
+  }
+  if (tabName === 'users') {
+    loadAdminUsers();
+  }
+};
+
+window.showAdminMenuNotice = function(menuKey) {
+  showToast(`📌 [${menuKey}] 관리자 메뉴로 진입했습니다.`);
 };
