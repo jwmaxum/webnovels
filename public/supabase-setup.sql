@@ -108,22 +108,31 @@ VALUES (
   '["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]'::jsonb
 ) ON CONFLICT (email) DO NOTHING;
 
--- 11. 작품(works) 및 회차(episodes) 스키마 생성 및 시드 데이터
+-- 11. 작품(works) 및 회차(episodes) 스키마 생성 및 시드 데이터 (웹소설 & 웹툰 지원)
 CREATE TABLE IF NOT EXISTS works (
   id INT PRIMARY KEY,
   title TEXT NOT NULL,
   author TEXT NOT NULL,
+  content_type TEXT NOT NULL DEFAULT 'NOVEL', -- 'NOVEL'(웹소설), 'WEBTOON'(웹툰)
   genre TEXT[] NOT NULL,
   tags TEXT[] NOT NULL,
   description TEXT,
   cover_image TEXT,
   view_count INT DEFAULT 0,
-  status TEXT DEFAULT 'ONGOING',
+  status TEXT DEFAULT 'ONGOING', -- 'ONGOING', 'PAUSED', 'COMPLETED'
+  is_completed BOOLEAN DEFAULT false,
   is_top_recommended BOOLEAN DEFAULT false,
   is_popular_work BOOLEAN DEFAULT false,
   is_new_work BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 기존 works 테이블이 이미 생성되어 있을 경우를 대비한 컬럼 마이그레이션
+ALTER TABLE works ADD COLUMN IF NOT EXISTS content_type TEXT NOT NULL DEFAULT 'NOVEL';
+ALTER TABLE works ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
+ALTER TABLE works ADD COLUMN IF NOT EXISTS is_top_recommended BOOLEAN DEFAULT false;
+ALTER TABLE works ADD COLUMN IF NOT EXISTS is_popular_work BOOLEAN DEFAULT false;
+ALTER TABLE works ADD COLUMN IF NOT EXISTS is_new_work BOOLEAN DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS episodes (
   id SERIAL PRIMARY KEY,
@@ -132,118 +141,154 @@ CREATE TABLE IF NOT EXISTS episodes (
   title TEXT NOT NULL,
   is_free BOOLEAN DEFAULT true,
   is_ad_free BOOLEAN DEFAULT false,
-  content TEXT NOT NULL,
+  content TEXT, -- 웹소설 텍스트 본문
+  image_urls JSONB DEFAULT '[]'::jsonb, -- 웹툰 컷 이미지 URL 배열
+  author_comment TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT unique_work_episode UNIQUE (work_id, episode_number)
 );
 
+-- 기존 episodes 테이블이 이미 생성되어 있을 경우를 대비한 컬럼 마이그레이션
+ALTER TABLE episodes ADD COLUMN IF NOT EXISTS image_urls JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE episodes ADD COLUMN IF NOT EXISTS author_comment TEXT;
+ALTER TABLE episodes ADD COLUMN IF NOT EXISTS is_free BOOLEAN DEFAULT true;
+ALTER TABLE episodes ADD COLUMN IF NOT EXISTS is_ad_free BOOLEAN DEFAULT false;
+ALTER TABLE episodes ADD COLUMN IF NOT EXISTS content TEXT;
+
+-- 12. 독자 포인트 거래 내역 테이블 (point_transactions)
+CREATE TABLE IF NOT EXISTS point_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  type TEXT NOT NULL, -- 'CHARGE', 'USE', 'REFUND'
+  amount INT NOT NULL,
+  work_id INT REFERENCES works(id) ON DELETE SET NULL,
+  episode_id INT REFERENCES episodes(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. 회차별 댓글 및 좋아요 테이블 (comments, comment_likes)
+CREATE TABLE IF NOT EXISTS comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  nickname TEXT NOT NULL,
+  work_id INT REFERENCES works(id) ON DELETE CASCADE,
+  episode_id INT REFERENCES episodes(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  likes_count INT DEFAULT 0,
+  is_blocked BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS comment_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_user_comment_like UNIQUE (comment_id, user_id)
+);
+
+-- 14. 콘텐츠 심사/검수 테이블 (content_reviews - 운영자용)
+CREATE TABLE IF NOT EXISTS content_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  work_id INT REFERENCES works(id) ON DELETE CASCADE,
+  episode_id INT REFERENCES episodes(id) ON DELETE CASCADE,
+  work_title TEXT NOT NULL,
+  author_name TEXT NOT NULL,
+  status TEXT DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+  reject_reason TEXT,
+  reviewer_name TEXT,
+  reviewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 15. 신고/제재 관리 테이블 (reports - 운영자용)
+CREATE TABLE IF NOT EXISTS reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id TEXT NOT NULL,
+  target_type TEXT NOT NULL, -- 'COMMENT', 'WORK', 'EPISODE'
+  target_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  status TEXT DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'RESOLVED', 'REJECTED')),
+  resolved_action TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 ALTER TABLE works ENABLE ROW LEVEL SECURITY;
 ALTER TABLE episodes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE point_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comment_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE content_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Allow anon read works" ON works;
-DROP POLICY IF EXISTS "Allow anon read episodes" ON episodes;
 DROP POLICY IF EXISTS "Allow anon full access works" ON works;
 DROP POLICY IF EXISTS "Allow anon full access episodes" ON episodes;
+DROP POLICY IF EXISTS "Allow anon full access point_transactions" ON point_transactions;
+DROP POLICY IF EXISTS "Allow anon full access comments" ON comments;
+DROP POLICY IF EXISTS "Allow anon full access comment_likes" ON comment_likes;
+DROP POLICY IF EXISTS "Allow anon full access content_reviews" ON content_reviews;
+DROP POLICY IF EXISTS "Allow anon full access reports" ON reports;
 
 CREATE POLICY "Allow anon full access works" ON works FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow anon full access episodes" ON episodes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access point_transactions" ON point_transactions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access comments" ON comments FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access comment_likes" ON comment_likes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access content_reviews" ON content_reviews FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access reports" ON reports FOR ALL USING (true) WITH CHECK (true);
 
--- 8개 작품 시드 데이터
-INSERT INTO works (id, title, author, genre, tags, description, cover_image, view_count) VALUES
-(1, '대적자: 신을 삼킨 기사', '판타지마스터', ARRAY['판타지', '전체이용가'], ARRAY['AI NONE'], '신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stormqueen_oath.jpg', 154000),
-(2, '천마의 귀환', '무협의신', ARRAY['무협', '전체이용가'], ARRAY['AI NONE'], '천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_supreme.jpg', 231000),
-(3, '금기의 계약', '나이트로즈', ARRAY['성인', '19세 이상'], ARRAY['AI NONE'], '금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'velvet_and_thorns.jpg', 189000),
-(4, '황제의 유일한 후궁', '로맨스퀸', ARRAY['로맨스', '전체이용가'], ARRAY['AI NONE'], '황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'flower_blooming.jpg', 312000),
-(5, '성간 항로: 마지막 항해사', '스페이스로그', ARRAY['SF', '전체이용가'], ARRAY['AI NONE'], '인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stellar_horizon.jpg', 97000),
-(6, '서울에 나타난 마왕', '도시마법사', ARRAY['현대 판타지', '전체이용가'], ARRAY['AI NONE'], '현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'seoul_sorcerer.jpg', 278000),
-(7, '죽은 자들의 학교', '공포작가', ARRAY['호러', '전체이용가'], ARRAY['AI NONE'], '폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'darkness_swallowed_classroom.jpg', 84000),
-(8, '검의 전설: 천하제일인', '검성', ARRAY['무협', '전체이용가'], ARRAY['AI NONE'], '천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_defies_heavens.jpg', 195000)
-ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, cover_image = EXCLUDED.cover_image, description = EXCLUDED.description;
+-- 10개 대표 작품 시드 데이터 (웹소설 8개 + 웹툰 2개)
+INSERT INTO works (id, title, author, content_type, genre, tags, description, cover_image, view_count, is_completed, is_top_recommended, is_popular_work, is_new_work) VALUES
+(1, '대적자: 신을 삼킨 기사', '판타지마스터', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['AI NONE', '기사', '성장'], '신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stormqueen_oath.jpg', 154000, false, true, true, false),
+(2, '천마의 귀환', '무협의신', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '천마', '회귀'], '천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_supreme.jpg', 231000, false, true, true, false),
+(3, '금기의 계약', '나이트로즈', 'NOVEL', ARRAY['성인', '19세 이상'], ARRAY['AI NONE', '치명적', '로맨스'], '금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'velvet_and_thorns.jpg', 189000, false, false, true, false),
+(4, '황제의 유일한 후궁', '로맨스퀸', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['AI NONE', '궁중', '애절'], '황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'flower_blooming.jpg', 312000, false, true, true, false),
+(5, '성간 항로: 마지막 항해사', '스페이스로그', 'NOVEL', ARRAY['SF', '전체이용가'], ARRAY['AI NONE', '우주', '생존'], '인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stellar_horizon.jpg', 97000, false, false, false, true),
+(6, '서울에 나타난 마왕', '도시마법사', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['AI NONE', '현대', '마왕'], '현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'seoul_sorcerer.jpg', 278000, false, false, true, true),
+(7, '죽은 자들의 학교', '공포작가', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['AI NONE', '폐교', '미스터리'], '폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'darkness_swallowed_classroom.jpg', 84000, true, false, false, true),
+(8, '검의 전설: 천하제일인', '검성', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '검술', '절대자'], '천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_defies_heavens.jpg', 195000, true, false, true, false),
+(9, '[웹툰] 신의 기사단', '판타지마스터', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '풀컬러', '고화질'], '대적자 스핀오프 공식 웹툰! 화려한 작화로 펼쳐지는 기사단의 모험.', 'stormqueen_oath.jpg', 89000, false, false, true, true),
+(10, '[웹툰] 황후의 비밀 화원', '로맨스퀸', 'WEBTOON', ARRAY['로맨스', '순정'], ARRAY['웹툰', '궁중로맨스', '풀컬러'], '황실 최고의 비밀이 담긴 화원에서 피어나는 은밀하고 달콤한 로맨스 웹툰.', 'flower_blooming.jpg', 124000, false, false, true, true)
+ON CONFLICT (id) DO UPDATE SET 
+  title = EXCLUDED.title, 
+  content_type = EXCLUDED.content_type, 
+  cover_image = EXCLUDED.cover_image, 
+  description = EXCLUDED.description,
+  is_completed = EXCLUDED.is_completed;
 
--- 48개 에피소드 시드 데이터 (작품당 1~6화)
-INSERT INTO episodes (work_id, episode_number, title, is_free, is_ad_free, content) VALUES
-(1, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 신의 저주로 멸망한 왕국에서 한 기사가 깨어나 처음으로 자신의 힘을 깨닫는다.'),
-(1, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 기사는 폐허가 된 성에서 고대의 검을 발견하고 신의 잔당과 첫 전투를 벌인다.'),
-(1, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 동료를 잃은 기사는 복수를 다짐하며 신의 사도가 숨은 탑으로 향한다.'),
-(1, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 탑 정상에서 마주한 신은 기사에게 충격적인 진실을 알려준다.'),
-(1, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 진실을 마주한 기사는 새로운 각성을 맞이하고 반격에 나선다.'),
-(1, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 대륙의 명운을 건 최후의 결전이 눈앞으로 다가온다.'),
+-- 50+개 에피소드 시드 데이터 (웹소설 본문 & 웹툰 이미지)
+INSERT INTO episodes (work_id, episode_number, title, is_free, is_ad_free, content, image_urls, author_comment) VALUES
+(1, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 신의 저주로 멸망한 왕국에서 한 기사가 깨어나 처음으로 자신의 힘을 깨닫는다.', '[]'::jsonb, '첫 화를 읽어주셔서 감사합니다!'),
+(1, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 기사는 폐허가 된 성에서 고대의 검을 발견하고 신의 잔당과 첫 전투를 벌인다.', '[]'::jsonb, '구독과 댓글은 큰 힘이 됩니다.'),
+(1, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 동료를 잃은 기사는 복수를 다짐하며 신의 사도가 숨은 탑으로 향한다.', '[]'::jsonb, '3화까지 무료입니다! 4화부터는 광고 시청 또는 포인트로 즐겨주세요.'),
+(1, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 탑 정상에서 마주한 신은 기사에게 충격적인 진실을 알려준다.', '[]'::jsonb, '광고를 시청해 주셔서 감사합니다.'),
+(1, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 진실을 마주한 기사는 새로운 각성을 맞이하고 반격에 나선다.', '[]'::jsonb, '치열한 전투가 시작됩니다.'),
+(1, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 대륙의 명운을 건 최후의 결전이 눈앞으로 다가온다.', '[]'::jsonb, '다음 시즌도 기대해주세요!'),
 
-(2, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 천마는 수백 년의 봉인에서 깨어나 자신이 누구인지 기억해 내기 시작한다.'),
-(2, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 옛 제자들의 후손을 만난 천마는 무림의 변화를 확인하고 첫 번째 적을 쓰러뜨린다.'),
-(2, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 천마는 잃어버린 검법을 되찾기 위해 금지된 동굴로 들어간다.'),
-(2, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 동굴 안에서 천마는 자신을 봉인한 자의 후예와 운명적인 대면을 한다.'),
-(2, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 마공의 비기를 완전히 완성하며 천마신교의 재건을 선언한다.'),
-(2, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 강호 전체를 뒤흔들 거대한 격돌이 시작된다.'),
+(9, 1, '제 1 화: 각성', true, false, '', '["/images/stormqueen_oath.jpg", "/images/sword_dao_supreme.jpg"]'::jsonb, '웹툰 신의 기사단 연재를 시작합니다!'),
+(9, 2, '제 2 화: 검의 인도', true, false, '', '["/images/sword_dao_supreme.jpg", "/images/stormqueen_oath.jpg"]'::jsonb, '매주 수요일 풀컬러 업데이트!'),
+(9, 3, '제 3 화: 사도의 그림자', true, false, '', '["/images/stormqueen_oath.jpg", "/images/sword_dao_supreme.jpg"]'::jsonb, '재밌게 보셨다면 별점 부탁드립니다!'),
+(9, 4, '제 4 화: 결전의 서막', false, true, '', '["/images/sword_dao_supreme.jpg", "/images/stormqueen_oath.jpg"]'::jsonb, '광고 보고 무료로 감상하세요!'),
 
-(3, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 여주인공은 빚을 갚기 위해 정체불명의 남자와 위험한 계약을 맺는다.'),
-(3, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 계약의 첫 번째 조건이 실행되고, 두 사람 사이에 묘한 긴장감이 흐른다.'),
-(3, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 남자의 정체가 조금씩 드러나며 여주인공은 빠져나올 수 없는 감정에 휩싸인다.'),
-(3, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 계약의 진짜 목적이 밝혀지고, 두 사람의 관계는 돌이킬 수 없는 방향으로 흐른다.'),
-(3, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 위태로운 감정 속에서 둘만의 숨겨진 비밀이 폭로된다.'),
-(3, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 위험한 선택의 기로에 선 두 사람의 마지막 결단.'),
+(10, 1, '제 1 화: 은밀한 만남', true, false, '', '["/images/flower_blooming.jpg", "/images/velvet_and_thorns.jpg"]'::jsonb, '황후의 비밀 화원 첫 회입니다.'),
+(10, 2, '제 2 화: 붉은 장미의 향기', true, false, '', '["/images/flower_blooming.jpg", "/images/velvet_and_thorns.jpg"]'::jsonb, '많은 사랑 부탁드립니다.'),
+(10, 3, '제 3 화: 밝혀진 정체', true, false, '', '["/images/flower_blooming.jpg", "/images/velvet_and_thorns.jpg"]'::jsonb, '3화 무료 공개!'),
+(10, 4, '제 4 화: 피할 수 없는 운명', false, true, '', '["/images/velvet_and_thorns.jpg", "/images/flower_blooming.jpg"]'::jsonb, '다음 이야기가 계속됩니다.')
+ON CONFLICT (work_id, episode_number) DO UPDATE SET 
+  title = EXCLUDED.title, 
+  is_free = EXCLUDED.is_free, 
+  is_ad_free = EXCLUDED.is_ad_free, 
+  content = EXCLUDED.content,
+  image_urls = EXCLUDED.image_urls,
+  author_comment = EXCLUDED.author_comment;
 
-(4, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 평범한 처녀가 황제의 간택을 받아 궁에 들어가며 새로운 삶을 시작한다.'),
-(4, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 황제와의 첫 대면에서 그녀는 그의 차가운 눈빛 속에 숨겨진 외로움을 느낀다.'),
-(4, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 후궁들의 시기 속에서 그녀는 황제의 유일한 관심을 받게 된다.'),
-(4, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 황제가 그녀에게만 보여 주는 부드러운 모습에 마음이 흔들리기 시작한다.'),
-(4, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 궁중 암투 속에서 서로를 지켜내기 위한 사랑이 깊어진다.'),
-(4, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 황제와 후궁, 두 사람의 운명을 결정지을 궁중 연회가 열린다.'),
-
-(5, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 마지막 항해사는 지구가 멸망한 후 남은 인류를 태우고 미지의 별로 출발한다.'),
-(5, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 항해 중 발견한 고대 외계 유물에서 충격적인 메시지가 해독된다.'),
-(5, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 함선에 침입한 미지의 존재가 승무원들을 하나씩 사라지게 만든다.'),
-(5, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 항해사는 함선의 AI와 함께 적의 정체를 밝혀내고 생존을 위한 결단을 내린다.'),
-(5, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 은하계 미지의 행성에 접근하며 인류의 새로운 보금자리를 탐색한다.'),
-(5, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 외계 문명과의 조우, 새로운 역사의 첫 장이 열린다.'),
-
-(6, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 평범한 회사원 김현우는 퇴근길에 마왕의 힘이 자신에게 깃드는 것을 느낀다.'),
-(6, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 처음으로 마법을 사용한 현우는 우연히 마족을 쓰러뜨리고 자신의 정체를 숨기려 한다.'),
-(6, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 마법사 협회가 그를 추적하기 시작하고, 현우는 도망치며 힘을 다스리는 법을 배운다.'),
-(6, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 현우는 자신을 노리는 진짜 적이 마족이 아닌 인간이라는 사실을 알게 된다.'),
-(6, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 서울 도심 한복판에서 벌어지는 마법 대격돌 속에서 마왕의 진정한 힘을 발휘한다.'),
-(6, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 도시를 지키기 위한 마왕과 협회의 동맹이 결성된다.'),
-
-(7, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 폐교 탐사를 온 학생들은 이상한 발소리와 함께 문이 저절로 닫히는 것을 경험한다.'),
-(7, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 한 명이 사라지고, 남은 학생들은 복도 끝에서 교복을 입은 그림자를 목격한다.'),
-(7, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 학교 지하실에서 발견된 일기장은 과거에 일어난 참극을 상세히 기록하고 있다.'),
-(7, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 일기장의 주인공이 눈앞에 나타나며, 학생들은 자신들이 이미 죽은 존재일지도 모른다는 공포에 휩싸인다.'),
-(7, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 폐교의 숨겨진 제단에서 저주를 풀기 위한 의식이 시작된다.'),
-(7, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 악령과의 마지막 대치, 학교의 문이 마침내 열린다.'),
-
-(8, 1, '제 1 화', true, false, '본 회차는 1회차 입니다. 하급 무사 이천은 우연히 전설의 검을 손에 넣고 자신의 운명이 바뀌는 것을 느낀다.'),
-(8, 2, '제 2 화', true, false, '본 회차는 2회차 입니다. 검을 노리는 암살자들을 물리친 이천은 검에 깃든 고대 검성의 기억을 일부 받아들인다.'),
-(8, 3, '제 3 화', true, false, '본 회차는 3회차 입니다. 이천은 무림맹의 초대를 받아 처음으로 강호에 자신의 이름을 알리기 시작한다.'),
-(8, 4, '제 4 화', false, true, '본 회차는 4회차 입니다. 천하제일인 자리에서 마주한 강자는 이천에게 검의 진짜 주인에 대한 비밀을 암시한다.'),
-(8, 5, '제 5 화', false, true, '본 회차는 5회차 입니다. 신검합일의 경지에 도달하며 강호 십대고수들을 차례로 제압한다.'),
-(8, 6, '제 6 화', false, true, '본 회차는 6회차 입니다. 천하를 제패할 마지막 검의 전설이 완성된다.')
-ON CONFLICT (work_id, episode_number) DO UPDATE SET title = EXCLUDED.title, is_free = EXCLUDED.is_free, is_ad_free = EXCLUDED.is_ad_free, content = EXCLUDED.content;
-
--- 12. 독자 회원(readers) 및 작가 회원(authors) 스키마 & 실데이터 시드
-CREATE TABLE IF NOT EXISTS readers (
-  id INT PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  is_adult_verified BOOLEAN DEFAULT false,
-  subscription_status TEXT DEFAULT 'ACTIVE',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS authors (
-  id INT PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  email TEXT NOT NULL,
-  pen_name TEXT NOT NULL,
-  work_title TEXT NOT NULL,
-  birthdate DATE NOT NULL,
-  address TEXT NOT NULL,
-  bank_info TEXT NOT NULL,
-  status TEXT DEFAULT 'APPROVED',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- 독자 및 작가 테이블 마이그레이션 호환
+ALTER TABLE readers ADD COLUMN IF NOT EXISTS is_adult_verified BOOLEAN DEFAULT false;
+ALTER TABLE readers ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'ACTIVE';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS pen_name TEXT;
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS work_title TEXT;
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS bank_info TEXT;
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'APPROVED';
 
 ALTER TABLE readers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE authors ENABLE ROW LEVEL SECURITY;

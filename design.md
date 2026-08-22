@@ -1,45 +1,26 @@
-# 광고 기반 웹소설 플랫폼 Front-end Design System & Implementation Specification
+# 광고 기반 웹소설·웹툰 플랫폼 Front-end Design System & Implementation Specification
 
 > **File:** `design.md`\
-> **Version:** 1.0.0\
-> **Date:** 2026-08-12\
-> **Target:** Next.js + React + TypeScript + Tailwind CSS + Radix UI +
-> TanStack Query + Zustand + PWA\
-> **Design Direction:** Mobile-First / Reading-First / Rewarded-Ad /
-> Creator Transparency
+> **Version:** 2.0.0 (CDG PLAY & 3-User Role Edition)\
+> **Date:** 2026-08-22\
+> **Target:** Vanilla Modern Web (HTML5/CSS3/ES6+ SPA) + Supabase Backend + Responsive PWA\
+> **Design Direction:** Comme des Garçons Play ("CDG PLAY") Dark Luxury & Iconic Pink (`#FF2A7A`) / 3-User Architecture (Reader, Creator, Admin) / Rewarded-Ad & Point Unlock / Hybrid Webtoon-Novel Reader
 
 ------------------------------------------------------------------------
 
 ## 0. Document Purpose
 
-본 문서는 광고 기반 웹소설 플랫폼의 Front-end 구축을 위한 **실행 가능한
-UI/UX 및 Design System 명세서**다.
+본 문서는 광고 기반 웹소설·웹툰 플랫폼의 Front-end 구축 및 고도화를 위한 **실행 가능한 UI/UX 및 Design System 명세서**다.
+`service_structure.md`와 `database.md`, `UX.md`에 정의된 3대 사용자(독자·작가·운영자) 체계 및 CDG PLAY 디자인 시스템을 완벽하게 반영하여 정의한다.
 
-단순한 화면 목록이 아니라 다음 항목을 개발자가 바로 구현할 수 있도록
-정의한다.
-
--   정보구조(IA)
--   사용자 흐름(User Flow)
--   화면 구조
--   디자인 토큰
--   반응형 Breakpoint
--   Typography
--   Component 규칙
--   Reader UX
--   Rewarded Ad UX
--   Creator Studio
--   My Page
--   PWA
--   접근성
--   상태 관리
--   API 연동 원칙
--   Loading / Empty / Error 상태
--   Analytics Event
--   SEO
--   성능 최적화
--   Front-end 폴더 구조
--   개발 우선순위
--   QA Acceptance Criteria
+-   **3대 사용자 체계:** 독자(Reader), 작가(Author/Creator), 운영자(Admin)
+-   **CDG PLAY 디자인 시스템:** Pure White, Deep Black, Iconic Pink (`#FF2A7A`), Soft Pink Accent
+-   **정보구조(IA) & 내비게이션:** 상단 헤더, 서브 카테고리 탭 (웹소설|웹툰|장르|랭킹|신작|완결작), 모바일 하단 내비
+-   **홈 7대 큐레이션 섹션:** HERO 캐러셀, 실시간 랭킹 Top 4, 신작 4선, 장르별 필터 칩, 인기 웹툰, 완결 명작, 오늘의 무료 혜택
+-   **하이브리드 뷰어:** 웹소설 텍스트 뷰어 + 웹툰 세로 스크롤 이미지 뷰어 + 회차 댓글/공감 + 추천작
+-   **이중 해금 시스템 (`UX.md`):** `▶ 광고 30초 보고 무료읽기` vs `🪙 100P 포인트로 즉시 열람`
+-   **작가센터 7대 메뉴:** 1. 작품관리, 2. 회차등록, 3. 연재관리, 4. 독자통계, 5. 광고수익, 6. 판매수익, 7. 정산관리
+-   **운영자 Admin 9대 메뉴:** 회원관리, 작가관리, 작품연재, 회차관리, 콘텐츠심사, 댓글/신고, 광고플랫폼, 수익배분 Engine, 작가정산
 
 ------------------------------------------------------------------------
 
@@ -47,363 +28,148 @@ UI/UX 및 Design System 명세서**다.
 
 ## 1.1 핵심 디자인 원칙
 
-### Principle 01 --- Reading First
-
-사용자가 플랫폼에 방문하는 가장 중요한 이유는 **읽기**다.
-
-모든 주요 화면은 다음 질문에 답해야 한다.
-
-> "사용자가 지금 읽고 싶은 작품을 얼마나 빨리 찾고 읽을 수 있는가?"
+### Principle 01 --- Reading & Viewing First (독서·열람 최우선)
+사용자가 플랫폼에 방문하는 가장 중요한 이유는 **웹소설 및 웹툰 열람**이다.
+모든 주요 화면은 "사용자가 지금 읽고 싶은 작품을 얼마나 빠르고 쾌적하게 찾고 감상할 수 있는가?"에 집중한다.
 
 핵심 Funnel:
-
 ``` text
-DISCOVER
+DISCOVER (홈/탐색/서브탭)
   ↓
-WORK DETAIL
+WORK DETAIL (작품소개/회차목록/관심등록/작가구독)
   ↓
-READ
+READ / VIEW (웹소설 텍스트 & 웹툰 세로 스크롤 뷰어)
   ↓
-NEXT EPISODE
+NEXT EPISODE (다음 회차 이동)
   ↓
-AD UNLOCK
+DUAL UNLOCK (▶ 광고 30초 무료해금 OR 🪙 100P 포인트 즉시해금)
   ↓
-READ AGAIN
+READ AGAIN (지속적인 연재 열람)
 ```
 
 ------------------------------------------------------------------------
 
-## 1.2 Principle 02 --- 광고는 방해가 아니라 보상
+## 1.2 Principle 02 --- 광고는 방해가 아니라 보상 (`UX.md`)
 
-광고를 일반 Display Ad처럼 취급하지 않는다.
-
-잘못된 UX:
-
-``` text
-작품 열람
- ↓
-갑작스러운 팝업 광고
- ↓
-광고 닫기
- ↓
-본문 읽기
-```
-
-권장 UX:
-
-``` text
-무료 회차 읽기
- ↓
-다음 회차 잠김
- ↓
-"광고 보고 무료로 읽기"
- ↓
-사용자 선택
- ↓
-광고 시청
- ↓
-해금
- ↓
-즉시 다음 회차
-```
-
-광고는 **User Intent 이후에만** 발생한다.
+광고를 일반 강제 팝업 Display Ad처럼 취급하지 않는다.
+- **잘못된 UX:** 작품 열람 중 갑작스러운 전면 팝업 광고 → 사용자 이탈
+- **권장 UX:** 무료 회차 열람 종료 → "다음 회차를 무료로 읽으시겠습니까?" 모달 팝업 → 사용자의 능동적 선택 (`광고 시청` 또는 `100P 포인트`) → 작가에게 직접 광고수익 배분 및 즉시 해금
 
 ------------------------------------------------------------------------
 
-## 1.3 Principle 03 --- Reader Control
+## 1.3 Principle 03 --- Comme des Garçons Play ("CDG PLAY") Aesthetic
 
-사용자는 다음을 스스로 선택할 수 있어야 한다.
-
--   광고를 볼지 여부
--   글자 크기
--   줄간격
--   배경 테마
--   페이지/스크롤 방식
--   알림 수신 여부
--   작품 관심등록
--   작가 구독
+플랫폼 전반에 글로벌 패션 하우스 Comme des Garçons Play의 미니멀리즘과 볼드한 아이코닉 핑크 포인트를 적용한다.
+- **Base:** Deep Luxury Black (`#0A0A0C`, `#121216`)과 Pure White (`#FFFFFF`)의 극적인 대비
+- **Accent:** Iconic CDG Pink (`#FF2A7A`), Soft Pink (`#FF6B9D`)
+- **Symbol:** CDG Play Heart SVG Icon
+- **Texture:** Glassmorphism (`backdrop-filter: blur(12px)`, `border: 1px solid rgba(255,42,122,0.2)`)
 
 ------------------------------------------------------------------------
 
-## 1.4 Principle 04 --- Creator Transparency
+## 1.4 Principle 04 --- Creator Transparency (3단계 투명 정산)
 
-작가는 플랫폼의 가장 중요한 공급자다.
-
-Creator Studio에서 다음 세 가지를 항상 명확하게 구분한다.
-
-``` text
-예상 수익
-Estimated Revenue
-
-확정 수익
-Confirmed Revenue
-
-정산 가능 금액
-Payable Revenue
-```
-
-이 세 금액을 하나의 숫자로 합치지 않는다.
+작가는 플랫폼의 핵심 창작자다. 작가센터에서 다음 3단계 수익 지표를 명확히 구분하여 표출한다.
+1. **실시간 예상 수익 (Estimated Revenue):** 당월 조회수/광고발생 기반 실시간 추정치
+2. **마감 확정 수익 (Confirmed Revenue):** 창작자 정산풀(62.5%) 공식 마감 확정액
+3. **출금 가능 정산금 (Payable Revenue):** 등록 계좌(국민은행 등)로 즉시 출금 신청 가능한 잔액
 
 ------------------------------------------------------------------------
 
-# 2. Target Users
+# 2. Target Users & 3-User Architecture
 
-## 2.1 Reader
+## 2.1 독자 (Reader)
+- 홈 탐색 (웹소설, 웹툰, 장르, 랭킹, 신작, 완결작, 검색)
+- 작품 상세 (시놉시스, 회차 목록, 관심등록, 작가구독)
+- 회차 열람 (소설 텍스트 뷰어, 웹툰 세로 스크롤 뷰어)
+- 회차별 독자 댓글 작성 및 `❤️ 공감` 토글
+- 다음화 해금 (`▶ 광고 보고 무료읽기` 또는 `🪙 100P 포인트 사용`)
+- 내 서재 (이어보기 진행률%, 관심 작품, 구독 작가, PASS 성인인증)
 
-주요 행동:
+## 2.2 작가 (Author / Creator)
+- 작가센터 Creator Studio 7대 메뉴:
+  1. `작품관리`: 내 연재 웹소설/웹툰 목록 및 신규 작품 등록
+  2. `회차등록`: 회차 텍스트 or 웹툰 이미지 URL 등록, 무료/광고 설정
+  3. `연재관리`: 연재중 / 휴재 / 완결 상태 관리
+  4. `독자통계`: 완독률(%), 평균 체류시간, 총 조회수, 구독 팬 수
+  5. `광고수익`: 실시간 예상 광고수익 및 트래픽 분석
+  6. `판매수익`: 포인트 회차 판매 현황
+  7. `정산관리`: 정산 출금 신청 및 송금 이력
 
--   작품 탐색
--   작품 검색
--   회차 읽기
--   광고 시청
--   회차 Unlock
--   관심등록
--   작가 구독
--   댓글
--   팬미팅/굿즈 구매
-
-------------------------------------------------------------------------
-
-## 2.2 Creator
-
-주요 행동:
-
--   작가 등록
--   작품 등록
--   회차 작성
--   예약 발행
--   독자 통계 확인
--   광고 수익 확인
--   정산 신청
--   팬미팅/커머스 관리
-
-------------------------------------------------------------------------
-
-## 2.3 Admin
-
-관리자는 별도의 Admin Web App으로 분리한다.
-
-Reader/Creator Front-end와 디자인 토큰은 공유할 수 있지만 인증과
-Routing은 분리한다.
+## 2.3 운영자 (Admin / Operator)
+- 관제탑 Admin Console 9대 핵심 메뉴:
+  1. `회원관리`: 독자 회원 목록, 성인인증 상태, 제재
+  2. `작품관리`: 소설/웹툰 분류, 실시간 HOT/인기/신작 토글
+  3. `작가관리`: 공식 인증 작가 승인 및 계좌 정보
+  4. `콘텐츠 검수`: 신규 작품/회차 심사 및 승인/반려
+  5. `광고관리`: 애드네트워크(AdMob 등), eCPM, 슬롯 관리
+  6. `결제관리`: 토스페이먼츠 결제 승인/취소 내역
+  7. `정산관리`: 작가 출금 신청 승인(PAID) 및 62.5% 마감
+  8. `신고/댓글관리`: 스팸/악플 블라인드 및 신고 처리
+  9. `통계/Analytics`: 플랫폼 DAU/MAU 및 총매출 KPI
 
 ------------------------------------------------------------------------
 
-# 3. Information Architecture
+# 3. Design Tokens (CDG PLAY Aesthetic)
 
-``` text
-/
-├── home
-├── discover
-│   ├── ranking
-│   ├── latest
-│   ├── genres
-│   └── recommendations
-│
-├── search
-│
-├── works
-│   └── [workId]
-│       ├── episodes
-│       ├── comments
-│       └── author
-│
-├── reader
-│   └── [workId]
-│       └── [episodeId]
-│
-├── author
-│   └── [authorId]
-│
-├── my
-│   ├── library
-│   ├── history
-│   ├── following
-│   ├── comments
-│   ├── ad-history
-│   ├── orders
-│   └── settings
-│
-├── creator
-│   ├── dashboard
-│   ├── works
-│   ├── works/new
-│   ├── works/[workId]
-│   ├── episodes
-│   ├── analytics
-│   ├── revenue
-│   ├── settlements
-│   └── settings
-│
-├── auth
-│   ├── login
-│   ├── signup
-│   ├── verify-email
-│   └── adult-verification
-│
-└── legal
-    ├── terms
-    ├── privacy
-    └── content-policy
-```
-
-------------------------------------------------------------------------
-
-# 4. Global Navigation
-
-## 4.1 Mobile Navigation
-
-Mobile에서는 Bottom Navigation을 기본으로 한다.
-
-``` text
-┌──────────────────────────────┐
-│ Logo                  Search  │
-├──────────────────────────────┤
-│                              │
-│        PAGE CONTENT          │
-│                              │
-├──────────────────────────────┤
-│  홈   탐색   보관함   알림   MY │
-└──────────────────────────────┘
-```
-
-Bottom Navigation:
-
-1.  홈
-2.  탐색
-3.  보관함
-4.  알림
-5.  MY
-
-Creator 모드에서는 별도 Creator Navigation을 사용한다.
-
-------------------------------------------------------------------------
-
-## 4.2 Desktop Navigation
-
-``` text
-┌──────────────────────────────────────────────────────────┐
-│ LOGO   홈   탐색   랭킹   장르                 검색  MY  │
-├──────────────────────────────────────────────────────────┤
-│                                                          │
-│                    CONTENT                               │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
-```
-
-------------------------------------------------------------------------
-
-# 5. Responsive Breakpoints
-
-Tailwind 기준:
-
-  Name        Width Target
-  ------ ---------- ------------------
-  xs       \< 640px small mobile
-  sm          640px mobile landscape
-  md          768px tablet
-  lg         1024px tablet/desktop
-  xl         1280px desktop
-  2xl        1536px large desktop
-
-기본 개발 기준:
-
-``` text
-Mobile First
-↓
-640
-↓
-768
-↓
-1024
-↓
-1280
-```
-
-------------------------------------------------------------------------
-
-# 6. Layout Grid
-
-## Mobile
-
--   화면 좌우 padding: 16px
--   Section gap: 28\~40px
--   Card gap: 12px
--   Bottom navigation 높이: 64px 이상
-
-## Tablet
-
--   좌우 padding: 24px
--   최대 콘텐츠 폭: 960px
-
-## Desktop
-
--   최대 콘텐츠 폭: 1200\~1280px
--   Reader 최대 본문 폭: 720\~780px
-
-------------------------------------------------------------------------
-
-# 7. Design Tokens
-
-## 7.1 Color
-
-브랜드 컬러는 특정 색에 종속되지 않도록 CSS Variable로 관리한다.
+## 3.1 Color Palette
 
 ``` css
 :root {
-  --color-brand-primary: #6D5EF5;
-  --color-brand-secondary: #8B7CF6;
+  /* CDG PLAY Core Brand Tokens */
+  --cdg-white: #FFFFFF;
+  --cdg-black: #0A0A0C;
+  --cdg-dark-surface: #121216;
+  --cdg-dark-card: #18181E;
+  
+  --cdg-pink: #FF2A7A;           /* Iconic CDG Pink */
+  --cdg-pink-hover: #FF4D91;     /* Interactive Hover Pink */
+  --cdg-pink-soft: #FF6B9D;      /* Secondary Pink Accent */
+  --cdg-pink-glow: rgba(255, 42, 122, 0.35);
+  --cdg-pink-border: rgba(255, 42, 122, 0.25);
+  --cdg-pink-bg: rgba(255, 42, 122, 0.08);
 
-  --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #F7F7FA;
-  --color-bg-tertiary: #F0F0F4;
-
-  --color-text-primary: #17171A;
-  --color-text-secondary: #66666F;
-  --color-text-tertiary: #9999A3;
-
-  --color-border: #E6E6EB;
-
-  --color-success: #18A566;
-  --color-warning: #E6A100;
-  --color-error: #D64545;
-  --color-info: #3B82F6;
+  /* Functional Status Colors */
+  --accent-emerald: #10B981;     /* 무료/성공/승인 */
+  --accent-amber: #F59E0B;       /* 출금가능/경고 */
+  --accent-rose: #EF4444;        /* 오류/19+ 성인 */
+  --accent-cyan: #06B6D4;        /* 웹툰/정보 */
+  
+  /* Text & Border Tokens */
+  --text-primary: #FFFFFF;
+  --text-secondary: #9E9EA8;
+  --text-muted: #6B6B78;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 42, 122, 0.4);
 }
 ```
 
-실제 브랜드 컬러 확정 후 Token만 변경한다.
-
 ------------------------------------------------------------------------
 
-# 8. Reader Theme Tokens
+# 4. Global Navigation Architecture
 
-Reader는 일반 UI와 독립적인 Theme System을 사용한다.
+## 4.1 상단 통합 헤더 (Desktop & Mobile Header)
+- **Brand Logo:** CDG Heart SVG 아이콘 + `webnovels` 타이포그래피
+- **3대 사용자 퀵 스위처:** `독자 홈` | `작가센터` | `운영자 Admin` | `내 서재`
+- **Header Actions:**
+  - `🪙 1,000P` 독자 실시간 보유 포인트 뱃지 (클릭 시 마이페이지/충전)
+  - `🔍` 작품/작가 실시간 검색 모달 트리거
+  - `로그인 / 프로필` 메뉴
 
-## Light
-
-``` css
---reader-bg: #FAFAF7;
---reader-text: #242424;
---reader-muted: #777777;
+## 4.2 서브 카테고리 내비게이션 바 (`cdg-sub-nav`)
+독자 홈 상단에 고정되어 스무스 스크롤 및 섹션 필터링을 제공한다.
+``` text
+┌─────────────────────────────────────────────────────────────┐
+│  [웹소설]  [웹툰]  [장르]  [랭킹]  [신작]  [완결작]        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Dark
-
-``` css
---reader-bg: #111111;
---reader-text: #EAEAEA;
---reader-muted: #9B9B9B;
-```
-
-## Sepia
-
-``` css
---reader-bg: #F3EBDD;
---reader-text: #40372F;
---reader-muted: #817468;
-```
-
-Reader Theme은 CSS Variable로 전환한다.
+## 4.3 모바일 하단 내비게이션 (`mobile-bottom-nav`)
+- `홈` (독자 홈 랜딩)
+- `탐색` (장르별/카테고리별 전체 작품 탐색)
+- `보관함` (내 서재)
+- `스튜디오` (작가 전용 스튜디오)
+- `MY` (마이페이지 및 설정)
 
 ------------------------------------------------------------------------
 
@@ -611,255 +377,122 @@ Reader 설정 및 secondary action.
 
 작품 카드에는 정보 우선순위를 명확하게 한다.
 
+# 15. Work Card (CDG PLAY Aesthetic)
+
+작품 카드에는 CDG PLAY 스타일의 랭킹 뱃지, 신작/무료 뱃지, 장르 태그를 표출한다.
+
 ``` text
-┌──────────────────────┐
-│                      │
-│      COVER           │
-│                      │
-├──────────────────────┤
-│ 작품 제목            │
-│ 작가명               │
-│ 장르 · 태그          │
-│ ★ 4.8   조회 12.4K   │
-│ [무료] [광고 Unlock] │
-└──────────────────────┘
+┌──────────────────────────────┐
+│  [TOP 1] [NEW] [19+]  COVER  │
+│                              │
+├──────────────────────────────┤
+│ 장르 뱃지 (판타지/웹툰/무협) │
+│ 작품 제목 (Bold 1.05rem)     │
+│ 작가명 · 👁️ 154.0K           │
+└──────────────────────────────┘
 ```
 
-Mobile에서는 2열 Grid를 기본으로 한다.
-
-Desktop에서는 4\~6열을 상황에 따라 사용한다.
+-   **Mobile/Desktop:** 가로 스크롤 캐러셀(`cdg-scroll-row`) 및 2~4열 반응형 그리드
+-   **Badges:** Top 1~4 랭킹 뱃지 (`.cdg-rank-badge`), NEW 핑크 뱃지, FREE 에메랄드 뱃지, 19+ 성인 뱃지
 
 ------------------------------------------------------------------------
 
-# 16. Main Home
-
-## Screen Structure
+# 16. Main Home (7대 큐레이션 섹션)
 
 ``` text
-Header
+Header (LOGO | 포인트 🪙 1,000P | 검색 🔍 | 로그인)
  ↓
-Hero
+Sub Navigation (웹소설 | 웹툰 | 장르 | 랭킹 | 신작 | 완결작)
  ↓
-Continue Reading
+1. HERO 캐러셀 슬라이더 (5초 자동 롤링, 실시간 추천 1~3위)
  ↓
-Today's Updates
+2. 🔥 지금 가장 많이 읽는 작품 (Top 1~4 랭킹 뱃지)
  ↓
-Trending
+3. ✨ 새로운 작품 (NEW 신작 4선)
  ↓
-Ad Unlock Recommended
+4. 장르별 추천 (로맨스, 판타지, 무협, 현판, SF, 호러, 19+ 성인 실시간 필터 칩)
  ↓
-Genre Recommendation
+5. 🎨 인기 웹툰 (공식 풀컬러 웹툰 큐레이션)
  ↓
-Native Ad
+6. 🏆 완결 명작 모음 (완결 작품 큐레이션)
  ↓
-Popular Authors
- ↓
-Footer
+7. 🎁 오늘의 무료 작품 (30초 광고 무료 혜택 배너 & 무료 추천작)
 ```
 
 ------------------------------------------------------------------------
 
-## 16.1 Hero
+# 17. Hybrid Reader & Viewer UX (웹소설 & 웹툰)
 
-Hero는 단순 배너가 아니라 작품 상세로 이동하는 CTA를 포함한다.
+## 17.1 하이브리드 열람 지원
+- **웹소설 모드 (`content_type: 'NOVEL'`):**
+  - 글자 크기 실시간 조절 (14px ~ 26px)
+  - 3대 독서 테마: Light (`#FAFAF7`), Dark (`#0A0A0C`), Sepia (`#F3EBDD`)
+  - 단락 줄간격 및 가독성 최적화
+- **웹툰 모드 (`content_type: 'WEBTOON'`):**
+  - 고화질 컷 이미지 세로 연속 스크롤 뷰어 (`.webtoon-viewer-box`, `.webtoon-cut`)
+  - 컷 간 여백 최소화 및 모바일 터치 스크롤 최적화
 
-필수 요소:
+## 17.2 회차별 독자 댓글 및 공감 (`❤️ 공감`)
+- 뷰어 하단 실시간 댓글 목록 및 댓글 작성 폼
+- 독자 닉네임, 작성 시간, 공감 수 표시 및 원클릭 좋아요 토글
 
--   Cover/Key Visual
--   작품명
--   한 줄 소개
--   장르
--   CTA
--   Pagination indicator
-
-Mobile에서는 Hero 높이를 과도하게 키우지 않는다.
+## 17.3 하단 추천 작품 목록
+- "이 작품과 함께 많이 본 추천작" 가로 스크롤 카드 그리드
 
 ------------------------------------------------------------------------
 
-# 17. Continue Reading
+# 18. Rewarded Ad & Point Unlock Gate (`UX.md`)
 
-로그인 사용자에게 가장 중요한 개인화 영역.
+4화 이상의 유료/잠긴 회차 진입 시 노출되는 이중 해금 모달 명세:
 
 ``` text
-이어보기
-────────────────────
-[Cover] 작품 A
-       23화 읽는 중
-       ███████░░ 72%
-       [계속 읽기]
+┌─────────────────────────────────────────────────────────────┐
+│ 🔓 다음 회차를 무료로 읽으시겠습니까?                       │
+│ 광고를 시청하면 작가에게 후원되고 회차가 무료 해금되며,     │
+│ 보유 포인트를 사용하여 즉시 열람할 수도 있습니다.            │
+│                                                             │
+│ [▶ 광고 보고 무료읽기 (30초)]                                │
+│ [🪙 100P 포인트로 즉시 열람 (보유: 1,000P)]                 │
+│ [나중에 보기]                                               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-독서 진행률은 Episode 단위로 표시한다.
+-   **옵션 1 (광고 시청):** 30초(시뮬레이션 3초) 보상형 광고 재생 → SSV 검증 → 100% 무료 해금
+-   **옵션 2 (포인트 사용):** 보유 포인트에서 100P 차감 → 즉시 해금 및 뷰어 로드
 
 ------------------------------------------------------------------------
 
-# 18. Today's Updates
-
-오늘 업데이트된 작품을 시간순 또는 개인화 기준으로 보여준다.
-
-Filter:
+# 19. Creator Studio (작가센터 7대 메뉴)
 
 ``` text
-전체
-월
-화
-수
-목
-금
-토
-일
-```
-
-------------------------------------------------------------------------
-
-# 19. Ranking
-
-Ranking 화면:
-
-``` text
-1위  작품 A
-2위  작품 B
-3위  작품 C
-...
-```
-
-Ranking 기준:
-
--   실시간 인기
--   일간
--   주간
--   월간
--   급상승
-
-Ranking Algorithm은 UI와 분리한다.
-
-------------------------------------------------------------------------
-
-# 20. Discover
-
-탐색 화면은 검색보다 **발견**을 강조한다.
-
-``` text
-탐색
-│
-├─ 장르
-├─ 인기
-├─ 신규
-├─ 완결
-├─ 무료
-├─ 광고로 무료
-└─ 추천
+1. 작품관리: 내 연재 웹소설/웹툰 목록 및 신규 작품 등록
+2. 회차등록: 회차 텍스트 or 웹툰 이미지 URL 쉼표 등록, 무료/광고 설정
+3. 연재관리: 연재중(ONGOING) / 휴재(PAUSED) / 완결(COMPLETED) 상태 관리
+4. 독자통계: 완독률(84.5%), 평균 체류시간(4분 32초), 구독 팬 수(1,280명)
+5. 광고수익: 실시간 예상 광고수익 (Estimated ₩1,245,000)
+6. 판매수익: 당월 포인트 회차 판매수 (3,420회) 및 정산 누적액 (₩342,000)
+7. 정산관리: 등록 정산 계좌(국민은행 999-888-777666) 출금 신청 및 송금 이력
 ```
 
 ------------------------------------------------------------------------
 
-# 21. Search
-
-검색 UX:
+# 20. Admin Management Tower (운영자 관제탑 9대 메뉴)
 
 ``` text
-[ 🔍 작품명, 작가명을 검색하세요 ]
-```
-
-검색 결과 Filter:
-
--   작품
--   작가
--   장르
--   태그
-
-검색 결과는 입력 즉시 무리하게 API를 호출하지 않고 debounce를 적용한다.
-
-권장:
-
-``` text
-300~400ms debounce
+1. 회원관리: 독자 계정, KCP PASS 성인인증 상태, 제재 관리
+2. 작가관리: 공식 인증 작가 승인 및 정산 계좌 확인
+3. 작품연재: 웹소설/웹툰 분류, 실시간 HOT/인기/신작 토글
+4. 회차관리: 회차별 무료/광고 공개 상태 관리
+5. 콘텐츠심사: 신규 작품/회차 심사 및 승인/반려 (Content Review)
+6. 댓글/신고: 스팸/욕설 신고 접수 및 블라인드 조치
+7. 광고플랫폼: 애드네트워크(AdMob 등), eCPM, 보상형 슬롯 관리
+8. 수익배분 Engine: 62.5% 창작자 정산풀 월별 마감 확정 (Confirmed)
+9. 작가정산: 출금 신청 건별 입금 승인 처리 (PAID)
 ```
 
 ------------------------------------------------------------------------
 
-# 22. Work Detail Page
-
-구조:
-
-``` text
-Header
- ↓
-Hero Work Info
- ↓
-CTA
- ↓
-Description
- ↓
-Author
- ↓
-Tags
- ↓
-Episode List
- ↓
-Comments
- ↓
-Related Works
-```
-
-------------------------------------------------------------------------
-
-# 23. Work Hero
-
-Mobile:
-
-``` text
-┌──────────────────────┐
-│       COVER          │
-│                      │
-│ 작품명               │
-│ 작가명               │
-│ ★ 4.8               │
-│ 로맨스 · 현대        │
-│                      │
-│ [이어 읽기]          │
-│ [♡ 관심] [작가 구독] │
-└──────────────────────┘
-```
-
-Desktop에서는 Cover와 Description을 2-column으로 배치한다.
-
-------------------------------------------------------------------------
-
-# 24. Episode List
-
-각 Episode는 다음 상태를 표시한다.
-
-``` text
-FREE
-READ
-LOCKED
-AD_UNLOCK_AVAILABLE
-UNLOCKED
-UPCOMING
-```
-
-예:
-
-``` text
-24화 새로운 시작
-어제 18:00
-[읽음]
-
-25화 흔들리는 마음
-오늘 18:00
-[무료]
-
-26화 뜻밖의 만남
-[광고로 무료 열람]
-
-27화 새로운 사건
-[잠김]
-```
-
-------------------------------------------------------------------------
-
-# 25. Sticky CTA
+# 21. Sticky CTA (Mobile)
 
 Work Detail에서 Mobile 하단에 다음 CTA를 고정한다.
 
