@@ -143,9 +143,63 @@ const SAMPLE_WORKS = [
     description: "천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 195000,
     episodesCount: 6,
+    isCompleted: true,
+    contentType: "NOVEL",
     episodes: createDefault6Episodes("검의 전설: 천하제일인")
+  },
+  {
+    id: 9,
+    title: "[웹툰] 신의 기사단",
+    author: "판타지마스터",
+    genre: "판타지",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    contentType: "WEBTOON",
+    coverUrl: "/images/stormqueen_oath.jpg",
+    description: "대적자 스핀오프 공식 웹툰! 화려한 작화로 펼쳐지는 기사단의 모험.",
+    viewCount: 89000,
+    episodesCount: 4,
+    isCompleted: false,
+    episodes: [
+      { episodeNumber: 1, title: "제 1 화: 각성", isFree: true, isAdFree: false, content: "", imageUrls: ["/images/stormqueen_oath.jpg", "/images/sword_dao_supreme.jpg"], authorComment: "웹툰 신의 기사단 연재를 시작합니다!" },
+      { episodeNumber: 2, title: "제 2 화: 검의 인도", isFree: true, isAdFree: false, content: "", imageUrls: ["/images/sword_dao_supreme.jpg", "/images/stormqueen_oath.jpg"], authorComment: "매주 수요일 풀컬러 업데이트!" },
+      { episodeNumber: 3, title: "제 3 화: 사도의 그림자", isFree: true, isAdFree: false, content: "", imageUrls: ["/images/stormqueen_oath.jpg", "/images/sword_dao_supreme.jpg"], authorComment: "재밌게 보셨다면 별점 부탁드립니다!" },
+      { episodeNumber: 4, title: "제 4 화: 결전의 서막", isFree: false, isAdFree: true, content: "", imageUrls: ["/images/sword_dao_supreme.jpg", "/images/stormqueen_oath.jpg"], authorComment: "광고 보고 무료로 감상하세요!" }
+    ]
+  },
+  {
+    id: 10,
+    title: "[웹툰] 황후의 비밀 화원",
+    author: "로맨스퀸",
+    genre: "로맨스",
+    rating: "ALL",
+    aiUsageType: "NONE",
+    contentType: "WEBTOON",
+    coverUrl: "/images/flower_blooming.jpg",
+    description: "황실 최고의 비밀이 담긴 화원에서 피어나는 은밀하고 달콤한 로맨스 웹툰.",
+    viewCount: 124000,
+    episodesCount: 4,
+    isCompleted: false,
+    episodes: [
+      { episodeNumber: 1, title: "제 1 화: 은밀한 만남", isFree: true, isAdFree: false, content: "", imageUrls: ["/images/flower_blooming.jpg", "/images/velvet_and_thorns.jpg"], authorComment: "황후의 비밀 화원 첫 회입니다." },
+      { episodeNumber: 2, title: "제 2 화: 붉은 장미의 향기", isFree: true, isAdFree: false, content: "", imageUrls: ["/images/flower_blooming.jpg", "/images/velvet_and_thorns.jpg"], authorComment: "많은 사랑 부탁드립니다." },
+      { episodeNumber: 3, title: "제 3 화: 밝혀진 정체", isFree: true, isAdFree: false, content: "", imageUrls: ["/images/flower_blooming.jpg", "/images/velvet_and_thorns.jpg"], authorComment: "3화 무료 공개!" },
+      { episodeNumber: 4, title: "제 4 화: 피할 수 없는 운명", isFree: false, isAdFree: true, content: "", imageUrls: ["/images/velvet_and_thorns.jpg", "/images/flower_blooming.jpg"], authorComment: "다음 이야기가 계속됩니다." }
+    ]
   }
 ];
+
+// 독자 댓글 실시간 저장소 (Local Mock & Supabase 연동)
+const COMMENTS_STORE = {
+  "1-1": [
+    { id: "c1", nickname: "새벽독자", content: "첫 화부터 몰입감 대박이네요! 기사의 결의가 느껴집니다.", likes: 14, time: "10분 전", liked: false },
+    { id: "c2", nickname: "판타지러버", content: "작화랑 묘사가 너무 섬세해요. 다음 화 바로 달립니다!", likes: 8, time: "25분 전", liked: false },
+    { id: "c3", nickname: "웹소마스터", content: "광고 보고 4화까지 정주행 완료했습니다. 최고!", likes: 5, time: "1시간 전", liked: false }
+  ]
+};
+
+// 독자 보유 포인트 상태 (기본 1,000P)
+let userPoints = parseInt(localStorage.getItem('webnovels_user_points') || '1000', 10);
 
 // ------------------------------------------------------------
 // [State] SAMPLE_READERS (샘플 독자 계정)
@@ -331,7 +385,39 @@ function bindWebNovelsEvents() {
     switchWebNovelsView('view-creator');
   });
 
-  // Genre Filter Pills Event
+  // CDG Sub-Category Nav Tabs (웹소설 | 웹툰 | 랭킹 | 신작)
+  document.querySelectorAll('.cdg-tab-item').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.cdg-tab-item').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const subtab = tab.dataset.subtab;
+
+      if (subtab === 'novel') {
+        if (currentActiveView !== 'view-home') switchWebNovelsView('view-home');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (subtab === 'webtoon') {
+        showToast('⚡ 웹툰 서비스 준비 중입니다! 현재 웹소설을 100% 무료로 감상해보세요.');
+      } else if (subtab === 'ranking') {
+        if (currentActiveView !== 'view-home') switchWebNovelsView('view-home');
+        document.getElementById('trendingWorksSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (subtab === 'new') {
+        if (currentActiveView !== 'view-home') switchWebNovelsView('view-home');
+        document.getElementById('newWorksSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // CDG Genre Recommendation Pills
+  document.querySelectorAll('.cdg-genre-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.cdg-genre-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const genre = pill.dataset.genre || '전체';
+      renderGenreRecommendations(genre);
+    });
+  });
+
+  // Genre Filter Pills Event (Discover View)
   document.querySelectorAll('.filter-pills .pill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.filter-pills .pill').forEach(p => p.classList.remove('active'));
@@ -391,6 +477,51 @@ function bindWebNovelsEvents() {
     }
   });
 
+  // Sub-Category Navigation Bar (웹소설 | 웹툰 | 장르 | 랭킹 | 신작 | 완결작)
+  document.querySelectorAll('#subCategoryNav [data-subtab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#subCategoryNav [data-subtab]').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const subtab = tab.dataset.subtab;
+
+      if (currentActiveView !== 'view-home') {
+        switchWebNovelsView('view-home');
+      }
+
+      if (subtab === 'novel') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (subtab === 'webtoon') {
+        document.getElementById('webtoonsSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (subtab === 'genre') {
+        document.getElementById('genreRecSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (subtab === 'ranking') {
+        document.getElementById('trendingWorksSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (subtab === 'new') {
+        document.getElementById('newWorksSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (subtab === 'completed') {
+        document.getElementById('completedWorksSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Creator Studio 7-Tab Switcher
+  document.querySelectorAll('#creatorTabsBar [data-creator-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabKey = btn.dataset.creatorTab;
+      switchCreatorTab(tabKey);
+    });
+  });
+
+  // Genre Filter Pills (Home)
+  document.querySelectorAll('#cdgGenrePillsBar .cdg-genre-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('#cdgGenrePillsBar .cdg-genre-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const genre = pill.dataset.genre || '전체';
+      renderGenreRecommendations(genre);
+    });
+  });
+
   // 뷰어 하단 이동 버튼 (내 서재 / 홈)
   document.getElementById('btnReaderLibrary')?.addEventListener('click', () => {
     switchWebNovelsView('view-mypage');
@@ -400,7 +531,6 @@ function bindWebNovelsEvents() {
   });
 
   // Ad Unlock Events
-
   document.getElementById('btnWatchAdSubmit')?.addEventListener('click', startAdSimulation);
 
   // PASS Adult Verify
@@ -414,6 +544,64 @@ function bindWebNovelsEvents() {
     btn.addEventListener('click', closeAllModals);
   });
 }
+
+// 작가센터 7대 탭 전환 함수
+window.switchCreatorTab = function(tabKey) {
+  document.querySelectorAll('#creatorTabsBar [data-creator-tab]').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`#creatorTabsBar [data-creator-tab="${tabKey}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  document.querySelectorAll('.creator-tab-panel').forEach(p => p.style.display = 'none');
+  const targetPanel = document.getElementById(`creatorTab-${tabKey}`);
+  if (targetPanel) targetPanel.style.display = 'block';
+
+  if (window.lucide) window.lucide.createIcons();
+};
+
+// 작가센터 신규 회차 등록 처리
+window.handleCreateEpisodeSubmit = function(e) {
+  e.preventDefault();
+  const workId = parseInt(document.getElementById('newEpWorkSelect').value, 10);
+  const epNum = parseInt(document.getElementById('newEpNumber').value, 10);
+  const title = document.getElementById('newEpTitle').value.trim();
+  const content = document.getElementById('newEpContent').value.trim();
+  const authorComment = document.getElementById('newEpAuthorComment').value.trim();
+  const isFree = document.getElementById('newEpIsFree').checked;
+
+  const targetWork = SAMPLE_WORKS.find(w => Number(w.id) === workId);
+  if (!targetWork) {
+    showToast('작품을 찾을 수 없습니다.');
+    return;
+  }
+
+  if (!targetWork.episodes) targetWork.episodes = [];
+  
+  const isWebtoon = targetWork.contentType === 'WEBTOON';
+  const newEp = {
+    episodeNumber: epNum,
+    title: title,
+    isFree: isFree,
+    isAdFree: !isFree,
+    content: isWebtoon ? '' : content,
+    imageUrls: isWebtoon ? content.split(',').map(s => s.trim()) : [],
+    authorComment: authorComment
+  };
+
+  targetWork.episodes.push(newEp);
+  targetWork.episodesCount = targetWork.episodes.length;
+
+  showToast(`🎉 [${targetWork.title}] 제 ${epNum}화가 성공적으로 발행되었습니다!`);
+  
+  // 회차 번호 1 증가 및 폼 초기화
+  document.getElementById('newEpNumber').value = epNum + 1;
+  document.getElementById('newEpTitle').value = '';
+  document.getElementById('newEpContent').value = '';
+  document.getElementById('newEpAuthorComment').value = '';
+
+  // 작품관리 탭으로 전환
+  switchCreatorTab('works');
+  fetchCreatorDashboardData();
+};
 
 let isAdminLoggedIn = false;
 let currentActiveView = 'view-home';
@@ -754,8 +942,152 @@ async function loadSystemConfig() {
 }
 
 // ----------------------------------------------------
-// 1. Home & Discover Views
+// 1. CDG PLAY Home & Discover Views
 // ----------------------------------------------------
+
+let cdgHeroInterval = null;
+
+const getWorkCover = (w) => w.coverUrl || w.coverImageUrl || (w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg');
+const getAuthorName = (w) => (typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상';
+
+// Single Work Card HTML Template (CDG PLAY Aesthetic)
+function renderCdgWorkCardHtml(w, options = {}) {
+  const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+  const cover = getWorkCover(w);
+  const authorName = getAuthorName(w);
+  const viewFormatted = w.viewCount ? `${(w.viewCount / 1000).toFixed(1)}K` : '50.0K';
+
+  let rankBadgeHtml = '';
+  if (options.rank) {
+    rankBadgeHtml = `<div class="cdg-rank-badge rank-${options.rank}">${options.rank}</div>`;
+  }
+
+  let cornerBadgeHtml = '';
+  if (options.badge === 'NEW') {
+    cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink">NEW</span></div>`;
+  } else if (options.badge === 'FREE') {
+    cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink" style="background:#10B981;">FREE</span></div>`;
+  } else if (isAdult) {
+    cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-dark" style="color:var(--cdg-pink);">19+</span></div>`;
+  }
+
+  return `
+    <article class="cdg-work-card" onclick="openWorkDetailDirect('${w.id}')" title="${w.title}">
+      <div class="cdg-card-cover">
+        <img class="cdg-card-cover-img" src="${cover}" alt="${w.title}" loading="lazy">
+        ${rankBadgeHtml}
+        ${cornerBadgeHtml}
+      </div>
+      <div class="cdg-card-info">
+        <span class="cdg-card-tag">${w.genre || '웹소설'}</span>
+        <h3 class="cdg-card-title">${w.title}</h3>
+        <div class="cdg-card-meta">
+          <span>${authorName}</span>
+          <span><i data-lucide="eye" style="width:11px;height:11px;display:inline;vertical-align:middle;"></i> ${viewFormatted}</span>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// 1. HERO / Featured Works Slider
+function renderCdgHeroSlider(heroWorks) {
+  const slider = document.getElementById('cdgHeroSlider');
+  if (!slider || !heroWorks || heroWorks.length === 0) return;
+
+  if (cdgHeroInterval) {
+    clearInterval(cdgHeroInterval);
+    cdgHeroInterval = null;
+  }
+
+  const slidesHtml = heroWorks.map((w, index) => {
+    const cover = getWorkCover(w);
+    const authorName = getAuthorName(w);
+    const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+    return `
+      <div class="cdg-hero-slide ${index === 0 ? 'active' : ''}" data-hero-index="${index}">
+        <div class="cdg-hero-bg" style="background-image: url('${cover}');"></div>
+        <div class="cdg-hero-gradient"></div>
+        <div class="cdg-hero-body">
+          <div class="cdg-hero-badges">
+            <span class="cdg-badge-pink">🔥 실시간 추천 TOP ${index + 1}</span>
+            <span class="cdg-badge-dark">${w.genre}</span>
+            ${isAdult ? '<span class="cdg-badge-dark" style="color:var(--cdg-pink);">19+ 성인</span>' : '<span class="cdg-badge-dark">100% 무료해금</span>'}
+          </div>
+          <h2 class="cdg-hero-title">${w.title}</h2>
+          <p class="cdg-hero-desc">${w.description || '광고를 시청하면 다음 회차가 100% 무료로 해금됩니다!'}</p>
+          <div class="cdg-hero-actions">
+            <button class="btn btn-primary" onclick="openWorkDetailDirect('${w.id}')">
+              <i data-lucide="play"></i> 지금 감상하기
+            </button>
+            <button class="btn btn-outline" onclick="openWorkDetailDirect('${w.id}')">
+              작품 정보
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const dotsHtml = `
+    <div class="cdg-hero-dots">
+      ${heroWorks.map((_, i) => `<span class="cdg-dot ${i === 0 ? 'active' : ''}" data-dot-index="${i}"></span>`).join('')}
+    </div>
+  `;
+
+  slider.innerHTML = slidesHtml + dotsHtml;
+
+  // Dot click handlers
+  slider.querySelectorAll('.cdg-dot').forEach(dot => {
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(dot.dataset.dotIndex, 10);
+      switchHeroSlide(idx);
+    });
+  });
+
+  // Auto rotate every 5 seconds
+  let currentHeroIdx = 0;
+  function switchHeroSlide(targetIdx) {
+    const slides = slider.querySelectorAll('.cdg-hero-slide');
+    const dots = slider.querySelectorAll('.cdg-dot');
+    if (!slides.length) return;
+    slides.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+
+    currentHeroIdx = (targetIdx + slides.length) % slides.length;
+    slides[currentHeroIdx]?.classList.add('active');
+    dots[currentHeroIdx]?.classList.add('active');
+  }
+
+  cdgHeroInterval = setInterval(() => {
+    switchHeroSlide(currentHeroIdx + 1);
+  }, 5000);
+}
+
+// 4. Genre Recommendation Renderer
+function renderGenreRecommendations(selectedGenre = '전체') {
+  const container = document.getElementById('genreWorksGrid');
+  if (!container) return;
+
+  let filtered = SAMPLE_WORKS;
+  if (selectedGenre !== '전체') {
+    if (selectedGenre === '19+ 성인') {
+      filtered = SAMPLE_WORKS.filter(w => w.rating === 'AGE_19' || w.genre === '성인');
+    } else {
+      filtered = SAMPLE_WORKS.filter(w => (w.genre && w.genre.includes(selectedGenre)) || (selectedGenre.includes(w.genre)));
+    }
+  }
+
+  if (filtered.length === 0) {
+    filtered = SAMPLE_WORKS.slice(0, 4);
+  }
+
+  container.innerHTML = filtered.map(w => renderCdgWorkCardHtml(w)).join('');
+  if (window.lucide) lucide.createIcons({ root: container });
+}
+
+// Main Home Works Orchestrator
 async function renderHomeWorks() {
   let topWorks = [];
   let popularWorks = [];
@@ -767,72 +1099,70 @@ async function renderHomeWorks() {
     topWorks = data.topWorks || [];
     popularWorks = data.popularWorks || [];
   } catch (error) {
-    console.warn('Backend API unavailable (likely static deployment). Falling back to SAMPLE_WORKS.');
-    
-    // Fallback logic using SAMPLE_WORKS (which is synced with Supabase on load)
+    console.warn('Backend API fallback to SAMPLE_WORKS.');
     topWorks = SAMPLE_WORKS.filter(w => w.isTopRecommended).slice(0, 4);
     if (topWorks.length < 4) {
-      const fb = SAMPLE_WORKS.filter(w => !w.isTopRecommended);
-      topWorks = [...topWorks, ...fb].slice(0, 4);
+      topWorks = SAMPLE_WORKS.slice(0, 4);
     }
-    
-    popularWorks = SAMPLE_WORKS.filter(w => w.isPopularWork);
-    if (popularWorks.length < 10) {
-      const fb = SAMPLE_WORKS.filter(w => !w.isPopularWork);
-      popularWorks = [...popularWorks, ...fb].slice(0, 10);
-    }
+    popularWorks = SAMPLE_WORKS.slice(0, 8);
   }
 
   try {
-    // Helper function for cover and author
-    const getWorkCover = (w) => w.coverUrl || w.coverImageUrl || (w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg');
-    const getAuthorName = (w) => (typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상';
+    // 1. HERO Carousel (상위 3개 작품)
+    const heroWorks = SAMPLE_WORKS.slice(0, 3);
+    renderCdgHeroSlider(heroWorks);
 
-    // Top 4 Works
-    const topContainer = document.getElementById('topWorksGrid');
-    if (topContainer && topWorks) {
-      topContainer.innerHTML = topWorks.map(w => {
-        const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
-        const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
-        const tagText = isAdult ? '19+ 성인' : w.genre;
-        const cover = getWorkCover(w);
-        const authorName = getAuthorName(w);
-        return `
-          <article class="feature-card" onclick="openWorkDetailDirect('${w.id}')" style="min-height: 200px;">
-            <div class="art" style="background-image: url('${cover}'); padding-top: 100%;"></div>
-            <div class="copy" style="padding: 10px;">
-              <span class="tag ${tagClass} btn-sm" style="font-size: 0.6rem;">${tagText}</span>
-              <h3 style="font-size: 0.9rem; margin: 4px 0;">${w.title}</h3>
-              <p style="font-size: 0.7rem;">${authorName} · 뷰 ${(w.viewCount / 1000).toFixed(1)}K</p>
-            </div>
-          </article>
-        `;
+    // 2. 🔥 지금 가장 많이 읽는 작품 (Top 4 Works with Rank Badges 1~4)
+    const trendingContainer = document.getElementById('trendingWorksGrid');
+    if (trendingContainer) {
+      const top4 = SAMPLE_WORKS.slice(0, 4);
+      trendingContainer.innerHTML = top4.map((w, idx) => {
+        return renderCdgWorkCardHtml(w, { rank: idx + 1 });
       }).join('');
     }
 
-    // Now Trending Works (using popularWorks + newWorks mixed or just popularWorks for now)
-    const container = document.getElementById('homeWorksGrid');
-    if (container && popularWorks) {
-      container.innerHTML = popularWorks.map(w => {
-        const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
-        const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
-        const tagText = isAdult ? '19+ 성인' : w.genre;
-        const cover = getWorkCover(w);
-        const authorName = getAuthorName(w);
-        return `
-          <article class="feature-card" onclick="openWorkDetailDirect('${w.id}')">
-            <div class="art" style="background-image: url('${cover}');"></div>
-            <div class="copy">
-              <span class="tag ${tagClass}">${tagText}</span>
-              <h3>${w.title}</h3>
-              <p>${authorName} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
-            </div>
-          </article>
-        `;
+    // 3. ✨ 새로운 작품 (New Releases, Items 4~8)
+    const newWorksContainer = document.getElementById('newWorksGrid');
+    if (newWorksContainer) {
+      const new4 = SAMPLE_WORKS.slice(4, 8).length >= 4 ? SAMPLE_WORKS.slice(4, 8) : SAMPLE_WORKS.slice(0, 4);
+      newWorksContainer.innerHTML = new4.map(w => {
+        return renderCdgWorkCardHtml(w, { badge: 'NEW' });
       }).join('');
+    }
+
+    // 4. 장르별 추천 (기본: 전체)
+    renderGenreRecommendations('전체');
+
+    // 5. 🎨 인기 웹툰 (Webtoons Grid)
+    const webtoonsContainer = document.getElementById('webtoonsGrid');
+    if (webtoonsContainer) {
+      const webtoons = SAMPLE_WORKS.filter(w => w.contentType === 'WEBTOON');
+      webtoonsContainer.innerHTML = webtoons.map(w => renderCdgWorkCardHtml(w, { badge: 'NEW' })).join('');
+    }
+
+    // 6. 🏆 완결 명작 모음 (Completed Works Grid)
+    const completedContainer = document.getElementById('completedWorksGrid');
+    if (completedContainer) {
+      const completed = SAMPLE_WORKS.filter(w => w.isCompleted);
+      const list = completed.length > 0 ? completed : [SAMPLE_WORKS[6], SAMPLE_WORKS[7]].filter(Boolean);
+      completedContainer.innerHTML = list.map(w => renderCdgWorkCardHtml(w, { badge: 'FREE' })).join('');
+    }
+
+    // 7. 오늘의 무료 작품 (대표 무료 작품 4선)
+    const todayFreeContainer = document.getElementById('todayFreeGrid');
+    if (todayFreeContainer) {
+      const free4 = [SAMPLE_WORKS[0], SAMPLE_WORKS[1], SAMPLE_WORKS[3], SAMPLE_WORKS[5]].filter(Boolean);
+      todayFreeContainer.innerHTML = free4.map(w => {
+        return renderCdgWorkCardHtml(w, { badge: 'FREE' });
+      }).join('');
+    }
+
+    // Initialize Lucide Icons for dynamic content
+    if (window.lucide) {
+      lucide.createIcons();
     }
   } catch (error) {
-    console.error('홈 작품 로드 실패:', error);
+    console.error('CDG PLAY 랜딩페이지 작품 로드 실패:', error);
   }
 }
 
@@ -1575,13 +1905,7 @@ window.handleComingSoonEpisode = function(epNum) {
 };
 
 // ============================================================
-// [Section 3] Web Novel Reader Engine (독서 뷰어) & Ad Unlock Gate
-//
-// [Purpose]
-// - 회차 본문 렌더링, 성인 인증(AGE_19) 가드 검증, 광고 잠금(Locked) 여부 검사
-// - LocalStorage 독서 진행률 자동 저장 (`saveReadingProgress`)
-// - 폰트 크기 조절 (14px~26px), 테마 변경 (다크/라이트/세피아)
-// - 이전 화 / 다음 화 이동 제어
+// [Section 3] Web Novel & Webtoon Reader Engine (독서 뷰어) & Ad/Point Gate
 // ============================================================
 window.openReaderDirect = function(workId, epNumber) {
   const targetWorkId = Number(workId);
@@ -1609,84 +1933,229 @@ window.openReaderDirect = function(workId, epNumber) {
     return;
   }
 
-  // 2. 광고 시청 해금 필요 체크 (4화 이상 유료/잠긴 회차)
+  // 2. 광고/포인트 해금 필요 체크 (4화 이상 유료/잠긴 회차)
   if (!ep.isFree && !unlockedEpisodes.has(unlockKey)) {
     window._pendingAdUnlockEpKey = unlockKey;
     window._pendingAdUnlockWorkId = work.id;
     window._pendingAdUnlockEpNum = epNum;
+    
+    // 포인트 모달 보유 포인트 표시 동기화
+    const pointsEl = document.getElementById('modalCurrentPoints');
+    if (pointsEl) pointsEl.textContent = `${userPoints.toLocaleString()}P`;
+    
     openModal('modalAdUnlock');
     return;
   }
 
   activeEpisodeId = String(epNum);
+  window._currentReadingWorkId = work.id;
+  window._currentReadingEpNum = epNum;
+
   document.getElementById('readerWorkTitle').textContent = work.title;
   document.getElementById('readerEpTitle').textContent = ep.title;
   document.getElementById('readerHeading').textContent = `${ep.title} (${ep.episodeNumber}화)`;
 
+  // 작가의 말 업데이트
+  const authorCommentEl = document.getElementById('readerAuthorComment');
+  if (authorCommentEl) {
+    authorCommentEl.innerHTML = `<strong>작가의 말:</strong> ${ep.authorComment || '재미있게 읽으셨다면 구독과 댓글 부탁드립니다!'}`;
+  }
+
   // 실시간 읽기 내역 저장 (내 서재 연동)
   saveReadingProgress(work.id, epNum);
 
-  // 본문 텍스트 렌더링
-  const rawContent = ep.content || `본 회차는 ${ep.episodeNumber}회차 입니다.\n\n[${work.title} - ${ep.title}]\n광고를 보면 다음 회차가 연속으로 해금되어 계속 읽을 수 있습니다.`;
-  const paragraphs = rawContent.split('\n\n').filter(p => p.trim().length > 0);
-  const bodyContent = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+  // 3. 웹툰 vs 웹소설 분기 렌더링
+  const textBodyEl = document.getElementById('readerBody');
+  const webtoonViewerEl = document.getElementById('readerWebtoonViewer');
 
-  document.getElementById('readerBody').innerHTML = bodyContent;
+  if (work.contentType === 'WEBTOON' || (ep.imageUrls && ep.imageUrls.length > 0)) {
+    if (textBodyEl) textBodyEl.style.display = 'none';
+    if (webtoonViewerEl) {
+      webtoonViewerEl.style.display = 'block';
+      const images = ep.imageUrls || [work.coverUrl || '/images/stormqueen_oath.jpg'];
+      webtoonViewerEl.innerHTML = images.map(imgSrc => `
+        <div class="webtoon-cut" style="margin: 0 auto; max-width: 720px; text-align: center;">
+          <img src="${imgSrc}" alt="${work.title} ${ep.title}" style="width: 100%; height: auto; display: block; margin-bottom: 2px; border-radius: 4px;" loading="lazy">
+        </div>
+      `).join('');
+    }
+  } else {
+    if (webtoonViewerEl) webtoonViewerEl.style.display = 'none';
+    if (textBodyEl) {
+      textBodyEl.style.display = 'block';
+      const rawContent = ep.content || `본 회차는 ${ep.episodeNumber}회차 입니다.\n\n[${work.title} - ${ep.title}]\n광고를 보면 다음 회차가 연속으로 해금되어 계속 읽을 수 있습니다.`;
+      const paragraphs = rawContent.split('\n\n').filter(p => p.trim().length > 0);
+      textBodyEl.innerHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+    }
+  }
+
+  // 4. 이전 화 / 다음 화 버튼 동작 바인딩
+  const btnPrev = document.getElementById('btnPrevEp');
+  const btnNext = document.getElementById('btnNextEp');
+  if (btnPrev) {
+    btnPrev.disabled = epNum <= 1;
+    btnPrev.onclick = () => openReaderDirect(work.id, epNum - 1);
+  }
+  if (btnNext) {
+    btnNext.onclick = () => openReaderDirect(work.id, epNum + 1);
+  }
+
+  // 5. 회차별 독자 댓글 렌더링
+  renderReaderComments(work.id, epNum);
+
+  // 6. 추천 작품 렌더링
+  renderReaderRecommendations(work.id);
+
   switchWebNovelsView('view-reader');
+  window.scrollTo({ top: 0, behavior: 'instant' });
   if (window.lucide) window.lucide.createIcons();
 };
 
-// ============================================================
-// [Function] startAdSimulation
-// [Purpose] 보상형 광고 3초 시뮬레이션 재생 후 서버 사이드 검증(SSV) 및 회차 언락 완료 처리
-// [Complete Ad Unlock Flow]
-// 1. 광고 모달에서 '광고 보고 무료 열람' 클릭
-// 2. 광고 플레이어 카운트다운 시작
-// 3. 광고 완료 시 `POST /api/ads/verify-unlock` (or 모의 토큰 생성)
-// 4. `unlockedEpisodes.add(key)`로 권한 저장
-// 5. 즉시 다음 잠긴 회차 본문 뷰어로 이동
-// ============================================================
+// 회차별 댓글 렌더링
+function renderReaderComments(workId, epNum) {
+  const commentKey = `${workId}-${epNum}`;
+  const listEl = document.getElementById('readerCommentsList');
+  const countEl = document.getElementById('readerCommentCount');
+  if (!listEl) return;
+
+  const comments = COMMENTS_STORE[commentKey] || [
+    { id: `c_${Date.now()}_1`, nickname: "열혈독자", content: "이번 회차 전개 속도 정말 시원시원하네요!", likes: 12, time: "방금 전", liked: false },
+    { id: `c_${Date.now()}_2`, nickname: "새벽정주행", content: "다음 회차가 너무 궁금해서 바로 광고 보고 갑니다 ㅎㅎ", likes: 7, time: "5분 전", liked: false }
+  ];
+  COMMENTS_STORE[commentKey] = comments;
+
+  if (countEl) countEl.textContent = `(${comments.length})`;
+
+  listEl.innerHTML = comments.map(c => `
+    <div class="comment-card glass-panel p-3" style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px;">
+      <div class="flex-between mb-1" style="display:flex; justify-content:space-between; align-items:center;">
+        <strong style="color:var(--text-color); font-size:0.92rem;">👤 ${c.nickname}</strong>
+        <span class="text-muted small">${c.time}</span>
+      </div>
+      <p style="margin:6px 0; font-size:0.92rem; color:var(--text-color); line-height:1.5;">${c.content}</p>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleCommentLike('${commentKey}', '${c.id}')" style="color:${c.liked ? 'var(--cdg-pink)' : 'var(--text-muted)'}; font-size:0.8rem; padding:2px 8px;">
+          ❤️ 공감 <span id="likeCount_${c.id}">${c.likes}</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 독자 댓글 등록
+window.submitReaderComment = function() {
+  const input = document.getElementById('readerCommentInput');
+  if (!input || !input.value.trim()) {
+    showToast('댓글 내용을 입력해주세요.');
+    return;
+  }
+
+  const workId = window._currentReadingWorkId || 1;
+  const epNum = window._currentReadingEpNum || 1;
+  const commentKey = `${workId}-${epNum}`;
+
+  const user = JSON.parse(localStorage.getItem('webnovels_user') || '{}');
+  const nickname = user.nickname || '익명독자';
+
+  if (!COMMENTS_STORE[commentKey]) COMMENTS_STORE[commentKey] = [];
+  COMMENTS_STORE[commentKey].unshift({
+    id: `c_${Date.now()}`,
+    nickname: nickname,
+    content: input.value.trim(),
+    likes: 0,
+    time: "방금 전",
+    liked: false
+  });
+
+  input.value = '';
+  showToast('💬 댓글이 등록되었습니다.');
+  renderReaderComments(workId, epNum);
+};
+
+// 댓글 공감/좋아요 토글
+window.toggleCommentLike = function(commentKey, commentId) {
+  const comments = COMMENTS_STORE[commentKey] || [];
+  const target = comments.find(c => c.id === commentId);
+  if (!target) return;
+
+  target.liked = !target.liked;
+  target.likes += target.liked ? 1 : -1;
+  const countEl = document.getElementById(`likeCount_${commentId}`);
+  if (countEl) countEl.textContent = target.likes;
+  showToast(target.liked ? '💖 댓글에 공감했습니다.' : '공감을 취소했습니다.');
+};
+
+// 뷰어 하단 추천 작품 렌더링
+function renderReaderRecommendations(currentWorkId) {
+  const container = document.getElementById('readerRecommendGrid');
+  if (!container) return;
+
+  const others = SAMPLE_WORKS.filter(w => Number(w.id) !== Number(currentWorkId)).slice(0, 4);
+  container.innerHTML = others.map(w => renderCdgWorkCardHtml(w)).join('');
+  if (window.lucide) lucide.createIcons({ root: container });
+}
+
+// 🪙 포인트로 회차 즉시 열람 (100P 차감)
+window.handlePointUnlockEpisode = function() {
+  if (userPoints < 100) {
+    showToast('❌ 보유 포인트가 부족합니다. (최소 100P 필요)');
+    return;
+  }
+
+  userPoints -= 100;
+  localStorage.setItem('webnovels_user_points', String(userPoints));
+  
+  // 헤더 포인트 뱃지 업데이트
+  const badgeVal = document.getElementById('headerPointsValue');
+  if (badgeVal) badgeVal.textContent = `${userPoints.toLocaleString()}P`;
+
+  const unlockKey = window._pendingAdUnlockEpKey;
+  if (unlockKey) {
+    unlockedEpisodes.add(unlockKey);
+  }
+
+  showToast('🪙 100P를 사용하여 회차를 즉시 해금했습니다!');
+  closeAllModals();
+
+  if (window._pendingAdUnlockWorkId && window._pendingAdUnlockEpNum) {
+    openReaderDirect(window._pendingAdUnlockWorkId, window._pendingAdUnlockEpNum);
+  }
+};
+
+// 보상형 광고 시뮬레이션 및 회차 언락
 async function startAdSimulation() {
   const playerBox = document.getElementById('adPlayerBox');
   const timerText = document.getElementById('adTimerText');
   const btnWatch = document.getElementById('btnWatchAdSubmit');
 
-  playerBox.style.display = 'block';
-  btnWatch.disabled = true;
+  if (playerBox) playerBox.style.display = 'block';
+  if (btnWatch) btnWatch.disabled = true;
 
-  let seconds = 3; // 시뮬레이션용 3초
-  timerText.textContent = `📺 광고 시청 중... ${seconds}초`;
+  let seconds = 3;
+  if (timerText) timerText.textContent = `📺 보상형 광고 시청 중... ${seconds}초`;
 
   const interval = setInterval(async () => {
     seconds--;
     if (seconds > 0) {
-      timerText.textContent = `📺 광고 시청 중... ${seconds}초`;
+      if (timerText) timerText.textContent = `📺 보상형 광고 시청 중... ${seconds}초`;
     } else {
       clearInterval(interval);
-      timerText.textContent = `⚡ 광고 완료! 서버 검증(SSV) 중...`;
+      if (timerText) timerText.textContent = `⚡ 광고 완료! 작가에게 수익이 배분되었습니다.`;
 
-      // 백엔드 SSV 광고 검증 호출 시뮬레이션
-      try {
-        const mockToken = `reward_token_${Date.now()}`;
-        showToast('🎉 광고 시청 검증 완료! 4화가 무료 해금되었습니다.');
-        closeAllModals();
-
-        // 4화 본문 열어주기
-        activeEpisodeId = 'ep-4';
-        document.getElementById('readerEpTitle').textContent = '제 4 화 (Unlock)';
-        document.getElementById('readerHeading').textContent = '제 4 화';
-        document.getElementById('readerBody').innerHTML = `
-          <p><strong>[🔓 광고 Unlock 해금 회차]</strong></p>
-          <p>제 4화 본문입니다! 광고를 성공적으로 시청해 주셔서 감사합니다. 작가에게 직접 광고 수익이 전달되었습니다.</p>
-          <p>마침내 전장의 안개가 걷히고 거대한 마왕의 형상이 나타났다.</p>
-        `;
-        switchWebNovelsView('view-reader');
-      } catch (err) {
-        showToast('광고 검증 중 에러 발생');
-      } finally {
-        playerBox.style.display = 'none';
-        btnWatch.disabled = false;
+      const unlockKey = window._pendingAdUnlockEpKey;
+      if (unlockKey) {
+        unlockedEpisodes.add(unlockKey);
       }
+
+      showToast('🎉 광고 시청 완료! 회차가 무료 해금되었습니다.');
+      closeAllModals();
+
+      if (window._pendingAdUnlockWorkId && window._pendingAdUnlockEpNum) {
+        openReaderDirect(window._pendingAdUnlockWorkId, window._pendingAdUnlockEpNum);
+      }
+
+      if (playerBox) playerBox.style.display = 'none';
+      if (btnWatch) btnWatch.disabled = false;
     }
   }, 1000);
 }
@@ -1694,7 +2163,9 @@ async function startAdSimulation() {
 // Reader Theme Controls
 window.setReaderTheme = function(themeClass) {
   const reader = document.getElementById('view-reader');
-  reader.className = `main-view full-screen-reader ${themeClass}`;
+  if (reader) {
+    reader.className = `main-view full-screen-reader ${themeClass} active`;
+  }
   currentTheme = themeClass;
 };
 
@@ -1703,8 +2174,10 @@ window.changeFontSize = function(delta) {
   if (currentFontSize < 14) currentFontSize = 14;
   if (currentFontSize > 26) currentFontSize = 26;
 
-  document.getElementById('readerPaper').style.fontSize = `${currentFontSize}px`;
-  document.getElementById('fontSizeDisplay').textContent = `${currentFontSize}px`;
+  const paper = document.getElementById('readerPaper');
+  if (paper) paper.style.fontSize = `${currentFontSize}px`;
+  const disp = document.getElementById('fontSizeDisplay');
+  if (disp) disp.textContent = `${currentFontSize}px`;
 };
 
 // ============================================================

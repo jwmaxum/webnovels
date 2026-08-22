@@ -1,37 +1,54 @@
 :root {
-  /* WebNovels Premium Dark Design Tokens (Design Proposal Compliant) */
-  --color-brand-primary: #8B5CF6; /* Soft Violet */
-  --color-brand-primary-hover: #A78BFA; /* Brighter Violet */
-  --color-brand-secondary: #60A5FA; /* Cool Blue */
-  --color-brand-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
-  --color-brand-gradient-hover: linear-gradient(135deg, #9333EA 0%, #4F46E5 100%);
+  /* Comme des Garcons Play (CDG PLAY) White, Black, Pink Design Tokens */
+  --cdg-white: #FFFFFF;
+  --cdg-off-white: #F8F9FA;
+  --cdg-black: #0A0A0C;
+  --cdg-black-surface: #131318;
+  --cdg-black-card: #1A1A22;
+  --cdg-black-hover: #23232D;
+  
+  /* CDG PLAY Signature Iconic Pink */
+  --cdg-pink: #FF2A7A;
+  --cdg-pink-hover: #FF478D;
+  --cdg-pink-light: #FF6FA4;
+  --cdg-pink-soft: rgba(255, 42, 122, 0.15);
+  --cdg-pink-glow: rgba(255, 42, 122, 0.4);
+  --cdg-pink-border: rgba(255, 42, 122, 0.5);
 
-  --bg-main: #0F1117; /* Deep Charcoal (깊이감과 고급감 보장) */
-  --bg-surface: #1A1D27; /* Elevated Surface */
-  --bg-surface-hover: #222633; /* Slightly Lighter Hover */
-  --bg-panel: rgba(26, 29, 39, 0.75);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-hover: rgba(139, 92, 246, 0.35);
+  --color-brand-primary: var(--cdg-pink);
+  --color-brand-primary-hover: var(--cdg-pink-hover);
+  --color-brand-secondary: #FF6FA4;
+  --color-brand-gradient: linear-gradient(135deg, #FF2A7A 0%, #FF5388 100%);
+  --color-brand-gradient-hover: linear-gradient(135deg, #FF146A 0%, #E60058 100%);
 
-  --text-primary: #F1F5F9; /* Almost White */
-  --text-secondary: #94A3B8; /* Muted Gray */
-  --text-tertiary: #64748B; /* Dim Gray */
-  --text-muted: #64748B;
+  --bg-main: #0A0A0C; /* CDG Deep Pure Black */
+  --bg-surface: #131318;
+  --bg-surface-hover: #1E1E26;
+  --bg-panel: rgba(19, 19, 24, 0.85);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-color-hover: var(--cdg-pink-border);
 
-  --accent-blue: #60A5FA;
-  --accent-rose: #F472B6; /* 19+ 성인 뱃지 Soft Rose */
-  --accent-emerald: #34D399; /* FREE 뱃지 Soft Emerald */
-  --accent-amber: #FBBF24;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --text-tertiary: #71717A;
+  --text-muted: #71717A;
 
-  --font-ui: 'Pretendard', 'Inter', 'Noto Sans KR', system-ui, sans-serif;
+  --accent-blue: #38BDF8;
+  --accent-rose: #FF2A7A; /* CDG 19+ / 성인 뱃지 */
+  --accent-emerald: #10B981; /* FREE 뱃지 */
+  --accent-amber: #F59E0B;
+
+  --font-ui: 'Pretendard', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Outfit', 'Pretendard', sans-serif;
   --font-reader: 'Noto Serif KR', serif;
 
-  --header-height: 64px;
-  --bottom-nav-height: 64px;
+  --header-height: 56px;
+  --subnav-height: 48px;
+  --bottom-nav-height: 60px;
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 9999px;
 }
 
 /* Base Setup */
@@ -56,22 +73,23 @@ body {
   min-height: 100vh;
 }
 
-/* Header (WebNovels Branding - Spec 5.1) */
+/* Header (CDG PLAY Aesthetic - Pure Black, White, Iconic Pink) */
 .webnovels-header {
   height: var(--header-height);
-  background: rgba(15, 17, 23, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(10, 10, 12, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 120;
 }
 
 .header-inner {
   max-width: 1280px;
   margin: 0 auto;
   height: 100%;
-  padding: 0 20px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -80,149 +98,233 @@ body {
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
-  color: var(--text-primary);
+  color: var(--cdg-white);
 }
 
-.brand-symbol {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, #A78BFA 0%, #6366F1 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(167, 139, 250, 0.35);
+.cdg-heart-icon {
+  width: 24px;
+  height: 24px;
+  fill: var(--cdg-pink);
+  filter: drop-shadow(0 2px 8px var(--cdg-pink-glow));
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.brand-link:hover .cdg-heart-icon {
+  transform: scale(1.15) rotate(-4deg);
 }
 
 .brand-text {
   font-family: var(--font-heading);
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--cdg-white);
+  text-transform: uppercase;
 }
 
 .brand-highlight {
-  color: #A78BFA;
+  color: var(--cdg-pink);
 }
 
-/* Desktop Navigation (Spec 5.1: Soft hover background highlight) */
+/* Sub-header Navigation Tabs (웹소설 | 웹툰 | 랭킹 | 신작) */
+.cdg-sub-nav {
+  background: var(--cdg-black);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: var(--header-height);
+  z-index: 110;
+}
+
+.cdg-sub-nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cdg-sub-nav-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.cdg-tab-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--cdg-text-sub);
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.cdg-tab-item:hover {
+  color: var(--cdg-white);
+}
+
+.cdg-tab-item.active {
+  color: var(--cdg-white);
+  font-weight: 800;
+}
+
+.cdg-tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  background: var(--cdg-pink);
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 -2px 10px var(--cdg-pink-glow);
+}
+
+/* Desktop Navigation Menu */
 .desktop-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .nav-link {
-  color: #E2E8F0;
+  color: var(--cdg-text-sub);
   text-decoration: none;
-  font-weight: 500;
-  font-size: 14.5px;
+  font-weight: 600;
+  font-size: 14px;
   padding: 6px 14px;
-  border-radius: 8px;
-  letter-spacing: 0;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-sm);
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
 }
 
 .nav-link:hover {
-  background: rgba(139, 92, 246, 0.15);
-  color: #F1F5F9;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cdg-white);
 }
 
 .nav-link.active {
-  background: rgba(139, 92, 246, 0.22);
-  color: #ffffff;
-  font-weight: 600;
+  background: var(--cdg-pink-soft);
+  color: var(--cdg-pink);
+  font-weight: 700;
 }
 
 .nav-highlight {
-  color: #34D399 !important;
-  font-weight: 600;
+  color: var(--cdg-pink) !important;
+  font-weight: 700;
 }
 
 .nav-admin {
-  color: #F472B6 !important;
+  color: #A1A1AA !important;
   font-weight: 600;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* Button System (Type Scale Spec: 14px, weight: 600, letter-spacing: 0.01em) */
+/* Button System (CDG PLAY Crisp Aesthetics) */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 6px;
+  padding: 8px 18px;
   border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  line-height: 1.5;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
   cursor: pointer;
   border: 1px solid transparent;
   outline: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: transparent;
-  color: var(--text-primary);
+  color: var(--cdg-white);
   text-decoration: none;
   user-select: none;
 }
 
 .btn svg {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   stroke: currentColor;
   fill: none;
 }
 
-.btn-hero, .btn-primary {
-  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%) !important;
+.btn-primary, .btn-hero {
+  background: var(--cdg-pink) !important;
   color: #ffffff !important;
-  border: none !important;
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35) !important;
+  border: 1px solid var(--cdg-pink) !important;
+  box-shadow: 0 4px 16px var(--cdg-pink-glow) !important;
 }
 
-.btn-hero:hover, .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55) !important;
-  background: linear-gradient(135deg, #9333EA 0%, #4F46E5 100%) !important;
+.btn-primary:hover, .btn-hero:hover {
+  background: var(--cdg-pink-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 42, 122, 0.55) !important;
+}
+
+.btn-cdg-white {
+  background: #ffffff !important;
+  color: #0A0A0C !important;
+  border: 1px solid #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.btn-cdg-white:hover {
+  background: #F4F4F5 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2) !important;
 }
 
 .btn-outline {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--cdg-white) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(8px);
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--cdg-white) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .btn-icon {
-  padding: 10px;
+  padding: 8px;
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.06) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #ffffff !important;
+  color: var(--cdg-white) !important;
+}
+
+.btn-icon:hover {
+  background: var(--cdg-pink-soft) !important;
+  border-color: var(--cdg-pink-border) !important;
+  color: var(--cdg-pink) !important;
 }
 
 .btn-sm {
@@ -307,64 +409,440 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Hero Carousel */
-.hero-carousel-wrapper {
-  position: relative;
-  height: 380px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border-color);
-}
+/* ============================================================
+   CDG PLAY Mobile & Landing Page Design System
+   ============================================================ */
 
-.hero-slide {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-}
-
-.hero-bg {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-size: cover;
-  background-position: center;
-  filter: blur(20px) brightness(0.4);
-}
-
-.hero-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(180deg, rgba(9, 13, 22, 0.4) 0%, #090d16 100%);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 10;
+/* CDG Section Headings */
+.cdg-section {
+  padding: 20px 16px;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 40px;
 }
 
-.hero-title {
+.cdg-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cdg-section-title {
   font-family: var(--font-heading);
-  font-size: 2.4rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  margin-bottom: 10px;
+  letter-spacing: -0.03em;
+  color: var(--cdg-white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.hero-desc {
-  font-size: 1.05rem;
-  color: var(--text-secondary);
+.cdg-section-title span.highlight-pink {
+  color: var(--cdg-pink);
+}
+
+.cdg-more-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--cdg-text-sub);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+
+.cdg-more-link:hover {
+  color: var(--cdg-pink);
+}
+
+/* 1. HERO / Featured Carousel (CDG PLAY High-Contrast Visuals) */
+.cdg-hero-container {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 16px 16px 16px;
+  overflow: hidden;
+}
+
+.cdg-hero-slider {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--cdg-black-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+}
+
+.cdg-hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px 20px;
+}
+
+.cdg-hero-slide.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cdg-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  filter: brightness(0.65);
+  transition: transform 6s cubic-bezier(0.1, 0.8, 0.3, 1);
+}
+
+.cdg-hero-slide.active .cdg-hero-bg {
+  transform: scale(1.05);
+}
+
+.cdg-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.1) 0%, rgba(10, 10, 12, 0.7) 50%, #0A0A0C 100%);
+}
+
+.cdg-hero-body {
+  position: relative;
+  z-index: 5;
   max-width: 600px;
-  margin-bottom: 16px;
 }
 
-.hero-tags span {
+.cdg-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.cdg-badge-pink {
+  background: var(--cdg-pink);
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  box-shadow: 0 2px 8px var(--cdg-pink-glow);
+}
+
+.cdg-badge-dark {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  color: var(--cdg-white);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.cdg-hero-title {
+  font-family: var(--font-heading);
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.cdg-hero-desc {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.45;
+  margin-bottom: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cdg-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cdg-hero-dots {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cdg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.35);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.cdg-dot.active {
+  width: 18px;
+  background: var(--cdg-pink);
+  box-shadow: 0 0 8px var(--cdg-pink-glow);
+}
+
+/* 2. Horizontal Scrollable Work Rows (Mobile First Touch Optimized) */
+.cdg-scroll-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.cdg-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Work Card Component (CDG PLAY Aesthetic) */
+.cdg-work-card {
+  flex: 0 0 calc(50% - 6px);
+  min-width: 135px;
+  max-width: 190px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--cdg-black-card);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.cdg-work-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--cdg-pink-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px var(--cdg-pink-soft);
+}
+
+.cdg-work-card:active {
+  transform: scale(0.98);
+}
+
+.cdg-card-cover {
+  position: relative;
+  width: 100%;
+  padding-top: 138%; /* 1:1.38 Novel Poster Ratio */
+  background-size: cover;
+  background-position: center;
+  background-color: #1a1a22;
+  overflow: hidden;
+}
+
+.cdg-card-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.cdg-work-card:hover .cdg-card-cover-img {
+  transform: scale(1.05);
+}
+
+/* Rank Badges (1, 2, 3, 4 with CDG Bold Pink/Black) */
+.cdg-rank-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1;
+  z-index: 3;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.cdg-rank-badge.rank-1 {
+  background: var(--cdg-pink);
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px var(--cdg-pink-glow);
+}
+
+.cdg-rank-badge.rank-2,
+.cdg-rank-badge.rank-3,
+.cdg-rank-badge.rank-4 {
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(6px);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Corner Badges */
+.cdg-corner-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+}
+
+.cdg-card-info {
+  padding: 10px 10px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cdg-card-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--cdg-pink);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
+.cdg-card-title {
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--cdg-white);
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cdg-card-meta {
+  font-size: 0.72rem;
+  color: var(--cdg-text-muted);
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 3. Genre Recommendation Pills */
+.cdg-genre-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.cdg-genre-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.cdg-genre-pill {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: var(--cdg-black-card);
+  border: 1px solid var(--border-color);
+  color: var(--cdg-text-sub);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  scroll-snap-align: start;
+}
+
+.cdg-genre-pill:hover {
+  border-color: var(--cdg-pink-border);
+  color: var(--cdg-white);
+}
+
+.cdg-genre-pill.active {
+  background: var(--cdg-pink);
+  border-color: var(--cdg-pink);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px var(--cdg-pink-glow);
+}
+
+/* 4. Today's Free Works Banner */
+.cdg-free-banner {
+  background: linear-gradient(135deg, #181822 0%, #121218 100%);
+  border: 1px solid var(--cdg-pink-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cdg-free-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, var(--cdg-pink-soft) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cdg-free-banner-content {
+  position: relative;
+  z-index: 2;
+}
+
+.cdg-free-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--cdg-pink-soft);
+  color: var(--cdg-pink);
+  border: 1px solid var(--cdg-pink-border);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  margin-bottom: 8px;
+}
+
+.cdg-free-banner h3 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-bottom: 4px;
+}
+
+.cdg-free-banner p {
   font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 4px 12px;
-  border-radius: 16px;
-  margin-right: 6px;
-  color: var(--text-secondary);
+  color: var(--cdg-text-sub);
+  line-height: 1.4;
 }
 
 .glass-panel {
@@ -1279,6 +1757,28 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
 }
 
 /* Responsive Breakpoints (design.md Section 5) */
+@media (min-width: 769px) {
+  .cdg-scroll-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    overflow-x: visible;
+  }
+  .cdg-work-card {
+    max-width: 100%;
+    flex: none;
+  }
+  .cdg-hero-slider {
+    min-height: 380px;
+  }
+  .cdg-hero-title {
+    font-size: 2rem;
+  }
+  .cdg-sub-nav {
+    display: none; /* Desktop uses main nav */
+  }
+}
+
 @media (max-width: 992px) {
   .admin-cms-layout {
     flex-direction: column;
@@ -1300,7 +1800,7 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   .detail-cover-box img { width: 140px; height: 200px; margin: 0 auto; }
   .detail-actions { display: none; }
   .sticky-bottom-cta { display: flex; }
-  .webnovels-body { padding-bottom: var(--bottom-nav-height); }
+  .webnovels-body { padding-bottom: calc(var(--bottom-nav-height) + 20px); }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .menu-16-grid { grid-template-columns: repeat(2, 1fr); }
   .grid-2-col { grid-template-columns: 1fr; }
@@ -1925,4 +2425,54 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   .library-reading-card { grid-template-columns: 72px 1fr; }
   .library-reading-card img { width: 72px; height: 96px; }
   .library-reading-card .btn { grid-column: 1 / -1; width: 100%; }
+}
+
+/* ============================================================
+   [3-User Roles & Webtoon/Comments CDG Theme Additions]
+   ============================================================ */
+.webtoon-viewer-box {
+  background: #000000;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 10px 0;
+}
+
+.webtoon-cut img {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  transition: transform 0.2s ease;
+}
+
+.reader-comments-box {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 24px;
+}
+
+.comment-card {
+  transition: all 0.2s ease;
+}
+
+.comment-card:hover {
+  background: rgba(255, 42, 122, 0.04) !important;
+  border-color: rgba(255, 42, 122, 0.3) !important;
+}
+
+.user-points-badge {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.user-points-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(255, 42, 122, 0.4);
+}
+
+.creator-tab-panel {
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

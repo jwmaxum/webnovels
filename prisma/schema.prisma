@@ -30,22 +30,24 @@ model User {
   phone           String?
   role            String               @default("READER") // 권한 구분: READER, AUTHOR, SUB_ADMIN, SUPER_ADMIN, ADMIN
   permissions     String?              // SUB_ADMIN용 메뉴 접근 권한 JSON 문자열 (예: ["USERS", "WORKS", "SETTLEMENTS"])
+  points          Int                  @default(1000)     // 보유 포인트/코인
   isAdultVerified Boolean              @default(false)    // KCP 본인/성인인증 완료 여부 (19세 이상만 성인 콘텐츠 열람 가능)
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 
   // 관계 정의
-  profile         UserProfile?
-  author          Author?
-  readingHistories UserReadingHistory[]
-  adHistories     UserAdHistory[]
-  unlocks         EpisodeUnlock[]
-  comments        Comment[]
-  likes           Like[]
-  reports         Report[]
-  orders          Order[]
-  subscriptions   AuthorSubscription[]
-  workFavorites   WorkFavorite[]
+  profile           UserProfile?
+  author            Author?
+  readingHistories  UserReadingHistory[]
+  adHistories       UserAdHistory[]
+  unlocks           EpisodeUnlock[]
+  comments          Comment[]
+  likes             Like[]
+  reports           Report[]
+  orders            Order[]
+  subscriptions     AuthorSubscription[]
+  workFavorites     WorkFavorite[]
+  pointTransactions PointTransaction[]
 }
 
 // ------------------------------------------------------------
@@ -99,13 +101,14 @@ model AuthorAccount {
 }
 
 // ------------------------------------------------------------
-// [Model] Work (웹소설 작품 정보)
-// [Purpose] 작품 메타데이터, 장르, 연재 요일, 연령가(ALL, AGE_15, AGE_18), 랭킹 플래그
+// [Model] Work (웹소설 및 웹툰 작품 정보)
+// [Purpose] 작품 메타데이터, 유형(NOVEL/WEBTOON), 장르, 연령가, 랭킹 플래그
 // ------------------------------------------------------------
 model Work {
   id               String          @id @default(uuid())
   authorId         String
   title            String
+  contentType      String          @default("NOVEL") // NOVEL(웹소설), WEBTOON(웹툰)
   coverImageUrl    String?
   description      String
   genre            String          // 판타지, 로맨스, 무협, 현대판타지, SF 등
@@ -113,6 +116,7 @@ model Work {
   rating           String          @default("ALL") // 연령 등급: ALL, AGE_15, AGE_18 (19금은 성인인증 필수)
   aiUsageType      String          @default("NONE") // AI 활용 여부: NONE, ASSISTED, FULL
   status           String          @default("ONGOING") // 연재 상태: ONGOING(연재중), PAUSED(휴재), COMPLETED(완결)
+  isCompleted      Boolean         @default(false) // 완결 여부
   publishDays      String          @default("MON,WED,FRI") // 연재 요일 (콤마 구분)
   isTopRecommended Boolean         @default(false) // 메인 상단 추천작 노출 여부
   isPopularWork    Boolean         @default(false) // 인기 작품 배지 및 탭 노출 여부
@@ -121,10 +125,11 @@ model Work {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
-  author        Author          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  episodes      Episode[]
-  statistics    WorkStatistics?
-  favorites     WorkFavorite[]
+  author          Author          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  episodes        Episode[]
+  statistics      WorkStatistics?
+  favorites       WorkFavorite[]
+  contentReviews  ContentReview[]
 }
 
 // ------------------------------------------------------------
@@ -147,14 +152,15 @@ model WorkStatistics {
 
 // ------------------------------------------------------------
 // [Model] Episode (회차 상세 정보)
-// [Purpose] 소설 본문 텍스트, 무료/유료 여부, 광고 언락 필요 여부, 예약 발행
+// [Purpose] 소설 본문 텍스트 또는 웹툰 이미지 배열, 무료/유료 여부, 광고 언락
 // ------------------------------------------------------------
 model Episode {
   id                String            @id @default(uuid())
   workId            String
   episodeNumber     Int               // 회차 번호 (1화, 2화, ...)
   title             String
-  content           String            // 회차 본문 텍스트 (마크다운/HTML)
+  content           String            // 회차 본문 텍스트 (소설)
+  imageUrls         String?           // 웹툰 컷 이미지 URL JSON 배열 문자열
   authorComment     String?           // 작가의 말
   isFree            Boolean           @default(false) // 무료 공개 회차 여부 (true면 광고 없이 즉시 열람)
   adUnlockRequired  Boolean           @default(true)  // 보상형 광고 시청 후 언락 필요 여부
@@ -472,5 +478,38 @@ model SystemConfig {
   portoneImpSecret String?
 
   updatedAt        DateTime @updatedAt
+}
+
+// ------------------------------------------------------------
+// [Model] PointTransaction (포인트 충전 및 회차 열람 차감 내역)
+// ------------------------------------------------------------
+model PointTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // CHARGE, USE, REFUND
+  amount    Int      // 증감 포인트
+  workId    String?
+  episodeId String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------------
+// [Model] ContentReview (운영자 콘텐츠 심사/검수)
+// ------------------------------------------------------------
+model ContentReview {
+  id           String    @id @default(uuid())
+  workId       String
+  episodeId    String?
+  workTitle    String
+  authorName   String
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectReason String?
+  reviewerName String?
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  work         Work      @relation(fields: [workId], references: [id], onDelete: Cascade)
 }
 
