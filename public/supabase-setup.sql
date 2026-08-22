@@ -306,17 +306,19 @@ INSERT INTO readers (id, username, password_hash, email, phone, is_adult_verifie
 (3, 'reader3', '!12345', 'reader3@webnovels.com', '+82-010-111-1113', true, '프리미엄 구독중')
 ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, phone = EXCLUDED.phone, is_adult_verified = EXCLUDED.is_adult_verified;
 
--- 작가 회원 8명 시드 데이터 (작품DB와 1:1 매칭)
+-- 작가 회원 10명 시드 데이터 (작품DB와 1:1 매칭, ID: writer1~10@webnovels.com, PW: !12345)
 INSERT INTO authors (id, username, password_hash, email, pen_name, work_title, birthdate, address, bank_info, status) VALUES
-(1, 'writer1', '!123456', 'writer1@webnovels.com', '판타지마스터', '대적자: 신을 삼킨 기사', '1990-01-15', '서울특별시 강남구 테헤란로 123', '국민은행 999-888-777666', '공식 인증 작가'),
-(2, 'writer2', '!123456', 'writer2@webnovels.com', '무협의신', '천마의 귀환', '1985-05-20', '서울특별시 서초구 반포대로 45', '신한은행 110-222-333444', '공식 인증 작가'),
-(3, 'writer3', '!123456', 'writer3@webnovels.com', '나이트로즈', '금기의 계약', '1992-08-12', '경기도 성남시 분당구 판교로 78', '우리은행 1002-555-666777', '공식 인증 작가'),
-(4, 'writer4', '!123456', 'writer4@webnovels.com', '로맨스퀸', '황제의 유일한 후궁', '1994-11-03', '서울특별시 마포구 월드컵북로 99', '하나은행 222-333-444555', '공식 인증 작가'),
-(5, 'writer5', '!123456', 'writer5@webnovels.com', '스페이스로그', '성간 항로: 마지막 항해사', '1988-03-30', '대전광역시 유성구 대학로 100', '농협 301-777-888999', '공식 인증 작가'),
-(6, 'writer6', '!123456', 'writer6@webnovels.com', '도시마법사', '서울에 나타난 마왕', '1995-07-07', '서울특별시 송파구 올림픽로 200', '카카오뱅크 3333-01-234567', '공식 인증 작가'),
-(7, 'writer7', '!123456', 'writer7@webnovels.com', '공포작가', '죽은 자들의 학교', '1991-10-31', '부산광역시 해운대구 센텀서로 30', '기업은행 010-9999-8888', '공식 인증 작가'),
-(8, 'writer8', '!123456', 'writer8@webnovels.com', '검성', '검의 전설: 천하제일인', '1987-12-25', '대구광역시 수성구 달구벌대로 500', '대구은행 508-12-345678', '공식 인증 작가')
-ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, address = EXCLUDED.address, bank_info = EXCLUDED.bank_info;
+(1, 'writer1', '!12345', 'writer1@webnovels.com', '판타지마스터', '대적자: 신을 삼킨 기사', '1990-01-15', '서울특별시 강남구 테헤란로 123', '국민은행 999-888-777666', '공식 인증 작가'),
+(2, 'writer2', '!12345', 'writer2@webnovels.com', '무협의신', '천마의 귀환', '1985-05-20', '서울특별시 서초구 반포대로 45', '신한은행 110-222-333444', '공식 인증 작가'),
+(3, 'writer3', '!12345', 'writer3@webnovels.com', '나이트로즈', '금기의 계약', '1992-08-12', '경기도 성남시 분당구 판교로 78', '우리은행 1002-555-666777', '공식 인증 작가'),
+(4, 'writer4', '!12345', 'writer4@webnovels.com', '로맨스퀸', '황제의 유일한 후궁', '1994-11-03', '서울특별시 마포구 월드컵북로 99', '하나은행 222-333-444555', '공식 인증 작가'),
+(5, 'writer5', '!12345', 'writer5@webnovels.com', '스페이스로그', '성간 항로: 마지막 항해사', '1988-03-30', '대전광역시 유성구 대학로 100', '농협 301-777-888999', '공식 인증 작가'),
+(6, 'writer6', '!12345', 'writer6@webnovels.com', '도시마법사', '서울에 나타난 마왕', '1995-07-07', '서울특별시 송파구 올림픽로 200', '카카오뱅크 3333-01-234567', '공식 인증 작가'),
+(7, 'writer7', '!12345', 'writer7@webnovels.com', '공포작가', '죽은 자들의 학교', '1991-10-31', '부산광역시 해운대구 센텀서로 30', '기업은행 010-9999-8888', '공식 인증 작가'),
+(8, 'writer8', '!12345', 'writer8@webnovels.com', '검성', '검의 전설: 천하제일인', '1987-12-25', '대구광역시 수성구 달구벌대로 500', '대구은행 508-12-345678', '공식 인증 작가'),
+(9, 'writer9', '!12345', 'writer9@webnovels.com', '스튜디오노바', '[웹툰] 신의 기사단', '1993-04-10', '서울특별시 마포구 독막로 50', '국민은행 111-222-333444', '공식 인증 작가'),
+(10, 'writer10', '!12345', 'writer10@webnovels.com', '로즈코믹스', '[웹툰] 황후의 비밀 화원', '1996-09-18', '서울특별시 강남구 학동로 20', '신한은행 333-444-555666', '공식 인증 작가')
+ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, password_hash = EXCLUDED.password_hash, address = EXCLUDED.address, bank_info = EXCLUDED.bank_info;
 
 -- 14. 관리자용 RPC 함수 (보안 검증 및 생성)
 CREATE OR REPLACE FUNCTION verify_admin_login(p_email TEXT, p_password TEXT)

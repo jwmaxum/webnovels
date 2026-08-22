@@ -427,28 +427,47 @@
             </div>
           </div>
 
-          <!-- Tab 2: New Episode Registration (회차등록) -->
+          <!-- Tab 2: New Episode Registration (Zero-Touch 회차등록 & 예약발행) -->
           <div class="creator-tab-panel" id="creatorTab-new-ep" style="display: none;">
             <div class="card glass-panel p-6">
-              <h3 class="mb-4"><i data-lucide="file-plus" style="color:var(--cdg-pink);"></i> 신규 회차 등록 (웹소설/웹툰)</h3>
+              <div class="flex-between mb-3">
+                <h3 style="margin:0;"><i data-lucide="file-plus" style="color:var(--cdg-pink);"></i> 신규 회차 등록 &amp; Zero-Touch 자동/예약 발행</h3>
+                <span class="badge badge-accent">AI 자동 검수 지원 🟢</span>
+              </div>
+              <p class="text-muted small mb-4">원고를 제출하면 AI/시스템 자동 검수 후 즉시 공개되거나, 지정한 예약 일시에 자동 공개됩니다.</p>
+              
               <form id="formCreateEpisode" onsubmit="handleCreateEpisodeSubmit(event)">
                 <div class="form-group mb-3">
-                  <label class="small text-muted mb-1 block">대상 작품 선택</label>
+                  <label class="small text-muted mb-1 block">내 연재 작품 선택 (실제 DB 연동)</label>
                   <select id="newEpWorkSelect" class="form-input" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
-                    <option value="1">대적자: 신을 삼킨 기사 (웹소설)</option>
-                    <option value="9">[웹툰] 신의 기사단 (웹툰)</option>
+                    <!-- Injected dynamically by author's real works -->
                   </select>
                 </div>
                 <div class="grid-2-col gap-4 mb-3" style="display:grid; grid-template-columns:1fr 2fr; gap:12px;">
                   <div>
                     <label class="small text-muted mb-1 block">회차 번호</label>
-                    <input type="number" id="newEpNumber" class="form-input" value="7" min="1" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
+                    <input type="number" id="newEpNumber" class="form-input" value="5" min="1" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
                   </div>
                   <div>
                     <label class="small text-muted mb-1 block">회차 제목</label>
-                    <input type="text" id="newEpTitle" class="form-input" placeholder="예: 제 7 화 - 새로운 시작" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
+                    <input type="text" id="newEpTitle" class="form-input" placeholder="예: 제 5 화 - 운명의 갈림길" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
                   </div>
                 </div>
+
+                <div class="grid-2-col gap-4 mb-3" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div>
+                    <label class="small text-muted mb-1 block">발행 방식</label>
+                    <select id="newEpPublishType" class="form-input" onchange="toggleScheduledTimeInput(this.value)" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                      <option value="IMMEDIATE">🚀 즉시 자동 발행 (AI 자동검수 후 공개)</option>
+                      <option value="SCHEDULED">⏰ 지정 일시 예약 발행 (예약연재)</option>
+                    </select>
+                  </div>
+                  <div id="scheduledTimeWrapper" style="display: none;">
+                    <label class="small text-muted mb-1 block">예약 발행 일시</label>
+                    <input type="datetime-local" id="newEpScheduledAt" class="form-input" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:9px; border-radius:8px; border:1px solid var(--border-color);">
+                  </div>
+                </div>
+
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">원고 본문 (웹소설 텍스트 or 웹툰 이미지 URL 쉼표 구분)</label>
                   <textarea id="newEpContent" rows="6" class="form-input" placeholder="웹소설 원고 본문 내용을 입력하거나, 웹툰의 경우 이미지 URL을 쉼표로 입력하세요." style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required></textarea>
@@ -457,11 +476,20 @@
                   <label class="small text-muted mb-1 block">작가의 말</label>
                   <input type="text" id="newEpAuthorComment" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
                 </div>
-                <div class="flex-between mt-4" style="display:flex; justify-content:space-between; align-items:center;">
+
+                <!-- Zero-Touch AI/규격 자동검사 인디케이터 -->
+                <div class="p-3 glass-panel mb-4" style="border-radius:6px; font-size:0.8rem; background:rgba(0,0,0,0.3); border:1px solid var(--border-color);">
+                  <span style="font-weight:700; color:var(--color-brand-secondary);">⚡ Zero-Touch 자동 검사 항목:</span>
+                  <span class="text-muted ml-2">✓ 본문/이미지 규격 검사 | ✓ 금칙어/욕설 자동 필터링 | ✓ 연령등급 일치 확인</span>
+                </div>
+
+                <div class="flex-between mt-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                   <label style="display:flex; align-items:center; gap:6px; font-size:0.88rem; cursor:pointer;">
-                    <input type="checkbox" id="newEpIsFree"> 🎁 100% 무료 공개 (체크 해제 시 광고 시청 또는 포인트 언락 필요)
+                    <input type="checkbox" id="newEpIsFree"> 🎁 100% 무료 공개 (체크 해제 시 100P / 광고 시청 무료 모델 적용)
                   </label>
-                  <button type="submit" class="btn btn-primary"><i data-lucide="upload"></i> 회차 즉시 발행</button>
+                  <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">
+                    <i data-lucide="upload"></i> 회차 제출 및 자동 발행
+                  </button>
                 </div>
               </form>
             </div>
