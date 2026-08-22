@@ -386,66 +386,63 @@ async function fetchWorksFromSupabase() {
   if (!supabaseClient) return null;
 
   try {
-    const { data: works, error: worksErr } = await supabaseClient
+    const { data: works, error } = await supabaseClient
       .from('works')
       .select('*')
       .order('id', { ascending: true });
 
-    if (worksErr || !works || works.length === 0) {
-      console.warn('[Supabase Works] 작품 DB 미존재 또는 비어있음, 시드 실행 시도...');
-      return null;
-    }
+    if (error || !works || works.length === 0) return null;
 
     const { data: episodes, error: epErr } = await supabaseClient
       .from('episodes')
       .select('*')
       .order('episode_number', { ascending: true });
 
-    // Supabase DB 데이터를 프론트엔드 포맷으로 바인딩
-    return works.map(w => {
-      const rawWorkEps = (episodes || []).filter(e => Number(e.work_id) === Number(w.id));
-
-      // 중복 회차 번호 제거 (deduplication)
-      const epMap = new Map();
-      rawWorkEps.forEach(e => {
-        if (!epMap.has(e.episode_number)) {
-          epMap.set(e.episode_number, {
-            episodeNumber: e.episode_number,
-            title: e.title || `제 ${e.episode_number} 화`,
-            isFree: e.is_free,
-            isAdFree: e.is_ad_free,
-            content: e.content || `본 회차는 ${e.episode_number}회차 입니다.`
-          });
-        }
+    const epMap = {};
+    if (!epErr && episodes) {
+      episodes.forEach(ep => {
+        if (!epMap[ep.work_id]) epMap[ep.work_id] = [];
+        epMap[ep.work_id].push({
+          id: ep.id,
+          episodeNumber: ep.episode_number,
+          title: ep.title,
+          isFree: ep.is_free,
+          isAdFree: ep.is_ad_free,
+          content: ep.content || '',
+          imageUrls: ep.image_urls || [],
+          authorComment: ep.author_comment || ''
+        });
       });
+    }
 
-      let finalEps = Array.from(epMap.values()).sort((a, b) => a.episodeNumber - b.episodeNumber);
-
-      // 회차가 없거나 비어있는 경우 기본 1~6회차 자동 주입
-      if (finalEps.length === 0) {
-        finalEps = getFallback6Episodes(w.title);
-      }
+    return works.map(w => {
+      const isAdult = Array.isArray(w.genre) && (w.genre.includes('성인') || w.genre.includes('19세 이상'));
+      const mainGenre = Array.isArray(w.genre) && w.genre.length > 0 ? w.genre[0] : '판타지';
+      const coverUrl = w.cover_image 
+        ? (w.cover_image.startsWith('/') ? w.cover_image : `/images/${w.cover_image}`)
+        : '/images/stormqueen_oath.jpg';
 
       return {
-        id: w.id,
+        id: Number(w.id),
         title: w.title,
         author: w.author,
-        genre: Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'),
-        rating: Array.isArray(w.genre) && w.genre.includes('19세 이상') ? 'AGE_19' : 'ALL',
-        aiUsageType: Array.isArray(w.tags) && w.tags[0] ? w.tags[0] : 'NONE',
-        coverUrl: w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg',
+        contentType: w.content_type || 'NOVEL',
+        genre: mainGenre,
+        tags: Array.isArray(w.tags) ? w.tags.join(', ') : (w.tags || 'AI NONE'),
         description: w.description,
-        viewCount: w.view_count || 100000,
+        coverUrl: coverUrl,
+        viewCount: Number(w.view_count || 0),
         status: w.status || 'ONGOING',
+        isCompleted: !!w.is_completed,
         isTopRecommended: !!w.is_top_recommended,
         isPopularWork: !!w.is_popular_work,
         isNewWork: !!w.is_new_work,
-        episodesCount: finalEps.length,
-        episodes: finalEps
+        rating: isAdult ? 'AGE_19' : 'ALL',
+        episodes: epMap[w.id] || []
       };
     });
   } catch (err) {
-    console.warn('[Supabase Works] 조회 에러:', err.message);
+    console.warn('[Supabase Works] 전체 조회 실패:', err.message);
     return null;
   }
 }
@@ -879,6 +876,12 @@ window.WebNovelsAdmin = {
   fetchWorksFromSupabase,
   seedWorksDatasetToSupabase,
   updateWorkAdminSetting,
+  createWorkInDB,
+  deleteWorkFromDB,
+  fetchEpisodesByWorkId,
+  updateEpisodeSetting,
+  createEpisodeInDB,
+  deleteEpisodeFromDB,
   fetchReadersFromSupabase,
   fetchAuthorsFromSupabase,
   seedRealUsersToSupabase,

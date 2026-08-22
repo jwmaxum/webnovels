@@ -16,16 +16,18 @@ const readers = [
   { username: 'reader3', password: '!12345', email: 'reader3@webnovels.com', phone: '+82-010-111-1113', isAdultVerified: true, subscriptionStatus: '프리미엄 구독중' }
 ];
 
-// 기본 테스트 작가 계정 및 대표 작품 정보 (판타지, 무협, 성인AGE_18, 로맨스, SF, 현대판타지, 호러 등)
+// 기본 테스트 작가 계정 및 대표 작품 정보 (판타지, 무협, 성인AGE_18, 로맨스, SF, 현대판타지, 호러, 웹툰 등)
 const authors = [
-  { username: 'writer1', password: '!123456', email: 'writer1@webnovels.com', penName: '판타지마스터', workTitle: '대적자: 신을 삼킨 기사', birthDate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bankInfo: '국민은행 999-888-777666', coverImageUrl: '/images/stormqueen_oath.jpg', genre: '판타지', viewCount: 154000 },
-  { username: 'writer2', password: '!123456', email: 'writer2@webnovels.com', penName: '무협의신', workTitle: '천마의 귀환', birthDate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bankInfo: '신한은행 110-222-333444', coverImageUrl: '/images/sword_dao_supreme.jpg', genre: '무협', viewCount: 231000 },
-  { username: 'writer3', password: '!123456', email: 'writer3@webnovels.com', penName: '나이트로즈', workTitle: '금기의 계약', birthDate: '1992-08-12', address: '경기도 성남시 분당구 판교로 78', bankInfo: '우리은행 1002-555-666777', coverImageUrl: '/images/velvet_and_thorns.jpg', genre: '성인', rating: 'AGE_18', viewCount: 189000 },
-  { username: 'writer4', password: '!123456', email: 'writer4@webnovels.com', penName: '로맨스퀸', workTitle: '황제의 유일한 후궁', birthDate: '1994-11-03', address: '서울특별시 마포구 월드컵북로 99', bankInfo: '하나은행 222-333-444555', coverImageUrl: '/images/flower_blooming.jpg', genre: '로맨스', viewCount: 312000 },
-  { username: 'writer5', password: '!123456', email: 'writer5@webnovels.com', penName: '스페이스로그', workTitle: '성간 항로: 마지막 항해사', birthDate: '1988-03-30', address: '대전광역시 유성구 대학로 100', bankInfo: '농협 301-777-888999', coverImageUrl: '/images/stellar_horizon.jpg', genre: 'SF', viewCount: 97000 },
-  { username: 'writer6', password: '!123456', email: 'writer6@webnovels.com', penName: '도시마법사', workTitle: '서울에 나타난 마왕', birthDate: '1995-07-07', address: '서울특별시 송파구 올림픽로 200', bankInfo: '카카오뱅크 3333-01-234567', coverImageUrl: '/images/seoul_sorcerer.jpg', genre: '현대 판타지', viewCount: 278000 },
-  { username: 'writer7', password: '!123456', email: 'writer7@webnovels.com', penName: '공포작가', workTitle: '죽은 자들의 학교', birthDate: '1991-10-31', address: '부산광역시 해운대구 센텀서로 30', bankInfo: '기업은행 010-9999-8888', coverImageUrl: '/images/darkness_swallowed_classroom.jpg', genre: '호러', viewCount: 84000 },
-  { username: 'writer8', password: '!123456', email: 'writer8@webnovels.com', penName: '검성', workTitle: '검의 전설: 천하제일인', birthDate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bankInfo: '대구은행 508-12-345678', coverImageUrl: '/images/sword_dao_defies_heavens.jpg', genre: '무협', viewCount: 195000 }
+  { username: 'writer1', password: '!123456', email: 'writer1@webnovels.com', penName: '판타지마스터', workTitle: '대적자: 신을 삼킨 기사', birthDate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bankInfo: '국민은행 999-888-777666', coverImageUrl: '/images/stormqueen_oath.jpg', genre: '판타지', viewCount: 154000, contentType: 'NOVEL' },
+  { username: 'writer2', password: '!123456', email: 'writer2@webnovels.com', penName: '무협의신', workTitle: '천마의 귀환', birthDate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bankInfo: '신한은행 110-222-333444', coverImageUrl: '/images/sword_dao_supreme.jpg', genre: '무협', viewCount: 231000, contentType: 'NOVEL' },
+  { username: 'writer3', password: '!123456', email: 'writer3@webnovels.com', penName: '나이트로즈', workTitle: '금기의 계약', birthDate: '1992-08-12', address: '경기도 성남시 분당구 판교로 78', bankInfo: '우리은행 1002-555-666777', coverImageUrl: '/images/velvet_and_thorns.jpg', genre: '성인', rating: 'AGE_18', viewCount: 189000, contentType: 'NOVEL' },
+  { username: 'writer4', password: '!123456', email: 'writer4@webnovels.com', penName: '로맨스퀸', workTitle: '황제의 유일한 후궁', birthDate: '1994-11-03', address: '서울특별시 마포구 월드컵북로 99', bankInfo: '하나은행 222-333-444555', coverImageUrl: '/images/flower_blooming.jpg', genre: '로맨스', viewCount: 312000, contentType: 'NOVEL' },
+  { username: 'writer5', password: '!123456', email: 'writer5@webnovels.com', penName: '스페이스로그', workTitle: '성간 항로: 마지막 항해사', birthDate: '1988-03-30', address: '대전광역시 유성구 대학로 100', bankInfo: '농협 301-777-888999', coverImageUrl: '/images/stellar_horizon.jpg', genre: 'SF', viewCount: 97000, contentType: 'NOVEL' },
+  { username: 'writer6', password: '!123456', email: 'writer6@webnovels.com', penName: '도시마법사', workTitle: '서울에 나타난 마왕', birthDate: '1995-07-07', address: '서울특별시 송파구 올림픽로 200', bankInfo: '카카오뱅크 3333-01-234567', coverImageUrl: '/images/seoul_sorcerer.jpg', genre: '현대 판타지', viewCount: 278000, contentType: 'NOVEL' },
+  { username: 'writer7', password: '!123456', email: 'writer7@webnovels.com', penName: '공포작가', workTitle: '죽은 자들의 학교', birthDate: '1991-10-31', address: '부산광역시 해운대구 센텀서로 30', bankInfo: '기업은행 010-9999-8888', coverImageUrl: '/images/darkness_swallowed_classroom.jpg', genre: '호러', viewCount: 84000, contentType: 'NOVEL' },
+  { username: 'writer8', password: '!123456', email: 'writer8@webnovels.com', penName: '검성', workTitle: '검의 전설: 천하제일인', birthDate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bankInfo: '대구은행 508-12-345678', coverImageUrl: '/images/sword_dao_defies_heavens.jpg', genre: '무협', viewCount: 195000, contentType: 'NOVEL' },
+  { username: 'writer9', password: '!123456', email: 'webtoon1@webnovels.com', penName: '스튜디오노바', workTitle: '[웹툰] 신의 기사단', birthDate: '1993-04-10', address: '서울특별시 마포구 독막로 50', bankInfo: '국민은행 111-222-333444', coverImageUrl: '/images/stormqueen_oath.jpg', genre: '웹툰', viewCount: 89000, contentType: 'WEBTOON' },
+  { username: 'writer10', password: '!123456', email: 'webtoon2@webnovels.com', penName: '로즈코믹스', workTitle: '[웹툰] 황후의 비밀 화원', birthDate: '1996-09-18', address: '서울특별시 강남구 학동로 20', bankInfo: '신한은행 333-444-555666', coverImageUrl: '/images/flower_blooming.jpg', genre: '웹툰', viewCount: 124000, contentType: 'WEBTOON' }
 ];
 
 // 회차별 본문 샘플 데이터
@@ -37,7 +39,9 @@ const episodeContent = [
   ['마지막 항해사는 지구가 멸망한 후 남은 인류를 태우고 미지의 별로 출발한다.', '항해 중 발견한 고대 외계 유물에서 충격적인 메시지가 해독된다.', '함선에 침입한 미지의 존재가 승무원들을 하나씩 사라지게 만든다.', '항해사는 함선의 AI와 함께 적의 정체를 밝혀내고 생존을 위한 결단을 내린다.'],
   ['평범한 회사원 김현우는 퇴근길에 마왕의 힘이 자신에게 깃드는 것을 느낀다.', '처음으로 마법을 사용한 현우는 우연히 마족을 쓰러뜨리고 자신의 정체를 숨기려 한다.', '마법사 협회가 그를 추적하기 시작하고, 현우는 도망치며 힘을 다스리는 법을 배운다.', '현우는 자신을 노리는 진짜 적이 마족이 아닌 인간이라는 사실을 알게 된다.'],
   ['폐교 탐사를 온 학생들은 이상한 발소리와 함께 문이 저절로 닫히는 것을 경험한다.', '한 명이 사라지고, 남은 학생들은 복도 끝에서 교복을 입은 그림자를 목격한다.', '학교 지하실에서 발견된 일기장은 과거에 일어난 참극을 상세히 기록하고 있다.', '일기장의 주인공이 눈앞에 나타나며, 학생들은 자신들이 이미 죽은 존재일지도 모른다는 공포에 휩싸인다.'],
-  ['하급 무사 이천은 우연히 전설의 검을 손에 넣고 자신의 운명이 바뀌는 것을 느낀다.', '검을 노리는 암살자들을 물리친 이천은 검에 깃든 고대 검성의 기억을 일부 받아들인다.', '이천은 무림맹의 초대를 받아 처음으로 강호에 자신의 이름을 알리기 시작한다.', '천하제일인 자리에서 마주한 강자는 이천에게 검의 진짜 주인에 대한 비밀을 암시한다.']
+  ['하급 무사 이천은 우연히 전설의 검을 손에 넣고 자신의 운명이 바뀌는 것을 느낀다.', '검을 노리는 암살자들을 물리친 이천은 검에 깃든 고대 검성의 기억을 일부 받아들인다.', '이천은 무림맹의 초대를 받아 처음으로 강호에 자신의 이름을 알리기 시작한다.', '천하제일인 자리에서 마주한 강자는 이천에게 검의 진짜 주인에 대한 비밀을 암시한다.'],
+  ['[웹툰 컷 1화: 각성] 신의 사도와 마주한 기사의 운명', '[웹툰 컷 2화: 검의 인도] 전설의 검이 빛을 발하다', '[웹툰 컷 3화: 사도의 그림자] 어둠 속에 도사린 적', '[웹툰 컷 4화: 결전의 서막] 성역을 향한 진군'],
+  ['[웹툰 컷 1화: 은밀한 만남] 황궁의 밤, 비밀의 화원', '[웹툰 컷 2화: 붉은 장미의 향기] 황제와의 재회', '[웹툰 컷 3화: 밝혀진 정체] 가려진 진실', '[웹툰 컷 4화: 피할 수 없는 운명] 황실의 사랑']
 ];
 
 function splitBankInfo(bankInfo: string) {
@@ -132,18 +136,21 @@ export class DemoDataSeedService {
       });
 
       let work = await db.work.findFirst({ where: { title: authorSeed.workTitle, authorId: author.id } });
+      const isWebtoon = authorSeed.contentType === 'WEBTOON';
       const workData = {
         authorId: author.id,
         title: authorSeed.workTitle,
         coverImageUrl: authorSeed.coverImageUrl,
         description: `${authorSeed.workTitle} - 1~3화 즉시 무료 & 4화부터 광고 보고 무료 열람!`,
         genre: authorSeed.genre,
-        tags: 'AI NONE',
+        tags: isWebtoon ? 'AI NONE,웹툰,풀컬러' : 'AI NONE',
         rating: authorSeed.rating || 'ALL',
         aiUsageType: 'NONE',
         status: 'ONGOING',
         publishDays: 'MON,WED,FRI',
-        viewCount: authorSeed.viewCount
+        viewCount: authorSeed.viewCount,
+        contentType: authorSeed.contentType || 'NOVEL',
+        isCompleted: index === 6 || index === 7
       };
       work = work
         ? await db.work.update({ where: { id: work.id }, data: workData })
@@ -157,11 +164,17 @@ export class DemoDataSeedService {
 
       for (let episodeNumber = 1; episodeNumber <= 4; episodeNumber++) {
         const existingEpisode = await db.episode.findFirst({ where: { workId: work.id, episodeNumber } });
+        const webtoonCuts = isWebtoon
+          ? (index === 8 
+              ? ['/images/stormqueen_oath.jpg', '/images/sword_dao_supreme.jpg'] 
+              : ['/images/flower_blooming.jpg', '/images/velvet_and_thorns.jpg'])
+          : [];
         const episodeData = {
           workId: work.id,
           episodeNumber,
           title: `제${episodeNumber}화`,
-          content: episodeContent[index][episodeNumber - 1],
+          content: isWebtoon ? '' : episodeContent[index][episodeNumber - 1],
+          imageUrls: isWebtoon ? JSON.stringify(webtoonCuts) : null,
           isFree: episodeNumber <= 3,
           adUnlockRequired: episodeNumber > 3,
           isPublished: true
