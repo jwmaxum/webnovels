@@ -250,34 +250,47 @@ async function initWebNovelsApp() {
   lucide.createIcons();
   bindWebNovelsEvents();
 
-  // Supabase 클라이언트 초기화 & 실시간 DB 연동
+  // 1. [즉시 1차 렌더링] 지연 없이 랜딩페이지 콘텐츠 즉각 표시
+  renderHomeWorks();
+  renderDiscoverWorks();
+  renderSearchResults();
+
+  // 2. Supabase 클라이언트 초기화 & 실시간 DB 연동
   if (window.WebNovelsAdmin) {
     window.WebNovelsAdmin.init();
     
     // Supabase DB에서 10개 작품 및 회차 실데이터 fetch
-    const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-    if (remoteWorks && remoteWorks.length > 0) {
-      console.log('[App Init] Supabase DB 실시간 작품 로드 성공:', remoteWorks.length);
-      SAMPLE_WORKS.length = 0;
-      SAMPLE_WORKS.push(...remoteWorks);
-    } else {
-      console.log('[App Init] Supabase DB 작품 미존재 -> 10개 대표 작품 & 50+개 에피소드 자동 시드 저장');
-      await window.WebNovelsAdmin.seedWorksDatasetToSupabase(SAMPLE_WORKS);
+    try {
+      const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+      if (remoteWorks && remoteWorks.length > 0) {
+        console.log('[App Init] Supabase DB 실시간 작품 로드 성공:', remoteWorks.length);
+        SAMPLE_WORKS.length = 0;
+        SAMPLE_WORKS.push(...remoteWorks);
+        
+        // 실데이터 기반으로 2차 리렌더링
+        renderHomeWorks();
+        renderDiscoverWorks();
+        renderSearchResults();
+      }
+    } catch(err) {
+      console.warn('[App Init] Supabase 작품 로드 예외:', err);
     }
 
-    // Supabase DB에서 독자 & 작가 실데이터 fetch 및 시드
-    const remoteReaders = await window.WebNovelsAdmin.fetchReadersFromSupabase();
-    if (remoteReaders && remoteReaders.length > 0) {
-      SAMPLE_READERS.length = 0;
-      SAMPLE_READERS.push(...remoteReaders);
-    } else {
-      await window.WebNovelsAdmin.seedRealUsersToSupabase(SAMPLE_READERS, SAMPLE_AUTHORS);
-    }
+    // Supabase DB에서 독자 & 작가 실데이터 fetch
+    try {
+      const remoteReaders = await window.WebNovelsAdmin.fetchReadersFromSupabase();
+      if (remoteReaders && remoteReaders.length > 0) {
+        SAMPLE_READERS.length = 0;
+        SAMPLE_READERS.push(...remoteReaders);
+      }
 
-    const remoteAuthors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
-    if (remoteAuthors && remoteAuthors.length > 0) {
-      SAMPLE_AUTHORS.length = 0;
-      SAMPLE_AUTHORS.push(...remoteAuthors);
+      const remoteAuthors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
+      if (remoteAuthors && remoteAuthors.length > 0) {
+        SAMPLE_AUTHORS.length = 0;
+        SAMPLE_AUTHORS.push(...remoteAuthors);
+      }
+    } catch(err) {
+      console.warn('[App Init] Supabase 사용자 로드 예외:', err);
     }
   }
 
@@ -317,11 +330,7 @@ async function initWebNovelsApp() {
 
   // 로그인 프로필 세션 복원 및 헤더 동기화
   await loadMyProfile();
-
-  renderHomeWorks();
-  renderDiscoverWorks();
   renderLibraryContent();
-  renderSearchResults();
 }
 
 // ============================================================
