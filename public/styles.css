@@ -235,6 +235,51 @@ body {
   gap: 10px;
 }
 
+/* Sub-Category Navigation Bar (웹소설 | 웹툰 | 장르 | 랭킹 | 신작 | 완결작) */
+.cdg-sub-nav {
+  display: block;
+  background: rgba(18, 18, 22, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 56px;
+  z-index: 90;
+  backdrop-filter: blur(12px);
+}
+.cdg-sub-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cdg-sub-nav-inner::-webkit-scrollbar {
+  display: none;
+}
+.cdg-tab-item {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.cdg-tab-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.cdg-tab-item.active {
+  background: rgba(255, 42, 122, 0.15);
+  color: #ff2a7a;
+  font-weight: 700;
+  border: 1px solid rgba(255, 42, 122, 0.3);
+}
+
 /* Button System (CDG PLAY Crisp Aesthetics) */
 .btn {
   display: inline-flex;

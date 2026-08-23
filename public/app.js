@@ -645,6 +645,8 @@ window.openWorkDetailDirect = function(workId) {
   if (genreBadge) genreBadge.textContent = work.genre;
   const ratingBadge = document.getElementById('detailRatingBadge');
   if (ratingBadge) ratingBadge.textContent = work.rating === 'ALL' ? '전체이용가' : '19세 이상 성인';
+  const aiBadge = document.getElementById('detailAiBadge');
+  if (aiBadge) aiBadge.textContent = `AI ${work.aiUsageType && work.aiUsageType !== 'NONE' ? work.aiUsageType : '미사용'}`;
   const descEl = document.getElementById('detailDescription');
   if (descEl) descEl.textContent = work.description || '작품 소개가 등록되어 있습니다.';
 
