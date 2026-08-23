@@ -803,19 +803,7 @@ function saveReadingProgress(workId, epNum) {
   } catch(e) {}
 }
 
-async function loadMyProfile() {
-  try {
-    const userJson = localStorage.getItem('webnovels_user');
-    const authorJson = localStorage.getItem('webnovels_author');
-    if (userJson) {
-      const user = JSON.parse(userJson);
-      updateMemberHeader(user);
-    } else if (authorJson) {
-      const author = JSON.parse(authorJson);
-      updateMemberHeader({ ...author, role: 'AUTHOR' });
-    }
-  } catch(e) {}
-}
+
 
 function renderLibraryContent() {
   const contList = document.getElementById('libraryContinueList');
@@ -4210,76 +4198,57 @@ async function handleAuthorSignup() {
   switchWebNovelsView('view-creator');
 }
 
+function getCurrentAuthorSession() {
+  try {
+    const raw = localStorage.getItem('webnovels_author');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function loadMyProfile() {
-  const authorSession = getCurrentAuthorSession();
-  if (authorSession) {
-    isAdminLoggedIn = false;
-    updateMemberHeader({ ...authorSession, role: 'AUTHOR' });
-    return;
-  }
-
-  const savedUser = localStorage.getItem('webnovels_user');
-  if (savedUser) {
-    try {
-      const user = JSON.parse(savedUser);
-      if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SUB_ADMIN') {
-        isAdminLoggedIn = true;
-        const badge = document.getElementById('adminRoleBadge');
-        if (badge) {
-          badge.textContent = `${user.role} 로그인됨`;
-          badge.className = 'badge badge-primary';
-        }
-        if (document.getElementById('btnAdminLogout')) {
-          document.getElementById('btnAdminLogout').style.display = 'inline-block';
-        }
-      } else {
-        isAdminLoggedIn = false;
-      }
-      updateMemberHeader(user);
-    } catch (e) {
-      console.warn('저장된 사용자 파싱 실패', e);
+  try {
+    const authorSession = getCurrentAuthorSession();
+    if (authorSession) {
+      isAdminLoggedIn = false;
+      updateMemberHeader({ ...authorSession, role: 'AUTHOR' });
+      return;
     }
-  }
 
-  const token = localStorage.getItem('webnovels_token');
-  if (token && !token.startsWith('reader-token') && !token.startsWith('author-')) {
-    try {
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const { user } = await res.json();
+    const savedUser = localStorage.getItem('webnovels_user');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
         if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SUB_ADMIN') {
           isAdminLoggedIn = true;
+          const badge = document.getElementById('adminRoleBadge');
+          if (badge) {
+            badge.textContent = `${user.role} 로그인됨`;
+            badge.className = 'badge badge-primary';
+          }
+          if (document.getElementById('btnAdminLogout')) {
+            document.getElementById('btnAdminLogout').style.display = 'inline-block';
+          }
+        } else {
+          isAdminLoggedIn = false;
         }
-        localStorage.setItem('webnovels_user', JSON.stringify(user));
-
-        // 서버 DB 활동 데이터 로컬 스토어에 동기화
-        syncUserActivityToStorage({
-          readingHistory: user.readingHistory,
-          favorites: user.favorites,
-          subscribedAuthors: user.subscribedAuthors,
-          isAdultVerified: user.isAdultVerified
-        });
-
         updateMemberHeader(user);
-        return;
-      }
-    } catch (err) {}
-  }
 
-  // Supabase 모드에서 저장된 유저 활동 복원
-  if (savedUser) {
-    try {
-      const u = JSON.parse(savedUser);
-      if (window.WebNovelsAdmin?.fetchReaderActivity) {
-        const remoteAct = await window.WebNovelsAdmin.fetchReaderActivity(u.username || u.email);
-        if (remoteAct) syncUserActivityToStorage(remoteAct);
+        if (window.WebNovelsAdmin?.fetchReaderActivity) {
+          const remoteAct = await window.WebNovelsAdmin.fetchReaderActivity(user.username || user.email);
+          if (remoteAct) syncUserActivityToStorage(remoteAct);
+        }
+        return;
+      } catch (e) {
+        console.warn('저장된 사용자 파싱 실패', e);
       }
-    } catch(e) {}
-  } else {
-    isAdminLoggedIn = false;
-    updateMemberHeader(null);
+    } else {
+      isAdminLoggedIn = false;
+      updateMemberHeader(null);
+    }
+  } catch(err) {
+    console.warn('[loadMyProfile] 에러 방지:', err);
   }
 }
 
@@ -4295,15 +4264,15 @@ function updateMemberHeader(user) {
 
     // [중요 요건] body data-user-role 속성 설정 (CSS Guard 및 JS 이중 보장)
     if (isReader) {
-      document.body.setAttribute('data-user-role', 'READER');
+      document.body?.setAttribute('data-user-role', 'READER');
       navCreatorLinks.forEach(el => el.style.setProperty('display', 'none', 'important'));
       navAdminLinks.forEach(el => el.style.setProperty('display', 'none', 'important'));
     } else if (isAuthor) {
-      document.body.setAttribute('data-user-role', 'AUTHOR');
+      document.body?.setAttribute('data-user-role', 'AUTHOR');
       navCreatorLinks.forEach(el => el.style.removeProperty('display'));
       navAdminLinks.forEach(el => el.style.setProperty('display', 'none', 'important'));
     } else if (isAdmin) {
-      document.body.setAttribute('data-user-role', 'ADMIN');
+      document.body?.setAttribute('data-user-role', 'ADMIN');
       navCreatorLinks.forEach(el => el.style.removeProperty('display'));
       navAdminLinks.forEach(el => el.style.removeProperty('display'));
     }
@@ -4381,7 +4350,7 @@ function updateMemberHeader(user) {
     }
   } else {
     // [비로그인 상태] 게스트일 때는 "작품 등록", "관리자" 메뉴를 다시 기본 표시로 복원
-    document.body.setAttribute('data-user-role', 'GUEST');
+    document.body?.setAttribute('data-user-role', 'GUEST');
     navCreatorLinks.forEach(el => el.style.removeProperty('display'));
     navAdminLinks.forEach(el => el.style.removeProperty('display'));
 
