@@ -591,6 +591,99 @@ async function updateWorkAdminSetting(workId, updateData) {
   }
 }
 
+async function createWorkInDB(workData) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('works')
+      .insert([workData])
+      .select();
+    if (error) throw error;
+    return { success: true, data: data ? data[0] : null };
+  } catch (err) {
+    console.warn('[Admin Works] Create error:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+async function deleteWorkFromDB(workId) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('works')
+      .delete()
+      .eq('id', workId);
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.warn('[Admin Works] Delete error:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+async function fetchEpisodesByWorkId(workId) {
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('episodes')
+      .select('*')
+      .eq('work_id', workId)
+      .order('episode_number', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn('[Admin Episodes] Fetch error:', err.message);
+    return [];
+  }
+}
+
+async function updateEpisodeSetting(workId, epNum, updates) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('episodes')
+      .update(updates)
+      .eq('work_id', workId)
+      .eq('episode_number', epNum);
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.warn('[Admin Episodes] Update error:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+async function createEpisodeInDB(epData) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('episodes')
+      .insert([epData])
+      .select();
+    if (error) throw error;
+    return { success: true, data: data ? data[0] : null };
+  } catch (err) {
+    console.warn('[Admin Episodes] Create error:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+async function deleteEpisodeFromDB(workId, epNum) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('episodes')
+      .delete()
+      .eq('work_id', workId)
+      .eq('episode_number', epNum);
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.warn('[Admin Episodes] Delete error:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 // ---- 독자 회원(readers) & 작가 회원(authors) 실데이터 조회 및 시드 ----
 async function fetchReadersFromSupabase() {
   if (!supabaseClient) return null;
