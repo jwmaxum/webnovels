@@ -11,6 +11,7 @@ let currentAdmin = null;
 
 // ---- Supabase 클라이언트 초기화 ----
 function initSupabaseAdmin() {
+  if (supabaseClient) return true;
   if (window.supabase && window.supabase.createClient) {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('[WebNovels Admin] Supabase 클라이언트 초기화 완료');
@@ -20,13 +21,25 @@ function initSupabaseAdmin() {
   return false;
 }
 
+// 스크립트 로드 시 즉시 초기화 시도
+initSupabaseAdmin();
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', initSupabaseAdmin);
+}
+
 // ---- 관리자 인증 ----
 async function adminLogin(email, password) {
   const cleanEmail = String(email).trim().toLowerCase();
   const cleanPw = String(password).trim();
 
-  // 최고 관리자 마스터 자격 증명 (비상 하드코딩 Fallback)
+  // 1. Supabase 클라이언트 미초기화 시 재시도
+  if (!supabaseClient) {
+    initSupabaseAdmin();
+  }
+
+  // 최고 관리자 & 서브 관리자 마스터 자격 증명 Fallback
   const isSuperAdminMaster = (cleanEmail === 'jwmaxum@gmail.com' || cleanEmail === 'super_admin') && cleanPw === 'SUPER_ADMIN_PASSWORD_REDACTED';
+  const isSubAdminAndy = (cleanEmail === 'andysung@webnovel-admin.com' || cleanEmail === 'andysung') && (cleanPw === 'subpass1234!' || cleanPw === '!12345' || cleanPw === 'SUPER_ADMIN_PASSWORD_REDACTED');
 
   if (!supabaseClient) {
     if (isSuperAdminMaster) {
@@ -40,6 +53,18 @@ async function adminLogin(email, password) {
       };
       currentAdmin = fallbackAdmin;
       return { success: true, admin: fallbackAdmin };
+    }
+    if (isSubAdminAndy) {
+      const fallbackSub = {
+        id: 'sub-admin-andysung',
+        email: 'andysung@webnovel-admin.com',
+        username: 'andysung',
+        nickname: '성일',
+        role: 'SUB_ADMIN',
+        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
+      };
+      currentAdmin = fallbackSub;
+      return { success: true, admin: fallbackSub };
     }
     return { success: false, error: 'Supabase 미연결 (오프라인 모드)' };
   }
@@ -64,13 +89,13 @@ async function adminLogin(email, password) {
 
     if (!queryError && adminUsers && adminUsers.length > 0) {
       const adminUser = adminUsers[0];
-      if (adminUser.password_hash === password || isSuperAdminMaster) {
+      if (adminUser.password_hash === password || isSuperAdminMaster || isSubAdminAndy) {
         currentAdmin = adminUser;
         return { success: true, admin: adminUser };
       }
     }
 
-    // 3. 최고 관리자 마스터 자격 증명 일치 시 즉시 성공
+    // 3. 마스터 자격 증명 일치 시 즉시 성공
     if (isSuperAdminMaster) {
       const superAdminObj = {
         id: 'c6889f7b-f1fc-4088-8144-b9654e668abf',
@@ -82,6 +107,19 @@ async function adminLogin(email, password) {
       };
       currentAdmin = superAdminObj;
       return { success: true, admin: superAdminObj };
+    }
+
+    if (isSubAdminAndy) {
+      const subAdminObj = {
+        id: 'e2330f38-8d79-4fa4-864e-c32859fb1d46',
+        email: 'andysung@webnovel-admin.com',
+        username: 'andysung',
+        nickname: '성일',
+        role: 'SUB_ADMIN',
+        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
+      };
+      currentAdmin = subAdminObj;
+      return { success: true, admin: subAdminObj };
     }
 
     return { success: false, error: '이메일 또는 비밀번호가 일치하지 않습니다.' };
@@ -97,6 +135,18 @@ async function adminLogin(email, password) {
       };
       currentAdmin = fallbackAdmin;
       return { success: true, admin: fallbackAdmin };
+    }
+    if (isSubAdminAndy) {
+      const fallbackSub = {
+        id: 'sub-admin-andysung',
+        email: 'andysung@webnovel-admin.com',
+        username: 'andysung',
+        nickname: '성일',
+        role: 'SUB_ADMIN',
+        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
+      };
+      currentAdmin = fallbackSub;
+      return { success: true, admin: fallbackSub };
     }
     return { success: false, error: err.message };
   }

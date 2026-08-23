@@ -3275,6 +3275,34 @@ async function handleMemberLogin() {
     // API 연결 안될 시 Supabase / 로컬 스토어 모드로 진행
   }
 
+  // 1. 관리자 계정 (Super Admin / Sub Admin) 로그인 시도
+  if (window.WebNovelsAdmin) {
+    window.WebNovelsAdmin.init();
+
+    const adminRes = await window.WebNovelsAdmin.login(loginIdentifier, password);
+    if (adminRes && adminRes.success) {
+      isAdminLoggedIn = true;
+      closeAllModals();
+      const admin = adminRes.admin || { id: loginIdentifier, username: loginIdentifier, nickname: loginIdentifier, role: 'SUB_ADMIN' };
+      localStorage.removeItem('webnovels_author');
+      const adminUserObj = {
+        id: admin.id || 'admin-root',
+        username: admin.username || loginIdentifier,
+        nickname: admin.nickname || loginIdentifier,
+        role: admin.role || 'SUB_ADMIN',
+        isAdultVerified: true
+      };
+      localStorage.setItem('webnovels_user', JSON.stringify(adminUserObj));
+      localStorage.setItem('webnovels_token', `admin-token-${admin.id}`);
+      localStorage.setItem('webnovels_admin_token', `admin-token-${admin.id}`);
+      
+      updateMemberHeader(adminUserObj);
+      showToast(`🔑 관리자 로그인 성공! (${adminUserObj.nickname || loginIdentifier})`);
+      switchWebNovelsView('view-admin-cms');
+      return;
+    }
+  }
+
   // 2. Supabase 작가 직접 로그인
   if (window.WebNovelsAdmin) {
     window.WebNovelsAdmin.init();
