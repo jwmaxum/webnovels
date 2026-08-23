@@ -692,6 +692,7 @@ window.fetchCreatorDashboardData = async function() {
       worksContainer.innerHTML = displayWorks.map(work => {
         const epList = work.episodes || [];
         const isWebtoon = work.contentType === 'WEBTOON';
+        const nextEpNum = epList.length + 1;
         return `
           <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.25);">
             <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
@@ -705,44 +706,63 @@ window.fetchCreatorDashboardData = async function() {
                 </div>
                 <p class="text-muted small mb-2" style="line-height: 1.4;">${work.description || '작품 소개가 등록되어 있습니다.'}</p>
                 <div style="display: flex; gap: 16px; font-size: 0.82rem; color: var(--text-secondary);">
-                  <span>👀 총 조회수: <strong>${(work.viewCount || 0).toLocaleString()}회</strong></span>
-                  <span>📖 총 회차: <strong>${epList.length}화</strong></span>
+                  <span>👀 누적 조회수: <strong>${(work.viewCount || 0).toLocaleString()}회</strong></span>
+                  <span>📖 총 연재: <strong>${epList.length}화</strong></span>
                   <span>⭐ 추천수: <strong>${(work.likeCount || 480).toLocaleString()}개</strong></span>
                 </div>
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px;">
                 <button class="btn btn-primary btn-sm" onclick="prepareNewEpisodeForWork(${work.id})">
-                  <i data-lucide="plus-circle"></i> 회차 등록 &amp; 예약
+                  <i data-lucide="plus-circle"></i> + 신규 회차 작성 / 예약발행
                 </button>
-                <button class="btn btn-outline btn-sm" onclick="switchCreatorTab('stats')">
-                  <i data-lucide="bar-chart-2"></i> 독자 통계
+                <button class="btn btn-outline btn-sm" onclick="switchCreatorTab('new-ep')">
+                  <i data-lucide="calendar"></i> Zero-Touch 예약 연재
                 </button>
               </div>
             </div>
 
-            <!-- 회차 목록 Preview -->
+            <!-- work_management_2.md Section 2 회차 작성 및 관리 표 -->
             <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
               <div class="flex-between mb-2">
-                <strong class="small text-muted"><i data-lucide="list"></i> 최근 연재 회차 (${epList.length}개)</strong>
-                <span class="text-muted small">1~3화 무료 | 4화 이후 유료/광고 모델 자동 적용</span>
+                <strong class="small text-muted" style="display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="list"></i> 회차 작성 및 연재 관리 (${epList.length}화)
+                </strong>
+                <span class="text-muted small">1~3화 무료 · 4화 이후 유료/광고 모델 자동 적용</span>
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px;">
-                ${epList.slice(0, 5).map((ep, idx) => {
+                ${epList.map((ep, idx) => {
                   const epNum = ep.episodeNumber || (idx + 1);
                   const isFree = ep.isFree !== false && epNum <= 3;
+                  const isScheduled = ep.status === 'SCHEDULED';
                   return `
-                    <div class="p-2 glass-panel flex-between" style="border-radius: 4px; font-size: 0.85rem; background: rgba(255,255,255,0.02);">
-                      <div>
-                        <span style="font-weight: 700; color: var(--color-brand-secondary); margin-right: 6px;">#${epNum}화</span>
-                        <span>${ep.title || `제 ${epNum}화`}</span>
+                    <div class="p-2 glass-panel flex-between" style="border-radius: 6px; font-size: 0.85rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-weight: 700; color: var(--color-brand-secondary); min-width: 45px;">${epNum}화</span>
+                        <strong style="color:#fff;">${ep.title || `제 ${epNum}화`}</strong>
+                        <span class="badge ${isFree ? 'badge-primary' : 'badge-ghost'}" style="font-size:0.72rem;">${isFree ? '무료' : '광고무료/100P'}</span>
                       </div>
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="badge ${isFree ? 'badge-primary' : 'badge-warning'}">${isFree ? '무료 공개' : '유료 / 광고 30초'}</span>
-                        <span class="text-muted small">발행완료 ✓</span>
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        ${isScheduled 
+                          ? `<span class="badge badge-warning" style="font-size:0.75rem;">⏰ 예약발행 ${ep.scheduledAt ? ep.scheduledAt.substring(5, 16) : '08/27 20:00'}</span>` 
+                          : `<span style="color:var(--accent-emerald); font-size:0.8rem; font-weight:700;">작성완료 ✓</span>`}
+                        <button class="btn btn-ghost btn-sm" onclick="openReaderDirect(${work.id}, 'ep-${epNum}')" style="font-size:0.75rem; padding:2px 8px;">
+                          열람
+                        </button>
                       </div>
                     </div>
                   `;
                 }).join('')}
+                
+                <!-- 다음 예약 준비 가이드 행 (work_management_2.md 2번 명세) -->
+                <div class="p-2 glass-panel flex-between" style="border-radius: 6px; font-size: 0.85rem; background: rgba(255,255,255,0.01); border: 1px dashed rgba(255,255,255,0.1);">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-weight: 700; color: var(--text-muted); min-width: 45px;">${nextEpNum}화</span>
+                    <span class="text-muted">다음 회차 원고 준비중...</span>
+                  </div>
+                  <button class="btn btn-outline btn-sm" onclick="prepareNewEpisodeForWork(${work.id})" style="font-size:0.75rem; padding:2px 10px; color:var(--color-brand-secondary); border-color:var(--color-brand-secondary);">
+                    + 예약발행 작성
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1513,7 +1533,11 @@ async function renderAdminWorks() {
     // Status Filter
     if (adminWorkFilterState.status !== 'ALL') {
       const currentStatus = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
-      if (currentStatus !== adminWorkFilterState.status) return false;
+      if (adminWorkFilterState.status === 'NEED_ACTION') {
+        if (currentStatus !== 'DELAYED' && currentStatus !== 'PENDING_REVIEW' && w.id !== 2 && w.id !== 3) return false;
+      } else if (currentStatus !== adminWorkFilterState.status) {
+        return false;
+      }
     }
     // Genre Filter
     if (adminWorkFilterState.genre !== 'ALL' && w.genre !== adminWorkFilterState.genre) return false;
@@ -1541,7 +1565,7 @@ async function renderAdminWorks() {
     return;
   }
 
-  // 3. 고밀도 테이블 렌더링
+  // 3. 고밀도 테이블 렌더링 (work_management_2.md 1.2 명세)
   tableBody.innerHTML = filtered.map(w => {
     const isWebtoon = w.contentType === 'WEBTOON';
     const typeBadge = isWebtoon 
@@ -1552,9 +1576,17 @@ async function renderAdminWorks() {
 
     // Status Badge & Selector
     const statusBadge = getStatusBadgeHtml(curStatus);
-    const trendIcon = getTrendIconHtml(w);
-    const nextEpDate = '08/23 (금)';
-    const lastEpDate = `08/20 (#${w.episodes?.length || 4})`;
+    const nextEpDate = curStatus === 'ONGOING' ? '08/23 20:00' : (curStatus === 'COMPLETED' ? '완결' : '-');
+
+    // Issue / Action (work_management_2.md 1.2)
+    let issueHtml = '<span class="text-muted">-</span>';
+    if (curStatus === 'DELAYED' || w.id === 2) {
+      issueHtml = `<span class="badge badge-warning" style="cursor:pointer;" onclick="showToast('작가에게 연재 독촉 알림이 발송되었습니다.')">⚠ 작가 알림</span>`;
+    } else if (curStatus === 'PENDING_REVIEW' || w.id === 3) {
+      issueHtml = `<span class="badge badge-primary" style="cursor:pointer;" onclick="switchAdminToEpisodeTab(${w.id})">⚠ 검수 확인</span>`;
+    } else if (curStatus === 'PAUSED') {
+      issueHtml = `<span class="badge badge-accent">휴재 공지</span>`;
+    }
 
     return `
       <tr class="work-table-row" style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;">
@@ -1573,29 +1605,21 @@ async function renderAdminWorks() {
             </div>
           </div>
         </td>
-        <td style="padding: 10px 12px; color: var(--text-secondary);">${authorName}</td>
+        <td style="padding: 10px 12px; color: var(--text-secondary); font-weight: 600;">${authorName}</td>
         <td style="padding: 10px 12px;">
           <div style="display: flex; flex-direction: column; gap: 4px;">
             ${statusBadge}
             <select style="padding: 2px 4px; font-size: 0.75rem; background: #000; color: #fff; border: 1px solid var(--border-color); border-radius: 4px;" onchange="toggleAdminSetting('${w.id}', 'status', this.value)">
-              <option value="ONGOING" ${curStatus === 'ONGOING' ? 'selected' : ''}>🟢 연재중</option>
-              <option value="PENDING_REVIEW" ${curStatus === 'PENDING_REVIEW' ? 'selected' : ''}>🔵 검수대기</option>
-              <option value="SCHEDULED" ${curStatus === 'SCHEDULED' ? 'selected' : ''}>🟠 예약연재</option>
+              <option value="ONGOING" ${curStatus === 'ONGOING' ? 'selected' : ''}>🟢 정상</option>
+              <option value="PENDING_REVIEW" ${curStatus === 'PENDING_REVIEW' ? 'selected' : ''}>🟡 확인</option>
+              <option value="DELAYED" ${curStatus === 'DELAYED' ? 'selected' : ''}>🟠 지연</option>
               <option value="PAUSED" ${curStatus === 'PAUSED' ? 'selected' : ''}>⚫ 휴재</option>
               <option value="COMPLETED" ${curStatus === 'COMPLETED' ? 'selected' : ''}>🔵 완결</option>
-              <option value="DELAYED" ${curStatus === 'DELAYED' ? 'selected' : ''}>🔴 연재지연</option>
-              <option value="ALERT" ${curStatus === 'ALERT' ? 'selected' : ''}>⚠️ 관리필요</option>
             </select>
           </div>
         </td>
-        <td style="padding: 10px 12px; font-size: 0.8rem; color: var(--text-secondary);">${nextEpDate}</td>
-        <td style="padding: 10px 12px; font-size: 0.8rem; color: var(--text-secondary);">${lastEpDate}</td>
-        <td style="padding: 10px 12px;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            ${trendIcon}
-            <span style="font-weight: 700; color: #fff;">${(w.viewCount || 0).toLocaleString()}</span>
-          </div>
-        </td>
+        <td style="padding: 10px 12px; font-size: 0.82rem; color: var(--text-secondary);">${nextEpDate}</td>
+        <td style="padding: 10px 12px;">${issueHtml}</td>
         <td style="padding: 10px 12px; text-align: center;">
           <div style="display: flex; gap: 4px; justify-content: center;">
             <button class="btn btn-outline btn-sm" onclick="openWorkSeriesDashboard(${w.id})" style="font-size: 0.75rem; padding: 3px 6px;" title="연재 종합 Dashboard">

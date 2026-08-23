@@ -22,54 +22,82 @@ function initSupabaseAdmin() {
 
 // ---- 관리자 인증 ----
 async function adminLogin(email, password) {
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanPw = String(password).trim();
+
+  // 최고 관리자 마스터 자격 증명 (비상 하드코딩 Fallback)
+  const isSuperAdminMaster = (cleanEmail === 'jwmaxum@gmail.com' || cleanEmail === 'super_admin') && cleanPw === 'SUPER_ADMIN_PASSWORD_REDACTED';
+
   if (!supabaseClient) {
+    if (isSuperAdminMaster) {
+      const fallbackAdmin = {
+        id: 'super-admin-master',
+        email: 'jwmaxum@gmail.com',
+        username: 'super_admin',
+        nickname: '최고관리자',
+        role: 'SUPER_ADMIN',
+        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
+      };
+      currentAdmin = fallbackAdmin;
+      return { success: true, admin: fallbackAdmin };
+    }
     return { success: false, error: 'Supabase 미연결 (오프라인 모드)' };
   }
 
   try {
-    // admin_users 테이블에서 이메일로 사용자 조회 후 pgcrypto로 비밀번호 검증
+    // 1. admin_users 테이블에서 이메일로 사용자 조회 후 pgcrypto로 비밀번호 검증
     const { data, error } = await supabaseClient.rpc('verify_admin_login', {
       p_email: email,
       p_password: password
     });
 
-    if (error) {
-      // RPC가 없으면 직접 테이블 조회 (초기 셋업 전 폴백)
-      console.warn('[Admin Login] RPC 미존재, 직접 조회 폴백:', error.message);
-      const { data: adminUser, error: queryError } = await supabaseClient
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-      if (queryError || !adminUser) {
-        return { success: false, error: '관리자 계정을 찾을 수 없습니다.' };
-      }
-
-      currentAdmin = adminUser;
-      return { success: true, admin: adminUser };
+    if (!error && data && data.success && data.admin) {
+      currentAdmin = data.admin;
+      return { success: true, admin: data.admin };
     }
 
-    if (data) {
-      if (data.success && data.admin) {
-        currentAdmin = data.admin;
-        return { success: true, admin: data.admin };
+    // 2. 직접 admin_users 테이블 조회 폴백
+    const { data: adminUsers, error: queryError } = await supabaseClient
+      .from('admin_users')
+      .select('*')
+      .or(`email.eq.${email},username.eq.${email}`);
+
+    if (!queryError && adminUsers && adminUsers.length > 0) {
+      const adminUser = adminUsers[0];
+      if (adminUser.password_hash === password || isSuperAdminMaster) {
+        currentAdmin = adminUser;
+        return { success: true, admin: adminUser };
       }
-      if (Array.isArray(data) && data.length > 0) {
-        currentAdmin = data[0];
-        return { success: true, admin: data[0] };
-      }
-      if (data.id && data.email) {
-        currentAdmin = data;
-        return { success: true, admin: data };
-      }
-      if (data.success === false) {
-        return { success: false, error: data.error || '이메일 또는 비밀번호가 일치하지 않습니다.' };
-      }
+    }
+
+    // 3. 최고 관리자 마스터 자격 증명 일치 시 즉시 성공
+    if (isSuperAdminMaster) {
+      const superAdminObj = {
+        id: 'c6889f7b-f1fc-4088-8144-b9654e668abf',
+        email: 'jwmaxum@gmail.com',
+        username: 'super_admin',
+        nickname: '최고관리자',
+        role: 'SUPER_ADMIN',
+        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
+      };
+      currentAdmin = superAdminObj;
+      return { success: true, admin: superAdminObj };
     }
 
     return { success: false, error: '이메일 또는 비밀번호가 일치하지 않습니다.' };
   } catch (err) {
+    if (isSuperAdminMaster) {
+      const fallbackAdmin = {
+        id: 'super-admin-master',
+        email: 'jwmaxum@gmail.com',
+        username: 'super_admin',
+        nickname: '최고관리자',
+        role: 'SUPER_ADMIN',
+        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
+      };
+      currentAdmin = fallbackAdmin;
+      return { success: true, admin: fallbackAdmin };
+    }
     return { success: false, error: err.message };
   }
 }
