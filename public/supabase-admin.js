@@ -9,13 +9,20 @@ const SUPABASE_ANON_KEY = 'sb_publishable_XYQ7ydRrTZQ94V6r1WKEtQ_pnL9Po5c';
 let supabaseClient = null;
 let currentAdmin = null;
 
+// window.WebNovelsAdmin 즉시 선언 (스크립트 로드 타이밍 이슈 원천 방지)
+window.WebNovelsAdmin = window.WebNovelsAdmin || {};
+
 // ---- Supabase 클라이언트 초기화 ----
 function initSupabaseAdmin() {
   if (supabaseClient) return true;
-  if (window.supabase && window.supabase.createClient) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('[WebNovels Admin] Supabase 클라이언트 초기화 완료');
-    return true;
+  if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('[WebNovels Admin] Supabase 클라이언트 초기화 완료');
+      return true;
+    } catch(e) {
+      console.warn('[WebNovels Admin] Supabase createClient 에러:', e);
+    }
   }
   console.warn('[WebNovels Admin] Supabase SDK 미로드 - 오프라인 모드로 전환');
   return false;
