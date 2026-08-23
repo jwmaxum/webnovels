@@ -236,11 +236,15 @@ let currentTheme = 'theme-dark';
 let currentFontSize = 18;
 
 // ============================================================
-// [Entry] DOMContentLoaded
+// [Entry] Safe Multi-Stage Initialization (DOMContentLoaded + readyState fallback)
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initWebNovelsApp();
+  });
+} else {
   initWebNovelsApp();
-});
+}
 
 // ============================================================
 // [Function] initWebNovelsApp
@@ -475,26 +479,37 @@ function renderGenreRecommendations(selectedGenre = '전체') {
   if (window.lucide) lucide.createIcons();
 }
 
-// Main Home Works Orchestrator
+// Main Home Works Orchestrator (CMS Curation Flags Driven)
 async function renderHomeWorks() {
   try {
-    // 1. HERO Carousel (상위 3개 작품)
-    const heroWorks = SAMPLE_WORKS.slice(0, 3);
+    // 1. HERO Carousel (관리자가 지정한 isTopRecommended 작품 우선 배치, 부족 시 상위 작품)
+    const topRecommended = SAMPLE_WORKS.filter(w => w.isTopRecommended);
+    const heroWorks = topRecommended.length >= 2 
+      ? topRecommended 
+      : [...topRecommended, ...SAMPLE_WORKS.filter(w => !w.isTopRecommended)].slice(0, 3);
     renderCdgHeroSlider(heroWorks);
 
-    // 2. 🔥 지금 가장 많이 읽는 작품 (Top 4 Works with Rank Badges 1~4)
+    // 2. 🔥 지금 가장 많이 읽는 작품 (관리자 지정 isPopularWork 작품 우선 + Top 4 Ranking 배지)
     const trendingContainer = document.getElementById('trendingWorksGrid');
     if (trendingContainer) {
-      const top4 = SAMPLE_WORKS.slice(0, 4);
+      const populars = SAMPLE_WORKS.filter(w => w.isPopularWork);
+      const top4 = populars.length >= 4 
+        ? populars.slice(0, 4) 
+        : [...populars, ...SAMPLE_WORKS.filter(w => !w.isPopularWork)].slice(0, 4);
+
       trendingContainer.innerHTML = top4.map((w, idx) => {
         return renderCdgWorkCardHtml(w, { rank: idx + 1 });
       }).join('');
     }
 
-    // 3. ✨ 새로운 작품 (New Releases, Items 4~8)
+    // 3. ✨ 새로운 작품 (관리자 지정 isNewWork 작품 우선)
     const newWorksContainer = document.getElementById('newWorksGrid');
     if (newWorksContainer) {
-      const new4 = SAMPLE_WORKS.slice(4, 8).length >= 4 ? SAMPLE_WORKS.slice(4, 8) : SAMPLE_WORKS.slice(0, 4);
+      const news = SAMPLE_WORKS.filter(w => w.isNewWork);
+      const new4 = news.length >= 4 
+        ? news.slice(0, 4) 
+        : [...news, ...SAMPLE_WORKS.filter(w => !w.isNewWork)].slice(0, 4);
+
       newWorksContainer.innerHTML = new4.map(w => {
         return renderCdgWorkCardHtml(w, { badge: 'NEW' });
       }).join('');
@@ -507,10 +522,11 @@ async function renderHomeWorks() {
     const webtoonsContainer = document.getElementById('webtoonsGrid');
     if (webtoonsContainer) {
       const webtoons = SAMPLE_WORKS.filter(w => w.contentType === 'WEBTOON');
-      webtoonsContainer.innerHTML = webtoons.map(w => renderCdgWorkCardHtml(w, { badge: 'NEW' })).join('');
+      const list = webtoons.length > 0 ? webtoons : SAMPLE_WORKS.slice(0, 2);
+      webtoonsContainer.innerHTML = list.map(w => renderCdgWorkCardHtml(w, { badge: 'NEW' })).join('');
     }
 
-    // 6. 🏆 완결 명작 모음 (Completed Works Grid)
+    // 6. 🏆 완결 명작 모음 (관리자 지정 isCompleted 작품 우선)
     const completedContainer = document.getElementById('completedWorksGrid');
     if (completedContainer) {
       const completed = SAMPLE_WORKS.filter(w => w.isCompleted);
