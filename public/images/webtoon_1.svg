@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+  <defs>
+    <linearGradient id="wg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4c0519"/>
+      <stop offset="40%" stop-color="#881337"/>
+      <stop offset="100%" stop-color="#fb7185"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#wg1)"/>
+  <rect x="20" y="20" width="360" height="340" rx="12" fill="#18181b" stroke="#f43f5e" stroke-width="2"/>
+  <text x="200" y="160" fill="#fda4af" font-size="40" font-family="'Pretendard', sans-serif" font-weight="900" text-anchor="middle">WEBTOON</text>
+  <text x="200" y="210" fill="#ffffff" font-size="28" font-family="'Pretendard', sans-serif" font-weight="bold" text-anchor="middle">웹툰 1</text>
+  <text x="200" y="250" fill="#fecdd3" font-size="16" font-family="'Pretendard', sans-serif" text-anchor="middle">풀컬러 고화질 연재작</text>
+  <rect x="30" y="390" width="340" height="170" rx="16" fill="#09090b" fill-opacity="0.85" stroke="#f43f5e" stroke-width="1.5"/>
+  <text x="200" y="435" fill="#ffffff" font-size="22" font-family="'Pretendard', sans-serif" font-weight="900" text-anchor="middle">액션 판타지 웹툰</text>
+  <text x="200" y="470" fill="#fda4af" font-size="15" font-family="'Pretendard', sans-serif" text-anchor="middle">매주 수요일 정기 업데이트</text>
+  <rect x="130" y="495" width="140" height="34" rx="17" fill="#f43f5e"/>
+  <text x="200" y="518" fill="#ffffff" font-size="14" font-family="'Pretendard', sans-serif" font-weight="bold" text-anchor="middle">⚡ WEBTOON 1</text>
+</svg>

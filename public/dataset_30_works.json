@@ -1,0 +1,1375 @@
+{
+  "works": [
+    {
+      "id": 1,
+      "title": "대적자: 신을 삼킨 기사",
+      "author": "판타지마스터",
+      "contentType": "NOVEL",
+      "genre": [
+        "판타지",
+        "전체이용가"
+      ],
+      "tags": [
+        "AI NONE",
+        "기사",
+        "성장"
+      ],
+      "description": "신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "stormqueen_oath.jpg",
+      "viewCount": 154000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false
+    },
+    {
+      "id": 2,
+      "title": "천마의 귀환",
+      "author": "무협의신",
+      "contentType": "NOVEL",
+      "genre": [
+        "무협",
+        "전체이용가"
+      ],
+      "tags": [
+        "AI NONE",
+        "천마",
+        "회귀"
+      ],
+      "description": "천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "sword_dao_supreme.jpg",
+      "viewCount": 231000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false
+    },
+    {
+      "id": 3,
+      "title": "금기의 계약",
+      "author": "나이트로즈",
+      "contentType": "NOVEL",
+      "genre": [
+        "성인",
+        "19세 이상"
+      ],
+      "tags": [
+        "AI NONE",
+        "치명적",
+        "로맨스"
+      ],
+      "description": "금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "velvet_and_thorns.jpg",
+      "viewCount": 189000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": false
+    },
+    {
+      "id": 4,
+      "title": "황제의 유일한 후궁",
+      "author": "로맨스퀸",
+      "contentType": "NOVEL",
+      "genre": [
+        "로맨스",
+        "전체이용가"
+      ],
+      "tags": [
+        "AI NONE",
+        "궁중",
+        "애절"
+      ],
+      "description": "황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "flower_blooming.jpg",
+      "viewCount": 312000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false
+    },
+    {
+      "id": 5,
+      "title": "성간 항로: 마지막 항해사",
+      "author": "스페이스로그",
+      "contentType": "NOVEL",
+      "genre": [
+        "SF",
+        "전체이용가"
+      ],
+      "tags": [
+        "AI NONE",
+        "우주",
+        "생존"
+      ],
+      "description": "인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "stellar_horizon.jpg",
+      "viewCount": 97000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": false,
+      "isNewWork": true
+    },
+    {
+      "id": 6,
+      "title": "서울에 나타난 마왕",
+      "author": "도시마법사",
+      "contentType": "NOVEL",
+      "genre": [
+        "현대 판타지",
+        "전체이용가"
+      ],
+      "tags": [
+        "AI NONE",
+        "현대",
+        "마왕"
+      ],
+      "description": "현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "seoul_sorcerer.jpg",
+      "viewCount": 278000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": true
+    },
+    {
+      "id": 7,
+      "title": "죽은 자들의 학교",
+      "author": "공포작가",
+      "contentType": "NOVEL",
+      "genre": [
+        "호러",
+        "전체이용가"
+      ],
+      "tags": [
+        "AI NONE",
+        "폐교",
+        "미스터리"
+      ],
+      "description": "폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "darkness_swallowed_classroom.jpg",
+      "viewCount": 84000,
+      "status": "COMPLETED",
+      "isCompleted": true,
+      "isTopRecommended": false,
+      "isPopularWork": false,
+      "isNewWork": true
+    },
+    {
+      "id": 8,
+      "title": "검의 전설: 천하제일인",
+      "author": "검성",
+      "contentType": "NOVEL",
+      "genre": [
+        "무협",
+        "전체이용가"
+      ],
+      "tags": [
+        "AI NONE",
+        "검술",
+        "절대자"
+      ],
+      "description": "천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
+      "coverImage": "sword_dao_defies_heavens.jpg",
+      "viewCount": 195000,
+      "status": "COMPLETED",
+      "isCompleted": true,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": false
+    },
+    {
+      "id": 9,
+      "title": "[웹툰] 신의 기사단",
+      "author": "스튜디오노바",
+      "contentType": "WEBTOON",
+      "genre": [
+        "판타지",
+        "액션"
+      ],
+      "tags": [
+        "웹툰",
+        "풀컬러",
+        "고화질"
+      ],
+      "description": "대적자 스핀오프 공식 웹툰! 화려한 작화로 펼쳐지는 기사단의 모험.",
+      "coverImage": "webtoon_1.svg",
+      "viewCount": 89000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": true
+    },
+    {
+      "id": 10,
+      "title": "[웹툰] 황후의 비밀 화원",
+      "author": "로즈코믹스",
+      "contentType": "WEBTOON",
+      "genre": [
+        "로맨스",
+        "순정"
+      ],
+      "tags": [
+        "웹툰",
+        "궁중로맨스",
+        "풀컬러"
+      ],
+      "description": "황실 최고의 비밀이 담긴 화원에서 피어나는 은밀하고 달콤한 로맨스 웹툰.",
+      "coverImage": "webtoon_2.svg",
+      "viewCount": 124000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": true
+    },
+    {
+      "id": 11,
+      "title": "환생한 마법사의 회귀록",
+      "author": "김마법",
+      "contentType": "NOVEL",
+      "genre": [
+        "판타지",
+        "전체이용가"
+      ],
+      "tags": [
+        "회귀",
+        "마법사",
+        "성장",
+        "복수"
+      ],
+      "description": "최강의 마법사였던 주인공이 과거로 회귀하여 새로운 삶을 살아가는 이야기. 전생의 지식으로 숨겨진 힘을 깨우고 세계를 구원한다.",
+      "coverImage": "novel_11.svg",
+      "viewCount": 285321,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer11",
+      "authorEmail": "writer11@webnovels.com",
+      "authorBirthdate": "1988-03-22",
+      "authorAddress": "서울특별시 강남구 테헤란로 123",
+      "bankInfo": "신한은행 110-234-567890"
+    },
+    {
+      "id": 12,
+      "title": "[웹툰] 나 혼자 만렙 헌터",
+      "author": "이헌터",
+      "contentType": "WEBTOON",
+      "genre": [
+        "헌터",
+        "전체이용가"
+      ],
+      "tags": [
+        "시스템",
+        "던전",
+        "성장",
+        "먼치킨"
+      ],
+      "description": "세상이 던전으로 변한 세상에서 최약체 헌터였던 주인공이 특별한 능력으로 최강의 헌터가 되는 과정을 그린 작품. 숨겨진 힘을 각성하며 괴물들을 사냥한다.",
+      "coverImage": "webtoon_12.svg",
+      "viewCount": 312567,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer12",
+      "authorEmail": "writer12@webnovels.com",
+      "authorBirthdate": "1992-07-01",
+      "authorAddress": "부산광역시 해운대구 마린시티1로 100",
+      "bankInfo": "우리은행 1002-345-678901"
+    },
+    {
+      "id": 13,
+      "title": "무림세가 천재 검신",
+      "author": "박무협",
+      "contentType": "NOVEL",
+      "genre": [
+        "무협",
+        "전체이용가"
+      ],
+      "tags": [
+        "환생",
+        "천재",
+        "복수",
+        "성장"
+      ],
+      "description": "무림의 명문 세가에 환생한 주인공이 압도적인 재능으로 무공을 익히고 강호의 질서를 뒤흔든다. 숨겨진 음모를 파헤치며 최강의 검신으로 거듭난다.",
+      "coverImage": "novel_13.svg",
+      "viewCount": 189765,
+      "status": "COMPLETED",
+      "isCompleted": true,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer13",
+      "authorEmail": "writer13@webnovels.com",
+      "authorBirthdate": "1985-11-05",
+      "authorAddress": "대구광역시 수성구 동대구로 200",
+      "bankInfo": "하나은행 222-333333-44444"
+    },
+    {
+      "id": 14,
+      "title": "[웹툰] 던전에서 살아남기",
+      "author": "최생존",
+      "contentType": "WEBTOON",
+      "genre": [
+        "판타지",
+        "헌터",
+        "전체이용가"
+      ],
+      "tags": [
+        "생존",
+        "던전",
+        "성장",
+        "모험"
+      ],
+      "description": "갑자기 나타난 던전에 갇힌 주인공이 특별한 능력 없이 오직 생존 본능으로 살아남는 이야기. 절망적인 상황 속에서 희망을 찾아나선다.",
+      "coverImage": "webtoon_14.svg",
+      "viewCount": 254987,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": true,
+      "authorUsername": "writer14",
+      "authorEmail": "writer14@webnovels.com",
+      "authorBirthdate": "1995-02-18",
+      "authorAddress": "인천광역시 연수구 센트럴로 263",
+      "bankInfo": "기업은행 010-123456-78901"
+    },
+    {
+      "id": 15,
+      "title": "강호의 마지막 영웅",
+      "author": "정협객",
+      "contentType": "NOVEL",
+      "genre": [
+        "무협",
+        "19세 이상"
+      ],
+      "tags": [
+        "복수",
+        "영웅",
+        "배신",
+        "성인"
+      ],
+      "description": "몰락한 가문의 마지막 후예가 되어 강호의 어둠에 맞서 싸우는 이야기. 피와 복수의 서사 속에서 진정한 영웅으로 각성한다.",
+      "coverImage": "novel_15.svg",
+      "viewCount": 98765,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": false,
+      "isNewWork": true,
+      "authorUsername": "writer15",
+      "authorEmail": "writer15@webnovels.com",
+      "authorBirthdate": "1980-09-10",
+      "authorAddress": "대전광역시 유성구 문지로 300",
+      "bankInfo": "농협은행 302-1234-5678-90"
+    },
+    {
+      "id": 16,
+      "title": "망가진 차원 학원의 유일한 생존자",
+      "author": "김은별",
+      "contentType": "NOVEL",
+      "genre": [
+        "SF",
+        "호러",
+        "아카데미",
+        "전체이용가"
+      ],
+      "tags": [
+        "디스토피아",
+        "생존물",
+        "초능력",
+        "미스터리"
+      ],
+      "description": "어느 날 갑자기 괴물들의 침공으로 폐허가 된 차원 학원. 유일하게 살아남은 주인공이 숨겨진 비밀을 파헤치며 탈출을 시도한다.",
+      "coverImage": "novel_1.svg",
+      "viewCount": 280000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer16",
+      "authorEmail": "writer16@webnovels.com",
+      "authorBirthdate": "1992-03-22",
+      "authorAddress": "서울특별시 강남구 테헤란로 123",
+      "bankInfo": "신한은행 110-333-555666"
+    },
+    {
+      "id": 17,
+      "title": "[웹툰] 어둠 속 아카데미의 그림자",
+      "author": "박준영",
+      "contentType": "WEBTOON",
+      "genre": [
+        "호러",
+        "SF",
+        "아카데미",
+        "19세 이상"
+      ],
+      "tags": [
+        "고딕호러",
+        "괴담",
+        "미스터리",
+        "심리"
+      ],
+      "description": "밤마다 기괴한 현상이 벌어지는 명문 아카데미. 신입생들이 숨겨진 악령의 저주에 맞서며 진실을 밝혀내야 한다.",
+      "coverImage": "webtoon_1.svg",
+      "viewCount": 320000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": false,
+      "isNewWork": true,
+      "authorUsername": "writer17",
+      "authorEmail": "writer17@webnovels.com",
+      "authorBirthdate": "1988-11-01",
+      "authorAddress": "부산광역시 해운대구 마린시티2로 33",
+      "bankInfo": "우리은행 1002-444-777888"
+    },
+    {
+      "id": 18,
+      "title": "우주 아카데미의 마지막 수업",
+      "author": "최지훈",
+      "contentType": "NOVEL",
+      "genre": [
+        "SF",
+        "아카데미",
+        "전체이용가"
+      ],
+      "tags": [
+        "우주",
+        "청춘",
+        "모험",
+        "성장"
+      ],
+      "description": "멸망 위기에 처한 지구를 떠나 우주 아카데미에 입학한 소년. 그는 인류의 미래를 건 마지막 수업에 참여하게 된다.",
+      "coverImage": "novel_1.svg",
+      "viewCount": 150000,
+      "status": "COMPLETED",
+      "isCompleted": true,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer18",
+      "authorEmail": "writer18@webnovels.com",
+      "authorBirthdate": "1995-07-07",
+      "authorAddress": "대구광역시 수성구 동대구로 99",
+      "bankInfo": "하나은행 222-333333-444"
+    },
+    {
+      "id": 19,
+      "title": "[웹툰] 저주받은 기계 아카데미",
+      "author": "이수민",
+      "contentType": "WEBTOON",
+      "genre": [
+        "SF",
+        "호러",
+        "아카데미",
+        "19세 이상"
+      ],
+      "tags": [
+        "사이버펑크",
+        "로봇",
+        "좀비",
+        "고어"
+      ],
+      "description": "기계 공학의 정점이라 불리던 아카데미가 의문의 바이러스로 인해 기계 좀비들의 소굴로 변한다. 생존을 건 극한의 사투가 시작된다.",
+      "coverImage": "webtoon_1.svg",
+      "viewCount": 210000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": false,
+      "isNewWork": true,
+      "authorUsername": "writer19",
+      "authorEmail": "writer19@webnovels.com",
+      "authorBirthdate": "1990-09-10",
+      "authorAddress": "인천광역시 연수구 송도과학로 56",
+      "bankInfo": "기업은행 444-555666-77-888"
+    },
+    {
+      "id": 20,
+      "title": "시간 여행자의 비밀 아카데미",
+      "author": "정하윤",
+      "contentType": "NOVEL",
+      "genre": [
+        "SF",
+        "아카데미",
+        "전체이용가"
+      ],
+      "tags": [
+        "시간여행",
+        "패러독스",
+        "미래",
+        "성장물"
+      ],
+      "description": "미래에서 온 시간 여행자들이 모여 과거를 연구하는 비밀 아카데미. 주인공은 이곳에서 시공간을 뒤흔들 엄청난 음모를 알게 된다.",
+      "coverImage": "novel_1.svg",
+      "viewCount": 90000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": false,
+      "isNewWork": false,
+      "authorUsername": "writer20",
+      "authorEmail": "writer20@webnovels.com",
+      "authorBirthdate": "1993-01-25",
+      "authorAddress": "대전광역시 유성구 문지로 100",
+      "bankInfo": "국민은행 999-888-777666"
+    },
+    {
+      "id": 21,
+      "title": "[웹툰] 마법소년 김철수",
+      "author": "김마법",
+      "contentType": "WEBTOON",
+      "genre": [
+        "액션",
+        "개그",
+        "전체이용가"
+      ],
+      "tags": [
+        "마법",
+        "소년만화",
+        "코믹"
+      ],
+      "description": "평범한 줄 알았던 김철수, 알고보니 세상을 구할 마법소년?! 코믹한 액션과 예측불허의 전개가 펼쳐집니다.",
+      "coverImage": "webtoon_1.svg",
+      "viewCount": 180000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer21",
+      "authorEmail": "writer21@webnovels.com",
+      "authorBirthdate": "1992-03-22",
+      "authorAddress": "경기도 성남시 분당구 판교역로 123",
+      "bankInfo": "신한은행 222-333-444555"
+    },
+    {
+      "id": 22,
+      "title": "[웹툰] 로맨스 레시피",
+      "author": "이사랑",
+      "contentType": "WEBTOON",
+      "genre": [
+        "로맨스",
+        "개그",
+        "전체이용가"
+      ],
+      "tags": [
+        "요리",
+        "직장로맨스",
+        "달달"
+      ],
+      "description": "요리에는 서툴지만 사랑에는 진심인 그녀와, 까칠하지만 따뜻한 셰프의 달콤살벌 로맨스! 과연 사랑의 레시피는 성공할 수 있을까?",
+      "coverImage": "webtoon_2.svg",
+      "viewCount": 250000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer22",
+      "authorEmail": "writer22@webnovels.com",
+      "authorBirthdate": "1988-11-01",
+      "authorAddress": "서울특별시 강남구 테헤란로 456",
+      "bankInfo": "우리은행 333-444-555666"
+    },
+    {
+      "id": 23,
+      "title": "[웹툰] 용사 김영희의 이세계 적응기",
+      "author": "박유머",
+      "contentType": "WEBTOON",
+      "genre": [
+        "액션",
+        "개그",
+        "전체이용가"
+      ],
+      "tags": [
+        "이세계",
+        "용사",
+        "판타지",
+        "코믹"
+      ],
+      "description": "평범한 직장인 김영희, 갑자기 이세계 용사가 되다! 엉뚱 발랄한 그녀의 좌충우돌 이세계 적응기가 시작된다.",
+      "coverImage": "webtoon_3.svg",
+      "viewCount": 310000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": false,
+      "isNewWork": true,
+      "authorUsername": "writer23",
+      "authorEmail": "writer23@webnovels.com",
+      "authorBirthdate": "1995-07-10",
+      "authorAddress": "인천광역시 연수구 송도과학로 789",
+      "bankInfo": "하나은행 444-555-666777"
+    },
+    {
+      "id": 24,
+      "title": "[웹툰] 오빠, 이번 생은 제가 주인공인데요?",
+      "author": "최로맨",
+      "contentType": "WEBTOON",
+      "genre": [
+        "로맨스",
+        "전체이용가"
+      ],
+      "tags": [
+        "회귀",
+        "로판",
+        "계약결혼"
+      ],
+      "description": "망할 오빠 때문에 비참한 생을 마감했던 그녀, 회귀하여 이번 생은 복수와 함께 로맨스를 쟁취한다! 과연 그녀의 계획은 성공할까?",
+      "coverImage": "webtoon_4.svg",
+      "viewCount": 120000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer24",
+      "authorEmail": "writer24@webnovels.com",
+      "authorBirthdate": "1993-01-18",
+      "authorAddress": "부산광역시 해운대구 센텀남대로 10",
+      "bankInfo": "농협은행 555-666-777888"
+    },
+    {
+      "id": 25,
+      "title": "[웹툰] 빌런이 너무 귀여워서 곤란하다",
+      "author": "정개그",
+      "contentType": "WEBTOON",
+      "genre": [
+        "개그",
+        "액션",
+        "전체이용가"
+      ],
+      "tags": [
+        "빌런",
+        "히어로",
+        "일상개그",
+        "코믹"
+      ],
+      "description": "세계를 정복하려는 빌런이 나타났다. 그런데… 너무 귀여워서 차마 싸울 수가 없다?! 히어로와 빌런의 예측불허 코믹 일상 액션!",
+      "coverImage": "webtoon_5.svg",
+      "viewCount": 90000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": false,
+      "isNewWork": true,
+      "authorUsername": "writer25",
+      "authorEmail": "writer25@webnovels.com",
+      "authorBirthdate": "1996-09-05",
+      "authorAddress": "대구광역시 수성구 동대구로 20",
+      "bankInfo": "기업은행 666-777-888999"
+    },
+    {
+      "id": 26,
+      "title": "[웹툰] 이계의 검사님은 회계사",
+      "author": "김철수",
+      "contentType": "WEBTOON",
+      "genre": [
+        "차원이동",
+        "전문직",
+        "전체이용가"
+      ],
+      "tags": [
+        "이세계",
+        "회계사",
+        "성장",
+        "코믹"
+      ],
+      "description": "평범한 회계사, 교통사고 후 검과 마법의 세계에 환생하다! 숫자에 강한 이세계 검사의 활극이 시작됩니다.",
+      "coverImage": "webtoon_1.svg",
+      "viewCount": 285432,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer26",
+      "authorEmail": "writer26@webnovels.com",
+      "authorBirthdate": "1988-11-20",
+      "authorAddress": "경기도 성남시 분당구 판교역로 100",
+      "bankInfo": "신한은행 110-123-456789"
+    },
+    {
+      "id": 27,
+      "title": "복수의 설계자",
+      "author": "박영희",
+      "contentType": "NOVEL",
+      "genre": [
+        "복수",
+        "전문직",
+        "19세 이상"
+      ],
+      "tags": [
+        "복수극",
+        "법정",
+        "스릴러",
+        "다크히어로"
+      ],
+      "description": "세상을 뒤흔든 음모로 가족을 잃은 천재 변호사. 그는 거대한 악에 맞서 치밀한 복수극을 설계한다.",
+      "coverImage": "novel_1.svg",
+      "viewCount": 312000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": false,
+      "isNewWork": false,
+      "authorUsername": "writer27",
+      "authorEmail": "writer27@webnovels.com",
+      "authorBirthdate": "1992-03-01",
+      "authorAddress": "서울특별시 강남구 테헤란로 200",
+      "bankInfo": "우리은행 1002-345-678901"
+    },
+    {
+      "id": 28,
+      "title": "[웹툰] 심연의 그림자 병원",
+      "author": "이지은",
+      "contentType": "WEBTOON",
+      "genre": [
+        "호러",
+        "전문직",
+        "19세 이상"
+      ],
+      "tags": [
+        "병원",
+        "미스터리",
+        "공포",
+        "심리"
+      ],
+      "description": "기이한 사건이 끊이지 않는 폐쇄 병원에 부임한 신입 의사. 그는 이 병원의 어두운 비밀과 마주하게 된다.",
+      "coverImage": "webtoon_2.svg",
+      "viewCount": 150000,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": false,
+      "isPopularWork": true,
+      "isNewWork": false,
+      "authorUsername": "writer28",
+      "authorEmail": "writer28@webnovels.com",
+      "authorBirthdate": "1995-07-10",
+      "authorAddress": "부산광역시 해운대구 마린시티3로 10",
+      "bankInfo": "하나은행 222-333444-555"
+    },
+    {
+      "id": 29,
+      "title": "천재 셰프의 이세계 레시피",
+      "author": "최현우",
+      "contentType": "NOVEL",
+      "genre": [
+        "차원이동",
+        "전문직",
+        "전체이용가"
+      ],
+      "tags": [
+        "요리",
+        "판타지",
+        "힐링",
+        "먹방"
+      ],
+      "description": "최고의 셰프가 이세계로 소환되었다! 그의 손끝에서 탄생하는 환상의 요리가 척박한 이세계를 변화시킨다.",
+      "coverImage": "novel_2.svg",
+      "viewCount": 330123,
+      "status": "ONGOING",
+      "isCompleted": false,
+      "isTopRecommended": true,
+      "isPopularWork": true,
+      "isNewWork": true,
+      "authorUsername": "writer29",
+      "authorEmail": "writer29@webnovels.com",
+      "authorBirthdate": "1990-05-15",
+      "authorAddress": "대전광역시 유성구 문지로 300",
+      "bankInfo": "국민은행 111-222-333444"
+    },
+    {
+      "id": 30,
+      "title": "저주받은 저택의 방문객",
+      "author": "강민준",
+      "contentType": "NOVEL",
+      "genre": [
+        "호러",
+        "복수",
+        "19세 이상"
+      ],
+      "tags": [
+        "고저택",
+        "귀신",
+        "미스터리",
+        "음모"
+      ],
+      "description": "오랜 저주에 갇힌 저택에 발을 들인 주인공. 그는 저택에 얽힌 잔혹한 비밀과 복수를 꿈꾸는 원혼들을 마주한다.",
+      "coverImage": "novel_3.svg",
+      "viewCount": 87654,
+      "status": "COMPLETED",
+      "isCompleted": true,
+      "isTopRecommended": false,
+      "isPopularWork": false,
+      "isNewWork": false,
+      "authorUsername": "writer30",
+      "authorEmail": "writer30@webnovels.com",
+      "authorBirthdate": "1985-02-28",
+      "authorAddress": "인천광역시 연수구 송도과학로 50",
+      "bankInfo": "IBK기업은행 010-987-654321"
+    }
+  ],
+  "authors": [
+    {
+      "id": 1,
+      "username": "writer1",
+      "pen_name": "판타지마스터",
+      "work_title": "대적자: 신을 삼킨 기사",
+      "birthdate": "1990-01-15",
+      "address": "서울특별시 강남구 테헤란로 123",
+      "bank_info": "국민은행 999-888-777666"
+    },
+    {
+      "id": 2,
+      "username": "writer2",
+      "pen_name": "무협의신",
+      "work_title": "천마의 귀환",
+      "birthdate": "1985-05-20",
+      "address": "서울특별시 서초구 반포대로 45",
+      "bank_info": "신한은행 110-222-333444"
+    },
+    {
+      "id": 3,
+      "username": "writer3",
+      "pen_name": "나이트로즈",
+      "work_title": "금기의 계약",
+      "birthdate": "1992-08-12",
+      "address": "경기도 성남시 분당구 판교로 78",
+      "bank_info": "우리은행 1002-555-666777"
+    },
+    {
+      "id": 4,
+      "username": "writer4",
+      "pen_name": "로맨스퀸",
+      "work_title": "황제의 유일한 후궁",
+      "birthdate": "1994-11-03",
+      "address": "서울특별시 마포구 월드컵북로 99",
+      "bank_info": "하나은행 222-333-444555"
+    },
+    {
+      "id": 5,
+      "username": "writer5",
+      "pen_name": "스페이스로그",
+      "work_title": "성간 항로: 마지막 항해사",
+      "birthdate": "1988-03-30",
+      "address": "대전광역시 유성구 대학로 100",
+      "bank_info": "농협 301-777-888999"
+    },
+    {
+      "id": 6,
+      "username": "writer6",
+      "pen_name": "도시마법사",
+      "work_title": "서울에 나타난 마왕",
+      "birthdate": "1995-07-07",
+      "address": "서울특별시 송파구 올림픽로 200",
+      "bank_info": "카카오뱅크 3333-01-234567"
+    },
+    {
+      "id": 7,
+      "username": "writer7",
+      "pen_name": "공포작가",
+      "work_title": "죽은 자들의 학교",
+      "birthdate": "1991-10-31",
+      "address": "부산광역시 해운대구 센텀서로 30",
+      "bank_info": "기업은행 010-9999-8888"
+    },
+    {
+      "id": 8,
+      "username": "writer8",
+      "pen_name": "검성",
+      "work_title": "검의 전설: 천하제일인",
+      "birthdate": "1987-12-25",
+      "address": "대구광역시 수성구 달구벌대로 500",
+      "bank_info": "대구은행 508-12-345678"
+    },
+    {
+      "id": 9,
+      "username": "writer9",
+      "pen_name": "스튜디오노바",
+      "work_title": "[웹툰] 신의 기사단",
+      "birthdate": "1993-04-10",
+      "address": "서울특별시 마포구 독막로 50",
+      "bank_info": "국민은행 111-222-333444"
+    },
+    {
+      "id": 10,
+      "username": "writer10",
+      "pen_name": "로즈코믹스",
+      "work_title": "[웹툰] 황후의 비밀 화원",
+      "birthdate": "1996-09-18",
+      "address": "서울특별시 강남구 학동로 20",
+      "bank_info": "신한은행 333-444-555666"
+    },
+    {
+      "id": 11,
+      "username": "writer11",
+      "pen_name": "김마법",
+      "work_title": "환생한 마법사의 회귀록",
+      "birthdate": "1988-03-22",
+      "address": "서울특별시 강남구 테헤란로 123",
+      "bank_info": "신한은행 110-234-567890"
+    },
+    {
+      "id": 12,
+      "username": "writer12",
+      "pen_name": "이헌터",
+      "work_title": "[웹툰] 나 혼자 만렙 헌터",
+      "birthdate": "1992-07-01",
+      "address": "부산광역시 해운대구 마린시티1로 100",
+      "bank_info": "우리은행 1002-345-678901"
+    },
+    {
+      "id": 13,
+      "username": "writer13",
+      "pen_name": "박무협",
+      "work_title": "무림세가 천재 검신",
+      "birthdate": "1985-11-05",
+      "address": "대구광역시 수성구 동대구로 200",
+      "bank_info": "하나은행 222-333333-44444"
+    },
+    {
+      "id": 14,
+      "username": "writer14",
+      "pen_name": "최생존",
+      "work_title": "[웹툰] 던전에서 살아남기",
+      "birthdate": "1995-02-18",
+      "address": "인천광역시 연수구 센트럴로 263",
+      "bank_info": "기업은행 010-123456-78901"
+    },
+    {
+      "id": 15,
+      "username": "writer15",
+      "pen_name": "정협객",
+      "work_title": "강호의 마지막 영웅",
+      "birthdate": "1980-09-10",
+      "address": "대전광역시 유성구 문지로 300",
+      "bank_info": "농협은행 302-1234-5678-90"
+    },
+    {
+      "id": 16,
+      "username": "writer16",
+      "pen_name": "김은별",
+      "work_title": "망가진 차원 학원의 유일한 생존자",
+      "birthdate": "1992-03-22",
+      "address": "서울특별시 강남구 테헤란로 123",
+      "bank_info": "신한은행 110-333-555666"
+    },
+    {
+      "id": 17,
+      "username": "writer17",
+      "pen_name": "박준영",
+      "work_title": "[웹툰] 어둠 속 아카데미의 그림자",
+      "birthdate": "1988-11-01",
+      "address": "부산광역시 해운대구 마린시티2로 33",
+      "bank_info": "우리은행 1002-444-777888"
+    },
+    {
+      "id": 18,
+      "username": "writer18",
+      "pen_name": "최지훈",
+      "work_title": "우주 아카데미의 마지막 수업",
+      "birthdate": "1995-07-07",
+      "address": "대구광역시 수성구 동대구로 99",
+      "bank_info": "하나은행 222-333333-444"
+    },
+    {
+      "id": 19,
+      "username": "writer19",
+      "pen_name": "이수민",
+      "work_title": "[웹툰] 저주받은 기계 아카데미",
+      "birthdate": "1990-09-10",
+      "address": "인천광역시 연수구 송도과학로 56",
+      "bank_info": "기업은행 444-555666-77-888"
+    },
+    {
+      "id": 20,
+      "username": "writer20",
+      "pen_name": "정하윤",
+      "work_title": "시간 여행자의 비밀 아카데미",
+      "birthdate": "1993-01-25",
+      "address": "대전광역시 유성구 문지로 100",
+      "bank_info": "국민은행 999-888-777666"
+    },
+    {
+      "id": 21,
+      "username": "writer21",
+      "pen_name": "김마법",
+      "work_title": "[웹툰] 마법소년 김철수",
+      "birthdate": "1992-03-22",
+      "address": "경기도 성남시 분당구 판교역로 123",
+      "bank_info": "신한은행 222-333-444555"
+    },
+    {
+      "id": 22,
+      "username": "writer22",
+      "pen_name": "이사랑",
+      "work_title": "[웹툰] 로맨스 레시피",
+      "birthdate": "1988-11-01",
+      "address": "서울특별시 강남구 테헤란로 456",
+      "bank_info": "우리은행 333-444-555666"
+    },
+    {
+      "id": 23,
+      "username": "writer23",
+      "pen_name": "박유머",
+      "work_title": "[웹툰] 용사 김영희의 이세계 적응기",
+      "birthdate": "1995-07-10",
+      "address": "인천광역시 연수구 송도과학로 789",
+      "bank_info": "하나은행 444-555-666777"
+    },
+    {
+      "id": 24,
+      "username": "writer24",
+      "pen_name": "최로맨",
+      "work_title": "[웹툰] 오빠, 이번 생은 제가 주인공인데요?",
+      "birthdate": "1993-01-18",
+      "address": "부산광역시 해운대구 센텀남대로 10",
+      "bank_info": "농협은행 555-666-777888"
+    },
+    {
+      "id": 25,
+      "username": "writer25",
+      "pen_name": "정개그",
+      "work_title": "[웹툰] 빌런이 너무 귀여워서 곤란하다",
+      "birthdate": "1996-09-05",
+      "address": "대구광역시 수성구 동대구로 20",
+      "bank_info": "기업은행 666-777-888999"
+    },
+    {
+      "id": 26,
+      "username": "writer26",
+      "pen_name": "김철수",
+      "work_title": "[웹툰] 이계의 검사님은 회계사",
+      "birthdate": "1988-11-20",
+      "address": "경기도 성남시 분당구 판교역로 100",
+      "bank_info": "신한은행 110-123-456789"
+    },
+    {
+      "id": 27,
+      "username": "writer27",
+      "pen_name": "박영희",
+      "work_title": "복수의 설계자",
+      "birthdate": "1992-03-01",
+      "address": "서울특별시 강남구 테헤란로 200",
+      "bank_info": "우리은행 1002-345-678901"
+    },
+    {
+      "id": 28,
+      "username": "writer28",
+      "pen_name": "이지은",
+      "work_title": "[웹툰] 심연의 그림자 병원",
+      "birthdate": "1995-07-10",
+      "address": "부산광역시 해운대구 마린시티3로 10",
+      "bank_info": "하나은행 222-333444-555"
+    },
+    {
+      "id": 29,
+      "username": "writer29",
+      "pen_name": "최현우",
+      "work_title": "천재 셰프의 이세계 레시피",
+      "birthdate": "1990-05-15",
+      "address": "대전광역시 유성구 문지로 300",
+      "bank_info": "국민은행 111-222-333444"
+    },
+    {
+      "id": 30,
+      "username": "writer30",
+      "pen_name": "강민준",
+      "work_title": "저주받은 저택의 방문객",
+      "birthdate": "1985-02-28",
+      "address": "인천광역시 연수구 송도과학로 50",
+      "bank_info": "IBK기업은행 010-987-654321"
+    }
+  ],
+  "readers": [
+    {
+      "id": 1,
+      "username": "reader1",
+      "email": "reader1@webnovels.com",
+      "phone": "+82-010-111-1111",
+      "is_adult_verified": false,
+      "subscription_status": "일반 회원",
+      "reading_history": [
+        1,
+        2,
+        4
+      ],
+      "favorites": [
+        1,
+        2,
+        4,
+        9,
+        11,
+        13
+      ],
+      "subscribed_authors": [
+        "판타지마스터",
+        "무협의신",
+        "밤샘작가"
+      ]
+    },
+    {
+      "id": 2,
+      "username": "reader2",
+      "email": "reader2@webnovels.com",
+      "phone": "+82-010-111-1112",
+      "is_adult_verified": true,
+      "subscription_status": "프리미엄 구독중",
+      "reading_history": [
+        3,
+        4,
+        6,
+        12
+      ],
+      "favorites": [
+        3,
+        4,
+        6,
+        12,
+        15,
+        21
+      ],
+      "subscribed_authors": [
+        "나이트로즈",
+        "로맨스퀸",
+        "청명검"
+      ]
+    },
+    {
+      "id": 3,
+      "username": "reader3",
+      "email": "reader3@webnovels.com",
+      "phone": "+82-010-111-1113",
+      "is_adult_verified": true,
+      "subscription_status": "프리미엄 구독중",
+      "reading_history": [
+        2,
+        8,
+        10,
+        21
+      ],
+      "favorites": [
+        2,
+        8,
+        10,
+        18,
+        21,
+        25
+      ],
+      "subscribed_authors": [
+        "검성",
+        "블랙툰",
+        "스튜디오노바"
+      ]
+    },
+    {
+      "id": 4,
+      "username": "reader4",
+      "email": "reader4@webnovels.com",
+      "phone": "+82-010-111-1114",
+      "is_adult_verified": false,
+      "subscription_status": "일반 회원",
+      "reading_history": [
+        9,
+        10,
+        21,
+        22
+      ],
+      "favorites": [
+        9,
+        10,
+        21,
+        22,
+        23,
+        24
+      ],
+      "subscribed_authors": [
+        "스튜디오노바",
+        "로즈코믹스",
+        "핑크베리"
+      ]
+    },
+    {
+      "id": 5,
+      "username": "reader5",
+      "email": "reader5@webnovels.com",
+      "phone": "+82-010-111-1115",
+      "is_adult_verified": true,
+      "subscription_status": "VIP 회원",
+      "reading_history": [
+        1,
+        3,
+        5,
+        11,
+        16
+      ],
+      "favorites": [
+        1,
+        3,
+        5,
+        11,
+        16,
+        17,
+        30
+      ],
+      "subscribed_authors": [
+        "스페이스로그",
+        "퇴마사",
+        "미드나잇"
+      ]
+    },
+    {
+      "id": 6,
+      "username": "reader6",
+      "email": "reader6@webnovels.com",
+      "phone": "+82-010-111-1116",
+      "is_adult_verified": true,
+      "subscription_status": "프리미엄 구독중",
+      "reading_history": [
+        18,
+        19,
+        20
+      ],
+      "favorites": [
+        18,
+        19,
+        20,
+        27
+      ],
+      "subscribed_authors": [
+        "룬마스터",
+        "머니파워",
+        "고메마스터"
+      ]
+    },
+    {
+      "id": 7,
+      "username": "reader7",
+      "email": "reader7@webnovels.com",
+      "phone": "+82-010-111-1117",
+      "is_adult_verified": false,
+      "subscription_status": "일반 회원",
+      "reading_history": [
+        7,
+        14,
+        26
+      ],
+      "favorites": [
+        7,
+        14,
+        26,
+        29
+      ],
+      "subscribed_authors": [
+        "공포작가",
+        "영혼술사",
+        "디멘션"
+      ]
+    },
+    {
+      "id": 8,
+      "username": "reader8",
+      "email": "reader8@webnovels.com",
+      "phone": "+82-010-111-1118",
+      "is_adult_verified": true,
+      "subscription_status": "일반 회원",
+      "reading_history": [
+        13,
+        28
+      ],
+      "favorites": [
+        4,
+        13,
+        28
+      ],
+      "subscribed_authors": [
+        "로맨스퀸",
+        "로즈가든",
+        "스칼렛"
+      ]
+    },
+    {
+      "id": 9,
+      "username": "reader9",
+      "email": "reader9@webnovels.com",
+      "phone": "+82-010-111-1119",
+      "is_adult_verified": true,
+      "subscription_status": "VIP 회원",
+      "reading_history": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "favorites": [
+        1,
+        2,
+        3,
+        4,
+        9,
+        10,
+        11,
+        12,
+        21,
+        22
+      ],
+      "subscribed_authors": [
+        "판타지마스터",
+        "무협의신",
+        "블랙툰"
+      ]
+    },
+    {
+      "id": 10,
+      "username": "reader10",
+      "email": "reader10@webnovels.com",
+      "phone": "+82-010-111-1120",
+      "is_adult_verified": true,
+      "subscription_status": "프리미엄 구독중",
+      "reading_history": [
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "favorites": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        23,
+        24
+      ],
+      "subscribed_authors": [
+        "밤샘작가",
+        "청명검",
+        "초코라떼"
+      ]
+    }
+  ]
+}

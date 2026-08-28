@@ -254,7 +254,45 @@ async function initWebNovelsApp() {
   lucide.createIcons();
   bindWebNovelsEvents();
 
-  // 1. [즉시 1차 렌더링] 지연 없이 랜딩페이지 콘텐츠 즉각 표시
+  // 1. [즉시 1차 렌더링] 로컬 30개 데이터셋 또는 기본 데이터 렌더링
+  try {
+    const localRes = await fetch('/dataset_30_works.json');
+    if (localRes.ok) {
+      const localData = await localRes.json();
+      if (localData.works && localData.works.length >= 30) {
+        SAMPLE_WORKS.length = 0;
+        SAMPLE_WORKS.push(...localData.works.map(w => ({
+          id: Number(w.id),
+          title: w.title,
+          author: w.author,
+          genre: Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'),
+          rating: Array.isArray(w.genre) && w.genre.includes('19세 이상') ? 'AGE_19' : 'ALL',
+          aiUsageType: 'NONE',
+          contentType: w.contentType || 'NOVEL',
+          coverUrl: w.coverImage ? (w.coverImage.startsWith('/') ? w.coverImage : `/images/${w.coverImage}`) : '/images/stormqueen_oath.jpg',
+          description: w.description,
+          viewCount: Number(w.viewCount || 100000),
+          episodesCount: 6,
+          isCompleted: !!w.isCompleted,
+          isTopRecommended: !!w.isTopRecommended,
+          isPopularWork: !!w.isPopularWork,
+          isNewWork: !!w.isNewWork,
+          episodes: createDefault6Episodes(w.title)
+        })));
+        if (localData.readers) {
+          SAMPLE_READERS.length = 0;
+          SAMPLE_READERS.push(...localData.readers);
+        }
+        if (localData.authors) {
+          SAMPLE_AUTHORS.length = 0;
+          SAMPLE_AUTHORS.push(...localData.authors);
+        }
+      }
+    }
+  } catch(e) {
+    // offline/fallback
+  }
+
   renderHomeWorks();
   renderDiscoverWorks();
   renderSearchResults();
@@ -263,7 +301,7 @@ async function initWebNovelsApp() {
   if (window.WebNovelsAdmin) {
     window.WebNovelsAdmin.init();
     
-    // Supabase DB에서 10개 작품 및 회차 실데이터 fetch
+    // Supabase DB에서 30개 작품 및 회차 실데이터 fetch
     try {
       const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
       if (remoteWorks && remoteWorks.length > 0) {
@@ -1651,13 +1689,9 @@ window.handleAdminLoginProcess = async function() {
     return;
   }
 
-  const cleanEmail = idInput.toLowerCase();
-  const isSuperAdminMaster = (cleanEmail === 'jwmaxum@gmail.com' || cleanEmail === 'super_admin') && pwInput === 'SUPER_ADMIN_PASSWORD_REDACTED';
-  const isSubAdminAndy = (cleanEmail === 'andysung@webnovel-admin.com' || cleanEmail === 'andysung') && (pwInput === 'subpass1234!' || pwInput === '!12345' || pwInput === 'SUPER_ADMIN_PASSWORD_REDACTED');
-
   let result = null;
 
-  // 1. WebNovelsAdmin 모듈을 통한 로그인 시도
+  // 1. WebNovelsAdmin 모듈을 통한 로그인 시도 (Supabase verify_admin_login RPC)
   try {
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.login === 'function') {
       window.WebNovelsAdmin.init();
@@ -1667,9 +1701,8 @@ window.handleAdminLoginProcess = async function() {
     console.warn('[Admin Login] WebNovelsAdmin 호출 에러, 자체 복구 진행:', e);
   }
 
-  // 2. 만약 WebNovelsAdmin 결과가 없거나 실패 시, Supabase 직접 RPC 또는 로컬 마스터 검증
+  // 2. 만약 WebNovelsAdmin 결과가 없거나 실패 시, Supabase 직접 RPC 검증
   if (!result || !result.success) {
-    // 2-1. 브라우저 window.supabase SDK 직접 호출 시도
     if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
       try {
         const directClient = window.supabase.createClient(
@@ -1685,35 +1718,6 @@ window.handleAdminLoginProcess = async function() {
         }
       } catch(rpcErr) {
         console.warn('[Admin Login] Direct RPC error:', rpcErr);
-      }
-    }
-
-    // 2-2. 마스터 / 서브관리자 안전 자격 증명 즉시 승인
-    if (!result || !result.success) {
-      if (isSuperAdminMaster) {
-        result = {
-          success: true,
-          admin: {
-            id: 'c6889f7b-f1fc-4088-8144-b9654e668abf',
-            email: 'jwmaxum@gmail.com',
-            username: 'super_admin',
-            nickname: '최고관리자',
-            role: 'SUPER_ADMIN',
-            permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-          }
-        };
-      } else if (isSubAdminAndy) {
-        result = {
-          success: true,
-          admin: {
-            id: 'e2330f38-8d79-4fa4-864e-c32859fb1d46',
-            email: 'andysung@webnovel-admin.com',
-            username: 'andysung',
-            nickname: '성일',
-            role: 'SUB_ADMIN',
-            permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-          }
-        };
       }
     }
   }

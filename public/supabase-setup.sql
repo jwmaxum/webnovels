@@ -97,19 +97,18 @@ ON CONFLICT (id) DO NOTHING;
 -- 9. 비밀번호 해싱 함수 (pgcrypto 확장)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- 10. 최고 관리자 계정 시드 (ID: jwmaxum@gmail.com, PW: SUPER_ADMIN_PASSWORD_REDACTED)
+-- 10. 최고 관리자 계정 시드 (ID: jwmaxum@gmail.com, PW: .env.local 설정값 참조)
 INSERT INTO admin_users (email, username, password_hash, nickname, role, permissions, is_active)
 VALUES (
   'jwmaxum@gmail.com',
   'super_admin',
-  crypt('SUPER_ADMIN_PASSWORD_REDACTED', gen_salt('bf')),
+  crypt('SUPER_ADMIN_INITIAL_PASSWORD', gen_salt('bf')),
   '최고관리자',
   'SUPER_ADMIN',
   '["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]'::jsonb,
   true
 ) ON CONFLICT (email) DO UPDATE 
-SET password_hash = crypt('SUPER_ADMIN_PASSWORD_REDACTED', gen_salt('bf')),
-    role = 'SUPER_ADMIN',
+SET role = 'SUPER_ADMIN',
     permissions = '["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]'::jsonb,
     is_active = true;
 

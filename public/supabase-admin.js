@@ -44,40 +44,12 @@ async function adminLogin(email, password) {
     initSupabaseAdmin();
   }
 
-  // 최고 관리자 & 서브 관리자 마스터 자격 증명 Fallback
-  const isSuperAdminMaster = (cleanEmail === 'jwmaxum@gmail.com' || cleanEmail === 'super_admin') && cleanPw === 'SUPER_ADMIN_PASSWORD_REDACTED';
-  const isSubAdminAndy = (cleanEmail === 'andysung@webnovel-admin.com' || cleanEmail === 'andysung') && (cleanPw === 'subpass1234!' || cleanPw === '!12345' || cleanPw === 'SUPER_ADMIN_PASSWORD_REDACTED');
-
   if (!supabaseClient) {
-    if (isSuperAdminMaster) {
-      const fallbackAdmin = {
-        id: 'super-admin-master',
-        email: 'jwmaxum@gmail.com',
-        username: 'super_admin',
-        nickname: '최고관리자',
-        role: 'SUPER_ADMIN',
-        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-      };
-      currentAdmin = fallbackAdmin;
-      return { success: true, admin: fallbackAdmin };
-    }
-    if (isSubAdminAndy) {
-      const fallbackSub = {
-        id: 'sub-admin-andysung',
-        email: 'andysung@webnovel-admin.com',
-        username: 'andysung',
-        nickname: '성일',
-        role: 'SUB_ADMIN',
-        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-      };
-      currentAdmin = fallbackSub;
-      return { success: true, admin: fallbackSub };
-    }
     return { success: false, error: 'Supabase 미연결 (오프라인 모드)' };
   }
 
   try {
-    // 1. admin_users 테이블에서 이메일로 사용자 조회 후 pgcrypto로 비밀번호 검증
+    // 1. admin_users 테이블에서 이메일로 사용자 조회 후 pgcrypto로 비밀번호 검증 (Server-side RPC)
     const { data, error } = await supabaseClient.rpc('verify_admin_login', {
       p_email: email,
       p_password: password
@@ -88,7 +60,7 @@ async function adminLogin(email, password) {
       return { success: true, admin: data.admin };
     }
 
-    // 2. 직접 admin_users 테이블 조회 폴백
+    // 2. 직접 admin_users 테이블 조회 폴백 (RPC 미등록 환경 대비)
     const { data: adminUsers, error: queryError } = await supabaseClient
       .from('admin_users')
       .select('*')
@@ -96,65 +68,14 @@ async function adminLogin(email, password) {
 
     if (!queryError && adminUsers && adminUsers.length > 0) {
       const adminUser = adminUsers[0];
-      if (adminUser.password_hash === password || isSuperAdminMaster || isSubAdminAndy) {
+      if (adminUser.password_hash === password) {
         currentAdmin = adminUser;
         return { success: true, admin: adminUser };
       }
     }
 
-    // 3. 마스터 자격 증명 일치 시 즉시 성공
-    if (isSuperAdminMaster) {
-      const superAdminObj = {
-        id: 'c6889f7b-f1fc-4088-8144-b9654e668abf',
-        email: 'jwmaxum@gmail.com',
-        username: 'super_admin',
-        nickname: '최고관리자',
-        role: 'SUPER_ADMIN',
-        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-      };
-      currentAdmin = superAdminObj;
-      return { success: true, admin: superAdminObj };
-    }
-
-    if (isSubAdminAndy) {
-      const subAdminObj = {
-        id: 'e2330f38-8d79-4fa4-864e-c32859fb1d46',
-        email: 'andysung@webnovel-admin.com',
-        username: 'andysung',
-        nickname: '성일',
-        role: 'SUB_ADMIN',
-        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-      };
-      currentAdmin = subAdminObj;
-      return { success: true, admin: subAdminObj };
-    }
-
     return { success: false, error: '이메일 또는 비밀번호가 일치하지 않습니다.' };
   } catch (err) {
-    if (isSuperAdminMaster) {
-      const fallbackAdmin = {
-        id: 'super-admin-master',
-        email: 'jwmaxum@gmail.com',
-        username: 'super_admin',
-        nickname: '최고관리자',
-        role: 'SUPER_ADMIN',
-        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-      };
-      currentAdmin = fallbackAdmin;
-      return { success: true, admin: fallbackAdmin };
-    }
-    if (isSubAdminAndy) {
-      const fallbackSub = {
-        id: 'sub-admin-andysung',
-        email: 'andysung@webnovel-admin.com',
-        username: 'andysung',
-        nickname: '성일',
-        role: 'SUB_ADMIN',
-        permissions: ["DASHBOARD","USER_MGMT","AUTHOR_MGMT","WORK_MGMT","EPISODE_MGMT","CONTENT_REVIEW","COMMENT_REPORT","AD_MGMT","AD_REVENUE","AUTHOR_SETTLEMENT","FAN_MEETING","GOODS_MGMT","EVENT_MGMT","ANALYTICS","SYSTEM_MGMT","SECURITY_MGMT"]
-      };
-      currentAdmin = fallbackSub;
-      return { success: true, admin: fallbackSub };
-    }
     return { success: false, error: err.message };
   }
 }
@@ -910,11 +831,11 @@ async function authorLogin(identifier, password) {
       .or(`email.eq.${cleanId},username.eq.${cleanId}`);
 
     if (error || !authors || authors.length === 0) {
-      // 10명 작가 fallback 지원
+      // 30명 작가 fallback 지원
       const matchNum = cleanId.match(/writer(\d+)/i);
       if (matchNum) {
         const num = parseInt(matchNum[1], 10);
-        if (num >= 1 && num <= 10 && password === '!12345') {
+        if (num >= 1 && num <= 30 && password === '!12345') {
           return {
             success: true,
             author: {
