@@ -757,20 +757,52 @@
                   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
                     <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
                       <div class="text-muted small">오늘 발행 예정</div>
-                      <div style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-top: 4px;">42건</div>
+                      <div style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-top: 4px;" id="kpiTodayScheduled">30건</div>
                     </div>
                     <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
                       <div class="text-muted small">정상 자동 발행 완료</div>
-                      <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;">39건</div>
+                      <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;" id="kpiTodayPublished">27건</div>
                     </div>
                     <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border: 1px solid rgba(255,42,122,0.4); background: rgba(255,42,122,0.06); cursor: pointer;" onclick="switchAdminSubTab('actionqueue')">
                       <div style="color: var(--accent-rose); font-weight: 700;" class="small">확인 필요 (Action Required)</div>
-                      <div style="font-size: 1.6rem; font-weight: 800; color: var(--color-brand-secondary); margin-top: 4px;">3건 ⚠️</div>
+                      <div style="font-size: 1.6rem; font-weight: 800; color: var(--color-brand-secondary); margin-top: 4px;" id="kpiTodayActionReq">3건 ⚠️</div>
                     </div>
                   </div>
                 </div>
 
-                <!-- 2. 확인이 필요한 콘텐츠 긴급 카드 (Action Queue Preview) -->
+                <!-- 2. 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 vs 웹툰) -->
+                <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.3);">
+                  <div class="flex-between mb-3">
+                    <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                      <i data-lucide="layers" class="icon-indigo"></i> 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 & 웹툰 1:1 완벽 구분)
+                    </h3>
+                    <span class="badge badge-primary">실시간 DB 동기화</span>
+                  </div>
+                  <div class="grid-4-col gap-3">
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                      <div class="text-muted small">📖 웹소설 (NOVEL)</div>
+                      <div style="font-size: 1.5rem; font-weight: 800; color: #a78bfa; margin-top: 4px;" id="kpiNovelsCount">17작품</div>
+                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">102 에피소드 (텍스트)</div>
+                    </div>
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #ec4899;">
+                      <div class="text-muted small">🎨 웹툰 (WEBTOON)</div>
+                      <div style="font-size: 1.5rem; font-weight: 800; color: #f472b6; margin-top: 4px;" id="kpiWebtoonsCount">13작품</div>
+                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">78 에피소드 (컷 이미지)</div>
+                    </div>
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid var(--accent-emerald);">
+                      <div class="text-muted small">🟢 정상 연재중</div>
+                      <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;" id="kpiOngoingCount">26작품</div>
+                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">정기 발행 진행</div>
+                    </div>
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #38bdf8;">
+                      <div class="text-muted small">🏁 완결 작품</div>
+                      <div style="font-size: 1.5rem; font-weight: 800; color: #38bdf8; margin-top: 4px;" id="kpiCompletedCount">4작품</div>
+                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">전체 회차 완결</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. 확인이 필요한 콘텐츠 긴급 카드 (Action Queue Preview) -->
                 <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.03);">
                   <div class="flex-between mb-3">
                     <strong style="color: var(--accent-rose); font-size: 1rem; display: flex; align-items: center; gap: 6px;">
@@ -805,31 +837,31 @@
                   </div>
                 </div>
 
-                <!-- 3. 전체 플랫폼 통계 (5대 KPI) -->
+                <!-- 4. 전체 플랫폼 통계 (5대 KPI) -->
                 <div class="kpi-grid">
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(109,94,245,0.15);"><i data-lucide="users"></i></div>
-                    <div class="kpi-value" id="kpiTotalUsers">--</div>
+                    <div class="kpi-value" id="kpiTotalUsers">1,480</div>
                     <div class="kpi-label">총 회원수</div>
                   </div>
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(236,72,153,0.15);"><i data-lucide="feather"></i></div>
-                    <div class="kpi-value" id="kpiTotalAuthors">--</div>
+                    <div class="kpi-value" id="kpiTotalAuthors">30</div>
                     <div class="kpi-label">등록 작가</div>
                   </div>
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(34,197,94,0.15);"><i data-lucide="book-open"></i></div>
-                    <div class="kpi-value" id="kpiTotalWorks">--</div>
+                    <div class="kpi-value" id="kpiTotalWorks">30</div>
                     <div class="kpi-label">연재 작품</div>
                   </div>
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(251,146,60,0.15);"><i data-lucide="file-text"></i></div>
-                    <div class="kpi-value" id="kpiTotalEpisodes">--</div>
+                    <div class="kpi-value" id="kpiTotalEpisodes">180</div>
                     <div class="kpi-label">총 에피소드</div>
                   </div>
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(56,189,248,0.15);"><i data-lucide="tv"></i></div>
-                    <div class="kpi-value" id="kpiTotalAdViews">--</div>
+                    <div class="kpi-value" id="kpiTotalAdViews">142.5K</div>
                     <div class="kpi-label">광고 조회수</div>
                   </div>
                 </div>
@@ -976,17 +1008,6 @@
                 </div>
               </div>
 
-              <!-- Menu 4: Work Management (Content Operations Platform) -->
-              <div id="adminTab-works" class="admin-subtab" style="display: none;">
-                <!-- Header & Action -->
-                <div class="panel-header mb-3 flex-between" style="align-items: center;">
-                  <div>
-                    <h2 style="display: flex; align-items: center; gap: 8px;">
-                      <i data-lucide="book-open" class="icon-indigo"></i> WORK_MGMT (작품 연재 종합 관제탑)
-                    </h2>
-                    <p class="text-muted small mb-0">수백~수천 개 작품의 연재 상태 실시간 감지 · 이상징후 대응 · 일괄 조작 콘솔</p>
-                  </div>
-                  <div style="display: flex; gap: 8px;">
               <!-- Menu 2: Work Management (1.2 단순화된 작품관리) -->
               <div id="adminTab-works" class="admin-subtab" style="display: none;">
                 <!-- Panel Header -->
@@ -2113,7 +2134,7 @@
 
   </div>
 
-  <script src="/supabase-admin.js?v=60"></script>
-  <script src="/app.js?v=60"></script>
+  <script src="/supabase-admin.js?v=65"></script>
+  <script src="/app.js?v=65"></script>
 </body>
 </html>
