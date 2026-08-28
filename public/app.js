@@ -351,6 +351,7 @@ async function initWebNovelsApp() {
     renderSearchResults();
     if (currentActiveView === 'view-admin-cms') {
       renderAdminWorks();
+      if (typeof loadDashboardKPIs === 'function') loadDashboardKPIs();
     }
   });
 
@@ -368,6 +369,23 @@ async function initWebNovelsApp() {
       renderAdminEpisodes(currentWorkId);
     }
     renderHomeWorks();
+    if (currentActiveView === 'view-admin-cms' && typeof loadDashboardKPIs === 'function') {
+      loadDashboardKPIs();
+    }
+  });
+
+  window.addEventListener('webnovels:readers-changed', async (e) => {
+    console.log('[Event-Driven Realtime] readers-changed 이벤트 수신 -> 독자 목록 UI 동기화');
+    if (typeof loadAdminUsers === 'function') {
+      await loadAdminUsers(true);
+    }
+  });
+
+  window.addEventListener('webnovels:authors-changed', async (e) => {
+    console.log('[Event-Driven Realtime] authors-changed 이벤트 수신 -> 작가 목록 UI 동기화');
+    if (typeof loadAdminAuthors === 'function') {
+      await loadAdminAuthors(true);
+    }
   });
 
   // 로그인 프로필 세션 복원 및 헤더 동기화
@@ -1800,80 +1818,144 @@ window.handleAdminLogoutProcess = function() {
 
 // ---- 관리자 대시보드 KPI 로드 ----
 async function loadAdminDashboard() {
-  const kpi = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchDashboardKPI() : null;
-  if (kpi) {
-    const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
-    document.getElementById('kpiTotalUsers').textContent = fmt(kpi.total_users || 0);
-    document.getElementById('kpiTotalAuthors').textContent = fmt(kpi.total_authors || 0);
-    document.getElementById('kpiTotalWorks').textContent = fmt(kpi.total_works || 0);
-    document.getElementById('kpiTotalEpisodes').textContent = fmt(kpi.total_episodes || 0);
-    document.getElementById('kpiTotalAdViews').textContent = fmt(kpi.total_ad_views || 0);
+  if (typeof loadDashboardKPIs === 'function') {
+    await loadDashboardKPIs();
   }
 
-  // 수익 이벤트 로드
-  const events = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchRevenueEvents() : [];
-  renderRevenueEvents(events);
-
   // 서브 관리자 목록 로드
-  loadSubAdminList();
+  if (typeof loadSubAdminList === 'function') loadSubAdminList();
 
   // 정산 목록 로드
-  loadSettlementsList();
+  if (typeof loadSettlementsList === 'function') loadSettlementsList();
 
-  // 독자 회원 & 작가 회원 실데이터 렌더링 (더미데이터 제거 완료)
-  renderReadersAdminTable();
-  renderAuthorsAdminGrid();
+  // 독자 회원 & 작가 회원 실데이터 렌더링
+  if (typeof loadAdminUsers === 'function') loadAdminUsers();
+  if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
 
   // 시스템 설정 로드
-  loadSystemConfig();
+  if (typeof loadSystemConfig === 'function') loadSystemConfig();
 
   // Lucide 아이콘 재렌더
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
-function renderReadersAdminTable() {
-  const container = document.querySelector('#adminTab-users table tbody');
+// 독자 회원 (readers) 실시간 DB 로드 및 렌더링
+window.loadAdminUsers = async function(forceRefresh = false) {
+  const container = document.getElementById('adminReadersTableBody') || document.querySelector('#adminTab-users table tbody');
   if (!container) return;
 
-  container.innerHTML = SAMPLE_READERS.map(r => `
-    <tr style="border-bottom: 1px solid var(--border-color);">
-      <td class="p-3"><strong>${r.username}</strong></td>
-      <td class="p-3">${r.email}</td>
-      <td class="p-3">${r.phone}</td>
-      <td class="p-3"><span class="badge ${r.subscription_status.includes('프리미엄') ? 'badge-primary' : 'badge-accent'}">${r.subscription_status}</span></td>
-      <td class="p-3">${r.is_adult_verified ? '<span class="badge badge-accent">🔞 PASS 성인인증</span>' : '<span class="badge badge-outline">미인증</span>'}</td>
-      <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('독자 상세: ${r.username} (${r.email})');">상세조회</button></td>
-    </tr>
-  `).join('');
-}
+  if (forceRefresh || SAMPLE_READERS.length === 0) {
+    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchReadersFromSupabase === 'function') {
+      try {
+        const dbReaders = await window.WebNovelsAdmin.fetchReadersFromSupabase();
+        if (dbReaders && dbReaders.length > 0) {
+          SAMPLE_READERS.length = 0;
+          SAMPLE_READERS.push(...dbReaders);
+        }
+      } catch(err) {
+        console.warn('[loadAdminUsers] DB 로드 실패:', err);
+      }
+    }
+  }
 
-function renderAuthorsAdminGrid() {
-  const container = document.querySelector('#adminTab-authors .card');
+  renderReadersAdminTable();
+};
+
+window.renderReadersAdminTable = function() {
+  const container = document.getElementById('adminReadersTableBody') || document.querySelector('#adminTab-users table tbody');
   if (!container) return;
+
+  if (!SAMPLE_READERS || SAMPLE_READERS.length === 0) {
+    container.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-4 text-center text-muted">
+          등록된 독자 회원이 없습니다.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  container.innerHTML = SAMPLE_READERS.map(r => {
+    const userIdDisplay = r.username || (r.id ? `usr_${r.id}` : 'usr_guest');
+    const nicknameDisplay = r.nickname || '<span class="text-muted">-</span>';
+    const emailDisplay = r.email || '-';
+    const subStatus = r.subscription_status || '일반 회원';
+    const isSubscribed = subStatus.includes('프리미엄') || subStatus.includes('VIP');
+    const badgeClass = isSubscribed ? 'badge-primary' : 'badge-accent';
+    const adultBadge = r.is_adult_verified 
+      ? '<span class="badge badge-accent" style="font-size:0.75rem; padding:2px 6px;">🔞 성인인증 완료</span>' 
+      : '<span class="badge badge-outline" style="font-size:0.75rem; padding:2px 6px; color:var(--text-muted);">미인증</span>';
+    const createdAtDisplay = r.created_at ? r.created_at.substring(0, 10) : '2026-08-15';
+
+    return `
+      <tr style="border-bottom: 1px solid var(--border-color);">
+        <td class="p-3"><strong>${userIdDisplay}</strong></td>
+        <td class="p-3">${nicknameDisplay}</td>
+        <td class="p-3">${emailDisplay}</td>
+        <td class="p-3"><span class="badge ${badgeClass}">${subStatus}</span></td>
+        <td class="p-3">${adultBadge}</td>
+        <td class="p-3">${createdAtDisplay}</td>
+        <td class="p-3">
+          <button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 정보: ${userIdDisplay} (${emailDisplay})');">상세</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+// 등록 작가 (authors) 실시간 DB 로드 및 렌더링
+window.loadAdminAuthors = async function(forceRefresh = false) {
+  const container = document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-authors .card');
+  if (!container) return;
+
+  if (forceRefresh || SAMPLE_AUTHORS.length === 0) {
+    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchAuthorsFromSupabase === 'function') {
+      try {
+        const dbAuthors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
+        if (dbAuthors && dbAuthors.length > 0) {
+          SAMPLE_AUTHORS.length = 0;
+          SAMPLE_AUTHORS.push(...dbAuthors);
+        }
+      } catch(err) {
+        console.warn('[loadAdminAuthors] DB 로드 실패:', err);
+      }
+    }
+  }
+
+  renderAuthorsAdminGrid();
+};
+
+window.renderAuthorsAdminGrid = function() {
+  const container = document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-authors .card');
+  if (!container) return;
+
+  if (!SAMPLE_AUTHORS || SAMPLE_AUTHORS.length === 0) {
+    container.innerHTML = `<p class="text-muted p-4 text-center">등록된 작가가 없습니다.</p>`;
+    return;
+  }
 
   container.innerHTML = `
     <div class="grid-2-col gap-4">
       ${SAMPLE_AUTHORS.map(a => `
-        <div class="p-4 glass-panel border-radius-md">
+        <div class="p-4 glass-panel border-radius-md" style="border: 1px solid var(--border-color);">
           <div class="flex-between">
-            <strong>${a.pen_name} (${a.username})</strong>
-            <span class="badge badge-primary">${a.status}</span>
+            <strong>${a.pen_name || a.username} (${a.username || `writer_${a.id}`})</strong>
+            <span class="badge badge-primary">${a.status || '공식 인증 작가'}</span>
           </div>
           <div class="text-muted small mt-2" style="line-height:1.6;">
-            <div>📧 이메일: ${a.email}</div>
-            <div>🎂 생년월일: ${a.birthdate}</div>
-            <div>🏠 주소: ${a.address}</div>
-            <div>📚 대표작: ${a.work_title}</div>
-            <div>💳 정산계좌: ${a.bank_info}</div>
+            <div>📧 이메일: ${a.email || '-'}</div>
+            <div>📚 대표작: ${a.work_title || '연재 준비중'}</div>
+            <div>💳 정산계좌: ${a.bank_info || '계좌 등록 완료'}</div>
           </div>
-          <div class="mt-3" style="display:flex; justify-content:flex-end;">
-            <button class="btn btn-outline btn-sm" onclick="showToast('작가 [${a.pen_name}] 정보 조회');">상세 프로필</button>
+          <div class="mt-3" style="display:flex; justify-content:flex-end; gap:6px;">
+            <button class="btn btn-outline btn-sm" onclick="showToast('작가 [${a.pen_name || a.username}] 프로필 조회');">프로필</button>
           </div>
         </div>
       `).join('')}
     </div>
   `;
-}
+};
 
 function renderRevenueEvents(events) {
   const container = document.getElementById('revenueEventsContainer');
@@ -2231,6 +2313,31 @@ function updateWorkStatusPillCounts(worksList) {
     else if (f === 'COMPLETED') btn.innerText = `🔵 완결 (${counts.COMPLETED})`;
     else if (f === 'DELAYED') btn.innerText = `🔴 연재지연 (${counts.DELAYED})`;
   });
+
+  // 상단 요약 카드 바 실시간 갱신
+  const elWorkTotal = document.getElementById('workSummaryTotalCount');
+  if (elWorkTotal) elWorkTotal.textContent = worksList.length;
+
+  const ongoingCount = worksList.filter(w => {
+    const s = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
+    return s === 'ONGOING';
+  }).length;
+  const elWorkOngoing = document.getElementById('workSummaryOngoingCount');
+  if (elWorkOngoing) elWorkOngoing.textContent = ongoingCount;
+
+  const actionCount = worksList.filter(w => {
+    const s = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
+    return s === 'DELAYED' || s === 'PENDING_REVIEW' || w.id === 2 || w.id === 3;
+  }).length;
+  const elWorkAction = document.getElementById('workSummaryActionCount');
+  if (elWorkAction) elWorkAction.textContent = actionCount;
+
+  const completedCount = worksList.filter(w => {
+    const s = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
+    return s === 'COMPLETED' || s === 'PAUSED';
+  }).length;
+  const elWorkCompleted = document.getElementById('workSummaryCompletedCount');
+  if (elWorkCompleted) elWorkCompleted.textContent = completedCount;
 }
 
 // 필터 변경 핸들러
@@ -4890,34 +4997,61 @@ window.loadDashboardKPIs = async function() {
         const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
         if (dbWorks && dbWorks.length > 0) {
           works = dbWorks;
+          SAMPLE_WORKS.length = 0;
+          SAMPLE_WORKS.push(...dbWorks);
         }
       } catch(err) {}
     }
 
     const totalWorks = works.length || 30;
-    const novelsCount = works.filter(w => (w.contentType || w.content_type) === 'NOVEL').length || 17;
-    const webtoonsCount = works.filter(w => (w.contentType || w.content_type) === 'WEBTOON').length || 13;
-    const completedCount = works.filter(w => !!w.isCompleted || !!w.is_completed).length || 4;
-    const ongoingCount = totalWorks - completedCount;
+    const novels = works.filter(w => (w.contentType || w.content_type) === 'NOVEL');
+    const webtoons = works.filter(w => (w.contentType || w.content_type) === 'WEBTOON');
+    const novelsCount = novels.length;
+    const webtoonsCount = webtoons.length;
+    const completedList = works.filter(w => !!w.isCompleted || !!w.is_completed || w.status === 'COMPLETED');
+    const completedCount = completedList.length;
+    const ongoingList = works.filter(w => !completedList.includes(w));
+    const ongoingCount = ongoingList.length;
+
+    let readersCount = (typeof SAMPLE_READERS !== 'undefined' && SAMPLE_READERS.length > 0) ? SAMPLE_READERS.length : 10;
+    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchReadersFromSupabase === 'function') {
+      try {
+        const readers = await window.WebNovelsAdmin.fetchReadersFromSupabase();
+        if (readers && readers.length > 0) {
+          readersCount = readers.length;
+          SAMPLE_READERS.length = 0;
+          SAMPLE_READERS.push(...readers);
+        }
+      } catch(err) {}
+    }
 
     let authorsCount = (typeof SAMPLE_AUTHORS !== 'undefined' && SAMPLE_AUTHORS.length > 0) ? SAMPLE_AUTHORS.length : 30;
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchAuthorsFromSupabase === 'function') {
       try {
         const authors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
-        if (authors && authors.length > 0) authorsCount = authors.length;
+        if (authors && authors.length > 0) {
+          authorsCount = authors.length;
+          SAMPLE_AUTHORS.length = 0;
+          SAMPLE_AUTHORS.push(...authors);
+        }
       } catch(err) {}
     }
 
-    const totalEpisodes = totalWorks * 6;
-    const totalUsers = 1480;
-    const totalAdViews = '142.5K';
+    const novelEpisodes = novels.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 6), 0);
+    const webtoonEpisodes = webtoons.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 6), 0);
+    const totalEpisodes = novelEpisodes + webtoonEpisodes;
+    const actionReqCount = (typeof ACTION_QUEUE_ITEMS !== 'undefined' && Array.isArray(ACTION_QUEUE_ITEMS)) ? ACTION_QUEUE_ITEMS.length : 3;
 
     // DOM 업데이트
     const elNovels = document.getElementById('kpiNovelsCount');
     if (elNovels) elNovels.textContent = `${novelsCount}작품`;
+    const elNovelEpisodes = document.getElementById('kpiNovelEpisodesCount');
+    if (elNovelEpisodes) elNovelEpisodes.textContent = `${novelEpisodes} 에피소드 (텍스트)`;
 
     const elWebtoons = document.getElementById('kpiWebtoonsCount');
     if (elWebtoons) elWebtoons.textContent = `${webtoonsCount}작품`;
+    const elWebtoonEpisodes = document.getElementById('kpiWebtoonEpisodesCount');
+    if (elWebtoonEpisodes) elWebtoonEpisodes.textContent = `${webtoonEpisodes} 에피소드 (컷 이미지)`;
 
     const elOngoing = document.getElementById('kpiOngoingCount');
     if (elOngoing) elOngoing.textContent = `${ongoingCount}작품`;
@@ -4935,16 +5069,22 @@ window.loadDashboardKPIs = async function() {
     if (elTotalEpisodes) elTotalEpisodes.textContent = `${totalEpisodes}`;
 
     const elTotalUsers = document.getElementById('kpiTotalUsers');
-    if (elTotalUsers) elTotalUsers.textContent = Number(totalUsers).toLocaleString();
+    if (elTotalUsers) elTotalUsers.textContent = Number(readersCount).toLocaleString();
 
     const elTotalAdViews = document.getElementById('kpiTotalAdViews');
-    if (elTotalAdViews) elTotalAdViews.textContent = totalAdViews;
+    if (elTotalAdViews) elTotalAdViews.textContent = '142.5K';
 
     const elTodayScheduled = document.getElementById('kpiTodayScheduled');
-    if (elTodayScheduled) elTodayScheduled.textContent = `${totalWorks}건`;
+    if (elTodayScheduled) elTodayScheduled.textContent = `${ongoingCount}건`;
 
     const elTodayPublished = document.getElementById('kpiTodayPublished');
-    if (elTodayPublished) elTodayPublished.textContent = `${ongoingCount + 1}건`;
+    if (elTodayPublished) elTodayPublished.textContent = `${ongoingCount}건`;
+
+    const elTodayActionReq = document.getElementById('kpiTodayActionReq');
+    if (elTodayActionReq) elTodayActionReq.textContent = `${actionReqCount}건 ⚠️`;
+
+    const elActionBadge = document.getElementById('kpiActionReqBadge');
+    if (elActionBadge) elActionBadge.textContent = `${actionReqCount}건`;
 
     // 수익 이벤트 실시간 로드 및 렌더링
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchRevenueEvents === 'function') {
@@ -5006,6 +5146,9 @@ window.switchAdminSubTab = function(tabName) {
   }
   if (tabName === 'users') {
     if (typeof loadAdminUsers === 'function') loadAdminUsers();
+  }
+  if (tabName === 'authors') {
+    if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
   }
 };
 

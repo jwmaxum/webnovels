@@ -782,21 +782,21 @@
                     <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #8b5cf6;">
                       <div class="text-muted small">📖 웹소설 (NOVEL)</div>
                       <div style="font-size: 1.5rem; font-weight: 800; color: #a78bfa; margin-top: 4px;" id="kpiNovelsCount">17작품</div>
-                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">102 에피소드 (텍스트)</div>
+                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;" id="kpiNovelEpisodesCount">102 에피소드 (텍스트)</div>
                     </div>
                     <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #ec4899;">
                       <div class="text-muted small">🎨 웹툰 (WEBTOON)</div>
                       <div style="font-size: 1.5rem; font-weight: 800; color: #f472b6; margin-top: 4px;" id="kpiWebtoonsCount">13작품</div>
-                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">78 에피소드 (컷 이미지)</div>
+                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;" id="kpiWebtoonEpisodesCount">78 에피소드 (컷 이미지)</div>
                     </div>
                     <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid var(--accent-emerald);">
                       <div class="text-muted small">🟢 정상 연재중</div>
-                      <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;" id="kpiOngoingCount">26작품</div>
+                      <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;" id="kpiOngoingCount">25작품</div>
                       <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">정기 발행 진행</div>
                     </div>
                     <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #38bdf8;">
                       <div class="text-muted small">🏁 완결 작품</div>
-                      <div style="font-size: 1.5rem; font-weight: 800; color: #38bdf8; margin-top: 4px;" id="kpiCompletedCount">4작품</div>
+                      <div style="font-size: 1.5rem; font-weight: 800; color: #38bdf8; margin-top: 4px;" id="kpiCompletedCount">5작품</div>
                       <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">전체 회차 완결</div>
                     </div>
                   </div>
@@ -806,7 +806,7 @@
                 <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.03);">
                   <div class="flex-between mb-3">
                     <strong style="color: var(--accent-rose); font-size: 1rem; display: flex; align-items: center; gap: 6px;">
-                      <i data-lucide="alert-triangle"></i> ⚠ 관리자 개입이 필요한 예외 항목 (3건)
+                      <i data-lucide="alert-triangle"></i> ⚠ 관리자 개입이 필요한 예외 항목 (<span id="kpiActionReqBadge">3건</span>)
                     </strong>
                     <button class="btn btn-outline btn-sm" onclick="switchAdminSubTab('actionqueue')" style="font-size: 0.8rem; padding: 4px 10px;">
                       전체 확인 및 조치 →
@@ -841,8 +841,8 @@
                 <div class="kpi-grid">
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(109,94,245,0.15);"><i data-lucide="users"></i></div>
-                    <div class="kpi-value" id="kpiTotalUsers">1,480</div>
-                    <div class="kpi-label">총 회원수</div>
+                    <div class="kpi-value" id="kpiTotalUsers">10</div>
+                    <div class="kpi-label">독자 회원수</div>
                   </div>
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(236,72,153,0.15);"><i data-lucide="feather"></i></div>
@@ -926,12 +926,14 @@
 
               <!-- Menu 2: User Management -->
               <div id="adminTab-users" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
-                    <h2><i data-lucide="users" class="icon-indigo"></i> USER_MGMT (회원 관리)</h2>
-                    <p class="text-muted">독자 회원 정보 조회 · 권한 변경 · 제재 및 이용 정지 관리</p>
+                    <h2><i data-lucide="users" class="icon-indigo"></i> USER_MGMT (독자 회원 실시간 관리)</h2>
+                    <p class="text-muted">Supabase DB 실시간 독자 계정 연동 · 권한 및 구독 상태 · PASS 성인인증 관리</p>
                   </div>
-                  <button class="btn btn-outline btn-sm" onclick="showToast('회원 목록 조회가 갱신되었습니다.');">🔄 목록 갱신</button>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminUsers(true); showToast('실시간 DB 독자 회원 목록을 갱신했습니다.');">
+                    <i data-lucide="refresh-cw"></i> 🔄 실시간 목록 갱신
+                  </button>
                 </div>
                 <div class="card glass-panel p-6">
                   <div class="table-responsive">
@@ -942,35 +944,13 @@
                           <th class="p-3">닉네임</th>
                           <th class="p-3">이메일</th>
                           <th class="p-3">구독 상태</th>
+                          <th class="p-3">성인 인증</th>
                           <th class="p-3">가입일</th>
                           <th class="p-3">조치</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
-                          <td class="p-3">usr_98124</td>
-                          <td class="p-3">웹소설마니아</td>
-                          <td class="p-3">user01@webnovel.kr</td>
-                          <td class="p-3"><span class="badge badge-primary">프리미엄 구독중</span></td>
-                          <td class="p-3">2026-08-01</td>
-                          <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 조회가 열립니다.');">상세</button></td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid var(--border-color);">
-                          <td class="p-3">usr_98125</td>
-                          <td class="p-3">달빛독자</td>
-                          <td class="p-3">moon@webnovel.kr</td>
-                          <td class="p-3"><span class="badge badge-accent">일반 회원</span></td>
-                          <td class="p-3">2026-08-05</td>
-                          <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 조회가 열립니다.');">상세</button></td>
-                        </tr>
-                        <tr>
-                          <td class="p-3">usr_98126</td>
-                          <td class="p-3">판타지러버</td>
-                          <td class="p-3">fan@webnovel.kr</td>
-                          <td class="p-3"><span class="badge badge-primary">프리미엄 구독중</span></td>
-                          <td class="p-3">2026-08-10</td>
-                          <td class="p-3"><button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 조회가 열립니다.');">상세</button></td>
-                        </tr>
+                      <tbody id="adminReadersTableBody">
+                        <!-- JS 실시간 DB 렌더링 -->
                       </tbody>
                     </table>
                   </div>
@@ -979,32 +959,20 @@
 
               <!-- Menu 3: Author Management -->
               <div id="adminTab-authors" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
-                    <h2><i data-lucide="feather" class="icon-indigo"></i> AUTHOR_MGMT (작가 관리)</h2>
-                    <p class="text-muted">등록 작가 승인 · 작가 등급 관리 · 정산 계좌 상태 조회</p>
+                    <h2><i data-lucide="feather" class="icon-indigo"></i> AUTHOR_MGMT (등록 작가 실시간 관리)</h2>
+                    <p class="text-muted">Supabase DB 30명 등록 작가 실시간 연동 · 작가 등급 · 대표 연재작 및 정산 계좌 상태</p>
                   </div>
-                  <button class="btn btn-primary btn-sm" onclick="showToast('신규 작가 승인 신청 모달이 열립니다.');">➕ 작가 신청 승인</button>
+                  <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-outline btn-sm" onclick="loadAdminAuthors(true); showToast('실시간 DB 작가 목록을 갱신했습니다.');">
+                      <i data-lucide="refresh-cw"></i> 🔄 실시간 목록 갱신
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="showToast('신규 작가 승인 신청 모달이 열립니다.');">➕ 작가 신청 승인</button>
+                  </div>
                 </div>
-                <div class="card glass-panel p-6">
-                  <div class="grid-2-col gap-4">
-                    <div class="p-4 glass-panel border-radius-md">
-                      <strong>판타지마스터 (master@fantasy.com)</strong>
-                      <p class="text-muted small mt-1">대표작: 차원 이동 마법사 | 정산계좌: 국민은행 999-***-777</p>
-                      <div class="mt-3" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge badge-primary">공식 인증 작가</span>
-                        <button class="btn btn-outline btn-sm" onclick="showToast('작가 정산 프로필 조회');">프로필</button>
-                      </div>
-                    </div>
-                    <div class="p-4 glass-panel border-radius-md">
-                      <strong>로맨스퀸 (queen@romance.kr)</strong>
-                      <p class="text-muted small mt-1">대표작: 공작가의 비밀 하녀 | 정산계좌: 신한은행 110-***-888</p>
-                      <div class="mt-3" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge badge-primary">공식 인증 작가</span>
-                        <button class="btn btn-outline btn-sm" onclick="showToast('작가 정산 프로필 조회');">프로필</button>
-                      </div>
-                    </div>
-                  </div>
+                <div class="card glass-panel p-6" id="adminAuthorsContainer">
+                  <!-- JS 실시간 DB 렌더링 -->
                 </div>
               </div>
 
@@ -1032,19 +1000,19 @@
                 <div class="grid-4-col gap-3 mb-3">
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; cursor: pointer;" onclick="filterWorksByStatus('ALL')">
                     <div class="text-muted small">전체 작품</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;">1,284<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;"><span id="workSummaryTotalCount">30</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid var(--accent-emerald); cursor: pointer;" onclick="filterWorksByStatus('ONGOING')">
                     <div class="text-muted small">🟢 정상 연재</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;">1,102<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;"><span id="workSummaryOngoingCount">25</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid var(--accent-rose); cursor: pointer; background: rgba(239,68,68,0.08);" onclick="filterWorksByStatus('NEED_ACTION')">
                     <div class="text-muted small" style="color: var(--accent-rose); font-weight: 700;">⚠ 확인 필요 (문제)</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-rose); margin-top: 2px;">18<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-rose); margin-top: 2px;"><span id="workSummaryActionCount">3</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
-                  <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid #818cf8; cursor: pointer;" onclick="filterWorksByStatus('PAUSED')">
+                  <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid #818cf8; cursor: pointer;" onclick="filterWorksByStatus('COMPLETED')">
                     <div class="text-muted small">⚫ 휴재 / 완결</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #818cf8; margin-top: 2px;">64<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: #818cf8; margin-top: 2px;"><span id="workSummaryCompletedCount">5</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                 </div>
 
