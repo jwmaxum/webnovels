@@ -11,6 +11,48 @@ import fs from 'fs';
 import path from 'path';
 import { db } from '../config/db.js';
 
+interface SeedReader {
+  id?: number;
+  username: string;
+  email?: string;
+  phone?: string;
+  is_adult_verified?: boolean;
+  subscription_status?: string;
+}
+
+interface SeedAuthor {
+  id?: number;
+  username: string;
+  pen_name?: string;
+  work_title?: string;
+  birthdate?: string;
+  address?: string;
+  bank_info?: string;
+}
+
+interface SeedWork {
+  id?: number;
+  title: string;
+  author?: string;
+  genre?: string | string[];
+  tags?: string | string[];
+  description?: string;
+  coverImage?: string;
+  viewCount?: number;
+  contentType?: string;
+  status?: string;
+  isCompleted?: boolean;
+  isTopRecommended?: boolean;
+  isPopularWork?: boolean;
+  isNewWork?: boolean;
+}
+
+interface SeedDataset {
+  works: SeedWork[];
+  authors: SeedAuthor[];
+  readers: SeedReader[];
+}
+
 function splitBankInfo(bankInfo: string) {
   const [bankName, ...accountParts] = bankInfo.split(' ');
   return { bankName: bankName || '국민은행', accountNumber: accountParts.join(' ') || '111-222-333444' };
@@ -22,7 +64,7 @@ export class DemoDataSeedService {
   // [Purpose] 전체 30개 데모 데이터(독자, 작가, 작품, 회차, 정산계좌) DB upsert 실행
   // ============================================================
   static async seed() {
-    let dataset = { works: [], authors: [], readers: [] };
+    let dataset: SeedDataset = { works: [], authors: [], readers: [] };
     try {
       const jsonPath = path.join(process.cwd(), 'public', 'dataset_30_works.json');
       if (fs.existsSync(jsonPath)) {
@@ -32,17 +74,17 @@ export class DemoDataSeedService {
       console.warn('[DemoDataSeed] JSON 데이터셋 읽기 실패, 기본 데이터 사용');
     }
 
-    const readers = dataset.readers && dataset.readers.length > 0 ? dataset.readers : [
+    const readers: SeedReader[] = dataset.readers && dataset.readers.length > 0 ? dataset.readers : [
       { id: 1, username: 'reader1', email: 'reader1@webnovels.com', phone: '+82-010-111-1111', is_adult_verified: false, subscription_status: '일반 회원' },
       { id: 2, username: 'reader2', email: 'reader2@webnovels.com', phone: '+82-010-111-1112', is_adult_verified: true, subscription_status: '프리미엄 구독중' },
       { id: 3, username: 'reader3', email: 'reader3@webnovels.com', phone: '+82-010-111-1113', is_adult_verified: true, subscription_status: '프리미엄 구독중' }
     ];
 
-    const authors = dataset.authors && dataset.authors.length > 0 ? dataset.authors : [
+    const authors: SeedAuthor[] = dataset.authors && dataset.authors.length > 0 ? dataset.authors : [
       { id: 1, username: 'writer1', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666' }
     ];
 
-    const works = dataset.works && dataset.works.length > 0 ? dataset.works : [];
+    const works: SeedWork[] = dataset.works && dataset.works.length > 0 ? dataset.works : [];
 
     const passwordHashes = new Map<string, string>();
     for (const password of ['!12345', '!123456']) {
@@ -124,7 +166,7 @@ export class DemoDataSeedService {
         create: { authorId: author.id, ...bank, accountHolder: author.penName }
       });
 
-      const matchedWork = works.find((w: any) => w.id === authorSeed.id) || works[index];
+      const matchedWork = works.find((w: SeedWork) => w.id === authorSeed.id) || works[index];
       if (matchedWork) {
         const isWebtoon = matchedWork.contentType === 'WEBTOON';
         const coverImg = matchedWork.coverImage 
