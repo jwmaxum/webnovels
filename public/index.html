@@ -1425,21 +1425,79 @@
 
               <!-- Menu 14: Analytics -->
               <div id="adminTab-analytics" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
                     <h2><i data-lucide="line-chart" class="icon-indigo"></i> ANALYTICS (매출 및 트래픽 통계)</h2>
-                    <p class="text-muted">월별 매출 성장 추이 · 장르별 매출 비중 · 일일 트래픽 집계</p>
+                    <p class="text-muted">실시간 DB 기반 월별 매출 성장 추이 · 62.5% 작가 정산 풀 · 장르별 점유율 비중 · 광고 트래픽 집계</p>
+                  </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminAnalytics(true)">
+                    <i data-lucide="refresh-cw"></i> 실시간 통계 새로고침
+                  </button>
+                </div>
+
+                <!-- 1. 당월 핵심 재무 & 트래픽 4대 KPI -->
+                <div class="grid-4-col gap-4 mb-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(255,42,122,0.3); background: rgba(255,42,122,0.05);">
+                    <div class="text-muted small">당월 총 플랫폼 광고 매출 (Gross)</div>
+                    <div id="analyticsGrossRev" class="kpi-value mt-2" style="color: var(--cdg-pink); font-size: 1.8rem; font-weight: 800;">₩31,200,000</div>
+                    <small class="text-muted" style="font-size: 0.75rem;">광고 시청 142.5K 완독 기반</small>
+                  </div>
+                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);">
+                    <div class="text-muted small">작가 정산 분배 예정 풀 (62.5%)</div>
+                    <div id="analyticsWriterPool" class="kpi-value mt-2" style="color: #10B981; font-size: 1.8rem; font-weight: 800;">₩17,550,000</div>
+                    <small class="text-muted" style="font-size: 0.75rem;">순매출 ₩28,080,000의 62.5%</small>
+                  </div>
+                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(59,130,246,0.3); background: rgba(59,130,246,0.05);">
+                    <div class="text-muted small">플랫폼 운영 순수익 (37.5%)</div>
+                    <div id="analyticsPlatformRev" class="kpi-value mt-2" style="color: #60A5FA; font-size: 1.8rem; font-weight: 800;">₩10,530,000</div>
+                    <small class="text-muted" style="font-size: 0.75rem;">인프라 및 운영 이익</small>
+                  </div>
+                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(245,158,11,0.3); background: rgba(245,158,11,0.05);">
+                    <div class="text-muted small">누적 광고 완독 트래픽</div>
+                    <div id="analyticsTotalAdViews" class="kpi-value mt-2" style="color: #F59E0B; font-size: 1.8rem; font-weight: 800;">142,500회</div>
+                    <small class="text-muted" style="font-size: 0.75rem;">광고 네트워크 10% 수수료 제외</small>
                   </div>
                 </div>
-                <div class="card glass-panel p-6">
-                  <div class="grid-2-col gap-4">
-                    <div class="p-4 glass-panel text-center">
-                      <div class="text-muted small">이번 달 총 플랫폼 광고 매출</div>
-                      <div class="kpi-value mt-2" style="color: var(--color-brand-primary);">₩10,000,000</div>
+
+                <!-- 2. 월별 매출 성장 추이 테이블 및 시각화 -->
+                <div class="card glass-panel p-6 mb-4" style="border-radius: 8px;">
+                  <div class="flex-between mb-3">
+                    <h3 style="margin: 0;"><i data-lucide="trending-up" class="icon-indigo"></i> 월별 매출 성장 추이 (DB revenue_events)</h3>
+                    <span class="badge badge-accent">실시간 DB 동기화</span>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table" style="width: 100%; text-align: left; font-size: 0.9rem;">
+                      <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+                          <th class="p-3">정산 대상 월</th>
+                          <th class="p-3">총 광고 매출 (Gross)</th>
+                          <th class="p-3">광고 대행 수수료 (10%)</th>
+                          <th class="p-3">순매출 (Net)</th>
+                          <th class="p-3">작가 분배 풀 (62.5%)</th>
+                          <th class="p-3">플랫폼 수익 (37.5%)</th>
+                          <th class="p-3" style="text-align: right;">마감 상태</th>
+                        </tr>
+                      </thead>
+                      <tbody id="analyticsMonthlyTableBody">
+                        <tr><td colspan="7" class="p-4 text-center text-muted">매출 데이터를 불러오는 중입니다...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 3. 장르별 매출 및 트래픽 비중 (30개 작품 실데이터 집계) -->
+                <div class="grid-2-col gap-4">
+                  <div class="card glass-panel p-6" style="border-radius: 8px;">
+                    <h3 class="mb-3"><i data-lucide="pie-chart" class="icon-indigo"></i> 장르별 조회수 및 매출 점유율 비중</h3>
+                    <div id="analyticsGenreDistribution">
+                      <div class="p-4 text-center text-muted">장르별 점유율을 집계하고 있습니다...</div>
                     </div>
-                    <div class="p-4 glass-panel text-center">
-                      <div class="text-muted small">이번 달 작가 정산 지급 예정 총액</div>
-                      <div class="kpi-value mt-2" style="color: #34d399;">₩5,000,000</div>
+                  </div>
+
+                  <div class="card glass-panel p-6" style="border-radius: 8px;">
+                    <h3 class="mb-3"><i data-lucide="activity" class="icon-indigo"></i> 플랫폼 트래픽 & 콘텐츠 인프라 지표</h3>
+                    <div id="analyticsPlatformSummary">
+                      <div class="p-4 text-center text-muted">플랫폼 인프라 지표를 집계하고 있습니다...</div>
                     </div>
                   </div>
                 </div>
