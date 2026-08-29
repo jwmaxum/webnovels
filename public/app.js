@@ -4861,12 +4861,17 @@ window.handlePgPingTest = function() {
   showToast('🔌 토스페이먼츠 및 KCP PASS API 연동 핑 테스트 성공!');
 };
 
-// ----------------------------------------------------
-// ----------------------------------------------------
-// Action Queue: 확인 필요 예외 관제 센터 (실시간 DB 연동)
-// ----------------------------------------------------
+// ============================================================
+// [Module] Action Queue: 실시간 예외 관제 센터 (Zero-Touch Operations)
+// [Purpose] Supabase DB의 미처리 심사/신고/정산 데이터를 실시간 폴링/조회하여 대시보드 및 관제 센터에 렌더링
+// ============================================================
 let ACTION_QUEUE_ITEMS = [];
 
+// ============================================================
+// [Function] loadActionQueueFromDB
+// [Purpose] Supabase DB에서 content_reviews, reports, author_settlements의 대기 항목을 비동기 조회
+// [Returns] Promise<Array> ACTION_QUEUE_ITEMS
+// ============================================================
 window.loadActionQueueFromDB = async function() {
   if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchActionQueueFromDB === 'function') {
     try {
@@ -4881,6 +4886,10 @@ window.loadActionQueueFromDB = async function() {
   return ACTION_QUEUE_ITEMS;
 };
 
+// ============================================================
+// [Function] renderDashboardActionQueuePreview
+// [Purpose] 관리자 메인 대시보드의 '확인 필요 예외 항목' 프리뷰 카드(상위 3건) 및 카운트 배지 실시간 렌더링
+// ============================================================
 window.renderDashboardActionQueuePreview = function() {
   const container = document.getElementById('dashboardActionQueuePreviewContainer');
   const badgeEl = document.getElementById('kpiActionReqBadge');
@@ -4924,6 +4933,10 @@ window.renderDashboardActionQueuePreview = function() {
   if (window.lucide) window.lucide.createIcons();
 };
 
+// ============================================================
+// [Function] renderActionQueue
+// [Purpose] Action Queue 전용 관제 센터 탭의 4개 레벨 요약 배너 및 전체 대기열 목록을 DB 기반으로 렌더링
+// ============================================================
 window.renderActionQueue = async function() {
   await window.loadActionQueueFromDB();
   const container = document.getElementById('actionQueueItemsContainer');
@@ -4990,6 +5003,10 @@ window.renderActionQueue = async function() {
   if (window.lucide) window.lucide.createIcons();
 };
 
+// ============================================================
+// [Function] handleActionQueueItem
+// [Purpose] 예외 항목의 주요 버튼(심사 승인, 블라인드 조치, 송금 승인) 클릭 시 DB 상태 업데이트 및 큐 갱신
+// ============================================================
 window.handleActionQueueItem = async function(id, action) {
   const item = ACTION_QUEUE_ITEMS.find(i => i.id === id);
   if (!item) return;
@@ -5012,6 +5029,10 @@ window.handleActionQueueItem = async function(id, action) {
   if (queueContainer) window.renderActionQueue();
 };
 
+// ============================================================
+// [Function] handleActionDismiss
+// [Purpose] 예외 항목을 수동으로 조치 완료 처리하여 DB 및 UI에서 해결 상태로 전환
+// ============================================================
 window.handleActionDismiss = async function(id) {
   const item = ACTION_QUEUE_ITEMS.find(i => i.id === id);
   if (item && window.WebNovelsAdmin && typeof window.WebNovelsAdmin.resolveActionQueueItemInDB === 'function') {

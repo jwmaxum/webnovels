@@ -996,7 +996,15 @@ async function checkReaderExists(username, email) {
 }
 
 
-// ---- Action Queue (실시간 DB 연동 예외 관제) ----
+// ============================================================
+// [Function] fetchActionQueueFromDB
+// [Purpose] Supabase DB의 content_reviews, reports, author_settlements를 실시간 조회하여 통합 Action Queue 생성
+// [Returns] Promise<Array<ActionQueueItem>> - 정렬 및 등급별(CRITICAL/WARNING/INFO) 분류된 예외 항목 리스트
+// [Business Rule] 
+//  1. 심사 대기(content_reviews: status === 'PENDING') -> WARNING / '검수 필요'
+//  2. 미처리 신고(reports: status === 'PENDING') -> CRITICAL / '신고 처리'
+//  3. 출금 신청(author_settlements: status === 'PENDING') -> INFO / '정산 승인'
+// ============================================================
 async function fetchActionQueueFromDB() {
   if (!supabaseClient) return [];
 
@@ -1091,6 +1099,12 @@ async function fetchActionQueueFromDB() {
   }
 }
 
+// ============================================================
+// [Function] resolveActionQueueItemInDB
+// [Purpose] 관리자의 원클릭 조치에 따라 대상 테이블(content_reviews, reports, author_settlements)의 상태를 업데이트
+// [Params] item: ActionQueueItem - 조치 대상 항목 객체
+// [Returns] Promise<{ success: boolean, message?: string, error?: string }>
+// ============================================================
 async function resolveActionQueueItemInDB(item) {
   if (!supabaseClient || !item) return { success: false, error: 'Supabase 미연결' };
 
