@@ -996,6 +996,152 @@ async function checkReaderExists(username, email) {
 }
 
 
+// ---- Action Queue (실시간 DB 연동 예외 관제) ----
+async function fetchActionQueueFromDB() {
+  if (!supabaseClient) return [];
+
+  try {
+    const queueItems = [];
+
+    // 1. 심사 대기 콘텐츠 (content_reviews: status === 'PENDING')
+    const { data: reviews, error: revErr } = await supabaseClient
+      .from('content_reviews')
+      .select('*')
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false });
+
+    if (!revErr && reviews && reviews.length > 0) {
+      reviews.forEach(rev => {
+        queueItems.push({
+          id: `REV-${rev.id}`,
+          rawId: rev.id,
+          source: 'content_reviews',
+          level: 'WARNING',
+          badge: '🟠 검수 대기',
+          title: `[콘텐츠 심사] ${rev.work_title || '작품'} — ${rev.author_name || '작가'}`,
+          workId: rev.work_id,
+          episodeId: rev.episode_id || 1,
+          type: '검수 필요',
+          desc: `신규 등록/수정 작품 콘텐츠에 대한 운영자 승인 심사가 대기 중입니다. (등록일시: ${new Date(rev.created_at).toLocaleDateString()})`,
+          occurredAt: new Date(rev.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          primaryBtn: '심사 승인',
+          action: 'approve_review'
+        });
+      });
+    }
+
+    // 2. 미처리 신고 항목 (reports: status === 'PENDING')
+    const { data: reports, error: repErr } = await supabaseClient
+      .from('reports')
+      .select('*')
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false });
+
+    if (!repErr && reports && reports.length > 0) {
+      reports.forEach(rep => {
+        queueItems.push({
+          id: `REP-${rep.id}`,
+          rawId: rep.id,
+          source: 'reports',
+          level: 'CRITICAL',
+          badge: '🔴 독자 신고',
+          title: `[신고 접수] 대상: ${rep.target_type} #${rep.target_id}`,
+          workId: rep.target_type === 'WORK' ? rep.target_id : null,
+          episodeId: rep.target_type === 'EPISODE' ? rep.target_id : null,
+          type: '신고 처리',
+          desc: `신고 사유: "${rep.reason || '부적절한 내용'}" (신고자: ${rep.reporter_id || '익명 독자'})`,
+          occurredAt: new Date(rep.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          primaryBtn: '블라인드 조치',
+          action: 'resolve_report'
+        });
+      });
+    }
+
+    // 3. 출금 대기 작가 정산 (author_settlements: status === 'PENDING')
+    const { data: settlements, error: setErr } = await supabaseClient
+      .from('author_settlements')
+      .select('*')
+      .eq('status', 'PENDING')
+      .order('requested_at', { ascending: false });
+
+    if (!setErr && settlements && settlements.length > 0) {
+      settlements.forEach(sett => {
+        queueItems.push({
+          id: `SET-${sett.id}`,
+          rawId: sett.id,
+          source: 'author_settlements',
+          level: 'INFO',
+          badge: '🟡 정산 대기',
+          title: `[정산 신청] ${sett.author_name || '작가'} — ₩${Number(sett.amount || 0).toLocaleString()}`,
+          workId: null,
+          episodeId: null,
+          type: '정산 승인',
+          desc: `지급 요청 계좌: ${sett.bank_info || '계좌 정보 없음'} (신청일: ${new Date(sett.requested_at).toLocaleDateString()})`,
+          occurredAt: new Date(sett.requested_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          primaryBtn: '송금 승인',
+          action: 'approve_settlement'
+        });
+      });
+    }
+
+    return queueItems;
+  } catch (err) {
+    console.warn('[Action Queue] DB 조회 실패:', err.message);
+    return [];
+  }
+}
+
+async function resolveActionQueueItemInDB(item) {
+  if (!supabaseClient || !item) return { success: false, error: 'Supabase 미연결' };
+
+  try {
+    if (item.source === 'content_reviews') {
+      const { error } = await supabaseClient
+        .from('content_reviews')
+        .update({
+          status: 'APPROVED',
+          reviewer_name: '최고관리자',
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', item.rawId);
+
+      if (error) throw error;
+      return { success: true, message: '콘텐츠 심사가 승인되었습니다.' };
+    }
+
+    if (item.source === 'reports') {
+      const { error } = await supabaseClient
+        .from('reports')
+        .update({
+          status: 'RESOLVED',
+          resolved_action: '관리자 확인 및 블라인드 조치 완료'
+        })
+        .eq('id', item.rawId);
+
+      if (error) throw error;
+      return { success: true, message: '신고 항목이 해결 처리되었습니다.' };
+    }
+
+    if (item.source === 'author_settlements') {
+      const { error } = await supabaseClient
+        .from('author_settlements')
+        .update({
+          status: 'PAID',
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', item.rawId);
+
+      if (error) throw error;
+      return { success: true, message: '정산금 지급이 승인되었습니다.' };
+    }
+
+    return { success: true, message: '처리가 완료되었습니다.' };
+  } catch (err) {
+    console.error('[Action Queue Resolve] 실패:', err);
+    return { success: false, error: err.message };
+  }
+}
+
 // ---- 글로벌 export ----
 window.WebNovelsAdmin = {
   init: initSupabaseAdmin,
@@ -1034,8 +1180,11 @@ window.WebNovelsAdmin = {
   checkReaderExists,
   fetchAuthorDashboard,
   createEpisode,
-  requestSettlement
+  requestSettlement,
+  fetchActionQueueFromDB,
+  resolveActionQueueItemInDB
 };
+
 
 
 

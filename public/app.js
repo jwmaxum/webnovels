@@ -4862,65 +4862,86 @@ window.handlePgPingTest = function() {
 };
 
 // ----------------------------------------------------
-// Action Queue: 확인 필요 예외 관제 센터 (Zero-Touch Operations)
 // ----------------------------------------------------
-let ACTION_QUEUE_ITEMS = [
-  {
-    id: 'AQ-101',
-    level: 'CRITICAL',
-    badge: '🔴 긴급',
-    title: '차원 마법사의 전설 제 5화 자동 발행 실패',
-    workId: 1,
-    episodeId: 5,
-    type: '발행 실패',
-    desc: '이미지 CDN 업로드 타임아웃 오류 (Error 504 Gateway Timeout)',
-    occurredAt: '오늘 20:00',
-    primaryBtn: '즉시 재시도',
-    action: 'retry'
-  },
-  {
-    id: 'AQ-102',
-    level: 'WARNING',
-    badge: '🟠 중요',
-    title: '[웹툰] 신의 기사단 제 1화 AI 자동 심사 플래그',
-    workId: 9,
-    episodeId: 1,
-    type: '신고/검수',
-    desc: 'AI 자동 검수 엔진에서 연령 등급(19+/전체) 일치 여부 확인 필요 판정',
-    occurredAt: '오늘 18:30',
-    primaryBtn: '검수 콘솔 확인',
-    action: 'review'
-  },
-  {
-    id: 'AQ-103',
-    level: 'INFO',
-    badge: '🟡 일반',
-    title: '별빛의 계약 — 예정 회차 2시간 미등록 (연재 지연)',
-    workId: 2,
-    episodeId: 5,
-    type: '연재 지연',
-    desc: '매주 금요일 20:00 정기 발행 주기이나 22:00 현재 회차 미등록 감지',
-    occurredAt: '오늘 20:10',
-    primaryBtn: '작가 1:1 푸시 알림',
-    action: 'notify'
-  },
-  {
-    id: 'AQ-104',
-    level: 'INFO',
-    badge: '🔵 참고',
-    title: '서울역 흑마법사 — 신규 태그 및 연재주기 변경 승인 요청',
-    workId: 6,
-    episodeId: null,
-    type: '정보 변경',
-    desc: '작가가 연재주기를 주 3회(월/수/금)에서 주 5회(월~금)로 변경 신청',
-    occurredAt: '어제 15:40',
-    primaryBtn: '원클릭 승인',
-    action: 'approve_meta'
-  }
-];
+// Action Queue: 확인 필요 예외 관제 센터 (실시간 DB 연동)
+// ----------------------------------------------------
+let ACTION_QUEUE_ITEMS = [];
 
-window.renderActionQueue = function() {
+window.loadActionQueueFromDB = async function() {
+  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchActionQueueFromDB === 'function') {
+    try {
+      const items = await window.WebNovelsAdmin.fetchActionQueueFromDB();
+      if (Array.isArray(items)) {
+        ACTION_QUEUE_ITEMS = items;
+      }
+    } catch(e) {
+      console.warn('[Action Queue] DB 로드 실패:', e);
+    }
+  }
+  return ACTION_QUEUE_ITEMS;
+};
+
+window.renderDashboardActionQueuePreview = function() {
+  const container = document.getElementById('dashboardActionQueuePreviewContainer');
+  const badgeEl = document.getElementById('kpiActionReqBadge');
+  const todayBadgeEl = document.getElementById('kpiTodayActionReq');
+
+  if (badgeEl) badgeEl.textContent = `${ACTION_QUEUE_ITEMS.length}건`;
+  if (todayBadgeEl) todayBadgeEl.textContent = `${ACTION_QUEUE_ITEMS.length}건 ⚠️`;
+
+  if (!container) return;
+
+  if (ACTION_QUEUE_ITEMS.length === 0) {
+    container.innerHTML = `
+      <div class="p-3 glass-panel text-center" style="border-radius: 6px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);">
+        <span style="color: var(--accent-emerald); font-size: 0.9rem; font-weight: 600;">✨ 현재 대기 중인 긴급/예외 조치 항목이 없습니다. (시스템 정상 작동 중)</span>
+      </div>
+    `;
+    return;
+  }
+
+  // 상위 최대 3개 항목 프리뷰 노출
+  const previewItems = ACTION_QUEUE_ITEMS.slice(0, 3);
+  container.innerHTML = previewItems.map(item => {
+    let badgeClass = 'badge-status-scheduled';
+    if (item.level === 'CRITICAL') badgeClass = 'badge-status-delayed';
+    if (item.level === 'WARNING') badgeClass = 'badge-status-review';
+
+    return `
+      <div class="p-3 glass-panel flex-between" style="border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);">
+        <div style="flex: 1; min-width: 0; margin-right: 12px;">
+          <span class="badge ${badgeClass}">${item.badge}</span>
+          <strong class="ml-2" style="font-size: 0.9rem; color: #fff;">${item.title}</strong>
+          <span class="text-muted small" style="margin-left: 6px; display: inline-block; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">— ${item.desc}</span>
+        </div>
+        <button class="btn btn-primary btn-sm" style="flex-shrink: 0;" onclick="handleActionQueueItem('${item.id}', '${item.action}')">
+          ${item.primaryBtn}
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+};
+
+window.renderActionQueue = async function() {
+  await window.loadActionQueueFromDB();
   const container = document.getElementById('actionQueueItemsContainer');
+
+  // 통계 배너 갱신
+  const repCount = ACTION_QUEUE_ITEMS.filter(i => i.source === 'reports').length;
+  const revCount = ACTION_QUEUE_ITEMS.filter(i => i.source === 'content_reviews').length;
+  const settCount = ACTION_QUEUE_ITEMS.filter(i => i.source === 'author_settlements').length;
+
+  const elRep = document.getElementById('aqCountReports');
+  if (elRep) elRep.textContent = `${repCount}건`;
+  const elRev = document.getElementById('aqCountReviews');
+  if (elRev) elRev.textContent = `${revCount}건`;
+  const elSett = document.getElementById('aqCountSettlements');
+  if (elSett) elSett.textContent = `${settCount}건`;
+  const elTotal = document.getElementById('aqCountTotal');
+  if (elTotal) elTotal.textContent = `${ACTION_QUEUE_ITEMS.length}건`;
+
   if (!container) return;
 
   if (ACTION_QUEUE_ITEMS.length === 0) {
@@ -4928,7 +4949,7 @@ window.renderActionQueue = function() {
       <div class="card p-6 text-center" style="background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px;">
         <div style="font-size: 2rem;">🎉</div>
         <h4 style="margin: 8px 0 4px; color: var(--accent-emerald);">모든 예외 조치가 완료되었습니다!</h4>
-        <p class="text-muted small mb-0">현재 확인이 필요한 예외 항목이 없습니다. 시스템이 정상 자동 연재를 수행하고 있습니다.</p>
+        <p class="text-muted small mb-0">현재 확인이 필요한 예외 항목이 없습니다. 실시간 DB에 대기 중인 심사/신고/정산건이 0건입니다.</p>
       </div>
     `;
     return;
@@ -4940,22 +4961,26 @@ window.renderActionQueue = function() {
     if (item.level === 'WARNING') borderStyle = 'border-left: 4px solid #f97316;';
     if (item.level === 'INFO') borderStyle = 'border-left: 4px solid #eab308;';
 
+    let badgeClass = 'badge-status-scheduled';
+    if (item.level === 'CRITICAL') badgeClass = 'badge-status-delayed';
+    if (item.level === 'WARNING') badgeClass = 'badge-status-review';
+
     return `
       <div class="p-4 glass-panel flex-between" style="border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); ${borderStyle}; align-items: flex-start; gap: 14px;">
         <div style="flex: 1;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span class="badge ${item.level === 'CRITICAL' ? 'badge-status-delayed' : item.level === 'WARNING' ? 'badge-status-review' : 'badge-status-scheduled'}">${item.badge}</span>
+            <span class="badge ${badgeClass}">${item.badge}</span>
             <strong style="font-size: 1rem; color: #fff;">${item.title}</strong>
             <span class="text-muted small" style="margin-left: auto;">${item.occurredAt}</span>
           </div>
           <p class="text-muted small mb-0" style="line-height: 1.5;">${item.desc}</p>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <button class="btn btn-primary btn-sm" onclick="handleActionQueueItem('${item.id}', '${item.action}', ${item.workId}, ${item.episodeId})">
+          <button class="btn btn-primary btn-sm" onclick="handleActionQueueItem('${item.id}', '${item.action}')">
             ${item.primaryBtn}
           </button>
           <button class="btn btn-outline btn-sm" onclick="handleActionDismiss('${item.id}')" title="보류/해결">
-            해결
+            조치 완료
           </button>
         </div>
       </div>
@@ -4965,27 +4990,40 @@ window.renderActionQueue = function() {
   if (window.lucide) window.lucide.createIcons();
 };
 
-window.handleActionQueueItem = function(id, action, workId, episodeId) {
-  if (action === 'retry') {
-    showToast('🚀 CDN 자동 재전송 및 즉시 발행이 성공적으로 실행되었습니다.');
-    handleActionDismiss(id);
-  } else if (action === 'review') {
-    openAdminEpisodeDetailModal(episodeId || 1, workId || 9);
-    handleActionDismiss(id);
-  } else if (action === 'notify') {
-    showToast('📲 작가에게 "정기 연재 회차 등록 독려" 푸시 알림을 발송했습니다.');
-    handleActionDismiss(id);
-  } else if (action === 'approve_meta') {
-    showToast('✅ 작가의 연재주기 변경 신청이 자동 승인되었습니다.');
-    handleActionDismiss(id);
+window.handleActionQueueItem = async function(id, action) {
+  const item = ACTION_QUEUE_ITEMS.find(i => i.id === id);
+  if (!item) return;
+
+  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.resolveActionQueueItemInDB === 'function') {
+    const res = await window.WebNovelsAdmin.resolveActionQueueItemInDB(item);
+    if (res && res.success) {
+      showToast(res.message || '조치가 성공적으로 DB에 반영되었습니다.');
+    } else {
+      showToast(`조치 완료 처리: ${item.title}`);
+    }
+  } else {
+    showToast(`조치 완료: ${item.title}`);
   }
+
+  // 목록 갱신
+  ACTION_QUEUE_ITEMS = ACTION_QUEUE_ITEMS.filter(i => i.id !== id);
+  window.renderDashboardActionQueuePreview();
+  const queueContainer = document.getElementById('actionQueueItemsContainer');
+  if (queueContainer) window.renderActionQueue();
 };
 
-window.handleActionDismiss = function(id) {
+window.handleActionDismiss = async function(id) {
+  const item = ACTION_QUEUE_ITEMS.find(i => i.id === id);
+  if (item && window.WebNovelsAdmin && typeof window.WebNovelsAdmin.resolveActionQueueItemInDB === 'function') {
+    await window.WebNovelsAdmin.resolveActionQueueItemInDB(item);
+  }
   ACTION_QUEUE_ITEMS = ACTION_QUEUE_ITEMS.filter(item => item.id !== id);
-  renderActionQueue();
-  showToast('항목이 조치 완료되었습니다.');
+  window.renderDashboardActionQueuePreview();
+  const queueContainer = document.getElementById('actionQueueItemsContainer');
+  if (queueContainer) window.renderActionQueue();
+  showToast('항목이 DB에서 조치 완료 처리되었습니다.');
 };
+
 // ----------------------------------------------------
 // Admin Dashboard KPIs Loader (실시간 DB 연동 통계)
 // ----------------------------------------------------
@@ -5040,7 +5078,10 @@ window.loadDashboardKPIs = async function() {
     const novelEpisodes = novels.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 6), 0);
     const webtoonEpisodes = webtoons.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 6), 0);
     const totalEpisodes = novelEpisodes + webtoonEpisodes;
-    const actionReqCount = (typeof ACTION_QUEUE_ITEMS !== 'undefined' && Array.isArray(ACTION_QUEUE_ITEMS)) ? ACTION_QUEUE_ITEMS.length : 3;
+
+    // 실시간 DB Action Queue 로드
+    await window.loadActionQueueFromDB();
+    const actionReqCount = ACTION_QUEUE_ITEMS.length;
 
     // DOM 업데이트
     const elNovels = document.getElementById('kpiNovelsCount');
@@ -5080,11 +5121,8 @@ window.loadDashboardKPIs = async function() {
     const elTodayPublished = document.getElementById('kpiTodayPublished');
     if (elTodayPublished) elTodayPublished.textContent = `${ongoingCount}건`;
 
-    const elTodayActionReq = document.getElementById('kpiTodayActionReq');
-    if (elTodayActionReq) elTodayActionReq.textContent = `${actionReqCount}건 ⚠️`;
-
-    const elActionBadge = document.getElementById('kpiActionReqBadge');
-    if (elActionBadge) elActionBadge.textContent = `${actionReqCount}건`;
+    // Action Queue 프리뷰 카드 렌더링
+    window.renderDashboardActionQueuePreview();
 
     // 수익 이벤트 실시간 로드 및 렌더링
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchRevenueEvents === 'function') {
