@@ -304,6 +304,24 @@ async function fetchRevenueEvents() {
 }
 
 // ---- 작가 정산 ----
+async function fetchAuthorSettlements(authorName) {
+  if (!supabaseClient || !authorName) return [];
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('author_settlements')
+      .select('*')
+      .eq('author_name', authorName)
+      .order('requested_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn('[Author Settlement] 작가별 내역 조회 실패:', err.message);
+    return [];
+  }
+}
+
 async function fetchPendingSettlements() {
   if (!supabaseClient) return [];
 
@@ -1195,6 +1213,7 @@ window.WebNovelsAdmin = {
   fetchAuthorDashboard,
   createEpisode,
   requestSettlement,
+  fetchAuthorSettlements,
   fetchActionQueueFromDB,
   resolveActionQueueItemInDB
 };

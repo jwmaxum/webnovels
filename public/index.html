@@ -587,32 +587,35 @@
           <!-- Tab 7: Settlement Management (정산관리) -->
           <div class="creator-tab-panel" id="creatorTab-settlements" style="display: none;">
             <div class="card glass-panel p-6 mb-4">
-              <h3 class="mb-3"><i data-lucide="wallet" style="color:var(--cdg-pink);"></i> 수익금 정산 출금 신청</h3>
-              <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div class="flex-between mb-3">
+                <h3 style="margin: 0;"><i data-lucide="wallet" style="color:var(--cdg-pink);"></i> 수익금 정산 출금 신청</h3>
+                <button class="btn btn-outline btn-sm" onclick="fetchCreatorDashboardData(true)">
+                  <i data-lucide="refresh-cw"></i> 실시간 잔액 갱신
+                </button>
+              </div>
+              <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
                 <div>
                   <div class="text-muted small">출금 가능 정산금 (Payable)</div>
-                  <h2 style="font-size:2rem; font-weight:800; color:var(--cdg-pink); margin:4px 0;">₩980,000</h2>
-                  <small class="text-muted">등록 계좌: 국민은행 999-888-777666 (예금주: 판타지마스터)</small>
+                  <h2 id="creatorSettlementPayableAmount" style="font-size:2.2rem; font-weight:800; color:var(--cdg-pink); margin:4px 0;">₩0</h2>
+                  <small id="creatorSettlementBankAccount" class="text-muted">등록 계좌: 국민은행 999-888-777666 (예금주: 작가)</small>
                 </div>
-                <button class="btn btn-primary btn-lg" id="btnRequestSettlement" onclick="handleCreatorSettlementReq()">
-                  <i data-lucide="send"></i> 정산금 전액 출금 신청
-                </button>
+                <div id="creatorSettlementActionContainer">
+                  <button class="btn btn-primary btn-lg" id="btnRequestSettlement" onclick="handleCreatorSettlementReq()">
+                    <i data-lucide="send"></i> 정산금 전액 출금 신청
+                  </button>
+                </div>
               </div>
             </div>
 
             <!-- Settlement History Table -->
             <div class="card glass-panel p-6">
-              <h3 class="mb-3"><i data-lucide="history"></i> 정산 신청 및 지급 이력</h3>
+              <div class="flex-between mb-3">
+                <h3 style="margin: 0;"><i data-lucide="history"></i> 정산 신청 및 지급 이력</h3>
+                <span class="text-muted small">실시간 DB 연동 정산 내역</span>
+              </div>
               <div id="creatorSettlementsHistory">
-                <div class="glass-panel p-3 mb-2" style="display:flex; justify-content:space-between; align-items:center;">
-                  <div>
-                    <strong>2026년 7월 정산금 지급 완료</strong>
-                    <div class="text-muted small">신청일: 2026-08-01 | 입금완료: 2026-08-05</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <strong style="color:#10B981;">₩850,000</strong>
-                    <div><span class="badge badge-primary">송금완료</span></div>
-                  </div>
+                <div class="p-4 text-center text-muted">
+                  <span class="spinner-border spinner-border-sm mr-2"></span>정산 신청 내역을 조회하고 있습니다...
                 </div>
               </div>
             </div>
