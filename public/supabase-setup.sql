@@ -137,6 +137,9 @@ ALTER TABLE works ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
 ALTER TABLE works ADD COLUMN IF NOT EXISTS is_top_recommended BOOLEAN DEFAULT false;
 ALTER TABLE works ADD COLUMN IF NOT EXISTS is_popular_work BOOLEAN DEFAULT false;
 ALTER TABLE works ADD COLUMN IF NOT EXISTS is_new_work BOOLEAN DEFAULT false;
+ALTER TABLE works ADD COLUMN IF NOT EXISTS rating TEXT DEFAULT 'ALL';
+ALTER TABLE works ADD COLUMN IF NOT EXISTS ai_usage_type TEXT DEFAULT 'NONE';
+ALTER TABLE works ADD COLUMN IF NOT EXISTS like_count INT DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS episodes (
   id SERIAL PRIMARY KEY,
@@ -148,6 +151,8 @@ CREATE TABLE IF NOT EXISTS episodes (
   content TEXT, -- 웹소설 텍스트 본문
   image_urls JSONB DEFAULT '[]'::jsonb, -- 웹툰 컷 이미지 URL 배열
   author_comment TEXT,
+  status TEXT DEFAULT 'PUBLISHED', -- 'PUBLISHED', 'SCHEDULED'
+  scheduled_at TIMESTAMPTZ, -- Zero-Touch 예약 연재 일시
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT unique_work_episode UNIQUE (work_id, episode_number)
 );
@@ -158,6 +163,8 @@ ALTER TABLE episodes ADD COLUMN IF NOT EXISTS author_comment TEXT;
 ALTER TABLE episodes ADD COLUMN IF NOT EXISTS is_free BOOLEAN DEFAULT true;
 ALTER TABLE episodes ADD COLUMN IF NOT EXISTS is_ad_free BOOLEAN DEFAULT false;
 ALTER TABLE episodes ADD COLUMN IF NOT EXISTS content TEXT;
+ALTER TABLE episodes ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PUBLISHED';
+ALTER TABLE episodes ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMPTZ;
 
 -- 12. 독자 포인트 거래 내역 테이블 (point_transactions)
 CREATE TABLE IF NOT EXISTS point_transactions (
@@ -287,21 +294,38 @@ ON CONFLICT (work_id, episode_number) DO UPDATE SET
   author_comment = EXCLUDED.author_comment;
 
 -- 독자 및 작가 테이블 마이그레이션 호환
+ALTER TABLE readers ADD COLUMN IF NOT EXISTS nickname TEXT;
 ALTER TABLE readers ADD COLUMN IF NOT EXISTS is_adult_verified BOOLEAN DEFAULT false;
-ALTER TABLE readers ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'ACTIVE';
+ALTER TABLE readers ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT '일반 회원';
+ALTER TABLE readers ADD COLUMN IF NOT EXISTS reading_history JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE readers ADD COLUMN IF NOT EXISTS favorites JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE readers ADD COLUMN IF NOT EXISTS subscribed_authors JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE readers ALTER COLUMN password_hash SET DEFAULT '!12345';
+
 ALTER TABLE authors ADD COLUMN IF NOT EXISTS pen_name TEXT;
 ALTER TABLE authors ADD COLUMN IF NOT EXISTS work_title TEXT;
 ALTER TABLE authors ADD COLUMN IF NOT EXISTS bank_info TEXT;
-ALTER TABLE authors ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'APPROVED';
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '공식 인증 작가';
 
 ALTER TABLE readers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE authors ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow anon read readers" ON readers;
 DROP POLICY IF EXISTS "Allow anon read authors" ON authors;
+DROP POLICY IF EXISTS "Allow anon full access readers" ON readers;
+DROP POLICY IF EXISTS "Allow anon full access authors" ON authors;
 
-CREATE POLICY "Allow anon read readers" ON readers FOR SELECT USING (true);
-CREATE POLICY "Allow anon read authors" ON authors FOR SELECT USING (true);
+CREATE POLICY "Allow anon full access readers" ON readers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon full access authors" ON authors FOR ALL USING (true) WITH CHECK (true);
+
+-- 검색 및 통계 성능 최적화 인덱스
+CREATE INDEX IF NOT EXISTS idx_author_settlements_author_name ON author_settlements(author_name);
+CREATE INDEX IF NOT EXISTS idx_author_settlements_status ON author_settlements(status);
+CREATE INDEX IF NOT EXISTS idx_content_reviews_status ON content_reviews(status);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
+CREATE INDEX IF NOT EXISTS idx_episodes_work_id ON episodes(work_id);
+CREATE INDEX IF NOT EXISTS idx_works_content_type ON works(content_type);
+CREATE INDEX IF NOT EXISTS idx_revenue_events_period ON revenue_events(period_month);
 
 -- 독자 회원 3명 시드 데이터 (더미 데이터 삭제 및 실데이터 등록)
 INSERT INTO readers (id, username, password_hash, email, phone, is_adult_verified, subscription_status) VALUES
