@@ -4021,6 +4021,15 @@ window.handlePointUnlockEpisode = function() {
     unlockedEpisodes.add(unlockKey);
   }
 
+  // Supabase episode_unlocks 및 ad_unlocks 테이블 실시간 동기화
+  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  const userId = savedUser ? (savedUser.username || savedUser.email) : 'guest';
+  if (window._pendingAdUnlockWorkId && window._pendingAdUnlockEpNum) {
+    if (window.WebNovelsAdmin?.recordEpisodeUnlock) {
+      window.WebNovelsAdmin.recordEpisodeUnlock(userId, window._pendingAdUnlockEpNum, 'POINT');
+    }
+  }
+
   showToast('🪙 100P를 사용하여 회차를 즉시 해금했습니다!');
   closeAllModals();
 
@@ -4038,6 +4047,12 @@ async function startAdSimulation() {
   if (playerBox) playerBox.style.display = 'block';
   if (btnWatch) btnWatch.disabled = true;
 
+  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  const userId = savedUser ? (savedUser.username || savedUser.email) : 'guest';
+  if (window.WebNovelsAdmin?.logAdEvent && window._pendingAdUnlockWorkId && window._pendingAdUnlockEpNum) {
+    window.WebNovelsAdmin.logAdEvent(userId, window._pendingAdUnlockWorkId, window._pendingAdUnlockEpNum, 'START');
+  }
+
   let seconds = 3;
   if (timerText) timerText.textContent = `📺 보상형 광고 시청 중... ${seconds}초`;
 
@@ -4052,6 +4067,16 @@ async function startAdSimulation() {
       const unlockKey = window._pendingAdUnlockEpKey;
       if (unlockKey) {
         unlockedEpisodes.add(unlockKey);
+      }
+
+      // Supabase episode_unlocks 및 ad_events 실시간 동기화
+      if (window._pendingAdUnlockWorkId && window._pendingAdUnlockEpNum) {
+        if (window.WebNovelsAdmin?.recordEpisodeUnlock) {
+          window.WebNovelsAdmin.recordEpisodeUnlock(userId, window._pendingAdUnlockEpNum, 'REWARDED_AD');
+        }
+        if (window.WebNovelsAdmin?.logAdEvent) {
+          window.WebNovelsAdmin.logAdEvent(userId, window._pendingAdUnlockWorkId, window._pendingAdUnlockEpNum, 'REWARD', 'ADMOB', 25);
+        }
       }
 
       showToast('🎉 광고 시청 완료! 회차가 무료 해금되었습니다.');
