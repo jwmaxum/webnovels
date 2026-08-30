@@ -1403,7 +1403,74 @@ REVOKE EXECUTE ON FUNCTION private.request_author_settlement(BIGINT, NUMERIC) FR
 
 
 /* ============================================================
-   52. SECURITY NOTE
+   52. VIEWS (프론트엔드 최적화 뷰)
+   ============================================================ */
+
+CREATE OR REPLACE VIEW public.v_public_works AS
+SELECT
+  w.id,
+  w.author_id,
+  a.pen_name AS author_name,
+  w.title,
+  w.content_type,
+  w.genre,
+  w.tags,
+  w.description,
+  w.cover_image,
+  w.rating,
+  w.status,
+  w.is_completed,
+  w.is_top_recommended,
+  w.is_popular_work,
+  w.is_new_work,
+  w.ai_usage_type,
+  w.view_count,
+  w.like_count,
+  w.published_at,
+  w.created_at,
+  (
+    SELECT COUNT(*)::INT
+    FROM public.episodes e
+    WHERE e.work_id = w.id AND e.status = 'PUBLISHED'
+  ) AS episodes_count
+FROM public.works w
+JOIN public.authors a ON a.id = w.author_id
+WHERE w.status IN ('PUBLISHED', 'ONGOING', 'COMPLETED');
+
+CREATE OR REPLACE VIEW public.v_public_episodes AS
+SELECT
+  e.id,
+  e.work_id,
+  w.title AS work_title,
+  e.episode_number,
+  e.title,
+  e.access_policy,
+  e.author_comment,
+  e.status,
+  e.view_count,
+  e.created_at
+FROM public.episodes e
+JOIN public.works w ON w.id = e.work_id
+WHERE e.status = 'PUBLISHED';
+
+CREATE OR REPLACE VIEW public.v_author_earnings_summary AS
+SELECT
+  a.id AS author_id,
+  a.pen_name,
+  COALESCE(SUM(CASE WHEN e.status = 'ESTIMATED' THEN e.author_revenue ELSE 0 END), 0) AS estimated_revenue,
+  COALESCE(SUM(CASE WHEN e.status = 'CONFIRMED' THEN e.author_revenue ELSE 0 END), 0) AS confirmed_revenue,
+  COALESCE(SUM(CASE WHEN e.status = 'SETTLED' THEN e.author_revenue ELSE 0 END), 0) AS settled_revenue
+FROM public.authors a
+LEFT JOIN public.author_earnings e ON e.author_id = a.id
+GROUP BY a.id, a.pen_name;
+
+GRANT SELECT ON public.v_public_works TO anon, authenticated;
+GRANT SELECT ON public.v_public_episodes TO anon, authenticated;
+GRANT SELECT ON public.v_author_earnings_summary TO authenticated;
+
+
+/* ============================================================
+   53. SECURITY NOTE
    ============================================================ */
 
 /*
@@ -1416,4 +1483,5 @@ REVOKE EXECUTE ON FUNCTION private.request_author_settlement(BIGINT, NUMERIC) FR
 
   DB의 system_config에는 Secret을 저장하지 않는다.
 */
+
 

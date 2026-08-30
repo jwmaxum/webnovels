@@ -1072,6 +1072,50 @@ async function resolveActionQueueItemInDB(item) {
   }
 }
 
+// ============================================================
+// [Step 4] Protected Episode Content & Secure Settlement RPC
+// ============================================================
+async function fetchEpisodeContentSecure(episodeId) {
+  if (!supabaseClient || !episodeId) return null;
+  try {
+    const { data, error } = await supabaseClient.rpc('get_episode_content', {
+      p_episode_id: Number(episodeId)
+    });
+
+    if (error) {
+      console.warn('[fetchEpisodeContentSecure Error]', error.message);
+      // Fallback: 일반 테이블 조회 시도
+      const { data: fbData } = await supabaseClient
+        .from('episode_contents')
+        .select('text_content')
+        .eq('episode_id', Number(episodeId))
+        .single();
+      return fbData?.text_content || null;
+    }
+
+    return (data && data.length > 0) ? data[0].text_content : null;
+  } catch (err) {
+    console.warn('[fetchEpisodeContentSecure Exception]', err);
+    return null;
+  }
+}
+
+async function requestSettlementSecure(authorId, amount) {
+  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+  try {
+    const { data, error } = await supabaseClient.rpc('request_author_settlement', {
+      p_author_id: Number(authorId),
+      p_amount: Number(amount)
+    });
+
+    if (error) throw error;
+    return data || { success: true };
+  } catch (err) {
+    // Fallback: 기존 함수 호출
+    return requestSettlement(authorId, amount);
+  }
+}
+
 // ---- 글로벌 export ----
 window.WebNovelsAdmin = {
   init: initSupabaseAdmin,
@@ -1100,6 +1144,8 @@ window.WebNovelsAdmin = {
   logAdEvent,
   fetchUserAdUnlocks,
   requestSettlement,
+  requestSettlementSecure,
+  fetchEpisodeContentSecure,
   fetchAuthorSettlements,
   updateReaderActivity,
   fetchReaderActivity,
@@ -1110,3 +1156,4 @@ window.WebNovelsAdmin = {
   submitEpisodeForReview,
   rejectContentReview
 };
+

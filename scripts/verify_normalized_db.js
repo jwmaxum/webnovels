@@ -29,6 +29,7 @@ async function runVerification() {
     '13_rls.sql',
     '14_grants.sql',
     '15_indexes.sql',
+    '16_views.sql',
     '99_seed_dev.sql'
   ];
 
