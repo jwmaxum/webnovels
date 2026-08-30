@@ -22,13 +22,13 @@ SET role = 'SUPER_ADMIN',
 INSERT INTO system_config (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO platform_stats (id, total_users, total_authors, total_works, total_episodes, total_ad_views)
-VALUES ('current', 10, 30, 30, 180, 54200)
+VALUES ('current', 10, 30, 30, 180, 18)
 ON CONFLICT (id) DO UPDATE SET
   total_users = 10,
   total_authors = 30,
   total_works = 30,
   total_episodes = 180,
-  total_ad_views = 54200;
+  total_ad_views = 18;
 
 -- 3. 독자 회원 10명 실데이터 시드 (readers)
 INSERT INTO readers (id, username, password_hash, email, phone, is_adult_verified, subscription_status) VALUES
@@ -89,36 +89,36 @@ ON CONFLICT (id) DO UPDATE SET
 
 -- 5. 연재 작품 30개 실데이터 시드 (works - author_id 1:1 매핑)
 INSERT INTO works (id, author_id, title, author, content_type, genre, tags, description, cover_image, view_count, is_completed, is_top_recommended, is_popular_work, is_new_work) VALUES
-(1, 1, '대적자: 신을 삼킨 기사', '판타지마스터', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['AI NONE', '기사', '성장'], '신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stormqueen_oath.jpg', 154000, false, true, true, false),
-(2, 2, '천마의 귀환', '무협의신', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '천마', '회귀'], '천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_supreme.jpg', 231000, false, true, true, false),
-(3, 3, '금기의 계약', '나이트로즈', 'NOVEL', ARRAY['성인', '19세 이상'], ARRAY['AI NONE', '치명적', '로맨스'], '금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'velvet_and_thorns.jpg', 189000, false, false, true, false),
-(4, 4, '황제의 유일한 후궁', '로맨스퀸', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['AI NONE', '궁중', '애절'], '황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'flower_blooming.jpg', 312000, false, true, true, false),
-(5, 5, '성간 항로: 마지막 항해사', '스페이스로그', 'NOVEL', ARRAY['SF', '전체이용가'], ARRAY['AI NONE', '우주', '생존'], '인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stellar_horizon.jpg', 97000, false, false, false, true),
-(6, 6, '서울에 나타난 마왕', '도시마법사', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['AI NONE', '현대', '마왕'], '현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'seoul_sorcerer.jpg', 278000, false, false, true, true),
-(7, 7, '죽은 자들의 학교', '공포작가', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['AI NONE', '폐교', '미스터리'], '폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'darkness_swallowed_classroom.jpg', 84000, true, false, false, true),
-(8, 8, '검의 전설: 천하제일인', '검성', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '검술', '절대자'], '천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_defies_heavens.jpg', 195000, true, false, true, false),
-(9, 9, '[웹툰] 신의 기사단', '스튜디오노바', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '풀컬러', '고화질'], '대적자 스핀오프 공식 웹툰! 화려한 작화로 펼쳐지는 기사단의 모험.', 'stormqueen_oath.jpg', 89000, false, false, true, true),
-(10, 10, '[웹툰] 황후의 비밀 화원', '로즈코믹스', 'WEBTOON', ARRAY['로맨스', '순정'], ARRAY['웹툰', '궁중로맨스', '풀컬러'], '황실 최고의 비밀이 담긴 화원에서 피어나는 은밀하고 달콤한 로맨스 웹툰.', 'flower_blooming.jpg', 124000, false, false, true, true),
-(11, 11, 'SSS급 헌터의 편의점', '밤샘작가', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['헌터', '각성', '힐링'], '던전 앞 편의점에서 물건을 팔았을 뿐인데 세계 최강이 되었다.', 'novel_1.svg', 310000, false, true, true, false),
-(12, 12, '화산파 막내 제자의 검', '청명검', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['화산파', '검술', '환생'], '멸망한 화산을 재건하기 위해 300년 전으로 환생한 매화검객의 전설.', 'novel_3.svg', 285000, false, true, true, false),
-(13, 13, '악녀는 조용히 살고 싶다', '로즈가든', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['로판', '악녀빙의', '사이다'], '소설 속 악녀로 빙의했다. 파멸을 피하기 위해 조용히 살려는데 황태자가 집착한다.', 'novel_2.svg', 242000, false, false, true, false),
-(14, 14, '네크로맨서로 살아남기', '영혼술사', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['네크로맨서', '언데드', '성장'], '죽은 자들을 이끌고 최악의 미궁을 탈출하는 어둠의 마도사 일대기.', 'novel_1.svg', 198000, false, false, false, true),
-(15, 15, '달콤한 오피스 스캔들', '초코라떼', 'NOVEL', ARRAY['성인', '19세 이상'], ARRAY['오피스', '비밀연애', '사내로맨스'], '냉철한 대표님과 야근 중 벌어진 아찔하고 은밀한 하룻밤.', 'novel_2.svg', 175000, false, false, true, false),
-(16, 16, '사이버펑크 2099: 네온 서울', '메카닉스', 'NOVEL', ARRAY['SF', '전체이용가'], ARRAY['사이버펑크', '해커', '디스토피아'], '인공지능과 거대 기업이 지배하는 2099년 서울, 한 해커의 마지막 저항.', 'novel_4.svg', 112000, false, false, false, true),
-(17, 17, '퇴마록: 어둠의 사냥꾼', '퇴마사', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['퇴마', '오컬트', '괴담'], '도심 속에 숨어든 악귀들을 사냥하는 퇴마 기사단의 처절한 사투.', 'novel_4.svg', 93000, true, false, false, false),
-(18, 18, '아카데미 천재 마법사', '룬마스터', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['아카데미', '마법', '먼치킨'], '마법 명문 아카데미에 입학한 낙제생, 사실은 마법의 근원을 본 자였다.', 'novel_1.svg', 340000, false, true, true, false),
-(19, 19, '재벌집 막내아들의 비밀투자', '머니파워', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['재벌', '투자', '회귀'], '과거로 돌아간 흙수저, 미래의 지식으로 대한민국 1위 재벌이 되다.', 'novel_3.svg', 290000, false, false, true, false),
-(20, 20, '망겜의 성기사가 되었다', '홀리나이트', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['게임빙의', '성기사', '사이다'], '서비스 종료 직전의 망겜 속 최고 난이도 성기사 캐릭터에 빙의했다.', 'novel_1.svg', 165000, false, false, false, true),
-(21, 21, '[웹툰] 그림자 군주의 재림', '블랙툰', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '군주', '풀컬러'], '그림자를 지배하는 군주가 현대에 다시 깨어났다! 박진감 넘치는 액션 웹툰.', 'webtoon_1.svg', 210000, false, true, true, false),
-(22, 22, '[웹툰] 공작가의 시한부 영애', '핑크베리', 'WEBTOON', ARRAY['로맨스', '순정'], ARRAY['웹툰', '시한부', '로판'], '시한부 판정을 받은 영애의 후회 없는 인생 역전과 눈부신 로맨스.', 'webtoon_2.svg', 184000, false, false, true, false),
-(23, 23, '[웹툰] 던전 브레이크 헌터', '썬더스튜디오', 'WEBTOON', ARRAY['현대 판타지', '액션'], ARRAY['웹툰', '헌터', '던전'], '서울 한복판에 터진 SS급 던전 브레이크를 막아선 유일한 헌터의 이야기.', 'webtoon_3.svg', 156000, false, false, false, true),
-(24, 24, '[웹툰] 마왕님은 카페 알바중', '코믹스쿨', 'WEBTOON', ARRAY['일상', '개그'], ARRAY['웹툰', '개그', '일상힐링'], '마계에서 쫓겨나 홍대 카페에서 라떼를 만드는 마왕님의 좌충우돌 일상.', 'webtoon_4.svg', 142000, false, false, true, true),
-(25, 25, '[웹툰] 천하제일 마교교주', '무협코믹스', 'WEBTOON', ARRAY['무협', '액션'], ARRAY['웹툰', '마교', '절대자'], '무림을 전율케 한 마교 교주의 통쾌한 무협 액션 활극.', 'webtoon_1.svg', 195000, false, false, true, false),
-(26, 26, '차원 이동자의 레벨업', '디멘션', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['차원이동', '상태창', '먼치킨'], '이세계로 소환되어 끝없는 한계를 돌파하는 레벨업 판타지 대서사시.', 'novel_1.svg', 178000, false, false, false, false),
-(27, 27, '비선실세가 된 셰프', '고메마스터', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['요리', '전문직', '회귀'], '환상의 맛으로 전 세계 VVIP들을 사로잡은 천재 요리사의 이야기.', 'novel_3.svg', 220000, false, false, true, false),
-(28, 28, '버림받은 황녀의 복수극', '스칼렛', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['궁중암투', '복수', '걸크러시'], '독주를 마시고 죽었던 황녀가 5년 전 과거로 회귀하여 제국을 뒤흔든다.', 'novel_2.svg', 135000, true, false, false, false),
-(29, 29, '[웹툰] 드래곤 하트', '드래곤랩', 'WEBTOON', ARRAY['판타지', '모험'], ARRAY['웹툰', '드래곤', '모험'], '고대 드래곤의 심장을 품은 소년의 대륙 횡단 대모험.', 'webtoon_3.svg', 167000, false, false, false, true),
-(30, 30, '심야 라디오 괴담', '미드나잇', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['괴담', '라디오', '단편'], '자정이 되면 주파수를 맞추세요. 당신만을 위한 섬뜩한 사연이 흘러나옵니다.', 'novel_4.svg', 88000, true, false, false, true)
+(1, 1, '대적자: 신을 삼킨 기사', '판타지마스터', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['AI NONE', '기사', '성장'], '신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stormqueen_oath.jpg', 42, false, true, true, false),
+(2, 2, '천마의 귀환', '무협의신', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '천마', '회귀'], '천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_supreme.jpg', 38, false, true, true, false),
+(3, 3, '금기의 계약', '나이트로즈', 'NOVEL', ARRAY['성인', '19세 이상'], ARRAY['AI NONE', '치명적', '로맨스'], '금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'velvet_and_thorns.jpg', 29, false, false, true, false),
+(4, 4, '황제의 유일한 후궁', '로맨스퀸', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['AI NONE', '궁중', '애절'], '황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'flower_blooming.jpg', 35, false, true, true, false),
+(5, 5, '성간 항로: 마지막 항해사', '스페이스로그', 'NOVEL', ARRAY['SF', '전체이용가'], ARRAY['AI NONE', '우주', '생존'], '인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stellar_horizon.jpg', 18, false, false, false, true),
+(6, 6, '서울에 나타난 마왕', '도시마법사', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['AI NONE', '현대', '마왕'], '현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'seoul_sorcerer.jpg', 24, false, false, true, true),
+(7, 7, '죽은 자들의 학교', '공포작가', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['AI NONE', '폐교', '미스터리'], '폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'darkness_swallowed_classroom.jpg', 12, true, false, false, true),
+(8, 8, '검의 전설: 천하제일인', '검성', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '검술', '절대자'], '천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_defies_heavens.jpg', 31, true, false, true, false),
+(9, 9, '[웹툰] 신의 기사단', '스튜디오노바', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '풀컬러', '고화질'], '대적자 스핀오프 공식 웹툰! 화려한 작화로 펼쳐지는 기사단의 모험.', 'stormqueen_oath.jpg', 26, false, false, true, true),
+(10, 10, '[웹툰] 황후의 비밀 화원', '로즈코믹스', 'WEBTOON', ARRAY['로맨스', '순정'], ARRAY['웹툰', '궁중로맨스', '풀컬러'], '황실 최고의 비밀이 담긴 화원에서 피어나는 은밀하고 달콤한 로맨스 웹툰.', 'flower_blooming.jpg', 22, false, false, true, true),
+(11, 11, 'SSS급 헌터의 편의점', '밤샘작가', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['헌터', '각성', '힐링'], '던전 앞 편의점에서 물건을 팔았을 뿐인데 세계 최강이 되었다.', 'novel_1.svg', 40, false, true, true, false),
+(12, 12, '화산파 막내 제자의 검', '청명검', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['화산파', '검술', '환생'], '멸망한 화산을 재건하기 위해 300년 전으로 환생한 매화검객의 전설.', 'novel_3.svg', 37, false, true, true, false),
+(13, 13, '악녀는 조용히 살고 싶다', '로즈가든', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['로판', '악녀빙의', '사이다'], '소설 속 악녀로 빙의했다. 파멸을 피하기 위해 조용히 살려는데 황태자가 집착한다.', 'novel_2.svg', 33, false, false, true, false),
+(14, 14, '네크로맨서로 살아남기', '영혼술사', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['네크로맨서', '언데드', '성장'], '죽은 자들을 이끌고 최악의 미궁을 탈출하는 어둠의 마도사 일대기.', 'novel_1.svg', 25, false, false, false, true),
+(15, 15, '달콤한 오피스 스캔들', '초코라떼', 'NOVEL', ARRAY['성인', '19세 이상'], ARRAY['오피스', '비밀연애', '사내로맨스'], '냉철한 대표님과 야근 중 벌어진 아찔하고 은밀한 하룻밤.', 'novel_2.svg', 28, false, false, true, false),
+(16, 16, '사이버펑크 2099: 네온 서울', '메카닉스', 'NOVEL', ARRAY['SF', '전체이용가'], ARRAY['사이버펑크', '해커', '디스토피아'], '인공지능과 거대 기업이 지배하는 2099년 서울, 한 해커의 마지막 저항.', 'novel_4.svg', 16, false, false, false, true),
+(17, 17, '퇴마록: 어둠의 사냥꾼', '퇴마사', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['퇴마', '오컬트', '괴담'], '도심 속에 숨어든 악귀들을 사냥하는 퇴마 기사단의 처절한 사투.', 'novel_4.svg', 14, true, false, false, false),
+(18, 18, '아카데미 천재 마법사', '룬마스터', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['아카데미', '마법', '먼치킨'], '마법 명문 아카데미에 입학한 낙제생, 사실은 마법의 근원을 본 자였다.', 'novel_1.svg', 45, false, true, true, false),
+(19, 19, '재벌집 막내아들의 비밀투자', '머니파워', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['재벌', '투자', '회귀'], '과거로 돌아간 흙수저, 미래의 지식으로 대한민국 1위 재벌이 되다.', 'novel_3.svg', 39, false, false, true, false),
+(20, 20, '망겜의 성기사가 되었다', '홀리나이트', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['게임빙의', '성기사', '사이다'], '서비스 종료 직전의 망겜 속 최고 난이도 성기사 캐릭터에 빙의했다.', 'novel_1.svg', 21, false, false, false, true),
+(21, 21, '[웹툰] 그림자 군주의 재림', '블랙툰', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '군주', '풀컬러'], '그림자를 지배하는 군주가 현대에 다시 깨어났다! 박진감 넘치는 액션 웹툰.', 'webtoon_1.svg', 34, false, true, true, false),
+(22, 22, '[웹툰] 공작가의 시한부 영애', '핑크베리', 'WEBTOON', ARRAY['로맨스', '순정'], ARRAY['웹툰', '시한부', '로판'], '시한부 판정을 받은 영애의 후회 없는 인생 역전과 눈부신 로맨스.', 'webtoon_2.svg', 30, false, false, true, false),
+(23, 23, '[웹툰] 던전 브레이크 헌터', '썬더스튜디오', 'WEBTOON', ARRAY['현대 판타지', '액션'], ARRAY['웹툰', '헌터', '던전'], '서울 한복판에 터진 SS급 던전 브레이크를 막아선 유일한 헌터의 이야기.', 'webtoon_3.svg', 23, false, false, false, true),
+(24, 24, '[웹툰] 마왕님은 카페 알바중', '코믹스쿨', 'WEBTOON', ARRAY['일상', '개그'], ARRAY['웹툰', '개그', '일상힐링'], '마계에서 쫓겨나 홍대 카페에서 라떼를 만드는 마왕님의 좌충우돌 일상.', 'webtoon_4.svg', 27, false, false, true, true),
+(25, 25, '[웹툰] 천하제일 마교교주', '무협코믹스', 'WEBTOON', ARRAY['무협', '액션'], ARRAY['웹툰', '마교', '절대자'], '무림을 전율케 한 마교 교주의 통쾌한 무협 액션 활극.', 'webtoon_1.svg', 32, false, false, true, false),
+(26, 26, '차원 이동자의 레벨업', '디멘션', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['차원이동', '상태창', '먼치킨'], '이세계로 소환되어 끝없는 한계를 돌파하는 레벨업 판타지 대서사시.', 'novel_1.svg', 20, false, false, false, false),
+(27, 27, '비선실세가 된 셰프', '고메마스터', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['요리', '전문직', '회귀'], '환상의 맛으로 전 세계 VVIP들을 사로잡은 천재 요리사의 이야기.', 'novel_3.svg', 36, false, false, true, false),
+(28, 28, '버림받은 황녀의 복수극', '스칼렛', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['궁중암투', '복수', '걸크러시'], '독주를 마시고 죽었던 황녀가 5년 전 과거로 회귀하여 제국을 뒤흔든다.', 'novel_2.svg', 17, true, false, false, false),
+(29, 29, '[웹툰] 드래곤 하트', '드래곤랩', 'WEBTOON', ARRAY['판타지', '모험'], ARRAY['웹툰', '드래곤', '모험'], '고대 드래곤의 심장을 품은 소년의 대륙 횡단 대모험.', 'webtoon_3.svg', 22, false, false, false, true),
+(30, 30, '심야 라디오 괴담', '미드나잇', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['괴담', '라디오', '단편'], '자정이 되면 주파수를 맞추세요. 당신만을 위한 섬뜩한 사연이 흘러나옵니다.', 'novel_4.svg', 11, true, false, false, true)
 ON CONFLICT (id) DO UPDATE SET 
   author_id = EXCLUDED.author_id,
   title = EXCLUDED.title, 

@@ -30,13 +30,13 @@ END $$;
 INSERT INTO public.system_config (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.platform_stats (id, total_users, total_authors, total_works, total_episodes, total_ad_views)
-VALUES ('current', 10, 30, 30, 180, 54200)
+VALUES ('current', 10, 30, 30, 180, 18)
 ON CONFLICT (id) DO UPDATE SET
   total_users = 10,
   total_authors = 30,
   total_works = 30,
   total_episodes = 180,
-  total_ad_views = 54200;
+  total_ad_views = 18;
 
 -- 2. 등록 작가 30명 공개 프로필 (authors)
 INSERT INTO public.authors (id, username, pen_name, status) VALUES
@@ -192,7 +192,7 @@ BEGIN
         END,
         access_pol,
         'PUBLISHED'::public.episode_status,
-        (31 - w_id) * 300 + (7 - ep_num) * 50
+        GREATEST(1, ((10 - (w_id % 7)) - (ep_num / 2)))
       )
       ON CONFLICT (work_id, episode_number) DO UPDATE SET
         title = EXCLUDED.title,

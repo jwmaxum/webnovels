@@ -38,7 +38,7 @@ function createDefault6Episodes(workTitle) {
 }
 
 // ------------------------------------------------------------
-// [State] SAMPLE_WORKS (대표 8개 작품 시드 데이터)
+// [State] SAMPLE_WORKS (대표 8개 작품 시드 데이터 - 실제 독자 10명 독서 기반)
 // ------------------------------------------------------------
 const SAMPLE_WORKS = [
   {
@@ -50,7 +50,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/stormqueen_oath.jpg",
     description: "신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 154000,
+    viewCount: 42,
     episodesCount: 6,
     episodes: createDefault6Episodes("대적자: 신을 삼킨 기사")
   },
@@ -63,7 +63,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/sword_dao_supreme.jpg",
     description: "천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 231000,
+    viewCount: 38,
     episodesCount: 6,
     episodes: createDefault6Episodes("천마의 귀환")
   },
@@ -76,7 +76,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/velvet_and_thorns.jpg",
     description: "금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 189000,
+    viewCount: 29,
     episodesCount: 6,
     episodes: createDefault6Episodes("금기의 계약")
   },
@@ -89,7 +89,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/flower_blooming.jpg",
     description: "황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 312000,
+    viewCount: 35,
     episodesCount: 6,
     episodes: createDefault6Episodes("황제의 유일한 후궁")
   },
@@ -102,7 +102,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/stellar_horizon.jpg",
     description: "인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 97000,
+    viewCount: 18,
     episodesCount: 6,
     episodes: createDefault6Episodes("성간 항로: 마지막 항해사")
   },
@@ -115,7 +115,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/seoul_sorcerer.jpg",
     description: "현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 278000,
+    viewCount: 24,
     episodesCount: 6,
     episodes: createDefault6Episodes("서울에 나타난 마왕")
   },
@@ -128,7 +128,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/darkness_swallowed_classroom.jpg",
     description: "폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 84000,
+    viewCount: 12,
     episodesCount: 6,
     episodes: createDefault6Episodes("죽은 자들의 학교")
   },
@@ -141,7 +141,7 @@ const SAMPLE_WORKS = [
     aiUsageType: "NONE",
     coverUrl: "/images/sword_dao_defies_heavens.jpg",
     description: "천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
-    viewCount: 195000,
+    viewCount: 31,
     episodesCount: 6,
     isCompleted: true,
     contentType: "NOVEL",
@@ -157,7 +157,7 @@ const SAMPLE_WORKS = [
     contentType: "WEBTOON",
     coverUrl: "/images/stormqueen_oath.jpg",
     description: "대적자 스핀오프 공식 웹툰! 화려한 작화로 펼쳐지는 기사단의 모험.",
-    viewCount: 89000,
+    viewCount: 26,
     episodesCount: 4,
     isCompleted: false,
     episodes: [
@@ -177,7 +177,7 @@ const SAMPLE_WORKS = [
     contentType: "WEBTOON",
     coverUrl: "/images/flower_blooming.jpg",
     description: "황실 최고의 비밀이 담긴 화원에서 피어나는 은밀하고 달콤한 로맨스 웹툰.",
-    viewCount: 124000,
+    viewCount: 22,
     episodesCount: 4,
     isCompleted: false,
     episodes: [
@@ -271,7 +271,7 @@ async function initWebNovelsApp() {
           contentType: w.contentType || 'NOVEL',
           coverUrl: w.coverImage ? (w.coverImage.startsWith('/') ? w.coverImage : `/images/${w.coverImage}`) : '/images/stormqueen_oath.jpg',
           description: w.description,
-          viewCount: Number(w.viewCount || 100000),
+          viewCount: Number(w.viewCount ?? w.view_count ?? 0),
           episodesCount: 6,
           isCompleted: !!w.isCompleted,
           isTopRecommended: !!w.isTopRecommended,
@@ -401,12 +401,13 @@ let cdgHeroInterval = null;
 const getWorkCover = (w) => w.coverUrl || w.coverImageUrl || (w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg');
 const getAuthorName = (w) => (typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상';
 
-// Single Work Card HTML Template (CDG PLAY Aesthetic)
+// Single Work Card HTML Template (CDG PLAY Aesthetic - 실제 독자 조회수 실시간 연동)
 function renderCdgWorkCardHtml(w, options = {}) {
   const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
   const cover = getWorkCover(w);
   const authorName = getAuthorName(w);
-  const viewFormatted = w.viewCount ? `${(w.viewCount / 1000).toFixed(1)}K` : '50.0K';
+  const rawViews = Number(w.viewCount ?? w.view_count ?? 0);
+  const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
 
   let rankBadgeHtml = '';
   if (options.rank) {
@@ -626,13 +627,15 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
     const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
     const tagText = isAdult ? '19+ 성인' : w.genre;
     const cover = getWorkCover(w);
+    const rawViews = Number(w.viewCount ?? w.view_count ?? 0);
+    const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
     return `
       <article class="feature-card" onclick="openWorkDetailDirect(${w.id})" style="cursor:pointer;">
         <div class="art" style="background-image: url('${cover}'); background-size: cover; background-position: center; height: 180px; border-radius: 8px;"></div>
         <div class="copy p-2">
           <span class="tag ${tagClass}">${tagText}</span>
           <h3 style="font-size: 1rem; margin: 4px 0;">${w.title}</h3>
-          <p class="text-muted small">${getAuthorName(w)} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
+          <p class="text-muted small">${getAuthorName(w)} · 조회 ${viewFormatted}</p>
         </div>
       </article>
     `;
@@ -808,6 +811,14 @@ window.openReaderDirect = function(workId, epNumber) {
   if (headingEl) headingEl.textContent = `${ep.title || `제 ${epNum}화`} (${epNum}화)`;
 
   saveReadingProgress(work.id, epNum);
+
+  // 실제 독자 열람 시 작품/회차 조회수 실시간 +1 증가
+  work.viewCount = (Number(work.viewCount) || 0) + 1;
+  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.recordWorkReadingView === 'function') {
+    try {
+      window.WebNovelsAdmin.recordWorkReadingView(work.id, epNum);
+    } catch(e) {}
+  }
 
   // 웹툰 vs 웹소설 분기 렌더링
   const textBodyEl = document.getElementById('readerBody');

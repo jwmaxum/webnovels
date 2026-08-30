@@ -94,23 +94,83 @@ async function fetchDashboardKPI() {
   if (!supabaseClient) return null;
 
   try {
+    let adEventsCount = 0;
+    try {
+      const { count } = await supabaseClient.from('ad_events').select('*', { count: 'exact', head: true });
+      if (typeof count === 'number') adEventsCount = count;
+    } catch(e) {}
+
     const { data, error } = await supabaseClient
       .from('platform_stats')
       .select('*')
       .eq('id', 'current')
       .single();
 
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    console.warn('[Dashboard KPI] 조회 실패:', err.message);
+    if (data) {
+      return {
+        ...data,
+        total_ad_views: Number(data.total_ad_views || adEventsCount || 0)
+      };
+    }
     return {
       total_users: 10,
       total_authors: 30,
       total_works: 30,
       total_episodes: 180,
-      total_ad_views: 54200
+      total_ad_views: adEventsCount
     };
+  } catch (err) {
+    console.warn('[Dashboard KPI] 조회 예외:', err.message);
+    return {
+      total_users: 10,
+      total_authors: 30,
+      total_works: 30,
+      total_episodes: 180,
+      total_ad_views: 0
+    };
+  }
+}
+
+// ============================================================
+// [Works] 실제 독자 열람 시 조회수 실시간 증가
+// ============================================================
+async function recordWorkReadingView(workId, episodeNumber) {
+  if (!supabaseClient || !workId) return;
+
+  try {
+    // 1. works 테이블의 view_count 실시간 +1
+    const { data: workData } = await supabaseClient
+      .from('works')
+      .select('view_count')
+      .eq('id', Number(workId))
+      .single();
+
+    if (workData) {
+      await supabaseClient
+        .from('works')
+        .update({ view_count: (Number(workData.view_count) || 0) + 1 })
+        .eq('id', Number(workId));
+    }
+
+    // 2. episodes 테이블 view_count 실시간 +1
+    if (episodeNumber) {
+      const { data: epData } = await supabaseClient
+        .from('episodes')
+        .select('view_count')
+        .eq('work_id', Number(workId))
+        .eq('episode_number', Number(episodeNumber))
+        .single();
+
+      if (epData) {
+        await supabaseClient
+          .from('episodes')
+          .update({ view_count: (Number(epData.view_count) || 0) + 1 })
+          .eq('work_id', Number(workId))
+          .eq('episode_number', Number(episodeNumber));
+      }
+    }
+  } catch (e) {
+    console.warn('[recordWorkReadingView] DB 업데이트 오류:', e.message);
   }
 }
 
@@ -1226,6 +1286,7 @@ window.WebNovelsAdmin = {
   approveSettlement,
   fetchSystemConfig,
   fetchWorksFromSupabase,
+  recordWorkReadingView,
   updateWorkAdminSetting,
   createWorkInDB,
   deleteWorkFromDB,
