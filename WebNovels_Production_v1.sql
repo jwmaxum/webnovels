@@ -1,7 +1,7 @@
 -- WebNovels Database Schema (Production)
 /* ============================================================
    WebNovels_Production_v1.sql
-   Supabase PostgreSQL / Production Baseline (Idempotent Migration Ready)
+   Supabase PostgreSQL / Production Baseline (Universal Idempotent Migration)
 
    핵심:
    - Supabase Auth
@@ -87,7 +87,7 @@ END $$;
 
 CREATE TABLE IF NOT EXISTS public.readers (
   id UUID PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
+  username TEXT,
   nickname TEXT,
   email TEXT,
   phone TEXT,
@@ -115,8 +115,8 @@ ALTER TABLE public.readers ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'ACTIVE'
 
 CREATE TABLE IF NOT EXISTS public.authors (
   id BIGSERIAL PRIMARY KEY,
-  auth_user_id UUID UNIQUE,
-  username TEXT UNIQUE,
+  auth_user_id UUID,
+  username TEXT,
   pen_name TEXT,
   profile_image TEXT,
   bio TEXT,
@@ -140,7 +140,7 @@ ALTER TABLE public.authors ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ;
    ============================================================ */
 
 CREATE TABLE IF NOT EXISTS public.author_private_profiles (
-  author_id BIGINT PRIMARY KEY REFERENCES public.authors(id) ON DELETE CASCADE,
+  author_id BIGINT PRIMARY KEY,
   email TEXT,
   birthdate DATE,
   address TEXT,
@@ -149,6 +149,11 @@ CREATE TABLE IF NOT EXISTS public.author_private_profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.author_private_profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.author_private_profiles ADD COLUMN IF NOT EXISTS birthdate DATE;
+ALTER TABLE public.author_private_profiles ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.author_private_profiles ADD COLUMN IF NOT EXISTS tax_status TEXT;
+
 
 /* ============================================================
    07. AUTHOR SETTLEMENT ACCOUNTS
@@ -156,7 +161,7 @@ CREATE TABLE IF NOT EXISTS public.author_private_profiles (
 
 CREATE TABLE IF NOT EXISTS public.author_settlement_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id BIGINT NOT NULL REFERENCES public.authors(id) ON DELETE CASCADE,
+  author_id BIGINT,
   bank_name TEXT,
   account_number_encrypted TEXT,
   account_holder TEXT,
@@ -167,15 +172,23 @@ CREATE TABLE IF NOT EXISTS public.author_settlement_accounts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.author_settlement_accounts ADD COLUMN IF NOT EXISTS author_id BIGINT;
+ALTER TABLE public.author_settlement_accounts ADD COLUMN IF NOT EXISTS bank_name TEXT;
+ALTER TABLE public.author_settlement_accounts ADD COLUMN IF NOT EXISTS account_number_encrypted TEXT;
+ALTER TABLE public.author_settlement_accounts ADD COLUMN IF NOT EXISTS account_holder TEXT;
+ALTER TABLE public.author_settlement_accounts ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'PENDING';
+ALTER TABLE public.author_settlement_accounts ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ;
+ALTER TABLE public.author_settlement_accounts ADD COLUMN IF NOT EXISTS is_primary BOOLEAN DEFAULT true;
+
 
 /* ============================================================
-   08. WORKS (기존 테이블 존재 시 author_id 자동 보강)
+   08. WORKS
    ============================================================ */
 
 CREATE TABLE IF NOT EXISTS public.works (
   id BIGSERIAL PRIMARY KEY,
   author_id BIGINT,
-  title TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
   content_type public.content_type NOT NULL DEFAULT 'NOVEL',
   genre TEXT[] NOT NULL DEFAULT '{}',
   tags TEXT[] NOT NULL DEFAULT '{}',
@@ -195,8 +208,8 @@ CREATE TABLE IF NOT EXISTS public.works (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 기존 테이블 대비 안전한 컬럼 추가 DDL
 ALTER TABLE public.works ADD COLUMN IF NOT EXISTS author_id BIGINT;
+ALTER TABLE public.works ADD COLUMN IF NOT EXISTS title TEXT DEFAULT '';
 ALTER TABLE public.works ADD COLUMN IF NOT EXISTS content_type public.content_type DEFAULT 'NOVEL';
 ALTER TABLE public.works ADD COLUMN IF NOT EXISTS genre TEXT[] DEFAULT '{}';
 ALTER TABLE public.works ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
@@ -215,14 +228,14 @@ ALTER TABLE public.works ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
 
 
 /* ============================================================
-   09. EPISODES (Metadata Only)
+   09. EPISODES
    ============================================================ */
 
 CREATE TABLE IF NOT EXISTS public.episodes (
   id BIGSERIAL PRIMARY KEY,
   work_id BIGINT,
   episode_number INT,
-  title TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
   access_policy public.access_policy NOT NULL DEFAULT 'FREE',
   author_comment TEXT,
   status public.episode_status NOT NULL DEFAULT 'DRAFT',
@@ -234,6 +247,7 @@ CREATE TABLE IF NOT EXISTS public.episodes (
 
 ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS work_id BIGINT;
 ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS episode_number INT;
+ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS title TEXT DEFAULT '';
 ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS access_policy public.access_policy DEFAULT 'FREE';
 ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS author_comment TEXT;
 ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS status public.episode_status DEFAULT 'DRAFT';
@@ -242,7 +256,7 @@ ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS view_count BIGINT DEFAULT 0
 
 
 /* ============================================================
-   10. EPISODE CONTENT (Protected Content)
+   10. EPISODE CONTENTS (Protected)
    ============================================================ */
 
 CREATE TABLE IF NOT EXISTS public.episode_contents (
@@ -252,20 +266,29 @@ CREATE TABLE IF NOT EXISTS public.episode_contents (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.episode_contents ADD COLUMN IF NOT EXISTS text_content TEXT;
+ALTER TABLE public.episode_contents ADD COLUMN IF NOT EXISTS content_version INT DEFAULT 1;
+
 
 /* ============================================================
-   11. WEBTOON PANELS (Protected Panels)
+   11. WEBTOON PANELS (Protected)
    ============================================================ */
 
 CREATE TABLE IF NOT EXISTS public.episode_panels (
   id BIGSERIAL PRIMARY KEY,
   episode_id BIGINT,
-  panel_number INT NOT NULL,
-  image_url TEXT NOT NULL,
+  panel_number INT,
+  image_url TEXT,
   width INT,
   height INT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.episode_panels ADD COLUMN IF NOT EXISTS episode_id BIGINT;
+ALTER TABLE public.episode_panels ADD COLUMN IF NOT EXISTS panel_number INT;
+ALTER TABLE public.episode_panels ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.episode_panels ADD COLUMN IF NOT EXISTS width INT;
+ALTER TABLE public.episode_panels ADD COLUMN IF NOT EXISTS height INT;
 
 
 /* ============================================================
@@ -283,6 +306,13 @@ CREATE TABLE IF NOT EXISTS public.reading_history (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.reading_history ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.reading_history ADD COLUMN IF NOT EXISTS work_id BIGINT;
+ALTER TABLE public.reading_history ADD COLUMN IF NOT EXISTS episode_id BIGINT;
+ALTER TABLE public.reading_history ADD COLUMN IF NOT EXISTS progress NUMERIC(5,2) DEFAULT 0;
+ALTER TABLE public.reading_history ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.reading_history ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+
 
 /* ============================================================
    13. FAVORITES
@@ -294,6 +324,9 @@ CREATE TABLE IF NOT EXISTS public.favorites (
   work_id BIGINT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.favorites ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.favorites ADD COLUMN IF NOT EXISTS work_id BIGINT;
 
 
 /* ============================================================
@@ -307,6 +340,10 @@ CREATE TABLE IF NOT EXISTS public.author_subscriptions (
   notification_enabled BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.author_subscriptions ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.author_subscriptions ADD COLUMN IF NOT EXISTS author_id BIGINT;
+ALTER TABLE public.author_subscriptions ADD COLUMN IF NOT EXISTS notification_enabled BOOLEAN DEFAULT true;
 
 
 /* ============================================================
@@ -324,6 +361,14 @@ CREATE TABLE IF NOT EXISTS public.episode_unlocks (
   status TEXT NOT NULL DEFAULT 'ACTIVE'
 );
 
+ALTER TABLE public.episode_unlocks ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.episode_unlocks ADD COLUMN IF NOT EXISTS episode_id BIGINT;
+ALTER TABLE public.episode_unlocks ADD COLUMN IF NOT EXISTS unlock_type public.unlock_type DEFAULT 'REWARDED_AD';
+ALTER TABLE public.episode_unlocks ADD COLUMN IF NOT EXISTS source_event_id UUID;
+ALTER TABLE public.episode_unlocks ADD COLUMN IF NOT EXISTS granted_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.episode_unlocks ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+ALTER TABLE public.episode_unlocks ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'ACTIVE';
+
 
 /* ============================================================
    16. POINT ACCOUNT & TRANSACTIONS
@@ -335,16 +380,25 @@ CREATE TABLE IF NOT EXISTS public.point_accounts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.point_accounts ADD COLUMN IF NOT EXISTS balance BIGINT DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS public.point_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID,
-  type TEXT NOT NULL,
-  amount BIGINT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'CHARGE',
+  amount BIGINT NOT NULL DEFAULT 0,
   work_id BIGINT,
   episode_id BIGINT,
   reference_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.point_transactions ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.point_transactions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'CHARGE';
+ALTER TABLE public.point_transactions ADD COLUMN IF NOT EXISTS amount BIGINT DEFAULT 0;
+ALTER TABLE public.point_transactions ADD COLUMN IF NOT EXISTS work_id BIGINT;
+ALTER TABLE public.point_transactions ADD COLUMN IF NOT EXISTS episode_id BIGINT;
+ALTER TABLE public.point_transactions ADD COLUMN IF NOT EXISTS reference_id TEXT;
 
 
 /* ============================================================
@@ -353,9 +407,9 @@ CREATE TABLE IF NOT EXISTS public.point_transactions (
 
 CREATE TABLE IF NOT EXISTS public.ad_units (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  ad_network TEXT NOT NULL,
-  placement TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  ad_network TEXT NOT NULL DEFAULT 'ADMOB',
+  placement TEXT NOT NULL DEFAULT 'BOTTOM_BANNER',
   ad_unit_code TEXT,
   is_rewarded BOOLEAN NOT NULL DEFAULT false,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -363,21 +417,40 @@ CREATE TABLE IF NOT EXISTS public.ad_units (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.ad_units ADD COLUMN IF NOT EXISTS name TEXT DEFAULT '';
+ALTER TABLE public.ad_units ADD COLUMN IF NOT EXISTS ad_network TEXT DEFAULT 'ADMOB';
+ALTER TABLE public.ad_units ADD COLUMN IF NOT EXISTS placement TEXT DEFAULT 'BOTTOM_BANNER';
+ALTER TABLE public.ad_units ADD COLUMN IF NOT EXISTS ad_unit_code TEXT;
+ALTER TABLE public.ad_units ADD COLUMN IF NOT EXISTS is_rewarded BOOLEAN DEFAULT false;
+ALTER TABLE public.ad_units ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+
 CREATE TABLE IF NOT EXISTS public.ad_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID,
   work_id BIGINT,
   episode_id BIGINT,
   ad_unit_id UUID,
-  ad_network TEXT NOT NULL,
+  ad_network TEXT NOT NULL DEFAULT 'ADMOB',
   external_event_id TEXT,
-  event_type TEXT NOT NULL,
+  event_type TEXT NOT NULL DEFAULT 'IMPRESSION',
   reward_granted BOOLEAN NOT NULL DEFAULT false,
   revenue NUMERIC(14,2) NOT NULL DEFAULT 0,
   currency TEXT NOT NULL DEFAULT 'KRW',
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS work_id BIGINT;
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS episode_id BIGINT;
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS ad_unit_id UUID;
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS ad_network TEXT DEFAULT 'ADMOB';
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS external_event_id TEXT;
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS event_type TEXT DEFAULT 'IMPRESSION';
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS reward_granted BOOLEAN DEFAULT false;
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS revenue NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'KRW';
+ALTER TABLE public.ad_events ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
 
 
 /* ============================================================
@@ -398,24 +471,43 @@ CREATE TABLE IF NOT EXISTS public.revenue_periods (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS period_month DATE;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS gross_revenue NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS network_fee NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS net_revenue NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS writer_pool_ratio NUMERIC(6,4) DEFAULT 0.625;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS writer_pool NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS platform_revenue NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS is_closed BOOLEAN DEFAULT false;
+ALTER TABLE public.revenue_periods ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;
+
 CREATE TABLE IF NOT EXISTS public.revenue_ledger (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   revenue_period_id UUID,
   author_id BIGINT,
   work_id BIGINT,
-  transaction_type TEXT NOT NULL,
-  direction TEXT NOT NULL,
-  amount NUMERIC(14,2) NOT NULL,
+  transaction_type TEXT NOT NULL DEFAULT 'REVENUE',
+  direction TEXT NOT NULL DEFAULT 'CREDIT',
+  amount NUMERIC(14,2) NOT NULL DEFAULT 0,
   reference_id TEXT,
   description TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS revenue_period_id UUID;
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS author_id BIGINT;
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS work_id BIGINT;
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS transaction_type TEXT DEFAULT 'REVENUE';
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS direction TEXT DEFAULT 'CREDIT';
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS amount NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS reference_id TEXT;
+ALTER TABLE public.revenue_ledger ADD COLUMN IF NOT EXISTS description TEXT;
+
 CREATE TABLE IF NOT EXISTS public.author_earnings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id BIGINT NOT NULL,
+  author_id BIGINT,
   work_id BIGINT,
-  period_date DATE NOT NULL,
+  period_date DATE NOT NULL DEFAULT CURRENT_DATE,
   ad_impressions BIGINT NOT NULL DEFAULT 0,
   rewarded_views BIGINT NOT NULL DEFAULT 0,
   gross_revenue NUMERIC(14,2) NOT NULL DEFAULT 0,
@@ -424,6 +516,16 @@ CREATE TABLE IF NOT EXISTS public.author_earnings (
   status TEXT NOT NULL DEFAULT 'ESTIMATED',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS author_id BIGINT;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS work_id BIGINT;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS period_date DATE DEFAULT CURRENT_DATE;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS ad_impressions BIGINT DEFAULT 0;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS rewarded_views BIGINT DEFAULT 0;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS gross_revenue NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS author_revenue NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.author_earnings ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'ESTIMATED';
 
 CREATE TABLE IF NOT EXISTS public.author_settlements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -445,6 +547,12 @@ ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS author_name_snaps
 ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS bank_name_snapshot TEXT;
 ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS account_number_snapshot TEXT;
 ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS account_holder_snapshot TEXT;
+ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS amount NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS status public.settlement_status DEFAULT 'PENDING';
+ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS requested_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS processed_at TIMESTAMPTZ;
+ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS processed_by UUID;
+ALTER TABLE public.author_settlements ADD COLUMN IF NOT EXISTS reject_reason TEXT;
 
 
 /* ============================================================
@@ -483,6 +591,9 @@ CREATE TABLE IF NOT EXISTS public.comment_likes (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.comment_likes ADD COLUMN IF NOT EXISTS comment_id UUID;
+ALTER TABLE public.comment_likes ADD COLUMN IF NOT EXISTS user_id UUID;
+
 CREATE TABLE IF NOT EXISTS public.content_reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   work_id BIGINT,
@@ -516,15 +627,21 @@ CREATE TABLE IF NOT EXISTS public.reports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS reporter_id UUID;
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS target_type TEXT;
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS target_id TEXT;
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS reason TEXT;
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS status public.report_status DEFAULT 'PENDING';
+
 
 /* ============================================================
-   20. ADMIN USERS & SYSTEM
+   20. ADMIN USERS & SYSTEM CONFIG (service_name 안전 보강)
    ============================================================ */
 
 CREATE TABLE IF NOT EXISTS public.admin_users (
   id UUID PRIMARY KEY,
-  username TEXT UNIQUE,
-  email TEXT UNIQUE,
+  username TEXT,
+  email TEXT,
   nickname TEXT,
   role TEXT NOT NULL DEFAULT 'SUB_ADMIN',
   permissions JSONB NOT NULL DEFAULT '["DASHBOARD"]'::jsonb,
@@ -533,10 +650,17 @@ CREATE TABLE IF NOT EXISTS public.admin_users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS username TEXT;
+ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS nickname TEXT;
+ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'SUB_ADMIN';
+ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '["DASHBOARD"]'::jsonb;
+ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+
 CREATE TABLE IF NOT EXISTS public.audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   admin_id UUID,
-  action TEXT NOT NULL,
+  action TEXT NOT NULL DEFAULT 'ACTION',
   target_type TEXT,
   target_id TEXT,
   old_data JSONB,
@@ -545,6 +669,13 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
   user_agent TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS admin_id UUID;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS action TEXT DEFAULT 'ACTION';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS target_type TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS target_id TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS old_data JSONB;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS new_data JSONB;
 
 CREATE TABLE IF NOT EXISTS public.platform_stats (
   id TEXT PRIMARY KEY DEFAULT 'current',
@@ -558,6 +689,14 @@ CREATE TABLE IF NOT EXISTS public.platform_stats (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.platform_stats ADD COLUMN IF NOT EXISTS total_users BIGINT DEFAULT 0;
+ALTER TABLE public.platform_stats ADD COLUMN IF NOT EXISTS total_authors BIGINT DEFAULT 0;
+ALTER TABLE public.platform_stats ADD COLUMN IF NOT EXISTS total_works BIGINT DEFAULT 0;
+ALTER TABLE public.platform_stats ADD COLUMN IF NOT EXISTS total_episodes BIGINT DEFAULT 0;
+ALTER TABLE public.platform_stats ADD COLUMN IF NOT EXISTS total_ad_views BIGINT DEFAULT 0;
+ALTER TABLE public.platform_stats ADD COLUMN IF NOT EXISTS total_revenue NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE public.platform_stats ADD COLUMN IF NOT EXISTS total_author_revenue NUMERIC(14,2) DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS public.system_config (
   id TEXT PRIMARY KEY DEFAULT 'default',
   service_name TEXT NOT NULL DEFAULT 'WebNovels',
@@ -568,10 +707,16 @@ CREATE TABLE IF NOT EXISTS public.system_config (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.system_config ADD COLUMN IF NOT EXISTS service_name TEXT DEFAULT 'WebNovels';
+ALTER TABLE public.system_config ADD COLUMN IF NOT EXISTS maintenance_mode BOOLEAN DEFAULT false;
+ALTER TABLE public.system_config ADD COLUMN IF NOT EXISTS default_writer_pool_ratio NUMERIC(6,4) DEFAULT 0.625;
+ALTER TABLE public.system_config ADD COLUMN IF NOT EXISTS minimum_settlement_amount NUMERIC(14,2) DEFAULT 10000;
+ALTER TABLE public.system_config ADD COLUMN IF NOT EXISTS reward_ad_enabled BOOLEAN DEFAULT true;
+
 CREATE TABLE IF NOT EXISTS public.fan_meetings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_id BIGINT,
-  title TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
   description TEXT,
   event_at TIMESTAMPTZ,
   location TEXT,
@@ -581,19 +726,29 @@ CREATE TABLE IF NOT EXISTS public.fan_meetings (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.fan_meetings ADD COLUMN IF NOT EXISTS author_id BIGINT;
+ALTER TABLE public.fan_meetings ADD COLUMN IF NOT EXISTS title TEXT DEFAULT '';
+ALTER TABLE public.fan_meetings ADD COLUMN IF NOT EXISTS ticket_price NUMERIC(12,2) DEFAULT 0;
+ALTER TABLE public.fan_meetings ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'DRAFT';
+
 CREATE TABLE IF NOT EXISTS public.fan_meeting_tickets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   meeting_id UUID,
   user_id UUID,
-  amount NUMERIC(12,2) NOT NULL,
+  amount NUMERIC(12,2) NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'PENDING',
   purchased_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.fan_meeting_tickets ADD COLUMN IF NOT EXISTS meeting_id UUID;
+ALTER TABLE public.fan_meeting_tickets ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.fan_meeting_tickets ADD COLUMN IF NOT EXISTS amount NUMERIC(12,2) DEFAULT 0;
+ALTER TABLE public.fan_meeting_tickets ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PENDING';
+
 CREATE TABLE IF NOT EXISTS public.goods (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_id BIGINT,
-  name TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
   description TEXT,
   price NUMERIC(12,2) NOT NULL DEFAULT 0,
   stock INT NOT NULL DEFAULT 0,
@@ -602,13 +757,23 @@ CREATE TABLE IF NOT EXISTS public.goods (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.goods ADD COLUMN IF NOT EXISTS author_id BIGINT;
+ALTER TABLE public.goods ADD COLUMN IF NOT EXISTS name TEXT DEFAULT '';
+ALTER TABLE public.goods ADD COLUMN IF NOT EXISTS price NUMERIC(12,2) DEFAULT 0;
+ALTER TABLE public.goods ADD COLUMN IF NOT EXISTS stock INT DEFAULT 0;
+ALTER TABLE public.goods ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'DRAFT';
+
 CREATE TABLE IF NOT EXISTS public.goods_orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID,
-  total_amount NUMERIC(12,2) NOT NULL,
+  total_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'PENDING',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.goods_orders ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.goods_orders ADD COLUMN IF NOT EXISTS total_amount NUMERIC(12,2) DEFAULT 0;
+ALTER TABLE public.goods_orders ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PENDING';
 
 
 /* ============================================================
@@ -809,7 +974,7 @@ FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 
 /* ============================================================
-   25. DEFAULT CONFIG
+   25. DEFAULT CONFIG & STATS
    ============================================================ */
 
 INSERT INTO public.system_config (id, service_name, default_writer_pool_ratio, minimum_settlement_amount, reward_ad_enabled)
