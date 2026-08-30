@@ -784,10 +784,26 @@ window.openReaderDirect = function(workId, epNumber) {
   const ep = work.episodes.find(e => e.episodeNumber === epNum) || work.episodes[0];
   const unlockKey = `${work.id}-${epNum}`;
 
-  // 성인 인증 검사
-  if (work.rating === 'AGE_19' && !window._isAdultVerified) {
-    openModal('modalPassAdultVerify');
-    return;
+  // 성인 인증 및 비로그인 검사 (19금 콘텐츠는 등록 회원만 접근 가능)
+  const isAdultWork = work.rating === 'AGE_19' || work.genre === '성인' || (Array.isArray(work.genre) && (work.genre.includes('성인') || work.genre.includes('19세 이상')));
+  if (isAdultWork) {
+    let savedUser = null;
+    try {
+      savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+    } catch(e) {}
+
+    if (!savedUser) {
+      showToast('🔒 19세 미만 이용불가 성인 콘텐츠입니다. 회원 로그인 후 성인인증을 진행해주세요.');
+      closeAllModals();
+      switchWebNovelsView('view-auth');
+      return;
+    }
+
+    const isVerified = !!(savedUser.isAdultVerified || savedUser.is_adult_verified || window._isAdultVerified);
+    if (!isVerified) {
+      openModal('modalPassAdultVerify');
+      return;
+    }
   }
 
   // 광고/포인트 언락 검사 (4화 이상)
@@ -1052,10 +1068,37 @@ async function startAdSimulation() {
   }, 1000);
 }
 
-// PASS 본인인증 완료 시뮬레이션
-window.handlePassAdultVerify = function() {
+// PASS 본인인증 완료 처리 (등록 회원 전용)
+window.handlePassAdultVerify = async function() {
+  let savedUser = null;
+  try {
+    savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  } catch(e) {}
+
+  if (!savedUser) {
+    closeAllModals();
+    showToast('🔒 성인 본인인증은 회원 로그인 후 진행할 수 있습니다.');
+    switchWebNovelsView('view-auth');
+    return;
+  }
+
+  showToast('📲 PASS 본인인증 검증 완료 중...');
   window._isAdultVerified = true;
-  showToast('🛡️ PASS 성인 본인인증이 성공적으로 완료되었습니다.');
+  savedUser.isAdultVerified = true;
+  savedUser.is_adult_verified = true;
+  localStorage.setItem('webnovels_user', JSON.stringify(savedUser));
+
+  // Supabase DB readers 테이블 동기화
+  if (window.WebNovelsAdmin && savedUser.id) {
+    try {
+      const client = window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+      if (client) {
+        await client.from('readers').update({ is_adult_verified: true, adult_verified_at: new Date().toISOString() }).eq('id', savedUser.id);
+      }
+    } catch(e) {}
+  }
+
+  showToast('🛡️ PASS 성인 본인인증이 완료되었습니다. 19+ 작품을 이용하실 수 있습니다.');
   closeAllModals();
   const adultBadge = document.getElementById('myAdultBadge');
   if (adultBadge) {
@@ -3860,10 +3903,26 @@ window.openReaderDirect = function(workId, epNumber) {
   const ep = work.episodes.find(e => e.episodeNumber === epNum) || work.episodes[0];
   const unlockKey = `${work.id}-${epNum}`;
 
-  // 1. 성인 콘텐츠 여부 확인 (미인증 시 PASS 성인인증 모달 팝업)
-  if (work.rating === 'AGE_19' && !window._isAdultVerified) {
-    openModal('modalPassAdultVerify');
-    return;
+  // 1. 성인 콘텐츠 여부 확인 (비로그인 차단 및 PASS 성인인증 모달)
+  const isAdultWork = work.rating === 'AGE_19' || work.genre === '성인' || (Array.isArray(work.genre) && (work.genre.includes('성인') || work.genre.includes('19세 이상')));
+  if (isAdultWork) {
+    let savedUser = null;
+    try {
+      savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+    } catch(e) {}
+
+    if (!savedUser) {
+      showToast('🔒 19세 미만 이용불가 성인 콘텐츠입니다. 회원 로그인 후 이용해주세요.');
+      closeAllModals();
+      switchWebNovelsView('view-auth');
+      return;
+    }
+
+    const isVerified = !!(savedUser.isAdultVerified || savedUser.is_adult_verified || window._isAdultVerified);
+    if (!isVerified) {
+      openModal('modalPassAdultVerify');
+      return;
+    }
   }
 
   // 2. 광고/포인트 해금 필요 체크 (4화 이상 유료/잠긴 회차)
@@ -5915,15 +5974,21 @@ window.toggleReplyInput = function(commentId) {
 };
 
 window.handleReaderCommentSubmit = async function(workId, episodeId) {
+  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  if (!savedUser) {
+    showToast('🔒 댓글 작성은 로그인 회원만 가능합니다.');
+    switchWebNovelsView('view-auth');
+    return;
+  }
+
   const input = document.getElementById('readerCommentInput');
   if (!input || !input.value.trim()) {
     showToast('댓글 내용을 입력해주세요.');
     return;
   }
 
-  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-  const userId = savedUser ? (savedUser.username || savedUser.email) : 'guest';
-  const nickname = savedUser?.nickname || userId;
+  const userId = savedUser.username || savedUser.email || String(savedUser.id);
+  const nickname = savedUser.nickname || savedUser.username || '독자';
 
   if (window.WebNovelsAdmin?.addCommentToEpisode) {
     await window.WebNovelsAdmin.addCommentToEpisode(workId, episodeId, userId, nickname, input.value.trim(), null);
@@ -5935,15 +6000,21 @@ window.handleReaderCommentSubmit = async function(workId, episodeId) {
 };
 
 window.handleReaderReplySubmit = async function(workId, episodeId, parentId) {
+  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  if (!savedUser) {
+    showToast('🔒 답글 작성은 로그인 회원만 가능합니다.');
+    switchWebNovelsView('view-auth');
+    return;
+  }
+
   const input = document.getElementById(`replyText-${parentId}`);
   if (!input || !input.value.trim()) {
     showToast('답글 내용을 입력해주세요.');
     return;
   }
 
-  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-  const userId = savedUser ? (savedUser.username || savedUser.email) : 'guest';
-  const nickname = savedUser?.nickname || userId;
+  const userId = savedUser.username || savedUser.email || String(savedUser.id);
+  const nickname = savedUser.nickname || savedUser.username || '독자';
 
   if (window.WebNovelsAdmin?.addCommentToEpisode) {
     await window.WebNovelsAdmin.addCommentToEpisode(workId, episodeId, userId, nickname, input.value.trim(), parentId);
