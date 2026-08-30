@@ -398,7 +398,12 @@ async function initWebNovelsApp() {
 // ============================================================
 let cdgHeroInterval = null;
 
-const getWorkCover = (w) => w.coverUrl || w.coverImageUrl || (w.cover_image ? `/images/${w.cover_image}` : '/images/stormqueen_oath.jpg');
+const getWorkCover = (w) => {
+  if (!w) return '/images/stormqueen_oath.jpg';
+  const raw = w.coverUrl || w.coverImageUrl || w.cover_image || w.coverImage || '/images/stormqueen_oath.jpg';
+  if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) return raw;
+  return `/images/${raw}`;
+};
 const getAuthorName = (w) => (typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상';
 
 // Single Work Card HTML Template (CDG PLAY Aesthetic - 실제 독자 조회수 실시간 연동)
