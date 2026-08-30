@@ -1849,7 +1849,11 @@ function switchWebNovelsView(viewId, activeLink) {
   const targetView = document.getElementById(viewId);
   if (targetView) {
     targetView.classList.add('active');
-    if (activeLink) activeLink.classList.add('active');
+    if (activeLink) {
+      activeLink.classList.add('active');
+    }
+    // viewId에 매칭되는 모든 상단/하단 네비게이션 링크 활성화
+    document.querySelectorAll(`[data-target="${viewId}"]`).forEach(el => el.classList.add('active'));
   }
 
   // Load Creator Studio data if opening creator
