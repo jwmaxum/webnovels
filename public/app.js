@@ -4996,9 +4996,9 @@ window.showAdminMenuNotice = function(menuKey) {
 
 // 신규 서브 관리자 생성 (Supabase 연동)
 window.handleCreateSubAdminSubmit = async function() {
-  const newId = document.getElementById('newSubAdminId').value;
-  const newPw = document.getElementById('newSubAdminPw').value;
-  const newName = document.getElementById('newSubAdminName').value;
+  const newId = document.getElementById('newSubAdminId')?.value.trim();
+  const newPw = document.getElementById('newSubAdminPw')?.value.trim();
+  const newName = document.getElementById('newSubAdminName')?.value.trim();
   const checkedPerms = Array.from(document.querySelectorAll('input[name="newPerm"]:checked')).map(el => el.value);
 
   if (!newId || !newPw || !newName) {
@@ -5012,13 +5012,17 @@ window.handleCreateSubAdminSubmit = async function() {
 
   if (result && result.success) {
     showToast(`👤 서브 관리자 (${newId} / ${newName}) 생성 완료! (부여 권한: ${checkedPerms.length}개 메뉴)`);
+    // 입력창 초기화
+    if (document.getElementById('newSubAdminId')) document.getElementById('newSubAdminId').value = '';
+    if (document.getElementById('newSubAdminPw')) document.getElementById('newSubAdminPw').value = '';
+    if (document.getElementById('newSubAdminName')) document.getElementById('newSubAdminName').value = '';
   } else {
     showToast(`❌ 서브 관리자 생성 실패: ${result?.error || 'DB 저장 실패'}`);
     return;
   }
 
   closeAllModals();
-  loadSubAdminList();
+  await window.loadSubAdminList();
 };
 
 // 서브 관리자 삭제
