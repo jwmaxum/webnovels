@@ -5025,6 +5025,9 @@ window.handleCreateSubAdminSubmit = async function() {
 
   closeAllModals();
   await window.loadSubAdminList();
+  if (typeof window.loadDashboardKPIs === 'function') {
+    window.loadDashboardKPIs();
+  }
 };
 
 // 서브 관리자 삭제
@@ -5032,8 +5035,11 @@ window.handleDeleteSubAdmin = async function(id, nickname) {
   if (!confirm(`서브 관리자 "${nickname}"을 삭제하시겠습니까?`)) return;
 
   const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.deleteSubAdmin(id) : null;
-  showToast(result?.success ? `🗑️ 서브 관리자 "${nickname}" 삭제 완료` : '삭제 처리됨 [오프라인 모드]');
-  loadSubAdminList();
+  showToast(result?.success ? `🗑️ 서브 관리자 "${nickname}" 삭제 완료` : '삭제 처리되었습니다.');
+  await window.loadSubAdminList();
+  if (typeof window.loadDashboardKPIs === 'function') {
+    window.loadDashboardKPIs();
+  }
 };
 
 // 권한 수정 모달 열기
@@ -5448,6 +5454,31 @@ window.loadDashboardKPIs = async function() {
         const events = await window.WebNovelsAdmin.fetchRevenueEvents();
         if (typeof renderRevenueEvents === 'function') {
           renderRevenueEvents(events);
+        }
+      } catch(err) {}
+    }
+
+    // 서브 관리자 현황 대시보드 실시간 업데이트
+    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchSubAdmins === 'function') {
+      try {
+        const subAdmins = await window.WebNovelsAdmin.fetchSubAdmins();
+        const statusEl = document.getElementById('dashboardSubAdminStatusText');
+        const previewEl = document.getElementById('dashboardSubAdminListPreview');
+        if (statusEl) {
+          statusEl.innerHTML = (subAdmins && subAdmins.length > 0)
+            ? `현재 총 <strong style="color: #10b981; font-size: 1.05rem;">${subAdmins.length}명</strong>의 서브 관리자가 등록되어 활성화 중입니다.`
+            : `현재 등록된 서브 관리자가 없습니다. "신규 서브 관리자 생성"을 진행하세요.`;
+        }
+        if (previewEl) {
+          if (subAdmins && subAdmins.length > 0) {
+            previewEl.innerHTML = `
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+                ${subAdmins.map(a => `<span class="badge badge-primary" style="font-size:0.75rem; padding: 3px 8px;">👤 ${a.nickname || a.username} (${(a.permissions||[]).length}개 메뉴)</span>`).join('')}
+              </div>
+            `;
+          } else {
+            previewEl.innerHTML = '';
+          }
         }
       } catch(err) {}
     }

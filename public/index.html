@@ -882,7 +882,8 @@
                   </div>
                   <div class="card glass-panel p-6">
                     <h3><i data-lucide="shield" class="icon-indigo"></i> 서브 관리자 현황</h3>
-                    <p class="text-muted mt-2">등록된 서브 관리자 수 및 RBAC 권한 배정 상태를 확인합니다.</p>
+                    <p class="text-muted mt-2" id="dashboardSubAdminStatusText">등록된 서브 관리자 수 및 RBAC 권한 배정 상태를 확인합니다.</p>
+                    <div id="dashboardSubAdminListPreview" style="margin-top: 10px;"></div>
                     <button class="btn btn-outline btn-sm mt-4" onclick="switchAdminSubTab('subadmins')">서브 관리자 권한 관리 바로가기 →</button>
                   </div>
                 </div>
@@ -2239,7 +2240,7 @@
 
   </div>
 
-  <script src="/supabase-admin.js?v=65"></script>
-  <script src="/app.js?v=65"></script>
+  <script src="/supabase-admin.js?v=70"></script>
+  <script src="/app.js?v=70"></script>
 </body>
 </html>
