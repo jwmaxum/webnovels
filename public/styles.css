@@ -2976,3 +2976,137 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
 .review-checklist-item:hover {
   background: rgba(255, 255, 255, 0.05);
 }
+
+/* ============================================================
+   [Step 4] 대댓글 (Nested Comments) 계층형 스타일
+   ============================================================ */
+.comment-item {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.comment-item.is-reply {
+  margin-left: 28px;
+  border-left: 3px solid var(--cdg-pink);
+  background: rgba(255, 42, 122, 0.03);
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+
+.comment-author {
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comment-time {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.comment-content {
+  font-size: 0.9rem;
+  color: #e4e4e7;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+}
+
+.btn-reply-toggle {
+  background: none;
+  border: none;
+  color: var(--cdg-pink);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-reply-toggle:hover {
+  background: rgba(255, 42, 122, 0.1);
+}
+
+.reply-input-wrapper {
+  margin-top: 10px;
+  margin-left: 28px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed var(--cdg-pink-border);
+  border-radius: 8px;
+  display: none;
+}
+
+.reply-input-wrapper.active {
+  display: block;
+}
+
+/* ============================================================
+   [Step 4] 크리에이터 스튜디오 4대 수익 카드 스타일
+   ============================================================ */
+.creator-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .creator-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.creator-kpi-card {
+  padding: 16px;
+  background: rgba(19, 19, 24, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.creator-kpi-card.highlight {
+  border-color: var(--cdg-pink-border);
+  background: rgba(255, 42, 122, 0.05);
+}
+
+.creator-kpi-card .label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.creator-kpi-card .amount {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  font-family: var(--font-heading);
+}
+
+.creator-kpi-card.highlight .amount {
+  color: var(--cdg-pink);
+}

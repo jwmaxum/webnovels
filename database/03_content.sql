@@ -1,8 +1,10 @@
 -- ============================================================
 -- 03_content.sql: 연재 작품(works) 및 회차(episodes) 스키마
+-- (작품/회차 상태값 표준화 및 심사 워크플로우 지원)
 -- ============================================================
 
--- 1. 연재 작품 테이블 (works - author_id 외래키 연동)
+-- 1. 연재 작품 테이블 (works - author_id 외래키 연동 및 표준 상태값)
+-- WORK 상태: 'DRAFT', 'REVIEW', 'PUBLISHED', 'PAUSED', 'COMPLETED', 'REJECTED'
 CREATE TABLE IF NOT EXISTS works (
   id SERIAL PRIMARY KEY,
   author_id INT REFERENCES authors(id) ON DELETE SET NULL,
@@ -17,7 +19,7 @@ CREATE TABLE IF NOT EXISTS works (
   like_count INT DEFAULT 0,
   rating TEXT DEFAULT 'ALL',
   ai_usage_type TEXT DEFAULT 'NONE',
-  status TEXT DEFAULT 'ONGOING', -- 'ONGOING', 'PAUSED', 'COMPLETED'
+  status TEXT DEFAULT 'PUBLISHED' CHECK (status IN ('DRAFT', 'REVIEW', 'PUBLISHED', 'PAUSED', 'COMPLETED', 'REJECTED')),
   is_completed BOOLEAN DEFAULT false,
   is_top_recommended BOOLEAN DEFAULT false,
   is_popular_work BOOLEAN DEFAULT false,
@@ -44,7 +46,8 @@ BEGIN
   END IF;
 END $$;
 
--- 2. 회차 상세 테이블 (episodes - 본문/웹툰컷 & 광고 언락 정책)
+-- 2. 회차 상세 테이블 (episodes - 표준 상태값 및 예약 연재 일시)
+-- EPISODE 상태: 'DRAFT', 'REVIEW', 'SCHEDULED', 'PUBLISHED', 'HIDDEN', 'DELETED'
 CREATE TABLE IF NOT EXISTS episodes (
   id SERIAL PRIMARY KEY,
   work_id INT REFERENCES works(id) ON DELETE CASCADE,
@@ -55,7 +58,7 @@ CREATE TABLE IF NOT EXISTS episodes (
   content TEXT, -- 웹소설 텍스트 본문
   image_urls JSONB DEFAULT '[]'::jsonb, -- 웹툰 컷 이미지 URL 배열
   author_comment TEXT,
-  status TEXT DEFAULT 'PUBLISHED', -- 'PUBLISHED', 'SCHEDULED', 'REVIEW', 'DRAFT'
+  status TEXT DEFAULT 'PUBLISHED' CHECK (status IN ('DRAFT', 'REVIEW', 'SCHEDULED', 'PUBLISHED', 'HIDDEN', 'DELETED')),
   scheduled_at TIMESTAMPTZ, -- Zero-Touch 예약 연재 일시
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT unique_work_episode UNIQUE (work_id, episode_number)

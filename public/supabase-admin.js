@@ -951,11 +951,75 @@ async function fetchActionQueueFromDB() {
   }
 }
 
+async function submitEpisodeForReview(workId, episodeId, workTitle, authorName) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연결' };
+
+  try {
+    // 1. 회차 상태를 'REVIEW'로 변경
+    await supabaseClient
+      .from('episodes')
+      .update({ status: 'REVIEW' })
+      .eq('work_id', Number(workId))
+      .eq('id', Number(episodeId));
+
+    // 2. content_reviews에 심사 요청 레코드 생성
+    const { data, error } = await supabaseClient
+      .from('content_reviews')
+      .insert({
+        work_id: Number(workId),
+        episode_id: Number(episodeId),
+        work_title: workTitle || '신규 원고',
+        author_name: authorName || '작가',
+        status: 'PENDING',
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, review: data };
+  } catch (err) {
+    console.warn('[Review Submit] 실패:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+async function rejectContentReview(reviewId, workId, episodeId, rejectReason) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연결' };
+
+  try {
+    // 1. 심사 반려 기록
+    await supabaseClient
+      .from('content_reviews')
+      .update({
+        status: 'REJECTED',
+        reject_reason: rejectReason || '운영 정책 미부합',
+        reviewer_name: '최고관리자',
+        reviewed_at: new Date().toISOString()
+      })
+      .eq('id', reviewId);
+
+    // 2. 회차 상태를 'DRAFT'로 복원
+    if (workId && episodeId) {
+      await supabaseClient
+        .from('episodes')
+        .update({ status: 'DRAFT' })
+        .eq('work_id', Number(workId))
+        .eq('id', Number(episodeId));
+    }
+
+    return { success: true, message: '콘텐츠 심사가 반려 처리되었습니다.' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
 async function resolveActionQueueItemInDB(item) {
   if (!supabaseClient || !item) return { success: false, error: 'Supabase 미연결' };
 
   try {
     if (item.source === 'content_reviews') {
+      // 1. 심사 승인 상태 업데이트
       await supabaseClient
         .from('content_reviews')
         .update({
@@ -965,7 +1029,16 @@ async function resolveActionQueueItemInDB(item) {
         })
         .eq('id', item.rawId);
 
-      return { success: true, message: '콘텐츠 심사가 승인되었습니다.' };
+      // 2. 연관 회차를 즉시 'PUBLISHED'로 전이 (Zero-Touch 공개)
+      if (item.workId && item.episodeId) {
+        await supabaseClient
+          .from('episodes')
+          .update({ status: 'PUBLISHED' })
+          .eq('work_id', Number(item.workId))
+          .eq('episode_number', Number(item.episodeId));
+      }
+
+      return { success: true, message: '콘텐츠 심사가 승인되어 회차가 즉시 공개(PUBLISHED)되었습니다.' };
     }
 
     if (item.source === 'reports') {
@@ -1033,5 +1106,7 @@ window.WebNovelsAdmin = {
   fetchCommentsByEpisode,
   addCommentToEpisode,
   fetchActionQueueFromDB,
-  resolveActionQueueItemInDB
+  resolveActionQueueItemInDB,
+  submitEpisodeForReview,
+  rejectContentReview
 };

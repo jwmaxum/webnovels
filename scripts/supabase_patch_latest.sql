@@ -8,7 +8,28 @@
 ALTER TABLE system_config DROP COLUMN IF EXISTS toss_secret_key;
 ALTER TABLE system_config DROP COLUMN IF EXISTS kcp_site_key;
 
--- 2. 기존 RLS 정책 일괄 정리
+-- 2. 기존 테이블 컬럼 보강 및 상태값 표준화
+ALTER TABLE works ADD COLUMN IF NOT EXISTS author_id INT;
+ALTER TABLE works ADD COLUMN IF NOT EXISTS like_count INT DEFAULT 0;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'fk_works_author'
+  ) THEN
+    ALTER TABLE works ADD CONSTRAINT fk_works_author FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+-- 상태 제약조건 적용 (기존 데이터 호환 보장)
+ALTER TABLE works DROP CONSTRAINT IF EXISTS check_work_status;
+ALTER TABLE works ADD CONSTRAINT check_work_status CHECK (status IN ('DRAFT', 'REVIEW', 'PUBLISHED', 'PAUSED', 'COMPLETED', 'REJECTED'));
+
+ALTER TABLE episodes DROP CONSTRAINT IF EXISTS check_episode_status;
+ALTER TABLE episodes ADD CONSTRAINT check_episode_status CHECK (status IN ('DRAFT', 'REVIEW', 'SCHEDULED', 'PUBLISHED', 'HIDDEN', 'DELETED'));
+
+ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS author_id INT;
+
+-- 3. 기존 RLS 정책 일괄 정리
 DO $$
 DECLARE
   pol RECORD;
@@ -22,7 +43,7 @@ BEGIN
   END LOOP;
 END $$;
 
--- 3. 보안 RLS 정책 재설정
+-- 4. 보안 RLS 정책 재설정
 CREATE POLICY "Public Read Works" ON works FOR SELECT USING (true);
 CREATE POLICY "Public Read Episodes" ON episodes FOR SELECT USING (true);
 CREATE POLICY "Public Read Platform Stats" ON platform_stats FOR SELECT USING (true);

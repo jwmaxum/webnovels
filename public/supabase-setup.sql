@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS works (
   like_count INT DEFAULT 0,
   rating TEXT DEFAULT 'ALL',
   ai_usage_type TEXT DEFAULT 'NONE',
-  status TEXT DEFAULT 'ONGOING',
+  status TEXT DEFAULT 'PUBLISHED' CHECK (status IN ('DRAFT', 'REVIEW', 'PUBLISHED', 'PAUSED', 'COMPLETED', 'REJECTED')),
   is_completed BOOLEAN DEFAULT false,
   is_top_recommended BOOLEAN DEFAULT false,
   is_popular_work BOOLEAN DEFAULT false,
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS episodes (
   content TEXT,
   image_urls JSONB DEFAULT '[]'::jsonb,
   author_comment TEXT,
-  status TEXT DEFAULT 'PUBLISHED',
+  status TEXT DEFAULT 'PUBLISHED' CHECK (status IN ('DRAFT', 'REVIEW', 'SCHEDULED', 'PUBLISHED', 'HIDDEN', 'DELETED')),
   scheduled_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT unique_work_episode UNIQUE (work_id, episode_number)

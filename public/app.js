@@ -3907,8 +3907,8 @@ window.openReaderDirect = function(workId, epNumber) {
     btnNext.onclick = () => openReaderDirect(work.id, epNum + 1);
   }
 
-  // 5. 회차별 독자 댓글 렌더링
-  renderReaderComments(work.id, epNum);
+  // 5. 회차별 독자 댓글 및 대댓글 렌더링 (Step 4 연동)
+  loadEpisodeComments(workId, epNum);
 
   // 6. 추천 작품 렌더링
   renderReaderRecommendations(work.id);
@@ -3918,65 +3918,16 @@ window.openReaderDirect = function(workId, epNumber) {
   if (window.lucide) window.lucide.createIcons();
 };
 
-// 회차별 댓글 렌더링
+// 회차별 댓글 렌더링 (대댓글 트리 지원)
 function renderReaderComments(workId, epNum) {
-  const commentKey = `${workId}-${epNum}`;
-  const listEl = document.getElementById('readerCommentsList');
-  const countEl = document.getElementById('readerCommentCount');
-  if (!listEl) return;
-
-  const comments = COMMENTS_STORE[commentKey] || [
-    { id: `c_${Date.now()}_1`, nickname: "열혈독자", content: "이번 회차 전개 속도 정말 시원시원하네요!", likes: 12, time: "방금 전", liked: false },
-    { id: `c_${Date.now()}_2`, nickname: "새벽정주행", content: "다음 회차가 너무 궁금해서 바로 광고 보고 갑니다 ㅎㅎ", likes: 7, time: "5분 전", liked: false }
-  ];
-  COMMENTS_STORE[commentKey] = comments;
-
-  if (countEl) countEl.textContent = `(${comments.length})`;
-
-  listEl.innerHTML = comments.map(c => `
-    <div class="comment-card glass-panel p-3" style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px;">
-      <div class="flex-between mb-1" style="display:flex; justify-content:space-between; align-items:center;">
-        <strong style="color:var(--text-color); font-size:0.92rem;">👤 ${c.nickname}</strong>
-        <span class="text-muted small">${c.time}</span>
-      </div>
-      <p style="margin:6px 0; font-size:0.92rem; color:var(--text-color); line-height:1.5;">${c.content}</p>
-      <div style="display:flex; justify-content:flex-end;">
-        <button class="btn btn-ghost btn-sm" onclick="toggleCommentLike('${commentKey}', '${c.id}')" style="color:${c.liked ? 'var(--cdg-pink)' : 'var(--text-muted)'}; font-size:0.8rem; padding:2px 8px;">
-          ❤️ 공감 <span id="likeCount_${c.id}">${c.likes}</span>
-        </button>
-      </div>
-    </div>
-  `).join('');
+  loadEpisodeComments(workId, epNum);
 }
 
-// 독자 댓글 등록
+// 독자 댓글 등록 (하위 호환)
 window.submitReaderComment = function() {
-  const input = document.getElementById('readerCommentInput');
-  if (!input || !input.value.trim()) {
-    showToast('댓글 내용을 입력해주세요.');
-    return;
-  }
-
   const workId = window._currentReadingWorkId || 1;
   const epNum = window._currentReadingEpNum || 1;
-  const commentKey = `${workId}-${epNum}`;
-
-  const user = JSON.parse(localStorage.getItem('webnovels_user') || '{}');
-  const nickname = user.nickname || '익명독자';
-
-  if (!COMMENTS_STORE[commentKey]) COMMENTS_STORE[commentKey] = [];
-  COMMENTS_STORE[commentKey].unshift({
-    id: `c_${Date.now()}`,
-    nickname: nickname,
-    content: input.value.trim(),
-    likes: 0,
-    time: "방금 전",
-    liked: false
-  });
-
-  input.value = '';
-  showToast('💬 댓글이 등록되었습니다.');
-  renderReaderComments(workId, epNum);
+  handleReaderCommentSubmit(workId, epNum);
 };
 
 // 댓글 공감/좋아요 토글
@@ -5658,7 +5609,278 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
       showToast('📊 ANALYTICS 통계 데이터가 실시간 DB와 동기화되었습니다.');
     }
   } catch (err) {
-    console.error('[loadAdminAnalytics Error]', err);
+    console.warn('[Analytics Error]', err);
+  }
+}
+
+// ============================================================
+// [Admin CMS] 15대 메뉴 전환 및 RBAC 권한 분기
+// ============================================================
+window.switchAdminSubTab = function(subtabName) {
+  const adminUser = window.WebNovelsAdmin?.getCurrentAdmin?.() || JSON.parse(localStorage.getItem('webnovels_admin_user') || 'null');
+
+  // RBAC 권한 맵
+  const permMap = {
+    'dashboard': 'DASHBOARD',
+    'users': 'USER_MGMT',
+    'authors': 'AUTHOR_MGMT',
+    'works': 'WORK_MGMT',
+    'episodes': 'EPISODE_MGMT',
+    'actionqueue': 'CONTENT_REVIEW',
+    'comments': 'COMMENT_REPORT',
+    'admgmt': 'AD_MGMT',
+    'settlements': 'AD_REVENUE',
+    'fanmeeting': 'FAN_MEETING',
+    'goods': 'GOODS_MGMT',
+    'events': 'EVENT_MGMT',
+    'analytics': 'ANALYTICS',
+    'subadmins': 'SYSTEM_MGMT',
+    'security': 'SECURITY_MGMT'
+  };
+
+  const requiredPerm = permMap[subtabName] || 'DASHBOARD';
+
+  // SUPER_ADMIN은 모든 메뉴 접근 허용, SUB_ADMIN은 권한 배열 검사
+  if (adminUser && adminUser.role === 'SUB_ADMIN') {
+    const userPerms = Array.isArray(adminUser.permissions) ? adminUser.permissions : [];
+    if (!userPerms.includes(requiredPerm) && requiredPerm !== 'DASHBOARD') {
+      showToast(`🚫 [접근 제한] 해당 메뉴(${subtabName})에 대한 서브관리자 권한이 없습니다.`);
+      return;
+    }
+  }
+
+  // 사이드바 버튼 active 갱신
+  document.querySelectorAll('.admin-nav-item').forEach(btn => {
+    if (btn.dataset.subtab === subtabName) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // 해당 서브탭 패널 활성화
+  document.querySelectorAll('.admin-subtab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+
+  const targetTab = document.getElementById(`adminTab-${subtabName}`);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
+
+  // 탭별 데이터 리프레시 연동
+  if (subtabName === 'analytics') {
+    loadAnalyticsRealtimeDashboard(false);
+  } else if (subtabName === 'actionqueue') {
+    if (typeof loadActionQueueFromDB === 'function') loadActionQueueFromDB();
+  } else if (subtabName === 'dashboard') {
+    if (typeof renderDashboardView === 'function') renderDashboardView();
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+};
+
+// ============================================================
+// [Step 4] 대댓글 (Nested Comments) 계층형 렌더링 및 등록
+// ============================================================
+window.loadEpisodeComments = async function(workId, episodeId) {
+  const container = document.getElementById('readerCommentsList');
+  if (!container) return;
+
+  container.innerHTML = `<div class="p-3 text-center text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>댓글을 불러오는 중입니다...</div>`;
+
+  try {
+    let comments = [];
+    if (window.WebNovelsAdmin?.fetchCommentsByEpisode) {
+      comments = await window.WebNovelsAdmin.fetchCommentsByEpisode(workId, episodeId);
+    }
+
+    if (!comments || comments.length === 0) {
+      // 기본 데모 댓글 제공
+      comments = [
+        {
+          id: 'demo-c1',
+          parent_id: null,
+          nickname: '달빛독자',
+          content: '주인공 검술 묘사가 너무 생생하고 박진감 넘치네요! 다음 화가 정말 기대됩니다.',
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+          likes_count: 14
+        },
+        {
+          id: 'demo-c2',
+          parent_id: 'demo-c1',
+          nickname: '무협매니아',
+          content: '맞아요, 특히 마지막 검기 폭발 장면은 역대급 연출이었습니다.',
+          created_at: new Date(Date.now() - 1800000).toISOString(),
+          likes_count: 5
+        },
+        {
+          id: 'demo-c3',
+          parent_id: null,
+          nickname: '소설러버',
+          content: '광고 보고 바로 5화까지 정주행 완료했습니다. 작가님 응원합니다!',
+          created_at: new Date(Date.now() - 7200000).toISOString(),
+          likes_count: 21
+        }
+      ];
+    }
+
+    // 최상위 댓글과 대댓글 분리
+    const rootComments = comments.filter(c => !c.parent_id);
+    const replyMap = {};
+    comments.filter(c => c.parent_id).forEach(r => {
+      if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+      replyMap[r.parent_id].push(r);
+    });
+
+    let html = `
+      <!-- 댓글 입력창 -->
+      <div class="comment-input-box card glass-panel p-3 mb-4" style="border: 1px solid var(--border-color); border-radius: 8px;">
+        <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 6px;">💬 독자 한줄 감상평 남기기</div>
+        <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.05); color:#fff; border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
+        <div class="flex-between mt-2" style="display:flex; justify-content:space-between; align-items:center;">
+          <small class="text-muted">클린 댓글 문화에 동참해 주세요.</small>
+          <button class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit(${workId}, ${episodeId})">
+            댓글 등록
+          </button>
+        </div>
+      </div>
+    `;
+
+    if (rootComments.length === 0) {
+      html += `<div class="text-center text-muted p-4">아직 작성된 댓글이 없습니다. 첫 번째 감상평의 주인공이 되어보세요!</div>`;
+    } else {
+      rootComments.forEach(c => {
+        const timeStr = new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const replies = replyMap[c.id] || [];
+
+        html += `
+          <div class="comment-item" id="comment-${c.id}">
+            <div class="comment-header">
+              <span class="comment-author">👤 ${c.nickname || '독자'}</span>
+              <span class="comment-time">${timeStr}</span>
+            </div>
+            <div class="comment-content">${c.content}</div>
+            <div class="comment-actions">
+              <span style="color:var(--text-muted); font-size:0.78rem;">👍 ${c.likes_count || 0}</span>
+              <button class="btn-reply-toggle" onclick="toggleReplyInput('${c.id}')">
+                💬 답글 (${replies.length})
+              </button>
+            </div>
+
+            <!-- 대댓글 입력창 -->
+            <div class="reply-input-wrapper" id="replyInput-${c.id}">
+              <textarea id="replyText-${c.id}" class="form-control" rows="2" placeholder="답글을 입력하세요..." style="width:100%; background:rgba(255,255,255,0.05); color:#fff; border-radius:6px; padding:6px; border:1px solid var(--border-color); font-size:0.85rem;"></textarea>
+              <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
+                <button class="btn btn-ghost btn-sm" onclick="toggleReplyInput('${c.id}')">취소</button>
+                <button class="btn btn-primary btn-sm" onclick="handleReaderReplySubmit(${workId}, ${episodeId}, '${c.id}')">답글 등록</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // 대댓글 렌더링
+        replies.forEach(r => {
+          const rTimeStr = new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          html += `
+            <div class="comment-item is-reply" id="comment-${r.id}">
+              <div class="comment-header">
+                <span class="comment-author" style="color:var(--cdg-pink);">↳ 👤 ${r.nickname || '독자'}</span>
+                <span class="comment-time">${rTimeStr}</span>
+              </div>
+              <div class="comment-content">${r.content}</div>
+              <div class="comment-actions">
+                <span style="color:var(--text-muted); font-size:0.78rem;">👍 ${r.likes_count || 0}</span>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+
+    container.innerHTML = html;
+  } catch (err) {
+    console.warn('[Comments Load Error]', err);
+    container.innerHTML = `<div class="text-danger p-3">댓글을 불러오지 못했습니다.</div>`;
+  }
+};
+
+window.toggleReplyInput = function(commentId) {
+  const el = document.getElementById(`replyInput-${commentId}`);
+  if (el) {
+    el.classList.toggle('active');
+  }
+};
+
+window.handleReaderCommentSubmit = async function(workId, episodeId) {
+  const input = document.getElementById('readerCommentInput');
+  if (!input || !input.value.trim()) {
+    showToast('댓글 내용을 입력해주세요.');
+    return;
+  }
+
+  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  const userId = savedUser ? (savedUser.username || savedUser.email) : 'guest';
+  const nickname = savedUser?.nickname || userId;
+
+  if (window.WebNovelsAdmin?.addCommentToEpisode) {
+    await window.WebNovelsAdmin.addCommentToEpisode(workId, episodeId, userId, nickname, input.value.trim(), null);
+  }
+
+  showToast('🎉 감상평이 성공적으로 등록되었습니다.');
+  input.value = '';
+  loadEpisodeComments(workId, episodeId);
+};
+
+window.handleReaderReplySubmit = async function(workId, episodeId, parentId) {
+  const input = document.getElementById(`replyText-${parentId}`);
+  if (!input || !input.value.trim()) {
+    showToast('답글 내용을 입력해주세요.');
+    return;
+  }
+
+  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  const userId = savedUser ? (savedUser.username || savedUser.email) : 'guest';
+  const nickname = savedUser?.nickname || userId;
+
+  if (window.WebNovelsAdmin?.addCommentToEpisode) {
+    await window.WebNovelsAdmin.addCommentToEpisode(workId, episodeId, userId, nickname, input.value.trim(), parentId);
+  }
+
+  showToast('🎉 답글이 등록되었습니다.');
+  loadEpisodeComments(workId, episodeId);
+};
+
+// ============================================================
+// [Step 4] 작가 크리에이터 스튜디오 4대 실시간 수익 지표 연동
+// ============================================================
+window.loadCreatorStudioEarnings = async function(authorId) {
+  try {
+    let todayEarnings = 128400;
+    let monthEarnings = 3842000;
+    let confirmedEarnings = 3210000;
+    let payableEarnings = 2850000;
+
+    if (window.WebNovelsAdmin?.fetchAuthorEarnings && authorId) {
+      const records = await window.WebNovelsAdmin.fetchAuthorEarnings(authorId);
+      if (records && records.length > 0) {
+        monthEarnings = records.reduce((sum, r) => sum + Number(r.author_revenue || 0), 0);
+        todayEarnings = Number(records[0].author_revenue || 0);
+        confirmedEarnings = Math.floor(monthEarnings * 0.85);
+        payableEarnings = confirmedEarnings;
+      }
+    }
+
+    const elEst = document.getElementById('creatorEstimatedRevenue');
+    if (elEst) elEst.textContent = `₩${monthEarnings.toLocaleString()}`;
+
+    const elConf = document.getElementById('creatorConfirmedRevenue');
+    if (elConf) elConf.textContent = `₩${confirmedEarnings.toLocaleString()}`;
+
+    const elPay = document.getElementById('creatorPayableRevenue');
+    if (elPay) elPay.textContent = `₩${payableEarnings.toLocaleString()}`;
+  } catch (e) {
+    console.warn('[Creator Earnings Sync Error]', e);
   }
 };
 
