@@ -15,16 +15,18 @@ async function runVerification() {
   const databaseDir = path.join(__dirname, '..', 'database');
   const expectedFiles = [
     '01_extensions.sql',
-    '02_users.sql',
-    '03_content.sql',
-    '04_reader_activity.sql',
-    '05_ads_and_unlocks.sql',
-    '06_revenue_earnings.sql',
-    '07_community.sql',
-    '08_system.sql',
-    '09_rls_and_security.sql',
-    '10_indexes.sql',
-    '99_seed_30_works.sql'
+    '02_types.sql',
+    '03_auth_profiles.sql',
+    '04_content.sql',
+    '05_reader.sql',
+    '06_advertisement.sql',
+    '07_revenue.sql',
+    '08_settlement.sql',
+    '09_community.sql',
+    '10_commerce.sql',
+    '11_system.sql',
+    '15_indexes.sql',
+    '99_seed_dev.sql'
   ];
 
   let missingCount = 0;
@@ -38,6 +40,15 @@ async function runVerification() {
     }
   }
 
+  // WebNovels_Production_v1.sql 존재 확인
+  const prodSqlPath = path.join(__dirname, '..', 'WebNovels_Production_v1.sql');
+  if (fs.existsSync(prodSqlPath)) {
+    console.log(`✅ [통합 배포본] WebNovels_Production_v1.sql 정상 존재 (${fs.statSync(prodSqlPath).size} bytes)`);
+  } else {
+    console.log(`❌ [통합 배포본] WebNovels_Production_v1.sql 누락됨`);
+    missingCount++;
+  }
+
   console.log('\n🔍 [2] Supabase 클라우드 테이블 접근성 검사...');
   const tables = [
     'works',
@@ -48,9 +59,7 @@ async function runVerification() {
     'favorites',
     'author_subscriptions',
     'episode_unlocks',
-    'ad_unlocks',
     'ad_events',
-    'revenue_events',
     'author_earnings',
     'author_settlements',
     'admin_users',

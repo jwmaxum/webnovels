@@ -1,71 +1,64 @@
-# 🔒 [Improvement Step 2] 보안 강화 및 민감정보 보호 (RLS & Backend SSV)
+# 🔒 [Improvement Step 2] Protected Content 접근 통제, RLS & GRANT 보안 아키텍처
 
-본 문서는 `needtochange1.md`의 핵심 개선 사항 중 **2단계: RLS 보안 재설계, 민감정보 DB 노출 제거 및 서버 사이드 서명 검증(SSV)** 작업을 위한 명세서입니다.
+본 문서는 `check.md`의 프로덕션 가이드라인을 바탕으로 한 **2단계: 회차 본문 보호(Protected Content), RLS 정책 및 GRANT/REVOKE 역할별 권한 제어** 실행 명세서입니다.
 
 ---
 
 ## 1. 개요 및 목적
-- **비인가 익명 접근(Anon Full Access) 차단**:
-  - `readers`, `authors`, `admin_users`의 비밀번호 해시, 전화번호, 정산 계좌번호 등 민감정보가 브라우저에서 직접 노출/위조되지 않도록 RLS 정책 강화
-- **민감 API Key의 DB 저장 제거 및 환경변수 격리**:
-  - `system_config` 내 `toss_secret_key`, `kcp_site_key` 등 결제/인증 비밀키를 클라이언트 DB 테이블에서 삭제하고 백엔드 Node.js `.env` 환경변수로 완전 분리
-- **광고 보상 및 정산의 Server-Side Verification (SSV)**:
-  - 클라이언트에서 임의로 광고 완료/해금을 DB에 INSERT하는 보안 취약점을 방지하고, 서버 검증 API(`POST /api/ads/verify-reward`)를 통해서만 `episode_unlocks` 및 `author_earnings`가 기록되도록 제어
-- **비밀번호 저장 보안 표준화**:
-  - `readers` 테이블의 평문 암호 기본값(`!12345`)을 제거하고 `pgcrypto` 기반 Bcrypt 해시 의무화
+- **잠긴 회차 본문 보호 (Protected Content Isolation)**:
+  - 일반 독자/익명 사용자가 `episodes` 테이블을 직접 `SELECT`해도 본문(`episode_contents`)이나 웹툰 컷(`episode_panels`)을 열람할 수 없도록 격리
+  - 본문 조회는 반드시 `private.get_episode_content(p_episode_id)` 보안 함수를 경유하며, 내부에서 `private.can_read_episode`를 통해 무료 회차이거나 유효한 `episode_unlocks`가 있는 경우에만 데이터 반환
+- **RLS + GRANT/REVOKE 이중 방어선 구축**:
+  - `anon` 역할: 공개 데이터(`works`, `episodes` 메타데이터, 공개 `authors`, `comments`, `platform_stats`, `system_config`)만 SELECT 허용
+  - `episode_contents`, `episode_panels`, `author_private_profiles`, `author_settlement_accounts`, `revenue_ledger` 등에 대해 `REVOKE ALL ON ... FROM PUBLIC, anon, authenticated` 적용
+- **관리자 RBAC 및 작가 판정 함수 (`private` 스키마)**:
+  - `private.is_admin()`, `private.is_super_admin()`, `private.is_author(p_author_id)`를 `SECURITY DEFINER` 및 `SET search_path = ''`로 안전하게 정의
 
 ---
 
 ## 2. 세부 구현 대상 (Tasks)
 
-### 2.1. Supabase RLS 정책 정밀 재설계
+### 2.1. 회차 본문 보호 함수 (`database/12_functions.sql`)
 ```sql
--- 1. 작품/회차 공개 데이터: Anon 읽기 전용 허용, 쓰기는 관리자/서버에만 허용
-ALTER TABLE works ENABLE ROW LEVEL SECURITY;
-ALTER TABLE episodes ENABLE ROW LEVEL SECURITY;
+CREATE OR REPLACE FUNCTION private.can_read_episode(p_episode_id BIGINT)
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.episodes e
+    WHERE e.id = p_episode_id
+      AND e.status = 'PUBLISHED'
+      AND (
+        e.access_policy = 'FREE'
+        OR EXISTS (
+          SELECT 1 FROM public.episode_unlocks u
+          WHERE u.episode_id = p_episode_id
+            AND u.user_id = (SELECT auth.uid())
+            AND u.status = 'ACTIVE'
+            AND (u.expires_at IS NULL OR u.expires_at > NOW())
+        )
+        OR (SELECT private.is_admin())
+      )
+  );
+$$;
 
-DROP POLICY IF EXISTS "Allow anon read works" ON works;
-CREATE POLICY "Allow anon read works" ON works FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Allow anon read episodes" ON episodes;
-CREATE POLICY "Allow anon read episodes" ON episodes FOR SELECT USING (status = 'PUBLISHED');
-
--- 2. 독자/작가 프로필: 자신의 데이터만 조회/수정 가능 (Supabase Auth / Session 연동)
-DROP POLICY IF EXISTS "Allow anon read readers" ON readers;
-CREATE POLICY "Allow user read own profile" ON readers FOR SELECT USING (true); -- 필터링된 view 제공
-
--- 3. 광고 해금 및 정산: 클라이언트 직접 INSERT 차단, 서버 Service Role Key를 통해서만 안전 기록
+CREATE OR REPLACE FUNCTION private.get_episode_content(p_episode_id BIGINT)
+RETURNS TABLE (episode_id BIGINT, text_content TEXT, content_version INT)
+LANGUAGE sql SECURITY DEFINER STABLE SET search_path = ''
+AS $$
+  SELECT c.episode_id, c.text_content, c.content_version
+  FROM public.episode_contents c
+  WHERE c.episode_id = p_episode_id
+    AND (SELECT private.can_read_episode(p_episode_id));
+$$;
 ```
 
----
-
-### 2.2. `system_config` 민감 키 분리
-- `system_config` 테이블에서 `toss_secret_key`, `kcp_site_key` 컬럼 제거 또는 마스킹
-- 백엔드 `src/config/env.ts` 및 `.env.local`을 통해 비밀키 관리:
-  ```env
-  TOSS_SECRET_KEY=test_sk_...
-  KCP_SITE_KEY=3383f508...
-  SUPABASE_SERVICE_ROLE_KEY=...
-  ```
-- 프론트엔드에는 공개 가능한 Client Key(`toss_client_key`, `kcp_site_code`)만 전달
+### 2.2. RLS 정책 및 GRANT/REVOKE (`database/13_rls.sql`, `database/14_grants.sql`)
+- 각 도메인별 RLS 활성화 및 `auth.uid()` 기준 정책 적용
+- `anon`, `authenticated`, `service_role`에 대한 명시적 `GRANT`/`REVOKE` 설정
 
 ---
 
-### 2.3. 백엔드 광고 보상 검증 서비스 (`src/services/adUnlock.service.ts` 및 `src/routes/ad.router.ts`)
-- 클라이언트가 광고 시청 완료 시 발급받은 `rewardToken`을 백엔드로 전달
-- 서버에서 유효성 및 중복 여부를 검증한 후 `episode_unlocks` 및 `author_earnings`를 안전하게 생성
-- 응답으로 서명된 열람 토큰(JWT) 또는 72시간 권한 반환
-
----
-
-## 3. 코드 연동 반영
-- `src/services/tossPayment.service.ts`, `src/services/kcpVerification.service.ts`: 환경변수 기반 시크릿 키 로드
-- `public/supabase-admin.js`: 민감 작업(정산 승인, 결제 확정, 광고 리워드 지급) 시 백엔드 검증 API 경유 처리
-- `public/app.js`: 안전한 광고 완료 핸들러 연동
-
----
-
-## 4. 검증 계획
-1. 익명 클라이언트에서 타인의 계좌정보나 패스워드 해시를 조회할 수 없는지 RLS 정책 검증
-2. `system_config` 조회 시 시크릿 키가 노출되지 않는지 확인
-3. 위조된 광고 완료 요청이 서버 검증 단계에서 정상적으로 차단되는지 테스트
+## 3. 검증 계획
+1. 익명(`anon`) 클라이언트에서 `episode_contents` 직접 조회 시 빈 결과 또는 Permission Denied 확인
+2. 광고 해금되지 않은 회차에 대해 `private.get_episode_content` 호출 시 빈 결과 반환 확인
+3. 무료 회차 또는 광고 언락 완료 후 정상적으로 본문 텍스트가 조회되는지 검증

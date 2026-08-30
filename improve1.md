@@ -1,123 +1,56 @@
-# 🚀 [Improvement Step 1] DB 구조 고도화 & 모듈형 SQL 및 실데이터 일관성 구축
+# 🏗️ [Improvement Step 1] Production DB 스키마 정규화 및 모듈형 SQL 구축
 
-본 문서는 `needtochange1.md`의 핵심 개선 사항 중 **1단계: 데이터베이스 스키마 고도화, 모듈형 SQL 구축 및 시드/통계 데이터 정합성 일치** 작업을 위한 명세서입니다.
+본 문서는 `check.md`의 프로덕션 가이드라인을 바탕으로 한 **1단계: Production DB 스키마 정규화, Private/Public 분리 및 모듈형 SQL 구축** 실행 명세서입니다.
 
 ---
 
 ## 1. 개요 및 목적
-- **광고 기반 비즈니스 모델 핵심 테이블 신설**:
-  - `episode_unlocks` (독자별 회차 해금 이력: 무료, 보상형광고, 포인트, 결제)
-  - `ad_events` (광고 노출, 시작, 완료, 리워드 지급 로그)
-  - `author_earnings` (작가별/작품별 일별·월별 실시간 추정 및 확정 수익)
-- **정산 데이터 계좌 스냅샷 체계 구축**:
-  - `author_settlements` 테이블에 `author_id` 및 정산 당시 계좌/필명 스냅샷 컬럼 추가
-- **댓글 시스템 고도화 (대댓글 계층 구조 지원)**:
-  - `comments` 테이블에 `parent_id UUID`, `is_deleted BOOLEAN`, `updated_at TIMESTAMPTZ` 추가
-- **실데이터 기준 통계/시드 일치화**:
-  - `readers`(10명), `authors`(30명), `works`(30개), `episodes`(180회차) 실데이터 기준과 `platform_stats` 대시보드 통계 수치를 1:1 완벽 일치화
-- **모듈형 SQL 파일 구조 (`/database`) 구축**:
-  - 단일 대형 파일에서 유지보수가 용이한 도메인별 SQL 파일 분할 체계 구축
+- **Auth 중심 사용자 프로필 분리**:
+  - `auth.users`를 단일 진실 공급원(SSOT)으로 삼고, 자체 비밀번호 저장을 완전 배제
+  - `readers`: 독자 기본 프로필 및 성인인증 정보
+  - `authors`: 작가 공개 프로필 (필명, 프로필 이미지, 소개)
+  - `author_private_profiles`: 작가 비공개 개인정보 (생년월일, 주소, 세금정보)
+  - `author_settlement_accounts`: 작가 정산 계좌 (암호화 계좌번호, 인증상태)
+  - `admin_users`: 관리자 RBAC 프로필
+  - `auth.users` 신규 가입 시 자동 프로필 생성 트리거 (`handle_new_user`)
+- **콘텐츠 메타데이터와 본문 완전 분리**:
+  - `works`: 작품 메타데이터 (`author_id BIGINT REFERENCES authors(id)`)
+  - `episodes`: 회차 메타데이터 (본문 없이 회차번호, 제목, 접근정책, 조회수만 보관)
+  - `episode_contents`: 웹소설 텍스트 본문 (Protected Content)
+  - `episode_panels`: 웹툰 컷 이미지 (Protected Content)
+- **독자 활동 및 커머스/포인트 스키마 구축**:
+  - `reading_history`, `favorites`, `author_subscriptions`, `episode_unlocks`
+  - `point_accounts`, `point_transactions`, `fan_meetings`, `goods`, `goods_orders`
+- **모듈형 SQL 체계 (`/database`) 및 통합 배포본 (`WebNovels_Production_v1.sql`) 생성**
 
 ---
 
 ## 2. 세부 구현 대상 (Tasks)
 
-### 2.1. 신규/개선 테이블 DDL 명세
-
-#### 1) `episode_unlocks` (회차 해금 마스터 테이블)
-```sql
-CREATE TABLE IF NOT EXISTS episode_unlocks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL,
-  episode_id INT NOT NULL REFERENCES episodes(id) ON DELETE CASCADE,
-  unlock_type TEXT NOT NULL CHECK (unlock_type IN ('FREE', 'REWARDED_AD', 'POINT', 'PURCHASE')),
-  ad_network TEXT,
-  ad_event_id TEXT,
-  unlocked_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ, -- 보상형 광고의 경우 기본 72시간 후 만료
-  UNIQUE(user_id, episode_id)
-);
+### 2.1. 도메인별 모듈 SQL 파일 생성 (`/database`)
 ```
-
-#### 2) `ad_events` (광고 라이프사이클 이벤트 로그)
-```sql
-CREATE TABLE IF NOT EXISTS ad_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT,
-  work_id INT REFERENCES works(id) ON DELETE SET NULL,
-  episode_id INT REFERENCES episodes(id) ON DELETE SET NULL,
-  ad_network TEXT NOT NULL,
-  ad_unit TEXT,
-  event_type TEXT NOT NULL CHECK (event_type IN ('IMPRESSION', 'START', 'COMPLETE', 'REWARD', 'SKIP')),
-  reward_granted BOOLEAN DEFAULT false,
-  revenue NUMERIC DEFAULT 0,
-  external_event_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-#### 3) `author_earnings` (작가별 일별/실시간 수익)
-```sql
-CREATE TABLE IF NOT EXISTS author_earnings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id INT NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
-  work_id INT REFERENCES works(id) ON DELETE SET NULL,
-  period_date DATE NOT NULL,
-  ad_impressions INT DEFAULT 0,
-  rewarded_views INT DEFAULT 0,
-  gross_revenue NUMERIC DEFAULT 0,
-  platform_fee NUMERIC DEFAULT 0,
-  author_revenue NUMERIC DEFAULT 0,
-  status TEXT DEFAULT 'ESTIMATED' CHECK (status IN ('ESTIMATED', 'CONFIRMED', 'SETTLED')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(author_id, work_id, period_date)
-);
-```
-
-#### 4) `author_settlements` (스냅샷 보강)
-```sql
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS author_id INT REFERENCES authors(id);
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS author_name_snapshot TEXT;
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS bank_name_snapshot TEXT;
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS account_number_snapshot TEXT;
-```
-
-#### 5) `comments` (대댓글 계층 지원)
-```sql
-ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES comments(id) ON DELETE CASCADE;
-ALTER TABLE comments ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
-ALTER TABLE comments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
-```
-
----
-
-### 2.2. 모듈형 SQL 디렉토리 구조 (`/database`)
-```text
 database/
-  ├── 01_extensions.sql       -- pgcrypto 등 확장 모듈
-  ├── 02_users.sql            -- admin_users, authors, readers
-  ├── 03_content.sql          -- works, episodes, works.author_id FK
-  ├── 04_reader_activity.sql  -- reading_history, favorites, author_subscriptions
-  ├── 05_ads_and_unlocks.sql  -- episode_unlocks, ad_events
-  ├── 06_revenue_earnings.sql -- revenue_events, author_earnings, author_settlements
-  ├── 07_community.sql        -- comments (parent_id), comment_likes, reports, content_reviews
-  ├── 08_system.sql           -- system_config, platform_stats
-  ├── 09_rls_and_security.sql -- RLS 활성화 및 권한 정책
-  ├── 10_indexes.sql          -- 성능 최적화 인덱스
-  └── 99_seed_30_works.sql    -- 30개 작품/180회차/30명 작가/10명 독자 실데이터 및 통계 시드
+├── 01_extensions.sql       -- pgcrypto 및 private schema
+├── 02_types.sql            -- content_type, work_status, episode_status, access_policy 등 Enum
+├── 03_auth_profiles.sql    -- readers, authors, author_private_profiles, accounts, admin_users, trigger
+├── 04_content.sql          -- works, episodes, episode_contents, episode_panels, content_reviews
+├── 05_reader.sql           -- reading_history, favorites, author_subscriptions, episode_unlocks
+├── 06_advertisement.sql    -- ad_units, ad_events
+├── 07_revenue.sql          -- revenue_periods, revenue_ledger, author_earnings
+├── 08_settlement.sql       -- author_settlements
+├── 09_community.sql        -- comments (with parent_id), comment_likes, reports
+├── 10_commerce.sql         -- fan_meetings, fan_meeting_tickets, goods, goods_orders
+├── 11_system.sql           -- platform_stats, system_config, audit_logs
+├── 15_indexes.sql          -- 쿼리 속도 및 조인 성능 최적화 인덱스
+└── 99_seed_dev.sql         -- 개발/테스트용 30작품/180회차/30작가/10독자 시드
 ```
 
----
-
-## 3. 코드 연동 반영 (`public/supabase-admin.js`, `public/app.js`)
-- `recordEpisodeUnlock`: `episode_unlocks` 테이블에 해금 사유(`unlock_type: REWARDED_AD / POINT`) 및 만료일자(`expires_at`) 저장
-- `logAdEvent`: `ad_events` 테이블에 광고 시작/완료/리워드 이벤트 기록
-- `fetchAuthorEarnings`: `author_earnings` 테이블에서 일별/월별 작가 수익 조회
-- `public/supabase-setup.sql` & `scripts/supabase_patch_latest.sql` 동기화
+### 2.2. 통합 배포본 생성
+- [`WebNovels_Production_v1.sql`](file:///D:/Antigravity/webnovels/WebNovels_Production_v1.sql): Supabase SQL Editor에서 1클릭으로 배포 가능한 전체 통합 SQL
+- [`public/supabase-setup.sql`](file:///D:/Antigravity/webnovels/public/supabase-setup.sql) 및 [`scripts/supabase_patch_latest.sql`](file:///D:/Antigravity/webnovels/scripts/supabase_patch_latest.sql) 최신화
 
 ---
 
-## 4. 검증 계획
-1. `node scripts/verify_normalized_db.js`로 모든 신규 테이블 및 컬럼 접근성 테스트 통과
-2. `public/dataset_30_works.json`과 `platform_stats`의 수치 정합성(독자 10명, 작가 30명, 작품 30개, 회차 180개) 확인
-3. TypeScript 컴파일 무오류 검증 (`npx tsc --noEmit`)
+## 3. 검증 계획
+1. `node scripts/verify_normalized_db.js`로 모든 25개 Production 테이블 생성 여부 확인
+2. `npx tsc --noEmit` 백엔드 구문 검증
