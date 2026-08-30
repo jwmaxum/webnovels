@@ -25,6 +25,9 @@ async function runVerification() {
     '09_community.sql',
     '10_commerce.sql',
     '11_system.sql',
+    '12_functions.sql',
+    '13_rls.sql',
+    '14_grants.sql',
     '15_indexes.sql',
     '99_seed_dev.sql'
   ];
