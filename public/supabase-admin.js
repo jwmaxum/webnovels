@@ -761,13 +761,49 @@ async function updateWorkAdminSetting(workId, updateData) {
 async function createWorkInDB(workData) {
   if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
   try {
+    // 1. max(id) 조회하여 안전한 다음 id 부여
+    let nextId = Date.now() % 1000000;
+    try {
+      const { data: maxW } = await supabaseClient
+        .from('works')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+      if (maxW && maxW.length > 0) nextId = Number(maxW[0].id) + 1;
+    } catch(e) {}
+
+    const cleanCover = workData.cover_image || workData.coverUrl || workData.coverImage || '/images/stormqueen_oath.jpg';
+    const finalCover = (cleanCover.startsWith('http://') || cleanCover.startsWith('https://') || cleanCover.startsWith('/'))
+      ? cleanCover
+      : `/images/${cleanCover}`;
+
+    const payload = {
+      id: workData.id || nextId,
+      title: workData.title,
+      author: typeof workData.author === 'string' ? workData.author : (workData.author?.penName || '작자미상'),
+      content_type: workData.contentType || workData.content_type || 'NOVEL',
+      genre: Array.isArray(workData.genre) ? workData.genre : [workData.genre || '판타지'],
+      tags: Array.isArray(workData.tags) ? workData.tags : [workData.tags || '신작', '정식연재'],
+      description: workData.description || '',
+      cover_image: finalCover,
+      rating: workData.rating || 'ALL',
+      view_count: Number(workData.viewCount || workData.view_count || 0),
+      like_count: Number(workData.likeCount || workData.like_count || 0),
+      status: workData.status || 'ONGOING',
+      is_completed: !!(workData.isCompleted || workData.is_completed),
+      is_top_recommended: !!(workData.isTopRecommended || workData.is_top_recommended),
+      is_popular_work: !!(workData.isPopularWork || workData.is_popular_work),
+      is_new_work: true
+    };
+
     const { data, error } = await supabaseClient
       .from('works')
-      .insert([workData])
+      .insert([payload])
       .select();
     if (error) throw error;
     return { success: true, data: data ? data[0] : null };
   } catch (err) {
+    console.warn('[createWorkInDB] 실패:', err.message);
     return { success: false, error: err.message };
   }
 }
