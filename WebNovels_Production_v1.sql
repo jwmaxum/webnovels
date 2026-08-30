@@ -1,7 +1,7 @@
 -- WebNovels Database Schema (Production)
 /* ============================================================
    WebNovels_Production_v1.sql
-   Supabase PostgreSQL / Production Baseline (Universal Idempotent Migration)
+   Supabase PostgreSQL / Production Baseline (Universal Type-Safe Migration)
 
    핵심:
    - Supabase Auth
@@ -635,7 +635,7 @@ ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS status public.report_status 
 
 
 /* ============================================================
-   20. ADMIN USERS & SYSTEM CONFIG (service_name 안전 보강)
+   20. ADMIN USERS & SYSTEM CONFIG
    ============================================================ */
 
 CREATE TABLE IF NOT EXISTS public.admin_users (
@@ -807,7 +807,7 @@ $$;
 
 
 /* ============================================================
-   23. PRIVATE SECURITY DEFINER FUNCTIONS
+   23. PRIVATE SECURITY DEFINER FUNCTIONS (Type-Safe ::TEXT)
    ============================================================ */
 
 CREATE OR REPLACE FUNCTION private.is_admin()
@@ -815,7 +815,7 @@ RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.admin_users
-    WHERE id = (SELECT auth.uid()) AND is_active = true
+    WHERE id::TEXT = (SELECT auth.uid())::TEXT AND is_active = true
   );
 $$;
 
@@ -824,7 +824,7 @@ RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.admin_users
-    WHERE id = (SELECT auth.uid()) AND role = 'SUPER_ADMIN' AND is_active = true
+    WHERE id::TEXT = (SELECT auth.uid())::TEXT AND role = 'SUPER_ADMIN' AND is_active = true
   );
 $$;
 
@@ -833,7 +833,7 @@ RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.authors
-    WHERE id = p_author_id AND auth_user_id = (SELECT auth.uid())
+    WHERE id = p_author_id AND auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   );
 $$;
 
@@ -849,7 +849,7 @@ AS $$
         OR EXISTS (
           SELECT 1 FROM public.episode_unlocks u
           WHERE u.episode_id = p_episode_id
-            AND u.user_id = (SELECT auth.uid())
+            AND u.user_id::TEXT = (SELECT auth.uid())::TEXT
             AND u.status = 'ACTIVE'
             AND (u.expires_at IS NULL OR u.expires_at > NOW())
         )
@@ -879,7 +879,7 @@ DECLARE
   v_event public.ad_events;
 BEGIN
   SELECT * INTO v_event FROM public.ad_events
-  WHERE id = p_ad_event_id AND user_id = p_user_id AND episode_id = p_episode_id
+  WHERE id = p_ad_event_id AND user_id::TEXT = p_user_id::TEXT AND episode_id = p_episode_id
     AND event_type = 'REWARD' AND reward_granted = true;
 
   IF v_event.id IS NULL THEN
@@ -908,7 +908,7 @@ DECLARE
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM public.authors
-    WHERE id = p_author_id AND auth_user_id = (SELECT auth.uid()) AND status = 'APPROVED'
+    WHERE id = p_author_id AND auth_user_id::TEXT = (SELECT auth.uid())::TEXT AND status = 'APPROVED'
   ) THEN
     RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
   END IF;
@@ -1025,7 +1025,7 @@ ALTER TABLE public.goods_orders ENABLE ROW LEVEL SECURITY;
 
 
 /* ============================================================
-   27. POLICIES
+   27. POLICIES (Type-Safe ::TEXT)
    ============================================================ */
 
 -- Public Policies
@@ -1064,80 +1064,80 @@ USING (true);
 -- Reader Policies
 DROP POLICY IF EXISTS p_reader_self_select ON public.readers;
 CREATE POLICY p_reader_self_select ON public.readers FOR SELECT TO authenticated
-USING (id = (SELECT auth.uid()));
+USING (id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_reader_self_update ON public.readers;
 CREATE POLICY p_reader_self_update ON public.readers FOR UPDATE TO authenticated
-USING (id = (SELECT auth.uid())) WITH CHECK (id = (SELECT auth.uid()));
+USING (id::TEXT = (SELECT auth.uid())::TEXT) WITH CHECK (id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_reading_history_user ON public.reading_history;
 CREATE POLICY p_reading_history_user ON public.reading_history FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid())) WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT) WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_favorites_user ON public.favorites;
 CREATE POLICY p_favorites_user ON public.favorites FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid())) WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT) WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_subscriptions_user ON public.author_subscriptions;
 CREATE POLICY p_subscriptions_user ON public.author_subscriptions FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid())) WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT) WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_unlocks_user ON public.episode_unlocks;
 CREATE POLICY p_unlocks_user ON public.episode_unlocks FOR SELECT TO authenticated
-USING (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_point_accounts_user ON public.point_accounts;
 CREATE POLICY p_point_accounts_user ON public.point_accounts FOR SELECT TO authenticated
-USING (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_point_transactions_user ON public.point_transactions;
 CREATE POLICY p_point_transactions_user ON public.point_transactions FOR SELECT TO authenticated
-USING (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_comments_insert ON public.comments;
 CREATE POLICY p_comments_insert ON public.comments FOR INSERT TO authenticated
-WITH CHECK (user_id = (SELECT auth.uid()));
+WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_comments_user_update ON public.comments;
 CREATE POLICY p_comments_user_update ON public.comments FOR UPDATE TO authenticated
-USING (user_id = (SELECT auth.uid())) WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT) WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_comment_likes_user ON public.comment_likes;
 CREATE POLICY p_comment_likes_user ON public.comment_likes FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid())) WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT) WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_reports_insert ON public.reports;
 CREATE POLICY p_reports_insert ON public.reports FOR INSERT TO authenticated
-WITH CHECK (reporter_id = (SELECT auth.uid()));
+WITH CHECK (reporter_id::TEXT = (SELECT auth.uid())::TEXT);
 
 -- Author Policies
 DROP POLICY IF EXISTS p_author_private_self ON public.author_private_profiles;
 CREATE POLICY p_author_private_self ON public.author_private_profiles FOR ALL TO authenticated
-USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())))
-WITH CHECK (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())));
+USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT))
+WITH CHECK (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT));
 
 DROP POLICY IF EXISTS p_author_accounts_self ON public.author_settlement_accounts;
 CREATE POLICY p_author_accounts_self ON public.author_settlement_accounts FOR ALL TO authenticated
-USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())))
-WITH CHECK (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())));
+USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT))
+WITH CHECK (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT));
 
 DROP POLICY IF EXISTS p_author_works_self ON public.works;
 CREATE POLICY p_author_works_self ON public.works FOR ALL TO authenticated
-USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())))
-WITH CHECK (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())));
+USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT))
+WITH CHECK (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT));
 
 DROP POLICY IF EXISTS p_author_episodes_self ON public.episodes;
 CREATE POLICY p_author_episodes_self ON public.episodes FOR ALL TO authenticated
-USING (EXISTS (SELECT 1 FROM public.works w JOIN public.authors a ON a.id = w.author_id WHERE w.id = work_id AND a.auth_user_id = (SELECT auth.uid())))
-WITH CHECK (EXISTS (SELECT 1 FROM public.works w JOIN public.authors a ON a.id = w.author_id WHERE w.id = work_id AND a.auth_user_id = (SELECT auth.uid())));
+USING (EXISTS (SELECT 1 FROM public.works w JOIN public.authors a ON a.id = w.author_id WHERE w.id = work_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT))
+WITH CHECK (EXISTS (SELECT 1 FROM public.works w JOIN public.authors a ON a.id = w.author_id WHERE w.id = work_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT));
 
 DROP POLICY IF EXISTS p_author_earnings_self ON public.author_earnings;
 CREATE POLICY p_author_earnings_self ON public.author_earnings FOR SELECT TO authenticated
-USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())));
+USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT));
 
 DROP POLICY IF EXISTS p_author_settlements_self ON public.author_settlements;
 CREATE POLICY p_author_settlements_self ON public.author_settlements FOR SELECT TO authenticated
-USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())));
+USING (EXISTS (SELECT 1 FROM public.authors a WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT));
 
 -- Admin Policies
 DROP POLICY IF EXISTS p_admin_all_readers ON public.readers;

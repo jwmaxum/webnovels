@@ -1,5 +1,5 @@
 -- WebNovels Production DB: 12_functions.sql
--- Private 보안 함수 (SECURITY DEFINER, SET search_path = '')
+-- Private 보안 함수 (SECURITY DEFINER, SET search_path = '', Type-Safe)
 
 -- 1. 관리자 여부 판정
 CREATE OR REPLACE FUNCTION private.is_admin()
@@ -12,7 +12,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.admin_users
-    WHERE id = (SELECT auth.uid())
+    WHERE id::TEXT = (SELECT auth.uid())::TEXT
       AND is_active = true
   );
 $$;
@@ -28,7 +28,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.admin_users
-    WHERE id = (SELECT auth.uid())
+    WHERE id::TEXT = (SELECT auth.uid())::TEXT
       AND role = 'SUPER_ADMIN'
       AND is_active = true
   );
@@ -48,7 +48,7 @@ AS $$
     SELECT 1
     FROM public.authors
     WHERE id = p_author_id
-      AND auth_user_id = (SELECT auth.uid())
+      AND auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   );
 $$;
 
@@ -73,7 +73,7 @@ AS $$
           SELECT 1
           FROM public.episode_unlocks u
           WHERE u.episode_id = p_episode_id
-            AND u.user_id = (SELECT auth.uid())
+            AND u.user_id::TEXT = (SELECT auth.uid())::TEXT
             AND u.status = 'ACTIVE'
             AND (
               u.expires_at IS NULL
@@ -130,7 +130,7 @@ BEGIN
   INTO v_event
   FROM public.ad_events
   WHERE id = p_ad_event_id
-    AND user_id = p_user_id
+    AND user_id::TEXT = p_user_id::TEXT
     AND episode_id = p_episode_id
     AND event_type = 'REWARD'
     AND reward_granted = true;
@@ -182,7 +182,7 @@ BEGIN
     SELECT 1
     FROM public.authors
     WHERE id = p_author_id
-      AND auth_user_id = (SELECT auth.uid())
+      AND auth_user_id::TEXT = (SELECT auth.uid())::TEXT
       AND status = 'APPROVED'
   ) THEN
     RETURN jsonb_build_object(

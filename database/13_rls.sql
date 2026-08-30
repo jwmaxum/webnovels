@@ -1,5 +1,5 @@
 -- WebNovels Production DB: 13_rls.sql
--- 25개 전 테이블 Row Level Security (RLS) 활성화 및 세부 정책 정의
+-- 25개 전 테이블 Row Level Security (RLS) 활성화 및 세부 정책 정의 (Type-Safe ::TEXT)
 
 -- 1. RLS 활성화
 ALTER TABLE public.readers ENABLE ROW LEVEL SECURITY;
@@ -95,68 +95,68 @@ USING (true);
 DROP POLICY IF EXISTS p_reader_self_select ON public.readers;
 CREATE POLICY p_reader_self_select ON public.readers
 FOR SELECT TO authenticated
-USING (id = (SELECT auth.uid()));
+USING (id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_reader_self_update ON public.readers;
 CREATE POLICY p_reader_self_update ON public.readers
 FOR UPDATE TO authenticated
-USING (id = (SELECT auth.uid()))
-WITH CHECK (id = (SELECT auth.uid()));
+USING (id::TEXT = (SELECT auth.uid())::TEXT)
+WITH CHECK (id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_reading_history_user ON public.reading_history;
 CREATE POLICY p_reading_history_user ON public.reading_history
 FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid()))
-WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT)
+WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_favorites_user ON public.favorites;
 CREATE POLICY p_favorites_user ON public.favorites
 FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid()))
-WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT)
+WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_subscriptions_user ON public.author_subscriptions;
 CREATE POLICY p_subscriptions_user ON public.author_subscriptions
 FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid()))
-WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT)
+WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_unlocks_user ON public.episode_unlocks;
 CREATE POLICY p_unlocks_user ON public.episode_unlocks
 FOR SELECT TO authenticated
-USING (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_point_accounts_user ON public.point_accounts;
 CREATE POLICY p_point_accounts_user ON public.point_accounts
 FOR SELECT TO authenticated
-USING (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_point_transactions_user ON public.point_transactions;
 CREATE POLICY p_point_transactions_user ON public.point_transactions
 FOR SELECT TO authenticated
-USING (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_comments_insert ON public.comments;
 CREATE POLICY p_comments_insert ON public.comments
 FOR INSERT TO authenticated
-WITH CHECK (user_id = (SELECT auth.uid()));
+WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_comments_user_update ON public.comments;
 CREATE POLICY p_comments_user_update ON public.comments
 FOR UPDATE TO authenticated
-USING (user_id = (SELECT auth.uid()))
-WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT)
+WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_comment_likes_user ON public.comment_likes;
 CREATE POLICY p_comment_likes_user ON public.comment_likes
 FOR ALL TO authenticated
-USING (user_id = (SELECT auth.uid()))
-WITH CHECK (user_id = (SELECT auth.uid()));
+USING (user_id::TEXT = (SELECT auth.uid())::TEXT)
+WITH CHECK (user_id::TEXT = (SELECT auth.uid())::TEXT);
 
 DROP POLICY IF EXISTS p_reports_insert ON public.reports;
 CREATE POLICY p_reports_insert ON public.reports
 FOR INSERT TO authenticated
-WITH CHECK (reporter_id = (SELECT auth.uid()));
+WITH CHECK (reporter_id::TEXT = (SELECT auth.uid())::TEXT);
 
 
 -- 4. AUTHOR POLICIES (작가 본인 데이터 제어)
@@ -167,13 +167,13 @@ FOR ALL TO authenticated
 USING (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 )
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 );
 
@@ -183,13 +183,13 @@ FOR ALL TO authenticated
 USING (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 )
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 );
 
@@ -199,13 +199,13 @@ FOR ALL TO authenticated
 USING (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 )
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 );
 
@@ -216,14 +216,14 @@ USING (
   EXISTS (
     SELECT 1 FROM public.works w
     JOIN public.authors a ON a.id = w.author_id
-    WHERE w.id = work_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE w.id = work_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 )
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.works w
     JOIN public.authors a ON a.id = w.author_id
-    WHERE w.id = work_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE w.id = work_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 );
 
@@ -233,7 +233,7 @@ FOR SELECT TO authenticated
 USING (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 );
 
@@ -243,7 +243,7 @@ FOR SELECT TO authenticated
 USING (
   EXISTS (
     SELECT 1 FROM public.authors a
-    WHERE a.id = author_id AND a.auth_user_id = (SELECT auth.uid())
+    WHERE a.id = author_id AND a.auth_user_id::TEXT = (SELECT auth.uid())::TEXT
   )
 );
 
