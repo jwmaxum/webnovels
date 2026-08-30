@@ -82,6 +82,40 @@ END $$;
 
 
 /* ============================================================
+   03-1. LEGACY CONSTRAINT RELAXATION
+   기존 과거 DB 테이블의 password_hash 등 NOT NULL 제약 해제
+   ============================================================ */
+
+DO $$
+BEGIN
+  BEGIN
+    ALTER TABLE public.authors ALTER COLUMN password_hash DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.authors ALTER COLUMN password DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.readers ALTER COLUMN password_hash DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.readers ALTER COLUMN password DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.works ALTER COLUMN author DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+END $$;
+
+
+/* ============================================================
    04. READERS
    ============================================================ */
 

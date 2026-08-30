@@ -4,6 +4,35 @@
 -- (platform_stats 10독자 / 30작가 / 30작품 / 180회차 일치)
 -- ============================================================
 
+-- 0. 레거시 NOT NULL 제약조건 안전하게 해제 (과거 테이블 호환성)
+DO $$
+BEGIN
+  BEGIN
+    ALTER TABLE public.authors ALTER COLUMN password_hash DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.authors ALTER COLUMN password DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.readers ALTER COLUMN password_hash DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.readers ALTER COLUMN password DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  BEGIN
+    ALTER TABLE public.works ALTER COLUMN author DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+END $$;
+
 -- 1. 플랫폼 KPI 통계 시드
 INSERT INTO public.system_config (id) VALUES ('default') ON CONFLICT (id) DO NOTHING;
 
