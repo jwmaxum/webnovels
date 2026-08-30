@@ -1524,39 +1524,80 @@
                 </div>
               </div>
 
-              <!-- Menu 15: System Management (PG & PASS Config) -->
-              <div id="adminTab-pgconfig" class="admin-subtab" style="display: none;">
+              <!-- Menu 15: Security & System Management (PG, PASS & Security Audit) -->
+              <div id="adminTab-security" class="admin-subtab" style="display: none;">
                 <div class="panel-header mb-4">
                   <div>
-                    <h2><i data-lucide="settings" class="icon-indigo"></i> SYSTEM_MGMT (시스템 & PG 설정)</h2>
-                    <p class="text-muted">토스페이먼츠 PG 결제 연동 · PASS/KCP 성인인증 키 관리</p>
+                    <h2><i data-lucide="shield-check" class="icon-indigo"></i> SECURITY_MGMT (시스템 보안 & PG 결제 설정)</h2>
+                    <p class="text-muted">토스페이먼츠 PG 결제 연동 · PASS/KCP 성인인증 키 관리 · 관리자 접속 보안 감사 로그</p>
                   </div>
                 </div>
-                <div class="card glass-panel p-6">
-                  <form id="formPgConfig" onsubmit="event.preventDefault(); handleSaveSystemConfig();">
-                    <div class="grid-2-col gap-4">
-                      <div class="form-group">
+                <div class="grid-2-col gap-6">
+                  <div class="card glass-panel p-6">
+                    <h3 class="mb-3"><i data-lucide="key" class="icon-indigo"></i> PG 및 성인인증 API 키 설정</h3>
+                    <form id="formPgConfig" onsubmit="event.preventDefault(); handleSaveSystemConfig();">
+                      <div class="form-group mb-3">
                         <label>토스페이먼츠 Client Key</label>
                         <input type="text" id="cfgTossClientKey" class="admin-input" value="" placeholder="로딩 중...">
                       </div>
-                      <div class="form-group">
+                      <div class="form-group mb-3">
                         <label>토스페이먼츠 Secret Key</label>
                         <input type="password" id="cfgTossSecretKey" class="admin-input" value="" placeholder="로딩 중...">
                       </div>
-                      <div class="form-group">
+                      <div class="form-group mb-3">
                         <label>KCP Site Code</label>
                         <input type="text" id="cfgKcpSiteCode" class="admin-input" value="" placeholder="로딩 중...">
                       </div>
-                      <div class="form-group">
+                      <div class="form-group mb-3">
                         <label>토스 모드</label>
                         <select id="cfgTossMode" class="admin-input"><option value="TEST">TEST</option><option value="LIVE">LIVE</option></select>
                       </div>
+                      <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button type="submit" class="btn btn-primary">설정 저장 (Supabase DB)</button>
+                        <button type="button" class="btn btn-outline" onclick="handlePgPingTest()">🔌 연동 핑 테스트</button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div class="card glass-panel p-6">
+                    <h3 class="mb-3"><i data-lucide="shield-alert" class="icon-indigo"></i> 최근 관리자 접속 보안 감사 로그</h3>
+                    <div class="table-responsive">
+                      <table style="width:100%; font-size:0.82rem; text-align:left;">
+                        <thead>
+                          <tr style="color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.08);">
+                            <th class="p-2">일시</th>
+                            <th class="p-2">계정</th>
+                            <th class="p-2">이벤트</th>
+                            <th class="p-2">IP</th>
+                            <th class="p-2">상태</th>
+                          </tr>
+                        </thead>
+                        <tbody id="securityAuditLogBody">
+                          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                            <td class="p-2 text-muted">2026-08-30 15:00</td>
+                            <td class="p-2 text-white">admin</td>
+                            <td class="p-2">최고관리자 로그인</td>
+                            <td class="p-2 text-muted">127.0.0.1</td>
+                            <td class="p-2"><span class="badge badge-primary">성공</span></td>
+                          </tr>
+                          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                            <td class="p-2 text-muted">2026-08-30 14:20</td>
+                            <td class="p-2 text-white">admin</td>
+                            <td class="p-2">정산금 승인 처리</td>
+                            <td class="p-2 text-muted">127.0.0.1</td>
+                            <td class="p-2"><span class="badge badge-primary">성공</span></td>
+                          </tr>
+                          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                            <td class="p-2 text-muted">2026-08-30 13:45</td>
+                            <td class="p-2 text-white">subadmin_1</td>
+                            <td class="p-2">콘텐츠 검수 승인</td>
+                            <td class="p-2 text-muted">192.168.1.15</td>
+                            <td class="p-2"><span class="badge badge-primary">성공</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
-                    <div style="display:flex; gap:12px; margin-top:20px;">
-                      <button type="submit" class="btn btn-primary">설정 저장 (Supabase DB)</button>
-                      <button type="button" class="btn btn-outline" onclick="handlePgPingTest()">🔌 연동 핑 테스트</button>
-                    </div>
-                  </form>
+                  </div>
                 </div>
               </div>
 

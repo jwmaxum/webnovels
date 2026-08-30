@@ -5451,19 +5451,59 @@ window.loadDashboardKPIs = async function() {
 };
 
 // ----------------------------------------------------
-// Admin Sub-Tab Switcher (Left Sidebar Navigation & Routing)
+// Admin Sub-Tab Switcher (Left Sidebar Navigation & 16 Menus Routing)
 // ----------------------------------------------------
 window.switchAdminSubTab = function(tabName) {
-  document.querySelectorAll('.admin-subtab').forEach(t => t.style.display = 'none');
+  const adminUser = window.WebNovelsAdmin?.getCurrentAdmin?.() || JSON.parse(localStorage.getItem('webnovels_admin_user') || localStorage.getItem('webnovels_user') || 'null');
+
+  // RBAC 권한 매핑
+  const permMap = {
+    'dashboard': 'DASHBOARD',
+    'users': 'USER_MGMT',
+    'authors': 'AUTHOR_MGMT',
+    'works': 'WORK_MGMT',
+    'episodes': 'EPISODE_MGMT',
+    'actionqueue': 'CONTENT_REVIEW',
+    'comments': 'COMMENT_REPORT',
+    'admgmt': 'AD_MGMT',
+    'settlements': 'AD_REVENUE',
+    'fanmeeting': 'FAN_MEETING',
+    'goods': 'GOODS_MGMT',
+    'events': 'EVENT_MGMT',
+    'analytics': 'ANALYTICS',
+    'subadmins': 'SYSTEM_MGMT',
+    'security': 'SECURITY_MGMT'
+  };
+
+  const requiredPerm = permMap[tabName] || 'DASHBOARD';
+
+  // SUPER_ADMIN은 전체 허용, SUB_ADMIN은 권한 검사
+  if (adminUser && adminUser.role === 'SUB_ADMIN') {
+    const userPerms = Array.isArray(adminUser.permissions) ? adminUser.permissions : [];
+    if (!userPerms.includes(requiredPerm) && requiredPerm !== 'DASHBOARD') {
+      showToast(`🚫 [접근 제한] 해당 메뉴(${tabName})에 대한 서브관리자 권한이 없습니다.`);
+      return;
+    }
+  }
+
+  // 1. 모든 서브탭 숨김 & 대상 서브탭 표시
+  document.querySelectorAll('.admin-subtab').forEach(t => {
+    t.style.display = 'none';
+    t.classList.remove('active');
+  });
+
   const target = document.getElementById(`adminTab-${tabName}`);
-  if (target) target.style.display = 'block';
+  if (target) {
+    target.style.display = 'block';
+    target.classList.add('active');
+  }
 
-  // Update sidebar menu active state
-  document.querySelectorAll('.admin-nav-item').forEach(btn => btn.classList.remove('active'));
-  const activeNavBtn = document.querySelector(`.admin-nav-item[data-subtab="${tabName}"]`);
-  if (activeNavBtn) activeNavBtn.classList.add('active');
+  // 2. 사이드바 버튼 active 갱신
+  document.querySelectorAll('.admin-nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.subtab === tabName);
+  });
 
-  // 모바일 화면(<=768px)인 경우 탭 클릭 시 메인 컨텐츠로 스크롤
+  // 3. 모바일 화면(<=768px)인 경우 탭 클릭 시 메인 컨텐츠로 스크롤
   if (window.innerWidth <= 768) {
     const mainContent = document.querySelector('.admin-main-content');
     if (mainContent) {
@@ -5471,19 +5511,19 @@ window.switchAdminSubTab = function(tabName) {
     }
   }
 
-  // Re-render Lucide icons
+  // 4. Re-render Lucide icons
   if (window.lucide) window.lucide.createIcons();
 
+  // 5. 메뉴별 데이터 로더 실행
   if (tabName === 'dashboard') {
     if (typeof loadDashboardKPIs === 'function') loadDashboardKPIs();
-  }
-  if (tabName === 'actionqueue') {
-    if (typeof renderActionQueue === 'function') renderActionQueue();
-  }
-  if (tabName === 'works') {
+  } else if (tabName === 'users') {
+    if (typeof loadAdminUsers === 'function') loadAdminUsers();
+  } else if (tabName === 'authors') {
+    if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
+  } else if (tabName === 'works') {
     if (typeof renderAdminWorks === 'function') renderAdminWorks();
-  }
-  if (tabName === 'episodes') {
+  } else if (tabName === 'episodes') {
     if (typeof populateAdminWorkSelects === 'function') populateAdminWorkSelects(SAMPLE_WORKS);
     const sel = document.getElementById('adminEpisodeWorkSelect');
     if (sel && sel.value) {
@@ -5491,25 +5531,20 @@ window.switchAdminSubTab = function(tabName) {
     } else if (typeof SAMPLE_WORKS !== 'undefined' && SAMPLE_WORKS[0]) {
       if (typeof renderAdminEpisodes === 'function') renderAdminEpisodes(SAMPLE_WORKS[0].id);
     }
-  }
-  if (tabName === 'settlements') {
+  } else if (tabName === 'actionqueue') {
+    if (typeof renderActionQueue === 'function') renderActionQueue();
+  } else if (tabName === 'settlements') {
     if (typeof loadSettlementsList === 'function') loadSettlementsList();
-  }
-  if (tabName === 'subadmins' || tabName === 'security') {
+  } else if (tabName === 'analytics') {
+    if (typeof loadAdminAnalytics === 'function') loadAdminAnalytics();
+  } else if (tabName === 'subadmins') {
     if (typeof window.loadSubAdminList === 'function') {
       window.loadSubAdminList();
     } else if (typeof loadSubAdminList === 'function') {
       loadSubAdminList();
     }
-  }
-  if (tabName === 'users') {
-    if (typeof loadAdminUsers === 'function') loadAdminUsers();
-  }
-  if (tabName === 'authors') {
-    if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
-  }
-  if (tabName === 'analytics') {
-    if (typeof loadAdminAnalytics === 'function') loadAdminAnalytics();
+  } else if (tabName === 'security') {
+    if (typeof loadSystemConfig === 'function') loadSystemConfig();
   }
 };
 
@@ -5661,72 +5696,7 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
   }
 }
 
-// ============================================================
-// [Admin CMS] 15대 메뉴 전환 및 RBAC 권한 분기
-// ============================================================
-window.switchAdminSubTab = function(subtabName) {
-  const adminUser = window.WebNovelsAdmin?.getCurrentAdmin?.() || JSON.parse(localStorage.getItem('webnovels_admin_user') || 'null');
 
-  // RBAC 권한 맵
-  const permMap = {
-    'dashboard': 'DASHBOARD',
-    'users': 'USER_MGMT',
-    'authors': 'AUTHOR_MGMT',
-    'works': 'WORK_MGMT',
-    'episodes': 'EPISODE_MGMT',
-    'actionqueue': 'CONTENT_REVIEW',
-    'comments': 'COMMENT_REPORT',
-    'admgmt': 'AD_MGMT',
-    'settlements': 'AD_REVENUE',
-    'fanmeeting': 'FAN_MEETING',
-    'goods': 'GOODS_MGMT',
-    'events': 'EVENT_MGMT',
-    'analytics': 'ANALYTICS',
-    'subadmins': 'SYSTEM_MGMT',
-    'security': 'SECURITY_MGMT'
-  };
-
-  const requiredPerm = permMap[subtabName] || 'DASHBOARD';
-
-  // SUPER_ADMIN은 모든 메뉴 접근 허용, SUB_ADMIN은 권한 배열 검사
-  if (adminUser && adminUser.role === 'SUB_ADMIN') {
-    const userPerms = Array.isArray(adminUser.permissions) ? adminUser.permissions : [];
-    if (!userPerms.includes(requiredPerm) && requiredPerm !== 'DASHBOARD') {
-      showToast(`🚫 [접근 제한] 해당 메뉴(${subtabName})에 대한 서브관리자 권한이 없습니다.`);
-      return;
-    }
-  }
-
-  // 사이드바 버튼 active 갱신
-  document.querySelectorAll('.admin-nav-item').forEach(btn => {
-    if (btn.dataset.subtab === subtabName) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-
-  // 해당 서브탭 패널 활성화
-  document.querySelectorAll('.admin-subtab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-
-  const targetTab = document.getElementById(`adminTab-${subtabName}`);
-  if (targetTab) {
-    targetTab.classList.add('active');
-  }
-
-  // 탭별 데이터 리프레시 연동
-  if (subtabName === 'analytics') {
-    loadAnalyticsRealtimeDashboard(false);
-  } else if (subtabName === 'actionqueue') {
-    if (typeof loadActionQueueFromDB === 'function') loadActionQueueFromDB();
-  } else if (subtabName === 'dashboard') {
-    if (typeof renderDashboardView === 'function') renderDashboardView();
-  }
-
-  if (window.lucide) window.lucide.createIcons();
-};
 
 // ============================================================
 // [Step 4] 대댓글 (Nested Comments) 계층형 렌더링 및 등록
