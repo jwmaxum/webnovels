@@ -5381,8 +5381,10 @@ window.loadDashboardKPIs = async function() {
         const readers = await window.WebNovelsAdmin.fetchReadersFromSupabase();
         if (readers && readers.length > 0) {
           readersCount = readers.length;
-          SAMPLE_READERS.length = 0;
-          SAMPLE_READERS.push(...readers);
+          if (typeof SAMPLE_READERS !== 'undefined') {
+            SAMPLE_READERS.length = 0;
+            SAMPLE_READERS.push(...readers);
+          }
         }
       } catch(err) {}
     }
@@ -5393,28 +5395,45 @@ window.loadDashboardKPIs = async function() {
         const authors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
         if (authors && authors.length > 0) {
           authorsCount = authors.length;
-          SAMPLE_AUTHORS.length = 0;
-          SAMPLE_AUTHORS.push(...authors);
+          if (typeof SAMPLE_AUTHORS !== 'undefined') {
+            SAMPLE_AUTHORS.length = 0;
+            SAMPLE_AUTHORS.push(...authors);
+          }
         }
       } catch(err) {}
     }
 
-    const novelEpisodes = novels.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 6), 0);
-    const webtoonEpisodes = webtoons.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 6), 0);
+    // 에피소드가 없는 신규작품일 시 0으로 계산하여 하드코딩 제거
+    const novelEpisodes = novels.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 0), 0);
+    const webtoonEpisodes = webtoons.reduce((sum, w) => sum + (w.episodes && w.episodes.length > 0 ? w.episodes.length : 0), 0);
     const totalEpisodes = novelEpisodes + webtoonEpisodes;
 
     // 실시간 DB Action Queue 로드
     await window.loadActionQueueFromDB();
     const actionReqCount = ACTION_QUEUE_ITEMS.length;
 
+    // 실시간 DB KPI 데이터 조회
+    let stats = null;
+    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchDashboardKPI === 'function') {
+      try {
+        stats = await window.WebNovelsAdmin.fetchDashboardKPI();
+      } catch(err) {}
+    }
+
+    const finalTotalWorks = stats?.total_works ?? totalWorks;
+    const finalTotalAuthors = stats?.total_authors ?? authorsCount;
+    const finalTotalEpisodes = stats?.total_episodes ?? totalEpisodes;
+    const finalTotalUsers = stats?.total_users ?? readersCount;
+    const finalTotalAdViews = stats?.total_ad_views ?? 0;
+
     // DOM 업데이트
     const elNovels = document.getElementById('kpiNovelsCount');
-    if (elNovels) elNovels.textContent = `${novelsCount}작품`;
+    if (elNovels) elNovels.textContent = `${stats?.novel_count ?? novelsCount}작품`;
     const elNovelEpisodes = document.getElementById('kpiNovelEpisodesCount');
     if (elNovelEpisodes) elNovelEpisodes.textContent = `${novelEpisodes} 에피소드 (텍스트)`;
 
     const elWebtoons = document.getElementById('kpiWebtoonsCount');
-    if (elWebtoons) elWebtoons.textContent = `${webtoonsCount}작품`;
+    if (elWebtoons) elWebtoons.textContent = `${stats?.webtoon_count ?? webtoonsCount}작품`;
     const elWebtoonEpisodes = document.getElementById('kpiWebtoonEpisodesCount');
     if (elWebtoonEpisodes) elWebtoonEpisodes.textContent = `${webtoonEpisodes} 에피소드 (컷 이미지)`;
 
@@ -5425,28 +5444,18 @@ window.loadDashboardKPIs = async function() {
     if (elCompleted) elCompleted.textContent = `${completedCount}작품`;
 
     const elTotalWorks = document.getElementById('kpiTotalWorks');
-    if (elTotalWorks) elTotalWorks.textContent = `${totalWorks}`;
+    if (elTotalWorks) elTotalWorks.textContent = `${finalTotalWorks}`;
 
     const elTotalAuthors = document.getElementById('kpiTotalAuthors');
-    if (elTotalAuthors) elTotalAuthors.textContent = `${authorsCount}`;
+    if (elTotalAuthors) elTotalAuthors.textContent = `${finalTotalAuthors}`;
 
     const elTotalEpisodes = document.getElementById('kpiTotalEpisodes');
-    if (elTotalEpisodes) elTotalEpisodes.textContent = `${totalEpisodes}`;
+    if (elTotalEpisodes) elTotalEpisodes.textContent = `${finalTotalEpisodes}`;
 
     const elTotalUsers = document.getElementById('kpiTotalUsers');
-    if (elTotalUsers) elTotalUsers.textContent = Number(readersCount).toLocaleString();
+    if (elTotalUsers) elTotalUsers.textContent = Number(finalTotalUsers).toLocaleString();
 
-    let adViewsFormatted = '142.5K';
-    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchDashboardKPI === 'function') {
-      try {
-        const stats = await window.WebNovelsAdmin.fetchDashboardKPI();
-        if (stats && stats.total_ad_views) {
-          const rawViews = Number(stats.total_ad_views);
-          adViewsFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : rawViews.toLocaleString();
-        }
-      } catch(err) {}
-    }
-
+    let adViewsFormatted = finalTotalAdViews >= 1000 ? `${(finalTotalAdViews / 1000).toFixed(1)}K` : finalTotalAdViews.toLocaleString();
     const elTotalAdViews = document.getElementById('kpiTotalAdViews');
     if (elTotalAdViews) elTotalAdViews.textContent = adViewsFormatted;
 
@@ -5703,10 +5712,12 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
     // 4. 플랫폼 트래픽 & 콘텐츠 인프라 지표 요약
     const platformSummaryContainer = document.getElementById('analyticsPlatformSummary');
     if (platformSummaryContainer) {
-      const worksCount = typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.length : 30;
-      const totalViews = typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.reduce((sum, w) => sum + (Number(w.viewCount) || 0), 0) : 6050000;
-      const novelCount = typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.filter(w => w.contentType !== 'WEBTOON').length : 17;
-      const webtoonCount = typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.filter(w => w.contentType === 'WEBTOON').length : 13;
+      const worksCount = platformStats?.total_works ?? (typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.length : 30);
+      const totalViews = platformStats?.total_views ?? (typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.reduce((sum, w) => sum + (Number(w.viewCount) || 0), 0) : 6050000);
+      const novelCount = platformStats?.novel_count ?? (typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.filter(w => w.contentType !== 'WEBTOON').length : 17);
+      const webtoonCount = platformStats?.webtoon_count ?? (typeof SAMPLE_WORKS !== 'undefined' ? SAMPLE_WORKS.filter(w => w.contentType === 'WEBTOON').length : 13);
+      const totalUsers = platformStats?.total_users ?? 10;
+      const totalAuthors = platformStats?.total_authors ?? 30;
 
       platformSummaryContainer.innerHTML = `
         <div class="grid-2-col gap-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -5722,12 +5733,12 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
           </div>
           <div class="p-3 glass-panel" style="border-radius: 6px; background: rgba(0,0,0,0.25);">
             <div class="text-muted small">등록 독자 회원</div>
-            <strong style="font-size: 1.3rem; color: #10B981;">10명</strong>
+            <strong style="font-size: 1.3rem; color: #10B981;">${totalUsers}명</strong>
             <div class="text-muted small" style="font-size: 0.75rem;">성인인증 및 결제 연동</div>
           </div>
           <div class="p-3 glass-panel" style="border-radius: 6px; background: rgba(0,0,0,0.25);">
             <div class="text-muted small">공식 인증 작가</div>
-            <strong style="font-size: 1.3rem; color: #F59E0B;">30명</strong>
+            <strong style="font-size: 1.3rem; color: #F59E0B;">${totalAuthors}명</strong>
             <div class="text-muted small" style="font-size: 0.75rem;">정산 계좌 등록 완료</div>
           </div>
         </div>
