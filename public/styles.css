@@ -2540,14 +2540,21 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
 @media (max-width: 992px) {
   .admin-cms-layout {
     flex-direction: column;
+    gap: 16px;
   }
   .admin-sidebar {
     width: 100%;
     position: static;
+    padding: 16px 12px;
   }
   .admin-sidebar-menu {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .sidebar-category {
+    grid-column: 1 / -1;
+    margin: 8px 0 4px 4px;
   }
 }
 
@@ -2558,11 +2565,63 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   .detail-cover-box img { width: 140px; height: 200px; margin: 0 auto; }
   .detail-actions { display: none; }
   .sticky-bottom-cta { display: flex; }
-  .webnovels-body { padding-bottom: calc(var(--bottom-nav-height) + 20px); }
+  .webnovels-body { padding-bottom: calc(var(--bottom-nav-height) + 24px); }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .menu-16-grid { grid-template-columns: repeat(2, 1fr); }
   .grid-2-col { grid-template-columns: 1fr; }
-  .admin-sidebar-menu { grid-template-columns: 1fr; }
+  .grid-4-col { grid-template-columns: repeat(2, 1fr) !important; }
+  
+  .admin-sidebar-menu { 
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .admin-nav-item {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    min-height: 44px;
+    border-radius: 8px;
+  }
+
+  .admin-nav-item svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Mobile Table Responsive Touch Container */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    scrollbar-width: thin;
+  }
+
+  .table-responsive table {
+    min-width: 580px;
+  }
+
+  /* Creator Studio Mobile Card Grid */
+  #creatorAuthorBar .flex-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  #creatorAuthorDetails {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px !important;
+  }
+
+  .creator-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px;
+  }
+
+  .creator-tab-panel {
+    padding: 0 !important;
+  }
 }
 
 /* ---- Admin Dashboard KPI Cards ---- */

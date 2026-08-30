@@ -5432,6 +5432,14 @@ window.switchAdminSubTab = function(tabName) {
   const activeNavBtn = document.querySelector(`.admin-nav-item[data-subtab="${tabName}"]`);
   if (activeNavBtn) activeNavBtn.classList.add('active');
 
+  // 모바일 화면(<=768px)인 경우 탭 클릭 시 메인 컨텐츠로 스크롤
+  if (window.innerWidth <= 768) {
+    const mainContent = document.querySelector('.admin-main-content');
+    if (mainContent) {
+      mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   // Re-render Lucide icons
   if (window.lucide) window.lucide.createIcons();
 
