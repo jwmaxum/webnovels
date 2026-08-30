@@ -26,6 +26,7 @@ import { creatorRouter } from './routes/creator.router.js';
 import { adminRouter } from './routes/admin.router.js';
 import { communityRouter } from './routes/community.router.js';
 import { paymentRouter } from './routes/payment.router.js';
+import { revenueRouter } from './routes/revenue.router.js';
 
 import path from 'path';
 
@@ -56,6 +57,7 @@ app.use('/api/works', workRouter);
 app.use('/api/episodes', episodeRouter);
 app.use('/api/ads', adRouter);
 app.use('/api/creator', creatorRouter);
+app.use('/api/revenue', revenueRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/community', communityRouter);
 app.use('/api/payments', paymentRouter);

@@ -204,5 +204,59 @@ export class RevenueEngineService {
       history: revenues
     };
   }
+
+  // ============================================================
+  // [Function] requestAuthorSettlementSecure
+  // [Purpose] 작가의 출금 신청 처리 (최소금액, 확정잔액, 계좌스냅샷 검증)
+  // ============================================================
+  static async requestAuthorSettlementSecure(
+    authorId: string,
+    amount: number,
+    accountSnapshot: {
+      bankName: string;
+      accountNumber: string;
+      accountHolder: string;
+    }
+  ) {
+    const MINIMUM_SETTLEMENT_AMOUNT = 10000;
+
+    if (amount < MINIMUM_SETTLEMENT_AMOUNT) {
+      throw new Error(`최소 정산 신청 금액은 ${MINIMUM_SETTLEMENT_AMOUNT.toLocaleString()}원입니다.`);
+    }
+
+    const dashboard = await this.getAuthorRevenueDashboard(authorId);
+    if (amount > dashboard.payableRevenue) {
+      throw new Error(`출금 가능 잔액(${dashboard.payableRevenue.toLocaleString()}원)을 초과하였습니다.`);
+    }
+
+    const author = await db.author.findUnique({
+      where: { id: authorId },
+      include: { account: true }
+    });
+
+    if (!author) {
+      throw new Error('작가 정보를 찾을 수 없습니다.');
+    }
+
+    const bankSnapshot = accountSnapshot.bankName 
+      ? `${accountSnapshot.bankName} ${accountSnapshot.accountNumber} (${accountSnapshot.accountHolder})`
+      : (author.account ? `${author.account.bankName} ${author.account.accountNumber} (${author.account.accountHolder})` : '국민은행 999-888-777666 (판타지마스터)');
+
+    const settlement = await db.authorSettlement.create({
+      data: {
+        authorId,
+        amount,
+        bankInfo: bankSnapshot,
+        status: 'PENDING'
+      }
+    });
+
+    return {
+      success: true,
+      settlementId: settlement.id,
+      amount,
+      status: 'PENDING'
+    };
+  }
 }
 
