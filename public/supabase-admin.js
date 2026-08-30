@@ -117,13 +117,38 @@ async function fetchDashboardKPI() {
 // ============================================================
 // [Sub-Admin] 서브 관리자 CRUD (Supabase DB + localStorage 영구 보존 동기화)
 // ============================================================
+const DEFAULT_SEED_SUB_ADMINS = [
+  {
+    id: 'subadmin-01',
+    username: 'sub_admin_01',
+    nickname: '콘텐츠검수담당',
+    email: 'sub01@webnovels.com',
+    role: 'SUB_ADMIN',
+    permissions: ['DASHBOARD', 'USER_MGMT', 'WORK_MGMT', 'EPISODE_MGMT', 'CONTENT_REVIEW', 'COMMENT_REPORT'],
+    created_at: '2026-08-20T09:00:00.000Z'
+  },
+  {
+    id: 'subadmin-02',
+    username: 'sub_admin_02',
+    nickname: '정산운영담당',
+    email: 'sub02@webnovels.com',
+    role: 'SUB_ADMIN',
+    permissions: ['DASHBOARD', 'AUTHOR_MGMT', 'AD_MGMT', 'AD_REVENUE', 'AUTHOR_SETTLEMENT', 'ANALYTICS'],
+    created_at: '2026-08-25T14:30:00.000Z'
+  }
+];
+
 function getLocalSubAdmins() {
   try {
     const raw = localStorage.getItem('webnovels_sub_admins');
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+
+  saveLocalSubAdmins(DEFAULT_SEED_SUB_ADMINS);
+  return [...DEFAULT_SEED_SUB_ADMINS];
 }
 
 function saveLocalSubAdmins(list) {

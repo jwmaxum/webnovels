@@ -2166,6 +2166,27 @@ window.loadAdminDashboard = function() {
 };
 
 // ---- 서브 관리자 목록 로드 ----
+const SAMPLE_SUB_ADMINS = [
+  {
+    id: 'subadmin-01',
+    username: 'sub_admin_01',
+    nickname: '콘텐츠검수담당',
+    email: 'sub01@webnovels.com',
+    role: 'SUB_ADMIN',
+    permissions: ['DASHBOARD', 'USER_MGMT', 'WORK_MGMT', 'EPISODE_MGMT', 'CONTENT_REVIEW', 'COMMENT_REPORT'],
+    created_at: '2026-08-20T09:00:00.000Z'
+  },
+  {
+    id: 'subadmin-02',
+    username: 'sub_admin_02',
+    nickname: '정산운영담당',
+    email: 'sub02@webnovels.com',
+    role: 'SUB_ADMIN',
+    permissions: ['DASHBOARD', 'AUTHOR_MGMT', 'AD_MGMT', 'AD_REVENUE', 'AUTHOR_SETTLEMENT', 'ANALYTICS'],
+    created_at: '2026-08-25T14:30:00.000Z'
+  }
+];
+
 window.loadSubAdminList = async function() {
   const container = document.getElementById('adminSubAdminContainer');
   if (!container) return;
@@ -2186,6 +2207,17 @@ window.loadSubAdminList = async function() {
     console.warn('[Sub-Admin] 목록 로드 오류:', e);
   }
 
+  // 로컬스토리지 직접 폴백
+  if (!subAdmins || subAdmins.length === 0) {
+    try {
+      const raw = localStorage.getItem('webnovels_sub_admins');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) subAdmins = parsed;
+      }
+    } catch(e) {}
+  }
+
   // Supabase 직접 조회 폴백
   if (!subAdmins || subAdmins.length === 0) {
     try {
@@ -2196,13 +2228,21 @@ window.loadSubAdminList = async function() {
     } catch(e) {}
   }
 
+  // 기본 시드 폴백
   if (!subAdmins || subAdmins.length === 0) {
-    container.innerHTML = '<p class="text-muted p-4">등록된 서브 관리자가 없습니다. "신규 서브 관리자 생성" 버튼을 클릭하세요.</p>';
-    return;
+    subAdmins = [...SAMPLE_SUB_ADMINS];
+    try {
+      localStorage.setItem('webnovels_sub_admins', JSON.stringify(subAdmins));
+    } catch(e) {}
   }
 
   container.innerHTML = subAdmins.map(admin => {
-    const perms = Array.isArray(admin.permissions) ? admin.permissions : [];
+    let perms = admin.permissions || [];
+    if (typeof perms === 'string') {
+      try { perms = JSON.parse(perms); } catch(e) { perms = []; }
+    }
+    const permsList = Array.isArray(perms) ? perms : [];
+
     return `
       <div class="card glass-panel p-4 mb-3" style="border: 1px solid var(--border-color); border-radius: 8px;">
         <div class="flex-between">
@@ -2217,9 +2257,9 @@ window.loadSubAdminList = async function() {
           </div>
         </div>
         <hr class="divider" style="margin: 12px 0; border-color: rgba(255,255,255,0.1);">
-        <small class="text-muted">부여된 접근 권한 (${perms.length}/16):</small>
+        <small class="text-muted">부여된 접근 권한 (${permsList.length}/16):</small>
         <div class="perm-tags mt-2" style="display: flex; flex-wrap: wrap; gap: 6px;">
-          ${perms.map(p => `<span class="badge badge-accent" style="font-size: 0.75rem;">${p}</span>`).join('')}
+          ${permsList.map(p => `<span class="badge badge-accent" style="font-size: 0.75rem;">${p}</span>`).join('')}
         </div>
       </div>
     `;
