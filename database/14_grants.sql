@@ -47,8 +47,10 @@ REVOKE ALL ON public.episode_panels FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON public.author_private_profiles FROM anon;
 REVOKE ALL ON public.author_settlement_accounts FROM anon;
 REVOKE ALL ON public.revenue_ledger FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON public.admin_users FROM anon;
 REVOKE ALL ON public.audit_logs FROM anon;
+
+-- admin_users는 RLS 정책("Admin Manage Admins") 및 RPC(verify_admin_login, create_admin_user, get_sub_admins)를 통해 안전하게 통제
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.admin_users TO anon, authenticated, service_role;
 
 -- 민감한 Private Function은 Client의 직접 호출 차단 (Service Layer/RPC 전용)
 REVOKE EXECUTE ON FUNCTION private.grant_rewarded_ad_unlock(UUID, BIGINT, UUID) FROM PUBLIC, anon, authenticated;

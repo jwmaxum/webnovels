@@ -397,9 +397,10 @@ CREATE TABLE IF NOT EXISTS public.reports (
 );
 
 CREATE TABLE IF NOT EXISTS public.admin_users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username TEXT UNIQUE NOT NULL,
   email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL DEFAULT '!123456',
   nickname TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'SUB_ADMIN' CHECK (role IN ('SUPER_ADMIN', 'SUB_ADMIN')),
   permissions JSONB NOT NULL DEFAULT '["DASHBOARD"]'::jsonb,
@@ -484,3 +485,83 @@ CREATE TABLE IF NOT EXISTS public.goods_orders (
   status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PAID', 'PREPARING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ============================================================
+-- RPC Functions: Sub-Admin CRUD & Management
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.create_admin_user(p_username TEXT, p_password TEXT, p_email TEXT, p_nickname TEXT, p_permissions TEXT)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_id UUID;
+  v_pw_hash TEXT;
+BEGIN
+  BEGIN
+    v_pw_hash := crypt(p_password, gen_salt('bf'));
+  EXCEPTION WHEN OTHERS THEN
+    v_pw_hash := p_password;
+  END;
+
+  INSERT INTO public.admin_users (username, email, password_hash, nickname, permissions, role)
+  VALUES (
+    p_username,
+    p_email,
+    v_pw_hash,
+    p_nickname,
+    p_permissions::jsonb,
+    'SUB_ADMIN'
+  )
+  RETURNING id INTO v_id;
+
+  RETURN jsonb_build_object('success', true, 'id', v_id);
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_sub_admins()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'id', id,
+      'username', username,
+      'nickname', nickname,
+      'email', email,
+      'role', role,
+      'permissions', permissions,
+      'created_at', created_at
+    ) ORDER BY created_at DESC
+  ) INTO v_result
+  FROM public.admin_users
+  WHERE role = 'SUB_ADMIN';
+
+  RETURN COALESCE(v_result, '[]'::jsonb);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.delete_sub_admin(p_id TEXT)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  DELETE FROM public.admin_users WHERE id::text = p_id AND role = 'SUB_ADMIN';
+  RETURN jsonb_build_object('success', true);
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.create_admin_user(TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_sub_admins() TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.delete_sub_admin(TEXT) TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.admin_users TO anon, authenticated, service_role;
+

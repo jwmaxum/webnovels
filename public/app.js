@@ -2165,28 +2165,7 @@ window.loadAdminDashboard = function() {
   }
 };
 
-// ---- 서브 관리자 목록 로드 ----
-const SAMPLE_SUB_ADMINS = [
-  {
-    id: 'subadmin-01',
-    username: 'sub_admin_01',
-    nickname: '콘텐츠검수담당',
-    email: 'sub01@webnovels.com',
-    role: 'SUB_ADMIN',
-    permissions: ['DASHBOARD', 'USER_MGMT', 'WORK_MGMT', 'EPISODE_MGMT', 'CONTENT_REVIEW', 'COMMENT_REPORT'],
-    created_at: '2026-08-20T09:00:00.000Z'
-  },
-  {
-    id: 'subadmin-02',
-    username: 'sub_admin_02',
-    nickname: '정산운영담당',
-    email: 'sub02@webnovels.com',
-    role: 'SUB_ADMIN',
-    permissions: ['DASHBOARD', 'AUTHOR_MGMT', 'AD_MGMT', 'AD_REVENUE', 'AUTHOR_SETTLEMENT', 'ANALYTICS'],
-    created_at: '2026-08-25T14:30:00.000Z'
-  }
-];
-
+// ---- 서브 관리자 목록 로드 (순수 Supabase DB 실시간 조회) ----
 window.loadSubAdminList = async function() {
   const container = document.getElementById('adminSubAdminContainer');
   if (!container) return;
@@ -2194,7 +2173,7 @@ window.loadSubAdminList = async function() {
   container.innerHTML = `
     <div class="admin-loading-placeholder p-4 text-center">
       <div class="spinner mb-2"></div>
-      <p class="text-muted">서브 관리자 목록 로딩 중...</p>
+      <p class="text-muted">서브 관리자 목록 DB 조회 중...</p>
     </div>
   `;
 
@@ -2202,38 +2181,21 @@ window.loadSubAdminList = async function() {
   try {
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchSubAdmins === 'function') {
       subAdmins = await window.WebNovelsAdmin.fetchSubAdmins();
+    } else if (window.supabaseClient) {
+      const { data } = await window.supabaseClient
+        .from('admin_users')
+        .select('*')
+        .eq('role', 'SUB_ADMIN')
+        .order('created_at', { ascending: false });
+      if (data) subAdmins = data;
     }
   } catch(e) {
-    console.warn('[Sub-Admin] 목록 로드 오류:', e);
+    console.error('[Sub-Admin] 목록 로드 오류:', e);
   }
 
-  // 로컬스토리지 직접 폴백
   if (!subAdmins || subAdmins.length === 0) {
-    try {
-      const raw = localStorage.getItem('webnovels_sub_admins');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) subAdmins = parsed;
-      }
-    } catch(e) {}
-  }
-
-  // Supabase 직접 조회 폴백
-  if (!subAdmins || subAdmins.length === 0) {
-    try {
-      if (window.supabaseClient) {
-        const { data } = await window.supabaseClient.from('admin_users').select('*').eq('role', 'SUB_ADMIN').order('created_at', { ascending: false });
-        if (data && data.length > 0) subAdmins = data;
-      }
-    } catch(e) {}
-  }
-
-  // 기본 시드 폴백
-  if (!subAdmins || subAdmins.length === 0) {
-    subAdmins = [...SAMPLE_SUB_ADMINS];
-    try {
-      localStorage.setItem('webnovels_sub_admins', JSON.stringify(subAdmins));
-    } catch(e) {}
+    container.innerHTML = '<p class="text-muted p-4">등록된 서브 관리자가 없습니다. "신규 서브 관리자 생성" 버튼을 클릭하세요.</p>';
+    return;
   }
 
   container.innerHTML = subAdmins.map(admin => {

@@ -115,221 +115,170 @@ async function fetchDashboardKPI() {
 }
 
 // ============================================================
-// [Sub-Admin] 서브 관리자 CRUD (Supabase DB + localStorage 영구 보존 동기화)
+// [Sub-Admin] 서브 관리자 CRUD (순수 Supabase PostgreSQL DB 실시간 연동)
 // ============================================================
-const DEFAULT_SEED_SUB_ADMINS = [
-  {
-    id: 'subadmin-01',
-    username: 'sub_admin_01',
-    nickname: '콘텐츠검수담당',
-    email: 'sub01@webnovels.com',
-    role: 'SUB_ADMIN',
-    permissions: ['DASHBOARD', 'USER_MGMT', 'WORK_MGMT', 'EPISODE_MGMT', 'CONTENT_REVIEW', 'COMMENT_REPORT'],
-    created_at: '2026-08-20T09:00:00.000Z'
-  },
-  {
-    id: 'subadmin-02',
-    username: 'sub_admin_02',
-    nickname: '정산운영담당',
-    email: 'sub02@webnovels.com',
-    role: 'SUB_ADMIN',
-    permissions: ['DASHBOARD', 'AUTHOR_MGMT', 'AD_MGMT', 'AD_REVENUE', 'AUTHOR_SETTLEMENT', 'ANALYTICS'],
-    created_at: '2026-08-25T14:30:00.000Z'
-  }
-];
-
-function getLocalSubAdmins() {
-  try {
-    const raw = localStorage.getItem('webnovels_sub_admins');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (e) {}
-
-  saveLocalSubAdmins(DEFAULT_SEED_SUB_ADMINS);
-  return [...DEFAULT_SEED_SUB_ADMINS];
-}
-
-function saveLocalSubAdmins(list) {
-  try {
-    localStorage.setItem('webnovels_sub_admins', JSON.stringify(list));
-  } catch (e) {}
-}
-
 async function fetchSubAdmins() {
-  const localAdmins = getLocalSubAdmins();
-  let dbAdmins = [];
-
-  if (supabaseClient) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('admin_users')
-        .select('*')
-        .eq('role', 'SUB_ADMIN')
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        dbAdmins = data;
-      }
-    } catch (err) {
-      console.warn('[Sub-Admin] Supabase 목록 조회 실패:', err.message);
-    }
+  if (!supabaseClient) {
+    console.warn('[Sub-Admin] Supabase 클라이언트 미연결');
+    return [];
   }
 
-  // DB 데이터와 로컬스토리지 데이터를 ID/username 기준으로 병합 & 정규화
-  const mergedMap = new Map();
-
-  // 1. 로컬 데이터 먼저 추가
-  localAdmins.forEach(admin => {
-    let perms = admin.permissions;
-    if (typeof perms === 'string') {
-      try { perms = JSON.parse(perms); } catch(e) { perms = []; }
+  try {
+    // 1. RPC 함수 get_sub_admins 우선 시도
+    const { data: rpcData, error: rpcError } = await supabaseClient.rpc('get_sub_admins');
+    if (!rpcError && Array.isArray(rpcData)) {
+      return rpcData.map(admin => {
+        let perms = admin.permissions;
+        if (typeof perms === 'string') {
+          try { perms = JSON.parse(perms); } catch(e) { perms = []; }
+        }
+        return { ...admin, permissions: Array.isArray(perms) ? perms : [] };
+      });
     }
-    const key = admin.id || admin.username;
-    mergedMap.set(key, { ...admin, permissions: Array.isArray(perms) ? perms : [] });
-  });
 
-  // 2. DB 데이터로 덮어쓰기/추가
-  dbAdmins.forEach(admin => {
-    let perms = admin.permissions;
-    if (typeof perms === 'string') {
-      try { perms = JSON.parse(perms); } catch(e) { perms = []; }
+    // 2. admin_users 테이블 직접 SELECT 폴백
+    const { data, error } = await supabaseClient
+      .from('admin_users')
+      .select('id, username, nickname, email, role, permissions, is_active, created_at, updated_at')
+      .eq('role', 'SUB_ADMIN')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[Sub-Admin] DB 조회 오류:', error);
+      return [];
     }
-    const key = admin.id || admin.username;
-    mergedMap.set(key, { ...admin, permissions: Array.isArray(perms) ? perms : [] });
-  });
 
-  const finalList = Array.from(mergedMap.values());
-  saveLocalSubAdmins(finalList);
-  return finalList;
+    return (data || []).map(admin => {
+      let perms = admin.permissions;
+      if (typeof perms === 'string') {
+        try { perms = JSON.parse(perms); } catch(e) { perms = []; }
+      }
+      return { ...admin, permissions: Array.isArray(perms) ? perms : [] };
+    });
+  } catch (err) {
+    console.error('[Sub-Admin] 목록 조회 예외:', err);
+    return [];
+  }
 }
 
 async function createSubAdmin(username, password, nickname, email, permissions) {
+  if (!supabaseClient) {
+    return { success: false, error: 'Supabase DB가 연결되지 않았습니다.' };
+  }
+
   const effectiveEmail = email || (username.includes('@') ? username : `${username}@webnovel-admin.com`);
   const effectivePerms = Array.isArray(permissions) ? permissions : [];
-  const newSubAdminObj = {
-    id: 'subadmin-' + Date.now(),
-    username,
-    nickname: nickname || username,
-    email: effectiveEmail,
-    role: 'SUB_ADMIN',
-    permissions: effectivePerms,
-    created_at: new Date().toISOString()
-  };
 
-  let dbSaved = false;
+  try {
+    // 1. RPC 함수 create_admin_user 시도 (Bcrypt / pgcrypto 해시 적용)
+    const { data: rpcData, error: rpcError } = await supabaseClient.rpc('create_admin_user', {
+      p_username: username,
+      p_password: password,
+      p_email: effectiveEmail,
+      p_nickname: nickname || username,
+      p_permissions: JSON.stringify(effectivePerms)
+    });
 
-  if (supabaseClient) {
-    try {
-      // 1. RPC 함수 create_admin_user 시도
-      const { data, error } = await supabaseClient.rpc('create_admin_user', {
-        p_username: username,
-        p_password: password,
-        p_email: effectiveEmail,
-        p_nickname: nickname,
-        p_permissions: JSON.stringify(effectivePerms)
-      });
-
-      if (!error && data && data.success) {
-        if (data.id) newSubAdminObj.id = String(data.id);
-        dbSaved = true;
-      } else {
-        // 2. admin_users 테이블 직접 Insert 시도
-        const { data: inserted, error: insertErr } = await supabaseClient
-          .from('admin_users')
-          .insert({
-            username,
-            email: effectiveEmail,
-            password_hash: password,
-            nickname,
-            role: 'SUB_ADMIN',
-            permissions: effectivePerms
-          })
-          .select()
-          .single();
-
-        if (!insertErr && inserted) {
-          newSubAdminObj.id = inserted.id || newSubAdminObj.id;
-          dbSaved = true;
+    if (!rpcError && rpcData && rpcData.success) {
+      return {
+        success: true,
+        subAdmin: {
+          id: rpcData.id,
+          username,
+          nickname: nickname || username,
+          email: effectiveEmail,
+          role: 'SUB_ADMIN',
+          permissions: effectivePerms,
+          created_at: new Date().toISOString()
         }
-      }
-    } catch (err) {
-      console.warn('[Sub-Admin] DB 생성 중 오류 (로컬 세션 보존):', err.message);
+      };
     }
-  }
 
-  // 로컬 스토리지에 영구 추가 저장
-  const localAdmins = getLocalSubAdmins();
-  const existingIdx = localAdmins.findIndex(a => a.username === username || a.id === newSubAdminObj.id);
-  if (existingIdx >= 0) {
-    localAdmins[existingIdx] = newSubAdminObj;
-  } else {
-    localAdmins.unshift(newSubAdminObj);
-  }
-  saveLocalSubAdmins(localAdmins);
+    // 2. RPC 실패 시 admin_users 테이블 직접 Insert 시도
+    console.warn('[Sub-Admin] RPC 실패, 직접 Insert 시도:', rpcError?.message);
+    const { data: inserted, error: insertErr } = await supabaseClient
+      .from('admin_users')
+      .insert({
+        username,
+        email: effectiveEmail,
+        password_hash: password,
+        nickname: nickname || username,
+        role: 'SUB_ADMIN',
+        permissions: effectivePerms
+      })
+      .select()
+      .single();
 
-  return { success: true, subAdmin: newSubAdminObj, dbSaved };
+    if (insertErr) {
+      console.error('[Sub-Admin] DB 생성 실패:', insertErr);
+      return { success: false, error: insertErr.message || 'DB 저장에 실패했습니다.' };
+    }
+
+    return { success: true, subAdmin: inserted };
+  } catch (err) {
+    console.error('[Sub-Admin] 계정 생성 예외:', err);
+    return { success: false, error: err.message };
+  }
 }
 
 async function updateSubAdminPermissions(subAdminId, permissions) {
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연결' };
+
   const effectivePerms = Array.isArray(permissions) ? permissions : [];
+  try {
+    const { error } = await supabaseClient
+      .from('admin_users')
+      .update({ permissions: effectivePerms, updated_at: new Date().toISOString() })
+      .eq('id', subAdminId);
 
-  if (supabaseClient) {
-    try {
-      await supabaseClient
-        .from('admin_users')
-        .update({ permissions: effectivePerms, updated_at: new Date().toISOString() })
-        .eq('id', subAdminId);
-    } catch (err) {
-      console.warn('[Sub-Admin] DB 권한 수정 실패:', err.message);
-    }
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
-
-  // 로컬 스토리지 동기화
-  const localAdmins = getLocalSubAdmins();
-  const target = localAdmins.find(a => a.id === subAdminId);
-  if (target) {
-    target.permissions = effectivePerms;
-    saveLocalSubAdmins(localAdmins);
-  }
-
-  return { success: true };
 }
 
 async function changeSubAdminPassword(subAdminId, newPassword) {
-  if (supabaseClient) {
-    try {
-      await supabaseClient
-        .from('admin_users')
-        .update({ password_hash: newPassword, updated_at: new Date().toISOString() })
-        .eq('id', subAdminId);
-    } catch (err) {
-      console.warn('[Sub-Admin] DB 비밀번호 변경 실패:', err.message);
-    }
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연결' };
+
+  try {
+    const { error } = await supabaseClient
+      .from('admin_users')
+      .update({ password_hash: newPassword, updated_at: new Date().toISOString() })
+      .eq('id', subAdminId);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
-  return { success: true };
 }
 
 async function deleteSubAdmin(subAdminId) {
-  if (supabaseClient) {
-    try {
-      await supabaseClient
-        .from('admin_users')
-        .delete()
-        .eq('id', subAdminId)
-        .eq('role', 'SUB_ADMIN');
-    } catch (err) {
-      console.warn('[Sub-Admin] DB 삭제 실패:', err.message);
+  if (!supabaseClient) return { success: false, error: 'Supabase 미연결' };
+
+  try {
+    // 1. delete_sub_admin RPC 시도
+    const { data: rpcData, error: rpcError } = await supabaseClient.rpc('delete_sub_admin', {
+      p_id: String(subAdminId)
+    });
+
+    if (!rpcError && rpcData && rpcData.success) {
+      return { success: true };
     }
+
+    // 2. admin_users 테이블 직접 Delete
+    const { error } = await supabaseClient
+      .from('admin_users')
+      .delete()
+      .eq('id', subAdminId)
+      .eq('role', 'SUB_ADMIN');
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
-
-  // 로컬 스토리지에서 삭제
-  let localAdmins = getLocalSubAdmins();
-  localAdmins = localAdmins.filter(a => a.id !== subAdminId);
-  saveLocalSubAdmins(localAdmins);
-
-  return { success: true };
 }
 
 // ============================================================

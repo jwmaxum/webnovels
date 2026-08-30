@@ -1905,17 +1905,17 @@
           <form id="formCreateSubAdmin" onsubmit="event.preventDefault(); handleCreateSubAdminSubmit();">
             <div class="grid-2-col gap-4 mb-3">
               <div class="form-group">
-                <label>서브 관리자 Username / ID</label>
-                <input type="text" id="newSubAdminId" class="form-control" value="sub_admin_02" autocomplete="username" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <label>서브 관리자 Username / ID (이메일)</label>
+                <input type="text" id="newSubAdminId" class="form-control" placeholder="예: andysung@webnovel-admin.com" autocomplete="username" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
               </div>
               <div class="form-group">
                 <label>초기 비밀번호</label>
-                <input type="password" id="newSubAdminPw" class="form-control" value="subpass1234!" autocomplete="new-password" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <input type="password" id="newSubAdminPw" class="form-control" placeholder="비밀번호 입력" autocomplete="new-password" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
               </div>
             </div>
             <div class="form-group mb-4">
               <label>담당자 닉네임 / 직책</label>
-              <input type="text" id="newSubAdminName" class="form-control" value="정산담당서브관" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="text" id="newSubAdminName" class="form-control" placeholder="예: 앤디성 (정산담당관)" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
             </div>
 
             <!-- 16 Menu Permission Selection Checklist -->

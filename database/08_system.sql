@@ -80,9 +80,24 @@ SECURITY DEFINER
 AS $$
 DECLARE
   v_id UUID;
+  v_pw_hash TEXT;
 BEGIN
+  -- pgcrypto crypt 해시 시도 (실패 시 원본 비밀번호 폴백)
+  BEGIN
+    v_pw_hash := crypt(p_password, gen_salt('bf'));
+  EXCEPTION WHEN OTHERS THEN
+    v_pw_hash := p_password;
+  END;
+
   INSERT INTO admin_users (username, email, password_hash, nickname, permissions, role)
-  VALUES (p_username, p_email, crypt(p_password, gen_salt('bf')), p_nickname, p_permissions::jsonb, 'SUB_ADMIN')
+  VALUES (
+    p_username,
+    p_email,
+    v_pw_hash,
+    p_nickname,
+    p_permissions::jsonb,
+    'SUB_ADMIN'
+  )
   RETURNING id INTO v_id;
 
   RETURN jsonb_build_object('success', true, 'id', v_id);
@@ -90,3 +105,49 @@ EXCEPTION WHEN OTHERS THEN
   RETURN jsonb_build_object('success', false, 'error', SQLERRM);
 END;
 $$;
+
+-- 5. 서브 관리자 목록 안전 조회 RPC (get_sub_admins)
+CREATE OR REPLACE FUNCTION get_sub_admins()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'id', id,
+      'username', username,
+      'nickname', nickname,
+      'email', email,
+      'role', role,
+      'permissions', permissions,
+      'created_at', created_at
+    ) ORDER BY created_at DESC
+  ) INTO v_result
+  FROM admin_users
+  WHERE role = 'SUB_ADMIN';
+
+  RETURN COALESCE(v_result, '[]'::jsonb);
+END;
+$$;
+
+-- 6. 서브 관리자 삭제 RPC (delete_sub_admin)
+CREATE OR REPLACE FUNCTION delete_sub_admin(p_id TEXT)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  DELETE FROM admin_users WHERE id::text = p_id AND role = 'SUB_ADMIN';
+  RETURN jsonb_build_object('success', true);
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$;
+
+-- RPC 실행 권한 부여
+GRANT EXECUTE ON FUNCTION create_admin_user(TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION get_sub_admins() TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION delete_sub_admin(TEXT) TO anon, authenticated, service_role;
