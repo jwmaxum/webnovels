@@ -1927,10 +1927,14 @@ window.handleAdminLoginProcess = async function() {
     
     // [중요] 기존 일반회원(독자/작가) 세션을 관리자 세션으로 완전히 덮어쓰기
     localStorage.removeItem('webnovels_author');
+    const adminEmail = admin.email || (idInput.includes('@') ? idInput : `${idInput}@webnovels.com`) || 'admin@webnovels.com';
+    const adminNickname = admin.nickname || (admin.role === 'SUPER_ADMIN' ? '최고관리자' : (admin.username || idInput));
+    
     const adminUserObj = {
       id: admin.id || 'admin-root',
       username: admin.username || idInput,
-      nickname: admin.nickname || idInput,
+      nickname: adminNickname,
+      email: adminEmail,
       role: admin.role || 'SUPER_ADMIN',
       isAdultVerified: true
     };
@@ -4154,13 +4158,17 @@ async function handleMemberLogin() {
     if (adminRes && adminRes.success) {
       isAdminLoggedIn = true;
       closeAllModals();
-      const admin = adminRes.admin || { id: loginIdentifier, username: loginIdentifier, nickname: loginIdentifier, role: 'SUB_ADMIN' };
+      const admin = adminRes.admin || { id: loginIdentifier, username: loginIdentifier, nickname: loginIdentifier, role: 'SUPER_ADMIN' };
       localStorage.removeItem('webnovels_author');
+      const adminEmail = admin.email || (loginIdentifier.includes('@') ? loginIdentifier : `${loginIdentifier}@webnovels.com`) || 'admin@webnovels.com';
+      const adminNickname = admin.nickname || (admin.role === 'SUPER_ADMIN' ? '최고관리자' : (admin.username || loginIdentifier));
+      
       const adminUserObj = {
         id: admin.id || 'admin-root',
         username: admin.username || loginIdentifier,
-        nickname: admin.nickname || loginIdentifier,
-        role: admin.role || 'SUB_ADMIN',
+        nickname: adminNickname,
+        email: adminEmail,
+        role: admin.role || 'SUPER_ADMIN',
         isAdultVerified: true
       };
       localStorage.setItem('webnovels_user', JSON.stringify(adminUserObj));
@@ -4611,6 +4619,10 @@ async function loadMyProfile() {
         const user = JSON.parse(savedUser);
         if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SUB_ADMIN') {
           isAdminLoggedIn = true;
+          user.email = user.email || (user.username && user.username.includes('@') ? user.username : `${user.username || 'admin'}@webnovels.com`);
+          user.nickname = user.nickname || (user.role === 'SUPER_ADMIN' ? '최고관리자' : (user.username || '운영관리자'));
+          localStorage.setItem('webnovels_user', JSON.stringify(user));
+          
           const badge = document.getElementById('adminRoleBadge');
           if (badge) {
             badge.textContent = `${user.role} 로그인됨`;
@@ -4710,25 +4722,44 @@ function updateMemberHeader(user) {
       }
     }
 
-    // 내 서재 프로필 정보 동기화
+    // 내 서재 프로필 정보 동기화 (관리자 / 작가 / 일반독자 역할별 분기)
     const myNickname = document.getElementById('myNickname');
     const myEmail = document.getElementById('myEmail');
     const myAvatar = document.getElementById('myAvatar');
     const myAdultBadge = document.getElementById('myAdultBadge');
 
-    if (myNickname) myNickname.textContent = user.nickname || user.username || '열혈독자';
-    if (myEmail) myEmail.textContent = user.email || 'reader@webnovels.com';
-    if (myAvatar) myAvatar.textContent = (user.nickname || user.username || 'R').slice(0, 1).toUpperCase();
-
-    if (myAdultBadge) {
-      if (user.isAdultVerified) {
-        myAdultBadge.textContent = '🔞 19+ 성인 인증 완료';
+    if (isAdmin) {
+      if (myNickname) myNickname.textContent = user.nickname || (user.role === 'SUPER_ADMIN' ? '최고관리자' : (user.username || '운영관리자'));
+      if (myEmail) myEmail.textContent = user.email || 'admin@webnovels.com';
+      if (myAvatar) myAvatar.textContent = (user.nickname || user.username || '관').slice(0, 1).toUpperCase();
+      if (myAdultBadge) {
+        myAdultBadge.textContent = `🛡️ ${user.role || 'SUPER_ADMIN'} (전체 권한)`;
         myAdultBadge.className = 'badge badge-primary mt-2';
         window._isAdultVerified = true;
-      } else {
-        myAdultBadge.textContent = '성인 인증 미완료';
-        myAdultBadge.className = 'badge badge-accent mt-2';
-        window._isAdultVerified = false;
+      }
+    } else if (isAuthor) {
+      const penName = user.pen_name || user.penName || user.nickname || user.username || '작가';
+      if (myNickname) myNickname.textContent = `${penName} (공식 작가)`;
+      if (myEmail) myEmail.textContent = user.email || `${user.username || 'author'}@webnovels.com`;
+      if (myAvatar) myAvatar.textContent = penName.slice(0, 1).toUpperCase();
+      if (myAdultBadge) {
+        myAdultBadge.textContent = '✍️ 공식 인증 작가';
+        myAdultBadge.className = 'badge badge-primary mt-2';
+      }
+    } else {
+      if (myNickname) myNickname.textContent = user.nickname || user.username || '열혈독자';
+      if (myEmail) myEmail.textContent = user.email || `${user.username || 'reader'}@webnovels.com`;
+      if (myAvatar) myAvatar.textContent = (user.nickname || user.username || 'R').slice(0, 1).toUpperCase();
+      if (myAdultBadge) {
+        if (user.isAdultVerified) {
+          myAdultBadge.textContent = '🔞 19+ 성인 인증 완료';
+          myAdultBadge.className = 'badge badge-primary mt-2';
+          window._isAdultVerified = true;
+        } else {
+          myAdultBadge.textContent = '성인 인증 미완료';
+          myAdultBadge.className = 'badge badge-accent mt-2';
+          window._isAdultVerified = false;
+        }
       }
     }
 
