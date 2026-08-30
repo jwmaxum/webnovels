@@ -1,56 +1,44 @@
-# 🏗️ [Improvement Step 1] Production DB 스키마 정규화 및 모듈형 SQL 구축
+# [Step 1] CDG Play 디자인 토큰 & 모바일 타이포그래피·스페이싱 시스템 구축
 
-본 문서는 `check.md`의 프로덕션 가이드라인을 바탕으로 한 **1단계: Production DB 스키마 정규화, Private/Public 분리 및 모듈형 SQL 구축** 실행 명세서입니다.
-
----
-
-## 1. 개요 및 목적
-- **Auth 중심 사용자 프로필 분리**:
-  - `auth.users`를 단일 진실 공급원(SSOT)으로 삼고, 자체 비밀번호 저장을 완전 배제
-  - `readers`: 독자 기본 프로필 및 성인인증 정보
-  - `authors`: 작가 공개 프로필 (필명, 프로필 이미지, 소개)
-  - `author_private_profiles`: 작가 비공개 개인정보 (생년월일, 주소, 세금정보)
-  - `author_settlement_accounts`: 작가 정산 계좌 (암호화 계좌번호, 인증상태)
-  - `admin_users`: 관리자 RBAC 프로필
-  - `auth.users` 신규 가입 시 자동 프로필 생성 트리거 (`handle_new_user`)
-- **콘텐츠 메타데이터와 본문 완전 분리**:
-  - `works`: 작품 메타데이터 (`author_id BIGINT REFERENCES authors(id)`)
-  - `episodes`: 회차 메타데이터 (본문 없이 회차번호, 제목, 접근정책, 조회수만 보관)
-  - `episode_contents`: 웹소설 텍스트 본문 (Protected Content)
-  - `episode_panels`: 웹툰 컷 이미지 (Protected Content)
-- **독자 활동 및 커머스/포인트 스키마 구축**:
-  - `reading_history`, `favorites`, `author_subscriptions`, `episode_unlocks`
-  - `point_accounts`, `point_transactions`, `fan_meetings`, `goods`, `goods_orders`
-- **모듈형 SQL 체계 (`/database`) 및 통합 배포본 (`WebNovels_Production_v1.sql`) 생성**
+> **목표:** Comme des Garçons Play (CDG PLAY: Black, White, Pink) 미학을 바탕으로, 모바일 환경에서 가장 트렌디하고 가독성이 뛰어난 Fluid Typography, Icon Size, Spacing Grid 시스템을 정의하고 CSS 토큰을 전면 쇄신한다.
 
 ---
 
-## 2. 세부 구현 대상 (Tasks)
+## 1. 주요 작업 내용
 
-### 2.1. 도메인별 모듈 SQL 파일 생성 (`/database`)
-```
-database/
-├── 01_extensions.sql       -- pgcrypto 및 private schema
-├── 02_types.sql            -- content_type, work_status, episode_status, access_policy 등 Enum
-├── 03_auth_profiles.sql    -- readers, authors, author_private_profiles, accounts, admin_users, trigger
-├── 04_content.sql          -- works, episodes, episode_contents, episode_panels, content_reviews
-├── 05_reader.sql           -- reading_history, favorites, author_subscriptions, episode_unlocks
-├── 06_advertisement.sql    -- ad_units, ad_events
-├── 07_revenue.sql          -- revenue_periods, revenue_ledger, author_earnings
-├── 08_settlement.sql       -- author_settlements
-├── 09_community.sql        -- comments (with parent_id), comment_likes, reports
-├── 10_commerce.sql         -- fan_meetings, fan_meeting_tickets, goods, goods_orders
-├── 11_system.sql           -- platform_stats, system_config, audit_logs
-├── 15_indexes.sql          -- 쿼리 속도 및 조인 성능 최적화 인덱스
-└── 99_seed_dev.sql         -- 개발/테스트용 30작품/180회차/30작가/10독자 시드
-```
+### 1.1. CDG PLAY Color Palette & Surface Tokens 정밀화
+- **Deep Black Surface**: `--bg-main: #0A0A0C`, `--bg-surface: #121218`, `--bg-card: #181820`, `--bg-glass: rgba(18, 18, 24, 0.8)`
+- **Iconic Pink Accent**: `--cdg-pink: #FF2A7A`, `--cdg-pink-hover: #FF478D`, `--cdg-pink-soft: rgba(255, 42, 122, 0.12)`, `--cdg-pink-glow: rgba(255, 42, 122, 0.35)`
+- **High-Contrast White**: `--text-primary: #FFFFFF`, `--text-secondary: #A1A1AA`, `--text-tertiary: #71717A`
+- **Border & Glass Effect**: `--border-subtle: rgba(255, 255, 255, 0.08)`, `--border-pink: rgba(255, 42, 122, 0.4)`
 
-### 2.2. 통합 배포본 생성
-- [`WebNovels_Production_v1.sql`](file:///D:/Antigravity/webnovels/WebNovels_Production_v1.sql): Supabase SQL Editor에서 1클릭으로 배포 가능한 전체 통합 SQL
-- [`public/supabase-setup.sql`](file:///D:/Antigravity/webnovels/public/supabase-setup.sql) 및 [`scripts/supabase_patch_latest.sql`](file:///D:/Antigravity/webnovels/scripts/supabase_patch_latest.sql) 최신화
+### 1.2. 2026 모바일 트렌드 Fluid Typography Scale (`clamp()`)
+- **Title (Hero/Heading)**: `clamp(1.35rem, 5vw, 1.75rem)` (22~28px, Bold, `Outfit`/`Pretendard`)
+- **Section Heading**: `clamp(1.15rem, 4vw, 1.35rem)` (18~22px, Bold)
+- **Work Card Title**: `clamp(0.95rem, 3.5vw, 1.05rem)` (15~17px, Semi-Bold, 2줄 말줄임)
+- **Body / Meta**: `0.875rem` (14px, Regular, Line-height: 1.6)
+- **Caption / Badge**: `0.75rem` (12px, Semi-Bold, 자간 +0.02em)
+- **Reader Novel Body**: `clamp(1.05rem, 4.2vw, 1.25rem)` (17~20px, Line-height: 1.85, `Noto Serif KR`)
+
+### 1.3. 모바일 터치 타깃 & 아이콘 크기 규격화
+- **Touch Target**: 모든 버튼, 탭, 링크 최소 높이 `44px` (Apple/Google 권장 규격 준수)
+- **Header / Bottom Nav Icon**: `22px` (선명도 최적화, Stroke: 2px)
+- **Badge / Small Icon**: `14px ~ 16px`
+- **Hero Icon / Big Graphic**: `32px ~ 48px`
+
+### 1.4. Spacing & Mobile Safe Area Grid
+- **Screen Gutter (좌우 여백)**: 모바일 `16px`, 태블릿 `24px`, 데스크톱 `32px`
+- **Card Gap**: 모바일 `12px`, 데스크톱 `16px`
+- **Section Margin Bottom**: 모바일 `36px`, 데스크톱 `48px`
+- **iOS Safe Area Support**: `padding-bottom: env(safe-area-inset-bottom, 16px)`
 
 ---
 
-## 3. 검증 계획
-1. `node scripts/verify_normalized_db.js`로 모든 25개 Production 테이블 생성 여부 확인
-2. `npx tsc --noEmit` 백엔드 구문 검증
+## 2. 변경 대상 파일
+- [`public/styles.css`](file:///D:/Antigravity/webnovels/public/styles.css): `:root` 변수군 전면 쇄신 및 베이스 리셋
+
+---
+
+## 3. 검증 방법
+- Chrome DevTools 모바일 뷰포트 (iPhone 14/15 390px, Galaxy S23 360px, iPad 768px)에서 폰트 깨짐 및 여백 검증
+- `npx tsc --noEmit`

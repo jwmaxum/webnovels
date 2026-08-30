@@ -1,19 +1,22 @@
 :root {
-  /* Comme des Garcons Play (CDG PLAY) White, Black, Pink Design Tokens */
+  /* ============================================================
+     1. Comme des Garçons Play (CDG PLAY) Color Tokens
+     ============================================================ */
   --cdg-white: #FFFFFF;
   --cdg-off-white: #F8F9FA;
   --cdg-black: #0A0A0C;
-  --cdg-black-surface: #131318;
-  --cdg-black-card: #1A1A22;
-  --cdg-black-hover: #23232D;
-  
-  /* CDG PLAY Signature Iconic Pink */
+  --cdg-black-surface: #121218;
+  --cdg-black-card: #181820;
+  --cdg-black-hover: #22222C;
+  --cdg-black-glass: rgba(18, 18, 24, 0.85);
+
+  /* CDG PLAY Signature Iconic Vivid Pink */
   --cdg-pink: #FF2A7A;
   --cdg-pink-hover: #FF478D;
   --cdg-pink-light: #FF6FA4;
-  --cdg-pink-soft: rgba(255, 42, 122, 0.15);
-  --cdg-pink-glow: rgba(255, 42, 122, 0.4);
-  --cdg-pink-border: rgba(255, 42, 122, 0.5);
+  --cdg-pink-soft: rgba(255, 42, 122, 0.12);
+  --cdg-pink-glow: rgba(255, 42, 122, 0.35);
+  --cdg-pink-border: rgba(255, 42, 122, 0.45);
 
   --color-brand-primary: var(--cdg-pink);
   --color-brand-primary-hover: var(--cdg-pink-hover);
@@ -21,11 +24,13 @@
   --color-brand-gradient: linear-gradient(135deg, #FF2A7A 0%, #FF5388 100%);
   --color-brand-gradient-hover: linear-gradient(135deg, #FF146A 0%, #E60058 100%);
 
-  --bg-main: #0A0A0C; /* CDG Deep Pure Black */
-  --bg-surface: #131318;
+  --bg-main: #0A0A0C;
+  --bg-surface: #121218;
   --bg-surface-hover: #1E1E26;
-  --bg-panel: rgba(19, 19, 24, 0.85);
-  --border-color: rgba(255, 255, 255, 0.12);
+  --bg-card: #181820;
+  --bg-card-hover: #22222C;
+  --bg-panel: rgba(18, 18, 24, 0.85);
+  --border-color: rgba(255, 255, 255, 0.09);
   --border-color-hover: var(--cdg-pink-border);
 
   --text-primary: #FFFFFF;
@@ -34,36 +39,103 @@
   --text-muted: #71717A;
 
   --accent-blue: #38BDF8;
-  --accent-rose: #FF2A7A; /* CDG 19+ / 성인 뱃지 */
-  --accent-emerald: #10B981; /* FREE 뱃지 */
+  --accent-rose: #FF2A7A;
+  --accent-emerald: #10B981;
   --accent-amber: #F59E0B;
 
+  /* ============================================================
+     2. 2026 Mobile Fluid Typography Scale (clamp)
+     ============================================================ */
   --font-ui: 'Pretendard', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Outfit', 'Pretendard', sans-serif;
   --font-reader: 'Noto Serif KR', serif;
 
+  --font-size-hero: clamp(1.4rem, 5.5vw, 1.85rem);       /* 22px ~ 30px */
+  --font-size-h1: clamp(1.25rem, 4.5vw, 1.55rem);         /* 20px ~ 25px */
+  --font-size-h2: clamp(1.1rem, 3.8vw, 1.3rem);           /* 17px ~ 21px */
+  --font-size-h3: clamp(1.0rem, 3.5vw, 1.15rem);          /* 16px ~ 18px */
+  --font-size-card-title: clamp(0.95rem, 3.5vw, 1.05rem); /* 15px ~ 17px */
+  --font-size-body: clamp(0.875rem, 3.2vw, 0.95rem);      /* 14px ~ 15px */
+  --font-size-caption: clamp(0.72rem, 2.8vw, 0.8rem);     /* 11.5px ~ 13px */
+  --font-size-reader: clamp(1.05rem, 4.2vw, 1.25rem);     /* 17px ~ 20px */
+
+  --lh-tight: 1.25;
+  --lh-normal: 1.55;
+  --lh-relaxed: 1.75;
+  --lh-reader: 1.85;
+
+  /* ============================================================
+     3. Mobile Touch Targets & Standard Icon Sizes
+     ============================================================ */
+  --touch-target-min: 44px; /* Apple / Google Touch Guideline */
+  --icon-xs: 12px;
+  --icon-sm: 14px;
+  --icon-md: 18px;
+  --icon-lg: 22px;
+  --icon-xl: 28px;
+  --icon-hero: 40px;
+
+  /* ============================================================
+     4. Mobile Spacing & Layout Grid
+     ============================================================ */
+  --gutter-mobile: 16px;
+  --gutter-desktop: 24px;
+  --gap-card: 12px;
+  --gap-section: clamp(28px, 6vw, 44px);
+
   --header-height: 56px;
   --subnav-height: 48px;
   --bottom-nav-height: 60px;
+
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
+
+  /* iOS Safe Area Support */
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 /* Base Setup */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   font-family: var(--font-ui);
   background-color: var(--bg-main);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: var(--lh-normal);
+  font-size: var(--font-size-body);
   min-height: 100vh;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fluid Typography Helper Classes */
+.font-hero { font-size: var(--font-size-hero); font-weight: 800; line-height: var(--lh-tight); letter-spacing: -0.02em; }
+.font-h1 { font-size: var(--font-size-h1); font-weight: 700; line-height: var(--lh-tight); letter-spacing: -0.015em; }
+.font-h2 { font-size: var(--font-size-h2); font-weight: 700; line-height: var(--lh-normal); letter-spacing: -0.01em; }
+.font-h3 { font-size: var(--font-size-h3); font-weight: 600; line-height: var(--lh-normal); }
+.font-card-title { font-size: var(--font-size-card-title); font-weight: 600; line-height: 1.35; }
+.font-body { font-size: var(--font-size-body); line-height: var(--lh-normal); }
+.font-caption { font-size: var(--font-size-caption); font-weight: 500; letter-spacing: 0.01em; color: var(--text-tertiary); }
+
+/* Touch Target Minimum 44px Utility */
+.touch-target {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* App Shell */
@@ -433,43 +505,45 @@ body {
 .cdg-section {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: clamp(18px, 4vw, 28px) var(--gutter-mobile);
 }
 
 .cdg-section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .cdg-section-title {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: var(--font-size-h2);
   font-weight: 800;
   color: #FFFFFF;
   letter-spacing: -0.02em;
 }
 
 .cdg-more-link {
-  font-size: 0.85rem;
+  font-size: var(--font-size-caption);
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-secondary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-height: var(--touch-target-min);
+  padding: 0 4px;
   transition: color 0.2s ease;
 }
 
 .cdg-more-link:hover {
-  color: #ff2a7a;
+  color: var(--cdg-pink);
 }
 
 /* Horizontal Scrollable Rows */
 .cdg-scroll-row {
   display: flex;
-  gap: 16px;
+  gap: var(--gap-card);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
@@ -483,32 +557,39 @@ body {
 
 /* Work Card Component (CDG PLAY Aesthetic) */
 .cdg-work-card {
-  flex: 0 0 calc(25% - 12px);
-  min-width: 160px;
+  flex: 0 0 calc(33.333% - 8px);
+  min-width: 135px;
   max-width: 220px;
   scroll-snap-align: start;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background: #141419;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease, box-shadow 0.25s ease;
   display: flex;
   flex-direction: column;
 }
 
+@media (min-width: 768px) {
+  .cdg-work-card {
+    flex: 0 0 calc(25% - 12px);
+    min-width: 160px;
+  }
+}
+
 .cdg-work-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(255, 42, 122, 0.5);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  border-color: var(--cdg-pink-border);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
 }
 
 .cdg-card-cover {
   position: relative;
   width: 100%;
-  padding-top: 138%; /* 1:1.38 aspect ratio */
+  padding-top: 133%; /* 3:4 aspect ratio */
   overflow: hidden;
-  background: #0A0A0C;
+  background: var(--cdg-black);
 }
 
 .cdg-card-cover-img {
@@ -530,10 +611,10 @@ body {
   bottom: 0;
   left: 0;
   font-family: var(--font-heading);
-  font-size: 2.2rem;
+  font-size: clamp(1.8rem, 6vw, 2.3rem);
   font-weight: 900;
   line-height: 0.9;
-  padding: 4px 10px;
+  padding: 4px 8px;
   color: #FFFFFF;
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
   font-style: italic;
@@ -553,7 +634,7 @@ body {
 }
 
 .cdg-card-info {
-  padding: 12px 10px;
+  padding: 10px 8px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -561,19 +642,19 @@ body {
 }
 
 .cdg-card-tag {
-  font-size: 0.72rem;
+  font-size: var(--font-size-caption);
   font-weight: 700;
-  color: #ff2a7a;
-  margin-bottom: 4px;
+  color: var(--cdg-pink);
+  margin-bottom: 2px;
   text-transform: uppercase;
 }
 
 .cdg-card-title {
-  font-size: 0.92rem;
+  font-size: var(--font-size-card-title);
   font-weight: 700;
   line-height: 1.35;
   color: #FFFFFF;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -584,8 +665,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.76rem;
-  color: #94a3b8;
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
 }
 
 /* Genre Recommendation Pills */
