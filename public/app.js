@@ -4054,6 +4054,11 @@ window.setReaderTheme = function(themeClass) {
     reader.className = `main-view full-screen-reader ${themeClass} active`;
   }
   currentTheme = themeClass;
+  localStorage.setItem('webnovels_reader_theme', themeClass);
+
+  document.querySelectorAll('.theme-selector-grid .theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.classList.contains(themeClass));
+  });
 };
 
 window.changeFontSize = function(delta) {
@@ -5766,7 +5771,9 @@ window.loadEpisodeComments = async function(workId, episodeId) {
             </div>
             <div class="comment-content">${c.content}</div>
             <div class="comment-actions">
-              <span style="color:var(--text-muted); font-size:0.78rem;">👍 ${c.likes_count || 0}</span>
+              <button class="btn-like-comment" onclick="handleLikeComment('${c.id}')" id="btnLike-${c.id}">
+                ❤️ 공감 <span id="likeCount-${c.id}">${c.likes_count || 0}</span>
+              </button>
               <button class="btn-reply-toggle" onclick="toggleReplyInput('${c.id}')">
                 💬 답글 (${replies.length})
               </button>
@@ -5794,7 +5801,9 @@ window.loadEpisodeComments = async function(workId, episodeId) {
               </div>
               <div class="comment-content">${r.content}</div>
               <div class="comment-actions">
-                <span style="color:var(--text-muted); font-size:0.78rem;">👍 ${r.likes_count || 0}</span>
+                <button class="btn-like-comment" onclick="handleLikeComment('${r.id}')" id="btnLike-${r.id}">
+                  ❤️ 공감 <span id="likeCount-${r.id}">${r.likes_count || 0}</span>
+                </button>
               </div>
             </div>
           `;
@@ -5803,9 +5812,25 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     }
 
     container.innerHTML = html;
+    const countEl = document.getElementById('readerCommentCount');
+    if (countEl) countEl.textContent = `(${comments.length})`;
   } catch (err) {
     console.warn('[Comments Load Error]', err);
     container.innerHTML = `<div class="text-danger p-3">댓글을 불러오지 못했습니다.</div>`;
+  }
+};
+
+window.handleLikeComment = function(commentId) {
+  const countEl = document.getElementById(`likeCount-${commentId}`);
+  const btnEl = document.getElementById(`btnLike-${commentId}`);
+  if (countEl) {
+    let cur = parseInt(countEl.textContent, 10) || 0;
+    cur += 1;
+    countEl.textContent = String(cur);
+    if (btnEl) {
+      btnEl.style.color = 'var(--cdg-pink)';
+    }
+    showToast('💖 감상평에 공감(좋아요)을 남겼습니다.');
   }
 };
 
@@ -5851,7 +5876,8 @@ window.handleReaderReplySubmit = async function(workId, episodeId, parentId) {
     await window.WebNovelsAdmin.addCommentToEpisode(workId, episodeId, userId, nickname, input.value.trim(), parentId);
   }
 
-  showToast('🎉 답글이 등록되었습니다.');
+  showToast('💬 답글이 등록되었습니다.');
+  input.value = '';
   loadEpisodeComments(workId, episodeId);
 };
 

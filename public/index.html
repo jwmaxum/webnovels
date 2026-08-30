@@ -1613,59 +1613,65 @@
       </a>
     </nav>
 
-    <!-- Modal: Rewarded Ad & Point Unlock Modal (UX.md 완벽 지원) -->
-    <div class="modal-backdrop" id="modalAdUnlock">
-      <div class="modal-dialog glass-panel dialog-ad">
+    <!-- Modal: Rewarded Ad & Point Dual Unlock Bottom Sheet Modal (UX.md & improve3.md) -->
+    <div class="modal-backdrop modal-bottom-sheet-backdrop" id="modalAdUnlock">
+      <div class="modal-dialog modal-bottom-sheet glass-panel dialog-ad">
+        <div class="sheet-handle-bar">
+          <div class="sheet-handle"></div>
+        </div>
         <div class="ad-modal-content text-center">
-          <div class="ad-unlock-icon" style="font-size:2.5rem; margin-bottom:8px;">🔓</div>
-          <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:6px;">다음 회차를 무료로 읽으시겠습니까?</h2>
-          <p class="text-muted small">광고를 시청하면 작가에게 직접 후원되고 회차가 무료 해금되며, 보유 포인트를 사용하여 즉시 열람할 수도 있습니다.</p>
+          <div class="ad-unlock-icon" style="font-size:2.2rem; margin-bottom:6px;">🔓</div>
+          <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:6px;">다음 회차를 무료로 읽으시겠습니까?</h2>
+          <p class="text-muted small mb-4" style="line-height:1.45;">광고를 시청하면 작가에게 직접 정산금이 후원되고 회차가 무료 해금되며, 보유 포인트를 사용하여 즉시 열람할 수도 있습니다.</p>
           
           <!-- Ad Video Player Simulation Box -->
-          <div class="ad-player-box mt-4" id="adPlayerBox" style="display: none; background:#000; border-radius:12px; padding:24px; border:1px solid var(--cdg-pink-border);">
+          <div class="ad-player-box mb-4" id="adPlayerBox" style="display: none; background:#000; border-radius:12px; padding:20px; border:1px solid var(--cdg-pink-border);">
             <div class="ad-video-sim">
-              <i data-lucide="play" class="pulse-icon" style="color:var(--cdg-pink);"></i>
-              <span id="adTimerText" style="display:block; margin-top:8px; font-weight:700;">광고 시청 중... 3초</span>
+              <i data-lucide="play" class="pulse-icon" style="color:var(--cdg-pink); width:28px; height:28px;"></i>
+              <span id="adTimerText" style="display:block; margin-top:8px; font-weight:700; color:#fff;">📺 광고 시청 중... 3초</span>
             </div>
           </div>
 
-          <div class="ad-modal-actions mt-5" style="display:flex; flex-direction:column; gap:10px;">
+          <div class="ad-modal-actions" style="display:flex; flex-direction:column; gap:10px;">
             <!-- Option 1: ▶ 광고 보고 무료읽기 (UX.md) -->
-            <button class="btn btn-primary btn-lg w-full" id="btnWatchAdSubmit">
-              <i data-lucide="play-circle"></i> ▶ 광고 보고 무료읽기
+            <button class="btn btn-primary btn-lg w-full" id="btnWatchAdSubmit" style="height:50px; font-size:0.95rem; font-weight:800;">
+              <i data-lucide="play-circle"></i> ▶ 30초 광고 보고 무료열람
             </button>
             <!-- Option 2: 🪙 포인트 사용 (UX.md) -->
-            <button class="btn btn-outline btn-lg w-full" id="btnUsePointUnlock" onclick="handlePointUnlockEpisode()">
-              🪙 100P 포인트로 즉시 열람 (보유: <span id="modalCurrentPoints">1,000P</span>)
+            <button class="btn btn-outline btn-lg w-full" id="btnUsePointUnlock" onclick="handlePointUnlockEpisode()" style="height:48px; font-size:0.92rem; font-weight:700;">
+              🪙 100P 포인트 즉시해금 (보유: <span id="modalCurrentPoints">1,000P</span>)
             </button>
-            <button class="btn btn-ghost modal-close w-full mt-1">나중에 보기</button>
+            <button class="btn btn-ghost modal-close w-full mt-1" style="font-size:0.85rem;">나중에 보기</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal: Reader Settings Drawer (design.md Section 29) -->
-    <div class="modal-backdrop" id="modalReaderSettings">
-      <div class="modal-dialog glass-panel dialog-bottom">
-        <div class="modal-header">
-          <h3><i data-lucide="sliders"></i> 읽기 설정</h3>
+    <!-- Modal: Reader Settings Bottom Sheet Drawer (design.md Section 29 & improve3.md) -->
+    <div class="modal-backdrop modal-bottom-sheet-backdrop" id="modalReaderSettings">
+      <div class="modal-dialog modal-bottom-sheet glass-panel dialog-bottom">
+        <div class="sheet-handle-bar">
+          <div class="sheet-handle"></div>
+        </div>
+        <div class="modal-header" style="margin-bottom:12px;">
+          <h3><i data-lucide="sliders"></i> 뷰어 읽기 환경 설정</h3>
           <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="gap:16px;">
           <div class="form-group">
-            <label>독서 테마</label>
-            <div class="theme-selector-grid">
-              <button class="theme-btn theme-light active" onclick="setReaderTheme('theme-light')">Light</button>
-              <button class="theme-btn theme-sepia" onclick="setReaderTheme('theme-sepia')">Sepia</button>
-              <button class="theme-btn theme-dark" onclick="setReaderTheme('theme-dark')">Dark</button>
+            <label class="small text-muted mb-2 block font-bold">독서 배경 테마</label>
+            <div class="theme-selector-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+              <button class="theme-btn theme-dark active" onclick="setReaderTheme('theme-dark')">다크 블랙</button>
+              <button class="theme-btn theme-sepia" onclick="setReaderTheme('theme-sepia')">세피아</button>
+              <button class="theme-btn theme-light" onclick="setReaderTheme('theme-light')">화이트</button>
             </div>
           </div>
           <div class="form-group">
-            <label>글자 크기</label>
-            <div class="font-size-control">
-              <button class="btn btn-outline" onclick="changeFontSize(-2)">A-</button>
-              <span id="fontSizeDisplay">18px</span>
-              <button class="btn btn-outline" onclick="changeFontSize(2)">A+</button>
+            <label class="small text-muted mb-2 block font-bold">본문 글자 크기</label>
+            <div class="font-size-control" style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);">
+              <button class="btn btn-outline btn-sm" onclick="changeFontSize(-2)" style="width:44px; height:36px; font-weight:800;">A-</button>
+              <span id="fontSizeDisplay" style="font-weight:800; font-size:1.1rem; color:var(--cdg-pink);">18px</span>
+              <button class="btn btn-outline btn-sm" onclick="changeFontSize(2)" style="width:44px; height:36px; font-weight:800;">A+</button>
             </div>
           </div>
         </div>

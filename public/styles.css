@@ -1597,6 +1597,68 @@ body {
   padding: 30px;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  background: var(--cdg-black-card);
+  border: 1px solid var(--border-color);
+}
+
+/* Mobile Slide-Up Bottom Sheet Modal (improve3.md Spec) */
+@media (max-width: 768px) {
+  .modal-bottom-sheet-backdrop {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-bottom-sheet-backdrop.active .modal-bottom-sheet {
+    animation: bottomSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .modal-bottom-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    padding: 12px 20px calc(24px + env(safe-area-inset-bottom)) 20px !important;
+    margin: 0 !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-top: 1px solid var(--cdg-pink-border) !important;
+    transform: translateY(100%);
+  }
+
+  .sheet-handle-bar {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0 14px 0;
+    cursor: grab;
+  }
+
+  .sheet-handle {
+    width: 44px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+@media (min-width: 769px) {
+  .sheet-handle-bar {
+    display: none;
+  }
+}
+
+@keyframes bottomSheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .dialog-ad {
@@ -2028,59 +2090,125 @@ body {
   font-weight: 600;
 }
 
-/* Fullscreen Reader (design.md Section 26~29) */
+/* Fullscreen Hybrid Reader (improve3.md & design.md Section 26~29) */
 .full-screen-reader {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: 500;
   overflow-y: auto;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-overflow-scrolling: touch;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  background-color: var(--cdg-black);
+  color: #E2E8F0;
 }
 
 .reader-header {
   position: sticky;
   top: 0;
   height: 56px;
-  padding: 0 20px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 10;
+  background: rgba(10, 10, 12, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 20;
+}
+
+.reader-title-info {
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.reader-title-info h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reader-title-info span {
+  font-size: 0.75rem;
+  color: var(--cdg-pink);
+  font-weight: 600;
 }
 
 .reader-container {
   max-width: 760px;
   margin: 0 auto;
-  padding: 40px 20px 80px;
+  padding: 24px 20px 80px 20px;
 }
 
+/* 1. Web Novel Typography & Paragraph Styling */
 .reader-paper {
   font-family: var(--font-reader);
-  line-height: 1.8;
   font-size: 18px;
+  line-height: 1.85;
+  letter-spacing: -0.015em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .ep-heading {
   font-family: var(--font-heading);
-  font-size: 1.8rem;
-  margin-bottom: 30px;
+  font-size: 1.65rem;
+  font-weight: 800;
+  margin-bottom: 28px;
   text-align: center;
+  letter-spacing: -0.03em;
+  color: var(--cdg-white);
+}
+
+.ep-content {
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .ep-content p {
-  margin-bottom: 1.4em;
-  text-indent: 1em;
+  margin-bottom: 1.35em;
+  text-indent: 0.85em;
+  color: inherit;
+}
+
+/* 2. Webtoon Zero-Gutter Vertical Image Viewer */
+.webtoon-viewer-box {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.webtoon-cut {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+}
+
+.webtoon-cut img {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
 }
 
 .author-comment-box {
-  margin-top: 50px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  margin-top: 40px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--cdg-pink);
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 /* ============================================================
@@ -2111,7 +2239,7 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   align-items: center !important;
   justify-content: space-between !important;
   gap: 12px !important;
-  margin-top: 40px !important;
+  margin-top: 36px !important;
   flex-wrap: wrap !important;
   width: 100% !important;
 }
@@ -2147,32 +2275,57 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   }
 }
 
-
-
-/* Reader Themes */
-.theme-light {
-  background-color: #fafaf7 !important;
-  color: #242424 !important;
+/* Reader Themes (Dark, Sepia, Light) */
+.theme-dark {
+  background-color: #0A0A0C !important;
+  color: #E2E8F0 !important;
 }
-.theme-light .reader-header {
-  background: rgba(250, 250, 247, 0.9) !important;
-  color: #242424 !important;
-  border-color: #e5e5e0 !important;
+.theme-dark .reader-header {
+  background: rgba(10, 10, 12, 0.92) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .theme-sepia {
-  background-color: #f3ebdd !important;
-  color: #40372f !important;
+  background-color: #F4ECD8 !important;
+  color: #382E25 !important;
 }
 .theme-sepia .reader-header {
-  background: rgba(243, 235, 221, 0.9) !important;
-  color: #40372f !important;
-  border-color: #dcd0c0 !important;
+  background: rgba(244, 236, 216, 0.95) !important;
+  color: #382E25 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+.theme-sepia .reader-header button {
+  color: #382E25 !important;
+}
+.theme-sepia .ep-heading {
+  color: #1E1710 !important;
+}
+.theme-sepia .author-comment-box {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #382E25 !important;
 }
 
-.theme-dark {
-  background-color: #111111 !important;
-  color: #eaeaea !important;
+.theme-light {
+  background-color: #F8F9FA !important;
+  color: #1E293B !important;
+}
+.theme-light .reader-header {
+  background: rgba(248, 249, 250, 0.95) !important;
+  color: #1E293B !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.theme-light .reader-header button {
+  color: #1E293B !important;
+}
+.theme-light .ep-heading {
+  color: #0F172A !important;
+}
+.theme-light .author-comment-box {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #1E293B !important;
 }
 
 /* Mobile Bottom Navigation (design.md Section 4.1) */
@@ -3205,7 +3358,29 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   display: flex;
   align-items: center;
   gap: 12px;
+  font-size: 0.82rem;
+}
+
+.btn-like-comment {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
   font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-like-comment:hover,
+.btn-like-comment:active {
+  color: var(--cdg-pink);
+  background: rgba(255, 42, 122, 0.1);
+  transform: scale(1.05);
 }
 
 .btn-reply-toggle {
@@ -3213,13 +3388,14 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   border: none;
   color: var(--cdg-pink);
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.78rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  transition: background 0.15s ease;
 }
 
 .btn-reply-toggle:hover {
