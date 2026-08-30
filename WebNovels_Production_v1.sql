@@ -82,35 +82,29 @@ END $$;
 
 
 /* ============================================================
-   03-1. LEGACY CONSTRAINT RELAXATION
-   기존 과거 DB 테이블의 password_hash, email 등 NOT NULL 제약 해제
+   03-1. UNIVERSAL LEGACY CONSTRAINT RELAXATION
+   기존 과거 DB 테이블의 모든 레거시 컬럼 NOT NULL 제약조건 동적 자동 해제
    ============================================================ */
 
 DO $$
+DECLARE
+  r RECORD;
 BEGIN
-  -- authors 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.authors ALTER COLUMN password_hash DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN password DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN email DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN phone DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN real_name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-
-  -- readers 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.readers ALTER COLUMN password_hash DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN password DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN email DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN phone DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN real_name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-
-  -- works 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.works ALTER COLUMN author DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.works ALTER COLUMN author_name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-
-  -- episodes 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.episodes ALTER COLUMN content DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.episodes ALTER COLUMN text_content DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
+  FOR r IN (
+    SELECT c.table_name, c.column_name
+    FROM information_schema.columns c
+    JOIN information_schema.tables t ON t.table_name = c.table_name AND t.table_schema = c.table_schema
+    WHERE c.table_schema = 'public'
+      AND c.is_nullable = 'NO'
+      AND c.column_name NOT IN ('id', 'created_at', 'updated_at')
+      AND t.table_type = 'BASE TABLE'
+  ) LOOP
+    BEGIN
+      EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I DROP NOT NULL', r.table_name, r.column_name);
+    EXCEPTION WHEN OTHERS THEN
+      NULL;
+    END;
+  END LOOP;
 END $$;
 
 

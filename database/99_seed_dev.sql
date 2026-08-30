@@ -4,32 +4,26 @@
 -- (platform_stats 10독자 / 30작가 / 30작품 / 180회차 일치)
 -- ============================================================
 
--- 0. 레거시 NOT NULL 제약조건 안전하게 해제 (과거 테이블 호환성)
+-- 0. 레거시 컬럼의 모든 NOT NULL 제약조건 동적 완전 자동 해제 (모든 과거 DB 스키마 100% 호환)
 DO $$
+DECLARE
+  r RECORD;
 BEGIN
-  -- authors 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.authors ALTER COLUMN password_hash DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN password DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN email DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN phone DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN real_name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.authors ALTER COLUMN name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-
-  -- readers 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.readers ALTER COLUMN password_hash DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN password DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN email DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN phone DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN real_name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.readers ALTER COLUMN name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-
-  -- works 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.works ALTER COLUMN author DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.works ALTER COLUMN author_name DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-
-  -- episodes 테이블 레거시 컬럼 제약 해제
-  BEGIN ALTER TABLE public.episodes ALTER COLUMN content DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE public.episodes ALTER COLUMN text_content DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
+  FOR r IN (
+    SELECT c.table_name, c.column_name
+    FROM information_schema.columns c
+    JOIN information_schema.tables t ON t.table_name = c.table_name AND t.table_schema = c.table_schema
+    WHERE c.table_schema = 'public'
+      AND c.is_nullable = 'NO'
+      AND c.column_name NOT IN ('id', 'created_at', 'updated_at')
+      AND t.table_type = 'BASE TABLE'
+  ) LOOP
+    BEGIN
+      EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I DROP NOT NULL', r.table_name, r.column_name);
+    EXCEPTION WHEN OTHERS THEN
+      NULL;
+    END;
+  END LOOP;
 END $$;
 
 -- 1. 플랫폼 KPI 통계 시드
@@ -128,90 +122,97 @@ INSERT INTO public.author_settlement_accounts (author_id, bank_name, account_num
 (10, '신한은행', '333-444-555666', '로즈코믹스', 'VERIFIED', true)
 ON CONFLICT DO NOTHING;
 
--- 5. 연재 작품 30개 (works - author_id 1:1 매핑)
-INSERT INTO public.works (id, author_id, title, content_type, genre, tags, description, cover_image, rating, status, view_count, is_completed, is_top_recommended, is_popular_work, is_new_work) VALUES
-(1, 1, '대적자: 신을 삼킨 기사', 'NOVEL', ARRAY['판타지', '전체이용가'], ARRAY['AI NONE', '기사', '성장'], '신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stormqueen_oath.jpg', 'ALL', 'PUBLISHED', 154000, false, true, true, false),
-(2, 2, '천마의 귀환', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '천마', '회귀'], '천마가 다시 눈을 떴다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_supreme.jpg', 'ALL', 'PUBLISHED', 231000, false, true, true, false),
-(3, 3, '금기의 계약', 'NOVEL', ARRAY['성인', '19세 이상'], ARRAY['AI NONE', '치명적', '로맨스'], '금지된 계약으로 시작된 위험한 욕망. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'velvet_and_thorns.jpg', '18', 'PUBLISHED', 189000, false, false, true, false),
-(4, 4, '황제의 유일한 후궁', 'NOVEL', ARRAY['로맨스', '전체이용가'], ARRAY['AI NONE', '궁중', '애절'], '황제의 후궁이 된 그녀, 그리고 금지된 사랑. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'flower_blooming.jpg', 'ALL', 'PUBLISHED', 312000, false, true, true, false),
-(5, 5, '성간 항로: 마지막 항해사', 'NOVEL', ARRAY['SF', '전체이용가'], ARRAY['AI NONE', '우주', '생존'], '인류 최후의 항해사가 별들을 건너다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'stellar_horizon.jpg', 'ALL', 'PUBLISHED', 97000, false, false, false, true),
-(6, 6, '서울에 나타난 마왕', 'NOVEL', ARRAY['현대 판타지', '전체이용가'], ARRAY['AI NONE', '현대', '마왕'], '현대 서울에 마왕이 강림했다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'seoul_sorcerer.jpg', 'ALL', 'PUBLISHED', 278000, false, false, true, true),
-(7, 7, '죽은 자들의 학교', 'NOVEL', ARRAY['호러', '전체이용가'], ARRAY['AI NONE', '폐교', '미스터리'], '폐교에 남은 것들. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'darkness_swallowed_classroom.jpg', 'ALL', 'PUBLISHED', 84000, true, false, false, true),
-(8, 8, '검의 전설: 천하제일인', 'NOVEL', ARRAY['무협', '전체이용가'], ARRAY['AI NONE', '검술', '절대자'], '천하를 제패할 검이 깨어난다. 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!', 'sword_dao_defies_heavens.jpg', 'ALL', 'PUBLISHED', 195000, true, false, true, false),
-(9, 9, '[웹툰] 신의 기사단', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '풀컬러', '고화질'], '대적자 스핀오프 공식 웹툰! 화려한 작화로 펼쳐지는 기사단의 모험.', 'stormqueen_oath.jpg', 'ALL', 'PUBLISHED', 89000, false, false, true, true),
-(10, 10, '[웹툰] 황후의 비밀 화원', 'WEBTOON', ARRAY['로맨스 판타지', '드라마'], ARRAY['웹툰', '궁중', '화려함'], '꽃들이 만발한 황후의 정원에 감춰진 비밀스런 로맨스 웹툰.', 'flower_blooming.jpg', 'ALL', 'PUBLISHED', 142000, false, true, true, false),
-(11, 11, 'SSS급 헌터의 편의점', 'NOVEL', ARRAY['현대 판타지', '일상'], ARRAY['헌터', '각성', '치유'], '마왕을 잡고 은퇴한 최강 헌터의 힐링 편의점 라이프.', 'stormqueen_oath.jpg', 'ALL', 'PUBLISHED', 120000, false, false, false, true),
-(12, 12, '화산파 막내 제자의 검', 'NOVEL', ARRAY['무협', '정통무협'], ARRAY['화산파', '천재', '성장'], '매화검존의 환생, 다시 한번 천하를 매화향으로 물들이다.', 'sword_dao_supreme.jpg', 'ALL', 'PUBLISHED', 180000, false, false, true, false),
-(13, 13, '악녀는 조용히 살고 싶다', 'NOVEL', ARRAY['로맨스 판타지', '빙의'], ARRAY['악녀', '사이다', '역하렘'], '원작에서 사형당한 악녀로 빙의했다. 이번엔 조용히 부자로 살겠다.', 'velvet_and_thorns.jpg', 'ALL', 'PUBLISHED', 210000, false, true, true, false),
-(14, 14, '네크로맨서로 살아남기', 'NOVEL', ARRAY['판타지', '다크판타지'], ARRAY['네크로맨서', '생존', '언데드'], '모두가 기피하는 금기의 직업, 그러나 나에겐 유일한 무기였다.', 'darkness_swallowed_classroom.jpg', 'ALL', 'PUBLISHED', 165000, false, false, false, false),
-(15, 15, '달콤한 오피스 스캔들', 'NOVEL', ARRAY['로맨스', '현대물'], ARRAY['사내연애', '직진남', '비밀'], '완벽주의 까칠 본부장님과 어쩌다 하룻밤 스캔들이 터졌다.', 'flower_blooming.jpg', 'ALL', 'PUBLISHED', 95000, false, false, false, true),
-(16, 16, '사이버펑크 2099: 네온 서울', 'NOVEL', ARRAY['SF', '사이버펑크'], ARRAY['해커', '신체개조', '디스토피아'], '거대 기업이 지배하는 미래 서울, 반역의 해커가 시스템을 부순다.', 'stellar_horizon.jpg', 'ALL', 'PUBLISHED', 88000, false, false, false, true),
-(17, 17, '퇴마록: 어둠의 사냥꾼', 'NOVEL', ARRAY['오컬트', '현대판타지'], ARRAY['퇴마', '도사', '퇴마록'], '도심 속 번지는 악령의 그림자, 전통 도술로 세상을 구한다.', 'seoul_sorcerer.jpg', 'ALL', 'PUBLISHED', 135000, false, false, true, false),
-(18, 18, '아카데미 천재 마법사', 'NOVEL', ARRAY['판타지', '아카데미'], ARRAY['마법', '천재', '학원물'], '마법 서클의 공식을 뒤엎은 시골 소년의 아카데미 정복기.', 'stormqueen_oath.jpg', 'ALL', 'PUBLISHED', 175000, false, true, true, false),
-(19, 19, '재벌집 막내아들의 비밀투자', 'NOVEL', ARRAY['현대 판타지', '재벌'], ARRAY['회귀', '투자', '사이다'], 'IMF 직전으로 회귀했다. 미래의 모든 대기업을 인수한다.', 'seoul_sorcerer.jpg', 'ALL', 'PUBLISHED', 320000, false, true, true, false),
-(20, 20, '망겜의 성기사가 되었다', 'NOVEL', ARRAY['판타지', '게임빙의'], ARRAY['성기사', '신앙', '구원'], '극악의 난이도 망겜 속, 몰락한 교단의 마지막 성기사로 빙의했다.', 'sword_dao_defies_heavens.jpg', 'ALL', 'PUBLISHED', 145000, false, false, false, false),
-(21, 21, '[웹툰] 그림자 군주의 재림', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '군주', '각성'], '최하위 헌터에서 그림자 군단으로 부활한 헌터의 신화적 웹툰.', 'stormqueen_oath.jpg', 'ALL', 'PUBLISHED', 290000, false, true, true, false),
-(22, 22, '[웹툰] 공작가의 시한부 영애', 'WEBTOON', ARRAY['로맨스 판타지', '순정'], ARRAY['웹툰', '시한부', '후회물'], '시한부 판정을 받고 마음대로 살기로 결심한 영애의 이야기.', 'velvet_and_thorns.jpg', 'ALL', 'PUBLISHED', 230000, false, true, true, false),
-(23, 23, '[웹툰] 던전 브레이크 헌터', 'WEBTOON', ARRAY['액션', '판타지'], ARRAY['웹툰', '레이드', '스킬'], '전 세계에 터진 던전 브레이크, 인류 최후의 방어선.', 'seoul_sorcerer.jpg', 'ALL', 'PUBLISHED', 160000, false, false, true, true),
-(24, 24, '[웹툰] 마왕님은 카페 알바중', 'WEBTOON', ARRAY['코미디', '일상'], ARRAY['웹툰', '마왕', '알바'], '차원이동으로 힘을 잃은 마왕님의 고단한 홍대 카페 알바기.', 'flower_blooming.jpg', 'ALL', 'PUBLISHED', 110000, false, false, false, true),
-(25, 25, '[웹툰] 천하제일 마교교주', 'WEBTOON', ARRAY['무협', '액션'], ARRAY['웹툰', '마교', '패왕'], '무림맹의 계략에 빠져 환생한 마교교주의 천하제일 무림 정벌기.', 'sword_dao_supreme.jpg', 'ALL', 'PUBLISHED', 270000, false, true, true, false),
-(26, 26, '차원 이동자의 레벨업', 'NOVEL', ARRAY['판타지', '차원이동'], ARRAY['레벨업', '상태창', '이세계'], '다른 차원으로 소환된 평범한 회사원의 압도적인 레벨업 질주.', 'stormqueen_oath.jpg', 'ALL', 'PUBLISHED', 105000, false, false, false, true),
-(27, 27, '비선실세가 된 셰프', 'NOVEL', ARRAY['현대 판타지', '요리'], ARRAY['요리', '미식', '성장'], '궁극의 미각을 얻은 요리사가 정재계 거물들의 입맛을 지배한다.', 'flower_blooming.jpg', 'ALL', 'PUBLISHED', 130000, false, false, true, false),
-(28, 28, '버림받은 황녀의 복수극', 'NOVEL', ARRAY['로맨스 판타지', '복수'], ARRAY['황녀', '흑화', '정략결혼'], '배신당하고 독살된 황녀, 죽음에서 돌아와 제국을 무너뜨린다.', 'velvet_and_thorns.jpg', 'ALL', 'PUBLISHED', 190000, false, false, true, false),
-(29, 29, '[웹툰] 드래곤 하트', 'WEBTOON', ARRAY['판타지', '모험'], ARRAY['웹툰', '드래곤', '마법'], '드래곤의 심장을 물려받은 소년의 대륙을 뒤흔드는 모험.', 'stellar_horizon.jpg', 'ALL', 'PUBLISHED', 155000, false, false, true, true),
-(30, 30, '심야 라디오 괴담', 'NOVEL', ARRAY['공포', '미스터리'], ARRAY['괴담', '라디오', '심령'], '자정에만 방송되는 비밀 라디오 채널에서 들려오는 진짜 괴담들.', 'darkness_swallowed_classroom.jpg', 'ALL', 'PUBLISHED', 82000, true, false, false, false)
+-- 5. 30개 작품 메타데이터 시드 (works)
+INSERT INTO public.works (
+  id, author_id, title, content_type, genre, tags, description, cover_image, rating, status, is_completed, is_top_recommended, is_popular_work, is_new_work, ai_usage_type, view_count, like_count
+) VALUES
+(1, 1, '폭풍의 여왕 서약', 'NOVEL', ARRAY['판타지', '액션'], ARRAY['마법', '왕국', '여주'], '대륙을 뒤흔든 폭풍 속에서 피어난 한 여인의 맹세와 복수극.', '/images/stormqueen_oath.jpg', 'ALL', 'PUBLISHED', false, true, true, false, 'NONE', 15200, 3420),
+(2, 2, '어둠 속의 그림자', 'NOVEL', ARRAY['무협', '미스터리'], ARRAY['암살', '정통무협', '복수'], '달빛조차 닿지 않는 어둠 속, 강호 최강의 암살자가 진실을 찾아 움직인다.', '/images/shadow_in_the_dark.jpg', 'ALL', 'PUBLISHED', false, true, false, false, 'NONE', 9800, 2100),
+(3, 3, '네온 드림', 'NOVEL', ARRAY['SF', '판타지'], ARRAY['사이버펑크', 'AI', '미래도시'], '2099년 네오 서울, 기억을 잃은 인공지능 해커의 자유를 향한 질주.', '/images/neon_dreams.jpg', 'ALL', 'PUBLISHED', false, false, true, true, 'NONE', 12400, 2890),
+(4, 4, '황혼의 맹세', 'NOVEL', ARRAY['로맨스', '판타지'], ARRAY['회귀', '궁중로맨스', '달달'], '모든 것을 잃고 돌아온 황혼의 시간, 이번에는 사랑과 권력을 모두 쟁취하리라.', '/images/twilight_oath.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 8700, 1950),
+(5, 5, '크로노스 리셋', 'NOVEL', ARRAY['판타지', '액션'], ARRAY['시간회귀', '차원이동', '성장'], '시간의 신 크로노스의 선택을 받아 종말 직전의 세계로 리셋된 자의 구원 서사.', '/images/chronos_reset.jpg', 'ALL', 'PUBLISHED', false, false, false, true, 'NONE', 6500, 1420),
+(6, 6, '용의 심장', 'NOVEL', ARRAY['판타지', '액션'], ARRAY['드래곤', '용족', '최강자'], '멸망한 고대 드래곤의 심장을 계승한 소년이 대륙의 패권을 쥐어잡는 일대기.', '/images/dragon_heart.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 11300, 2750),
+(7, 7, '침묵의 미궁', 'NOVEL', ARRAY['미스터리', '공포'], ARRAY['던전', '생존', '스릴러'], '소리 내는 순간 죽는다. 100층 미궁에서 펼쳐지는 극한의 음소거 생존 게임.', '/images/silent_labyrinth.jpg', 'ALL', 'PUBLISHED', false, false, false, false, 'NONE', 5400, 980),
+(8, 8, '검의 길', 'NOVEL', ARRAY['무협', '액션'], ARRAY['검술', '천마', '수련'], '오직 한 자루의 검으로 천하를 평정한 전설의 검선, 그의 깨달음의 발자취.', '/images/way_of_sword.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 14100, 3120),
+(9, 9, '사이버 판타지 2088', 'NOVEL', ARRAY['SF', '판타지'], ARRAY['마법공학', '메카닉', '용병'], '마법과 초고도 나노테크놀로지가 융합된 2088년의 무법지대.', '/images/cyber_fantasy.jpg', 'ALL', 'PUBLISHED', false, false, false, true, 'NONE', 7200, 1600),
+(10, 10, '달빛의 멜로디', 'NOVEL', ARRAY['로맨스', '현대'], ARRAY['음악', '첫사랑', '힐링'], '피아노 선율을 타고 찾아온 기적 같은 인연과 청춘들의 순수한 사랑.', '/images/moonlight_melody.jpg', 'ALL', 'PUBLISHED', false, false, false, false, 'NONE', 6100, 1340),
+(11, 11, '심연의 탑 랭커', 'NOVEL', ARRAY['판타지', '액션'], ARRAY['탑등반', '시스템', '먼치킨'], '100층 심연의 탑을 홀로 정복한 1위 랭커의 히든 클래스 공략기.', '/images/abyss_tower.jpg', 'ALL', 'PUBLISHED', false, true, true, false, 'NONE', 18900, 4200),
+(12, 12, '화산파 막내제자', 'NOVEL', ARRAY['무협', '코미디'], ARRAY['화산파', '환생', '먼치킨'], '화산파의 대선배가 300년 후 막내 제자로 환생하여 무림을 뒤집어놓는다.', '/images/mount_hua.jpg', 'ALL', 'PUBLISHED', false, false, true, true, 'NONE', 16500, 3800),
+(13, 13, '황실의 비밀 온실', 'NOVEL', ARRAY['로맨스', '판타지'], ARRAY['치유', '황태자', '온실'], '황태자의 저주를 풀 수 있는 유일한 식물을 기르는 정원사의 로맨스 판타지.', '/images/secret_greenhouse.jpg', 'ALL', 'PUBLISHED', false, false, false, false, 'NONE', 7800, 1750),
+(14, 14, '네크로맨서의 100번째 생애', 'NOVEL', ARRAY['판타지', '다크'], ARRAY['언데드', '환생', '지략'], '99번의 죽음 끝에 마침내 영생의 비밀을 깨달은 사령술사의 대서사시.', '/images/necromancer_100.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 13200, 2900),
+(15, 15, '디저트 공방의 마녀', 'NOVEL', ARRAY['현대판타지', '일상'], ARRAY['요리', '힐링', '마녀'], '한 입 베어 물면 소원이 이루어지는 마법 디저트를 만드는 골목길 카페 이야기.', '/images/dessert_witch.jpg', 'ALL', 'PUBLISHED', false, false, false, true, 'NONE', 8900, 2100),
+(16, 16, '스타쉽 아카데미', 'NOVEL', ARRAY['SF', '학원'], ARRAY['우주전함', '사관학교', '우정'], '은하 연합 사관학교 열등생이 천재적인 전술로 함대전을 지휘한다.', '/images/starship_academy.jpg', 'ALL', 'PUBLISHED', false, false, false, false, 'NONE', 5900, 1150),
+(17, 17, '조선퇴마록', 'NOVEL', ARRAY['역사', '판타지'], ARRAY['조선', '퇴마', '도술'], '조선 한양 도성에 출몰하는 요괴들을 소탕하는 착호갑사의 비밀 결사단.', '/images/joseon_exorcist.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 10400, 2400),
+(18, 18, '대마도사의 만물상', 'NOVEL', ARRAY['판타지', '착각'], ARRAY['아이템', '마법상점', '먼치킨'], '은퇴한 대마도사가 차린 허름한 상점에 대륙의 영웅들이 줄을 선다.', '/images/archmage_shop.jpg', 'ALL', 'PUBLISHED', false, false, false, true, 'NONE', 9400, 2200),
+(19, 19, '재벌집 막내사위', 'NOVEL', ARRAY['현대', '드라마'], ARRAY['재벌', '투자', '사이다'], '미래의 경제 흐름을 꿰뚫어보는 천재 펀드매니저의 통쾌한 재계 정복기.', '/images/chaebol_soninlaw.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 14500, 3100),
+(20, 20, '성기사의 은밀한 이중생활', 'NOVEL', ARRAY['로맨스판타지', '코미디'], ARRAY['성기사', '비밀', '로코'], '낮에는 근엄한 교단의 총사령관, 밤에는 대륙 최고의 로맨스 소설 작가?!', '/images/paladin_secret.jpg', 'ALL', 'PUBLISHED', false, false, false, false, 'NONE', 8300, 1900),
+(21, 21, '섀도우 헌터 블러드', 'WEBTOON', ARRAY['액션', '스릴러'], ARRAY['웹툰', '뱀파이어', '풀컬러'], '뱀파이어와 인간의 혼혈 헌터가 펼치는 숨막히는 도심 밤거리 스타일리시 액션.', '/images/shadow_hunter.jpg', 'ALL', 'PUBLISHED', false, true, true, false, 'NONE', 21000, 5200),
+(22, 22, '달콤한 마법 베이커리', 'WEBTOON', ARRAY['로맨스', '일상'], ARRAY['웹툰', '힐링', '베이킹'], '달콤한 빵 굽는 냄새와 함께 피어나는 두 남녀의 풋풋한 러브스토리 웹툰.', '/images/sweet_bakery.jpg', 'ALL', 'PUBLISHED', false, false, true, true, 'NONE', 14800, 3600),
+(23, 23, '신마대전: 라그나로크', 'WEBTOON', ARRAY['판타지', '액션'], ARRAY['웹툰', '신화', '대규모전투'], '신과 악마의 대격돌! 웅장한 작화와 화려한 이펙트의 정통 판타지 대작 웹툰.', '/images/god_demon_war.jpg', 'ALL', 'PUBLISHED', false, true, false, false, 'NONE', 19500, 4800),
+(24, 24, '아카데미 일진 격파기', 'WEBTOON', ARRAY['학원', '액션'], ARRAY['웹툰', '사이다', '격투'], '괴롭힘당하던 전학생이 전설의 무술을 전수받고 일진회를 하나씩 무너뜨린다.', '/images/academy_fighter.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 17200, 4100),
+(25, 25, '천마강림록', 'WEBTOON', ARRAY['무협', '액션'], ARRAY['웹툰', '천마', '정통무협'], '강호를 피로 물들였던 천마의 화려한 귀환! 압도적인 필력과 화풍의 무협 웹툰.', '/images/heavenly_demon.jpg', 'ALL', 'PUBLISHED', false, false, false, true, 'NONE', 13400, 3200),
+(26, 26, '차원 유랑선', 'WEBTOON', ARRAY['SF', '모험'], ARRAY['웹툰', '차원포탈', '탐험'], '미지의 차원을 유람하며 신비한 보물을 발굴하는 차원 항해자들의 모험담.', '/images/dimension_ship.jpg', 'ALL', 'PUBLISHED', false, false, false, false, 'NONE', 8600, 1950),
+(27, 27, '이세계 미식 로드', 'WEBTOON', ARRAY['판타지', '요리'], ARRAY['웹툰', '먹방', '이세계'], '마물의 고기로 최고급 미슐랭 요리를 만들어내는 이세계 셰프의 미식 여행.', '/images/isekai_gourmet.jpg', 'ALL', 'PUBLISHED', false, false, true, false, 'NONE', 15600, 3700),
+(28, 28, '공녀님의 완벽한 이혼', 'WEBTOON', ARRAY['로맨스판타지', '드라마'], ARRAY['웹툰', '걸크러시', '사이다'], '바람피운 황태자에게 시원하게 파혼을 선언하고 대공과 계약 결혼한 공녀의 이야기.', '/images/perfect_divorce.jpg', 'ALL', 'PUBLISHED', false, false, true, true, 'NONE', 18300, 4500),
+(29, 29, '사이버 던전 크롤러', 'WEBTOON', ARRAY['SF', '액션'], ARRAY['웹툰', '가상현실', '배틀로얄'], '가상현실 던전 속에 갇힌 유저들의 목숨을 건 배틀로얄 탈출 액션 웹툰.', '/images/cyber_crawler.jpg', 'ALL', 'PUBLISHED', false, false, false, false, 'NONE', 9100, 2150),
+(30, 30, '심야 심령 상담소', 'WEBTOON', ARRAY['미스터리', '공포'], ARRAY['웹툰', '귀신', '감동'], '밤 12시에만 문을 여는 심령 상담소에서 영혼들의 한을 풀어주는 영능력자 이야기.', '/images/midnight_counsel.jpg', 'ALL', 'PUBLISHED', false, false, false, true, 'NONE', 11200, 2700)
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
-  author_id = EXCLUDED.author_id,
   content_type = EXCLUDED.content_type,
-  genre = EXCLUDED.genre,
+  cover_image = EXCLUDED.cover_image,
   status = EXCLUDED.status;
 
--- 6. 30개 작품 x 6회차 = 180회차 메타데이터 (episodes) 및 본문 (episode_contents) 자동 생성
+-- 6. 180개 회차 메타데이터 & 본문 시드 (각 작품당 6회차)
 DO $$
 DECLARE
-  w_rec RECORD;
+  w_id INT;
   ep_num INT;
-  v_ep_id BIGINT;
-  v_is_free BOOLEAN;
-  v_policy public.access_policy;
+  ep_id BIGINT;
+  access_pol public.access_policy;
 BEGIN
-  FOR w_rec IN SELECT id, title, content_type FROM public.works ORDER BY id LOOP
+  FOR w_id IN 1..30 LOOP
     FOR ep_num IN 1..6 LOOP
-      v_is_free := (ep_num <= 3);
-      v_policy := CASE WHEN v_is_free THEN 'FREE'::public.access_policy ELSE 'REWARDED_AD'::public.access_policy END;
-      
-      INSERT INTO public.episodes (work_id, episode_number, title, access_policy, status, author_comment)
+      IF ep_num <= 3 THEN
+        access_pol := 'FREE'::public.access_policy;
+      ELSE
+        access_pol := 'REWARDED_AD'::public.access_policy;
+      END IF;
+
+      INSERT INTO public.episodes (work_id, episode_number, title, access_policy, status, view_count)
       VALUES (
-        w_rec.id,
+        w_id,
         ep_num,
-        '제 ' || ep_num || ' 화',
-        v_policy,
+        '제 ' || ep_num || '화: ' || CASE ep_num 
+          WHEN 1 THEN '운명적인 만남과 여정의 시작'
+          WHEN 2 THEN '숨겨진 진실과 다가오는 위기'
+          WHEN 3 THEN '어둠의 장막을 가르는 검격'
+          WHEN 4 THEN '피할 수 없는 격돌과 각성'
+          WHEN 5 THEN '폭풍전야의 결단'
+          ELSE '새로운 시대의 서막'
+        END,
+        access_pol,
         'PUBLISHED'::public.episode_status,
-        '재미있게 감상하셨다면 구독과 따뜻한 댓글 부탁드립니다!'
+        (31 - w_id) * 300 + (7 - ep_num) * 50
       )
       ON CONFLICT (work_id, episode_number) DO UPDATE SET
         title = EXCLUDED.title,
         access_policy = EXCLUDED.access_policy,
         status = EXCLUDED.status
-      RETURNING id INTO v_ep_id;
+      RETURNING id INTO ep_id;
 
-      -- 보호된 텍스트 본문 (episode_contents)
-      IF w_rec.content_type = 'NOVEL' THEN
-        INSERT INTO public.episode_contents (episode_id, text_content)
-        VALUES (
-          v_ep_id,
-          '[' || w_rec.title || ' 제 ' || ep_num || ' 화]\n\n어둠이 짙게 깔린 밤, 운명의 수레바퀴가 천천히 회전하기 시작했다.\n\n"더 이상 물러설 곳은 없다."\n\n주인공은 결연한 눈빛으로 검을 뽑아 들었다. 찬란한 빛과 함께 전장의 공기가 급격히 냉각되었다.\n\n(본 회차는 ' || ep_num || '화 본문입니다. 다음 회차도 흥미진진한 스토리가 이어집니다.)'
-        )
-        ON CONFLICT (episode_id) DO UPDATE SET text_content = EXCLUDED.text_content;
-      ELSE
-        -- 웹툰 컷 패널 (episode_panels)
-        INSERT INTO public.episode_panels (episode_id, panel_number, image_url)
-        VALUES 
-          (v_ep_id, 1, '/images/stormqueen_oath.jpg'),
-          (v_ep_id, 2, '/images/sword_dao_supreme.jpg')
-        ON CONFLICT (episode_id, panel_number) DO NOTHING;
-      END IF;
+      -- 회차 본문 보호 텍스트 (episode_contents)
+      INSERT INTO public.episode_contents (episode_id, text_content, content_version)
+      VALUES (
+        ep_id,
+        '제 ' || ep_num || '화 본문 내용입니다.' || E'\n\n' ||
+        '차가운 밤바람이 창틀을 흔들며 스쳐 지나갔다. 어둠 속에서 조용히 숨을 고르던 주인공은 손에 쥔 검자루를 단단히 쥐었다.' || E'\n\n' ||
+        '“이번만큼은 결코 물러서지 않는다.”' || E'\n\n' ||
+        '결연한 의지가 담긴 나지막한 읊조림과 함께, 굳게 닫혀 있던 철문이 서서히 열리기 시작했다. 문 너머로 뿜어져 나오는 푸른 마력의 파동은 숨을 턱 막히게 만들 정도로 거대했다.' || E'\n\n' ||
+        '그의 눈빛이 푸른 섬광처럼 번뜩였다. 마침내 모든 운명이 걸린 최후의 결전이 눈앞으로 다가온 것이다...',
+        1
+      )
+      ON CONFLICT (episode_id) DO UPDATE SET
+        text_content = EXCLUDED.text_content;
 
     END LOOP;
   END LOOP;
