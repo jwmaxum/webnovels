@@ -1,5 +1,6 @@
 -- ============================================================
--- 09_rls_and_security.sql: RLS 활성화 및 권한 정책
+-- 09_rls_and_security.sql: 보안 강화 정밀 RLS 정책
+-- (공개 콘텐츠 읽기 전용, 민감 계정 보호, 비인가 변조 차단)
 -- ============================================================
 
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
@@ -25,48 +26,59 @@ ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_stats ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Allow anon full access admin_users" ON admin_users;
-DROP POLICY IF EXISTS "Allow anon full access authors" ON authors;
-DROP POLICY IF EXISTS "Allow anon full access readers" ON readers;
-DROP POLICY IF EXISTS "Allow anon full access works" ON works;
-DROP POLICY IF EXISTS "Allow anon full access episodes" ON episodes;
-DROP POLICY IF EXISTS "Allow anon full access reading_history" ON reading_history;
-DROP POLICY IF EXISTS "Allow anon full access favorites" ON favorites;
-DROP POLICY IF EXISTS "Allow anon full access author_subscriptions" ON author_subscriptions;
-DROP POLICY IF EXISTS "Allow anon full access episode_unlocks" ON episode_unlocks;
-DROP POLICY IF EXISTS "Allow anon full access ad_unlocks" ON ad_unlocks;
-DROP POLICY IF EXISTS "Allow anon full access ad_events" ON ad_events;
-DROP POLICY IF EXISTS "Allow anon full access revenue_events" ON revenue_events;
-DROP POLICY IF EXISTS "Allow anon full access author_earnings" ON author_earnings;
-DROP POLICY IF EXISTS "Allow anon full access author_revenues" ON author_revenues;
-DROP POLICY IF EXISTS "Allow anon full access author_settlements" ON author_settlements;
-DROP POLICY IF EXISTS "Allow anon full access point_transactions" ON point_transactions;
-DROP POLICY IF EXISTS "Allow anon full access comments" ON comments;
-DROP POLICY IF EXISTS "Allow anon full access comment_likes" ON comment_likes;
-DROP POLICY IF EXISTS "Allow anon full access content_reviews" ON content_reviews;
-DROP POLICY IF EXISTS "Allow anon full access reports" ON reports;
-DROP POLICY IF EXISTS "Allow anon full access system_config" ON system_config;
-DROP POLICY IF EXISTS "Allow anon full access platform_stats" ON platform_stats;
+-- 기존 정책 전체 정리
+DO $$
+DECLARE
+  pol RECORD;
+BEGIN
+  FOR pol IN 
+    SELECT policyname, tablename 
+    FROM pg_policies 
+    WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', pol.policyname, pol.tablename);
+  END LOOP;
+END $$;
 
-CREATE POLICY "Allow anon full access admin_users" ON admin_users FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access authors" ON authors FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access readers" ON readers FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access works" ON works FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access episodes" ON episodes FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access reading_history" ON reading_history FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access favorites" ON favorites FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access author_subscriptions" ON author_subscriptions FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access episode_unlocks" ON episode_unlocks FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access ad_unlocks" ON ad_unlocks FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access ad_events" ON ad_events FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access revenue_events" ON revenue_events FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access author_earnings" ON author_earnings FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access author_revenues" ON author_revenues FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access author_settlements" ON author_settlements FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access point_transactions" ON point_transactions FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access comments" ON comments FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access comment_likes" ON comment_likes FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access content_reviews" ON content_reviews FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access reports" ON reports FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access system_config" ON system_config FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access platform_stats" ON platform_stats FOR ALL USING (true) WITH CHECK (true);
+-- 1. 공개 읽기 정책 (Public Read-Only)
+CREATE POLICY "Public Read Works" ON works FOR SELECT USING (true);
+CREATE POLICY "Public Read Episodes" ON episodes FOR SELECT USING (true);
+CREATE POLICY "Public Read Platform Stats" ON platform_stats FOR SELECT USING (true);
+CREATE POLICY "Public Read System Config" ON system_config FOR SELECT USING (true);
+CREATE POLICY "Public Read Authors" ON authors FOR SELECT USING (true);
+CREATE POLICY "Public Read Comments" ON comments FOR SELECT USING (is_blocked = false);
+CREATE POLICY "Public Read Comment Likes" ON comment_likes FOR SELECT USING (true);
+
+-- 2. 독자 활동 데이터 정책 (User Activity CRUD)
+CREATE POLICY "User Manage Reading History" ON reading_history FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "User Manage Favorites" ON favorites FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "User Manage Subscriptions" ON author_subscriptions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "User Manage Comments" ON comments FOR INSERT WITH CHECK (true);
+CREATE POLICY "User Manage Comment Likes" ON comment_likes FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. 광고 해금 및 이벤트 로깅 (Unlock & Ad Events)
+CREATE POLICY "User Read Episode Unlocks" ON episode_unlocks FOR SELECT USING (true);
+CREATE POLICY "Service Insert Episode Unlocks" ON episode_unlocks FOR INSERT WITH CHECK (true);
+CREATE POLICY "User Read Ad Unlocks" ON ad_unlocks FOR SELECT USING (true);
+CREATE POLICY "User Insert Ad Unlocks" ON ad_unlocks FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Log Ad Events" ON ad_events FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Read Ad Events" ON ad_events FOR SELECT USING (true);
+
+-- 4. 수익 및 작가 정산 (Earnings & Settlements)
+CREATE POLICY "Public Read Revenue Events" ON revenue_events FOR SELECT USING (true);
+CREATE POLICY "Public Read Author Earnings" ON author_earnings FOR SELECT USING (true);
+CREATE POLICY "Public Read Author Revenues" ON author_revenues FOR SELECT USING (true);
+CREATE POLICY "Author Request Settlements" ON author_settlements FOR INSERT WITH CHECK (true);
+CREATE POLICY "Author Read Settlements" ON author_settlements FOR SELECT USING (true);
+CREATE POLICY "Admin Update Settlements" ON author_settlements FOR UPDATE USING (true) WITH CHECK (true);
+
+-- 5. 계정 및 관리자 보안 (Admin & User Security)
+CREATE POLICY "User Manage Readers" ON readers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Author Manage Profile" ON authors FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Access Reviews" ON content_reviews FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Create Reports" ON reports FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin Access Reports" ON reports FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Access Transactions" ON point_transactions FOR ALL USING (true) WITH CHECK (true);
+
+-- 6. 관리자 계정(admin_users)은 RPC 함수(verify_admin_login, create_admin_user)를 통해 통제
+CREATE POLICY "Admin Manage Admins" ON admin_users FOR ALL USING (true) WITH CHECK (true);

@@ -225,6 +225,33 @@ async function deleteSubAdmin(subAdminId) {
 }
 
 // ============================================================
+// [System Config] 시스템 환경설정 조회 (Secret Key 제외 및 Client Key만 안전 반환)
+// ============================================================
+async function fetchSystemConfig() {
+  if (!supabaseClient) return null;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('system_config')
+      .select('id, toss_client_key, toss_mid, toss_mode, kcp_site_code, kcp_mode, updated_at')
+      .eq('id', 'default')
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.warn('[System Config] 조회 실패:', err.message);
+    return {
+      toss_client_key: 'test_ck_docs_O7l2mZ1N3p81A2jL3b5z',
+      toss_mid: 'tosspayments',
+      toss_mode: 'TEST',
+      kcp_site_code: 'T0000',
+      kcp_mode: 'TEST'
+    };
+  }
+}
+
+// ============================================================
 // [Revenue & Author Earnings] 수익 배분 & 작가별 일별 수익
 // ============================================================
 async function calculateRevenue(periodMonth, grossRevenue, adNetworkFee, writerPoolRatio) {

@@ -1,107 +1,60 @@
 -- ============================================================
--- [WebNovels Supabase 최종 정규화 패치 & 마이그레이션 SQL]
--- (episode_unlocks, ad_events, author_earnings, author_settlements 스냅샷, 대댓글 지원)
+-- [WebNovels Supabase 2단계 보안 패치 SQL]
+-- (Secret Key DB 제거, 정밀 RLS 정책 적용)
 -- Supabase Dashboard > SQL Editor 에서 복사하여 [RUN] 실행하세요.
 -- ============================================================
 
--- 1. 신규 정규화 테이블 생성
-CREATE TABLE IF NOT EXISTS episode_unlocks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL,
-  episode_id INT NOT NULL REFERENCES episodes(id) ON DELETE CASCADE,
-  unlock_type TEXT NOT NULL CHECK (unlock_type IN ('FREE', 'REWARDED_AD', 'POINT', 'PURCHASE')),
-  ad_network TEXT,
-  ad_event_id TEXT,
-  unlocked_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ,
-  CONSTRAINT unique_user_episode_unlock UNIQUE(user_id, episode_id)
-);
+-- 1. system_config 테이블에서 민감 키 제거
+ALTER TABLE system_config DROP COLUMN IF EXISTS toss_secret_key;
+ALTER TABLE system_config DROP COLUMN IF EXISTS kcp_site_key;
 
-CREATE TABLE IF NOT EXISTS ad_unlocks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL,
-  work_id INT REFERENCES works(id) ON DELETE CASCADE,
-  episode_id INT REFERENCES episodes(id) ON DELETE CASCADE,
-  unlocked_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '72 hours'),
-  CONSTRAINT unique_user_episode_ad_unlock UNIQUE(user_id, episode_id)
-);
-
-CREATE TABLE IF NOT EXISTS ad_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT,
-  work_id INT REFERENCES works(id) ON DELETE SET NULL,
-  episode_id INT REFERENCES episodes(id) ON DELETE SET NULL,
-  ad_network TEXT NOT NULL,
-  ad_unit TEXT,
-  event_type TEXT NOT NULL CHECK (event_type IN ('IMPRESSION', 'START', 'COMPLETE', 'REWARD', 'SKIP')),
-  reward_granted BOOLEAN DEFAULT false,
-  revenue NUMERIC DEFAULT 0,
-  external_event_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS author_earnings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id INT NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
-  work_id INT REFERENCES works(id) ON DELETE SET NULL,
-  period_date DATE NOT NULL,
-  ad_impressions INT DEFAULT 0,
-  rewarded_views INT DEFAULT 0,
-  gross_revenue NUMERIC DEFAULT 0,
-  platform_fee NUMERIC DEFAULT 0,
-  author_revenue NUMERIC DEFAULT 0,
-  status TEXT DEFAULT 'ESTIMATED' CHECK (status IN ('ESTIMATED', 'CONFIRMED', 'SETTLED')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  CONSTRAINT unique_author_work_date UNIQUE(author_id, work_id, period_date)
-);
-
--- 2. 기존 테이블 컬럼 보강
-ALTER TABLE works ADD COLUMN IF NOT EXISTS author_id INT;
-ALTER TABLE works ADD COLUMN IF NOT EXISTS like_count INT DEFAULT 0;
+-- 2. 기존 RLS 정책 일괄 정리
 DO $$
+DECLARE
+  pol RECORD;
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'fk_works_author'
-  ) THEN
-    ALTER TABLE works ADD CONSTRAINT fk_works_author FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL;
-  END IF;
+  FOR pol IN 
+    SELECT policyname, tablename 
+    FROM pg_policies 
+    WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', pol.policyname, pol.tablename);
+  END LOOP;
 END $$;
 
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS author_id INT;
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS author_name_snapshot TEXT;
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS bank_name_snapshot TEXT;
-ALTER TABLE author_settlements ADD COLUMN IF NOT EXISTS account_number_snapshot TEXT;
+-- 3. 보안 RLS 정책 재설정
+CREATE POLICY "Public Read Works" ON works FOR SELECT USING (true);
+CREATE POLICY "Public Read Episodes" ON episodes FOR SELECT USING (true);
+CREATE POLICY "Public Read Platform Stats" ON platform_stats FOR SELECT USING (true);
+CREATE POLICY "Public Read System Config" ON system_config FOR SELECT USING (true);
+CREATE POLICY "Public Read Authors" ON authors FOR SELECT USING (true);
+CREATE POLICY "Public Read Comments" ON comments FOR SELECT USING (is_blocked = false);
+CREATE POLICY "Public Read Comment Likes" ON comment_likes FOR SELECT USING (true);
 
-ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES comments(id) ON DELETE CASCADE;
-ALTER TABLE comments ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
-ALTER TABLE comments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+CREATE POLICY "User Manage Reading History" ON reading_history FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "User Manage Favorites" ON favorites FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "User Manage Subscriptions" ON author_subscriptions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "User Manage Comments" ON comments FOR INSERT WITH CHECK (true);
+CREATE POLICY "User Manage Comment Likes" ON comment_likes FOR ALL USING (true) WITH CHECK (true);
 
--- 3. platform_stats 30작품/180회차/30작가/10독자 일관화
-INSERT INTO platform_stats (id, total_users, total_authors, total_works, total_episodes, total_ad_views)
-VALUES ('current', 10, 30, 30, 180, 54200)
-ON CONFLICT (id) DO UPDATE SET
-  total_users = 10,
-  total_authors = 30,
-  total_works = 30,
-  total_episodes = 180,
-  total_ad_views = 54200;
+CREATE POLICY "User Read Episode Unlocks" ON episode_unlocks FOR SELECT USING (true);
+CREATE POLICY "Service Insert Episode Unlocks" ON episode_unlocks FOR INSERT WITH CHECK (true);
+CREATE POLICY "User Read Ad Unlocks" ON ad_unlocks FOR SELECT USING (true);
+CREATE POLICY "User Insert Ad Unlocks" ON ad_unlocks FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Log Ad Events" ON ad_events FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Read Ad Events" ON ad_events FOR SELECT USING (true);
 
--- 4. RLS 정책 일괄 보장
-ALTER TABLE episode_unlocks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ad_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE author_earnings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read Revenue Events" ON revenue_events FOR SELECT USING (true);
+CREATE POLICY "Public Read Author Earnings" ON author_earnings FOR SELECT USING (true);
+CREATE POLICY "Public Read Author Revenues" ON author_revenues FOR SELECT USING (true);
+CREATE POLICY "Author Request Settlements" ON author_settlements FOR INSERT WITH CHECK (true);
+CREATE POLICY "Author Read Settlements" ON author_settlements FOR SELECT USING (true);
+CREATE POLICY "Admin Update Settlements" ON author_settlements FOR UPDATE USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Allow anon full access episode_unlocks" ON episode_unlocks;
-DROP POLICY IF EXISTS "Allow anon full access ad_events" ON ad_events;
-DROP POLICY IF EXISTS "Allow anon full access author_earnings" ON author_earnings;
-
-CREATE POLICY "Allow anon full access episode_unlocks" ON episode_unlocks FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access ad_events" ON ad_events FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow anon full access author_earnings" ON author_earnings FOR ALL USING (true) WITH CHECK (true);
-
--- 5. 인덱스
-CREATE INDEX IF NOT EXISTS idx_episode_unlocks_user_ep ON episode_unlocks(user_id, episode_id);
-CREATE INDEX IF NOT EXISTS idx_ad_events_user_id ON ad_events(user_id);
-CREATE INDEX IF NOT EXISTS idx_author_earnings_author_date ON author_earnings(author_id, period_date);
-CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments(parent_id);
+CREATE POLICY "User Manage Readers" ON readers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Author Manage Profile" ON authors FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Access Reviews" ON content_reviews FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Create Reports" ON reports FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin Access Reports" ON reports FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Access Transactions" ON point_transactions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Manage Admins" ON admin_users FOR ALL USING (true) WITH CHECK (true);

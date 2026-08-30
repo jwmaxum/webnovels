@@ -1,21 +1,24 @@
 -- ============================================================
--- 08_system.sql: 시스템 설정, 대시보드 통계(실데이터 일치), 포인트 거래 및 RPC
+-- 08_system.sql: 시스템 설정 (Secret Key 제거 및 Client Key만 유지), 통계, 포인트 및 RPC
+-- (보안 강화: toss_secret_key, kcp_site_key 등 민감 비밀키는 백엔드 .env로 완전 분리)
 -- ============================================================
 
--- 1. 시스템 설정 테이블 (system_config)
+-- 1. 시스템 설정 테이블 (system_config - 공개 가능한 Client Key만 보관)
 CREATE TABLE IF NOT EXISTS system_config (
   id TEXT PRIMARY KEY DEFAULT 'default',
   toss_client_key TEXT DEFAULT 'test_ck_docs_O7l2mZ1N3p81A2jL3b5z',
-  toss_secret_key TEXT DEFAULT 'test_sk_docs_O7l2mZ1N3p81A2jL3b5z',
   toss_mid TEXT DEFAULT 'tosspayments',
   toss_mode TEXT DEFAULT 'TEST',
   kcp_site_code TEXT DEFAULT 'T0000',
-  kcp_site_key TEXT DEFAULT '3383f5080e729a67a57a8a1c0d48',
   kcp_mode TEXT DEFAULT 'TEST',
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 2. 대시보드 5대 KPI 통계 테이블 (platform_stats - 실데이터 30작품/180회차/30작가/10독자 일치)
+-- 기존 테이블에서 민감 키 컬럼 제거 (마이그레이션 안전 처리)
+ALTER TABLE system_config DROP COLUMN IF EXISTS toss_secret_key;
+ALTER TABLE system_config DROP COLUMN IF EXISTS kcp_site_key;
+
+-- 2. 대시보드 5대 KPI 통계 테이블 (platform_stats)
 CREATE TABLE IF NOT EXISTS platform_stats (
   id TEXT PRIMARY KEY DEFAULT 'current',
   total_users INT DEFAULT 10,
@@ -37,7 +40,7 @@ CREATE TABLE IF NOT EXISTS point_transactions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. 관리자 로그인 검증 및 생성 RPC
+-- 4. 관리자 로그인 검증 및 생성 RPC (pgcrypto Bcrypt 해시 필수)
 CREATE OR REPLACE FUNCTION verify_admin_login(p_email TEXT, p_password TEXT)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -53,20 +56,6 @@ BEGIN
   END IF;
 
   IF v_admin.password_hash = crypt(p_password, v_admin.password_hash) THEN
-    RETURN jsonb_build_object(
-      'success', true,
-      'admin', jsonb_build_object(
-        'id', v_admin.id,
-        'email', v_admin.email,
-        'username', v_admin.username,
-        'nickname', v_admin.nickname,
-        'role', v_admin.role,
-        'permissions', v_admin.permissions
-      )
-    );
-  END IF;
-  
-  IF v_admin.password_hash = p_password THEN
     RETURN jsonb_build_object(
       'success', true,
       'admin', jsonb_build_object(
