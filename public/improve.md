@@ -1,1196 +1,876 @@
-결론부터 말씀드리면, **현재 코드는 “실시간 DB 연동이 일부 되어 있는 개발/데모 코드”이지, 실제 서비스에서 발생하는 작품등록·독자활동·광고시청·Unlock·수익·정산을 안전하게 영구 보존하는 Production 코드로는 아직 부족합니다.**
+QL이 현재 JS보다 앞서 있습니다. supabase-setup.sql은 episode_contents, episode_panels, author_private_profiles, author_settlement_accounts, works.author_id 등의 새 구조를 갖고 있지만, JS는 여전히 password_hash, episodes.content, episodes.image_urls, ad_unlocks, author_name, bank_info 등을 참조합니다. SQL의 현재 구조를 보면 이 새 테이블들이 존재하고 works.author_id가 정의되어 있습니다.
 
-특히 **현재 올려주신 코드와 제가 직전에 제안한 Production DB 스키마는 서로 상당 부분 불일치**합니다. 따라서 현재 상태에서 실제 사용을 시작하면 어떤 기능은 DB에 정상 저장되지만, 어떤 기능은 실패하거나 더 심각하게는 **dummy 데이터/로컬 데이터가 실제 데이터처럼 보일 수 있습니다.**
+따라서 현재 그대로 배포하면 일부 기능은 정상 작동하지만, 핵심 기능 상당수가 실패하거나 보안상 잘못 동작할 가능성이 높습니다.
 
-아래처럼 보시면 됩니다.
+1. 최종 판정
+영역	판정	상태
+Supabase 접속	✅	정상
+작품 조회	⚠️	일부 정상
+작품 등록	⚠️	DB와 필드 불일치
+회차 조회	❌	구스키마 참조
+독자 로그인	❌	Supabase Auth와 불일치
+작가 로그인	❌	Supabase Auth와 불일치
+관리자 로그인	❌	현재 SQL과 불일치
+독서이력	❌	UUID/JSONB 구조 불일치
+관심작품	⚠️	구조 일부 일치
+작가 구독	✅/⚠️	구조는 맞지만 인증 문제
+광고 Event	❌	Client가 임의 생성 가능
+광고 Unlock	❌	SQL 구조와 JS 구조 불일치
+광고수익	❌	실제 광고수익 자동계산 아님
+작가 수익	❌	SQL/JS 필드와 계산방식 불일치
+정산	❌	보안/필드/ID 불일치
+콘텐츠 검수	❌	컬럼명이 다름
+Realtime	⚠️	JS는 있지만 SQL publication/권한 검증 필요
+영구 데이터	⚠️	일부는 DB에 남지만 전체 거래 Chain 미완성
+2. 가장 심각한 문제는 SQL과 JS의 스키마가 다르다는 것입니다
 
----
+현재 SQL의 authors는:
 
-# 1. 가장 먼저 결론
+id
+auth_user_id
+username
+pen_name
+profile_image
+bio
+status
+...
 
-| 기능        | 현재 코드 상태                      | 실제 사용 시             | 영구 저장 |
-| --------- | ----------------------------- | ------------------- | ----- |
-| 작품 조회     | DB 조회                         | ✅ 가능                | ✅     |
-| 작품 등록     | DB INSERT                     | ⚠️ 조건부              | ✅     |
-| 회차 조회     | DB 조회                         | ✅/⚠️                | ✅     |
-| 독자 활동     | JSONB + 별도 테이블 혼용             | ⚠️                  | ⚠️    |
-| 독서이력      | 별도 테이블 시도                     | ⚠️                  | ✅ 가능  |
-| 관심작품      | 별도 테이블 시도                     | ⚠️                  | ✅ 가능  |
-| 작가 구독     | 별도 테이블 시도                     | ⚠️                  | ✅ 가능  |
-| 광고 이벤트    | DB INSERT                     | ⚠️ 보안 취약            | ✅     |
-| 광고 Unlock | DB UPSERT                     | ❌ Production 방식 아님  | ⚠️    |
-| 작가 수익     | 일부 DB 연동                      | ❌ 실제 발생수익과 자동연결 안 됨 | ⚠️    |
-| 정산        | DB 저장                         | ❌ 직접 수정 가능 구조       | ✅     |
-| 관리자 KPI   | DB + dummy fallback           | ❌ 잘못된 숫자 표시 가능      | ⚠️    |
-| 관리자 계정    | DB + LocalStorage + hardcoded | 🔴 위험               | ⚠️    |
-| 실제 Auth   | 미사용                           | ❌                   | —     |
-| Realtime  | 이 코드에는 사실상 없음                 | ❌                   | —     |
+입니다.
 
-즉,
+그런데 JS에서는:
 
-> **“DB에 저장되는 기능은 일부 존재하지만, ‘실제 발생한 모든 거래를 정확하게 DB의 영구 원장으로 기록한다’고 보기는 어렵습니다.”**
+authors.password_hash
+authors.email
+authors.bank_info
 
----
+등을 참조합니다. 실제 readerLogin()과 authorLogin()도 password_hash를 이용합니다.
 
-# 2. 가장 큰 문제: Dummy data가 실제 데이터를 덮을 수 있습니다
+즉 현재 SQL에 맞추면:
 
-이 부분이 매우 중요합니다.
+authors.password_hash
 
-`fetchDashboardKPI()`를 보면:
+자체가 없기 때문에 작가 로그인은 정상적으로 작동할 수 없습니다.
 
-```js
-let totalUsers = 10;
-let totalAuthors = 30;
-let totalWorks = 30;
-let totalEpisodes = 180;
-let totalAdViews = 0;
-let totalViews = 0;
-let novelCount = 17;
-let webtoonCount = 13;
-```
+독자도 마찬가지입니다.
 
-즉 DB를 조회하기 전에 **기본값 자체가 dummy data**입니다.
+SQL의 readers는 auth.users.id를 PK로 사용하는 구조인데, JS는 여전히 readers.password_hash를 읽습니다.
 
-DB 조회가 성공하면 덮어쓰지만:
+결론
 
-```js
-if (typeof count === 'number') totalUsers = count;
-```
+Reader/Author 인증 부분은 반드시 Supabase Auth로 재작성해야 합니다.
 
-실패하면 그대로 10명, 30명, 30작품, 180회차가 남습니다.
+3. 관리자 인증도 현재 SQL과 맞지 않습니다
 
-더 심각한 부분은 최종 catch입니다.
+현재 SQL의 admin_users에는 아직도:
 
-```js
-return {
-  total_users: 10,
-  total_authors: 30,
-  total_works: 30,
-  total_episodes: 180,
-  ...
-};
-```
-
-그래서 네트워크 오류나 RLS 오류가 나더라도 관리자 화면은
-
-> "실제 데이터가 10명입니다."
-
-처럼 보일 수 있습니다.
-
-### 반드시 변경
-
-Production에서는:
-
-```js
-if (DB 조회 실패) {
-   return ERROR;
-}
-```
-
-로 해야 합니다.
-
-즉,
-
-```text
-DB 실패
-→ 10명 표시
-```
-
-가 아니라
-
-```text
-DB 실패
-→ "실시간 DB 연결 실패"
-```
-
-가 되어야 합니다.
-
----
-
-# 3. 매출도 현재는 가짜 데이터가 만들어질 수 있습니다
-
-이 부분:
-
-```js
-total_revenue: dbStats.total_revenue || (finalAdViews * 200),
-```
-
-그리고:
-
-```js
-total_author_revenue:
-  dbStats.total_author_revenue ||
-  ((finalAdViews * 200) * 0.625)
-```
-
-는 Production에서 제거해야 합니다.
-
-예를 들어 광고 1,000회면:
-
-```text
-1000 × 200 = 200,000원
-```
-
-으로 표시합니다.
-
-하지만 **실제 광고 네트워크에서 발생한 매출이 20만원이라는 보장이 없습니다.**
-
-따라서 관리자에게 실제 매출처럼 보일 수 있습니다.
-
-### 반드시
-
-```js
-total_revenue = 실제 revenue_ledger 집계
-```
-
-로 변경해야 합니다.
-
----
-
-# 4. `recordWorkReadingView()`는 실제 사용 시 조회수가 유실될 수 있습니다
-
-현재:
-
-```js
-SELECT view_count
-→ +1
-→ UPDATE
-```
-
-방식입니다.
-
-예를 들어 동시에 2명이 읽으면:
-
-```text
-현재 100
-
-User A → 100 읽음
-User B → 100 읽음
-
-A → 101
-B → 101
-```
-
-결과:
-
-> 102가 아니라 101
-
-이 될 수 있습니다.
-
-즉 **동시접속이 많아질수록 조회수가 실제보다 적게 기록될 수 있습니다.**
-
-### Production에서는
-
-DB에서 Atomic Increment를 사용해야 합니다.
-
-예:
-
-```sql
-UPDATE works
-SET view_count = view_count + 1
-WHERE id = $1;
-```
-
-또는 RPC:
-
-```text
-increment_work_view(work_id)
-increment_episode_view(episode_id)
-```
-
-구조로 변경하는 것이 좋습니다.
-
----
-
-# 5. 작품 ID 생성 방식도 위험합니다
-
-현재:
-
-```js
-const { data: maxW } = await supabaseClient
-  .from('works')
-  .select('id')
-  .order('id', { ascending: false })
-  .limit(1);
-
-nextId = Number(maxW[0].id) + 1;
-```
-
-이 방식은 동시등록에서 문제가 발생합니다.
-
-예:
-
-```text
-관리자 A → max = 127
-관리자 B → max = 127
-
-A → 128
-B → 128
-```
-
-두 명이 동시에 작품을 등록하면 충돌할 수 있습니다.
-
-### Production
-
-`BIGSERIAL` 또는 `GENERATED BY DEFAULT AS IDENTITY`를 사용하고:
-
-```js
-id를 보내지 않는다.
-```
-
-즉:
-
-```js
-.insert({
-  title,
-  author_id,
-  ...
-})
-```
-
-로 해야 합니다.
-
-DB가 ID를 자동 생성합니다.
-
----
-
-# 6. 현재 작품등록 코드가 Production DB와 맞지 않습니다
-
-현재:
-
-```js
-const payload = {
-  id: workData.id || nextId,
-  title: workData.title,
-  author: ...
-}
-```
-
-이 코드에는:
-
-```text
-author
-```
+password_hash TEXT NOT NULL DEFAULT '!123456'
 
 가 있습니다.
 
-하지만 최종 Production DB에서는:
+반면 JS는:
 
-```text
-works.author_id
-```
+supabaseClient.rpc('verify_admin_login', ...)
 
-입니다.
+을 호출합니다.
 
-즉 Production DB를 적용하면 이 부분은 실패할 가능성이 높습니다.
+그런데 제공된 SQL에는 verify_admin_login() 함수가 없습니다.
 
-현재 Front-end:
+SQL에 존재하는 것은:
 
-```text
-workData.author
-```
+create_admin_user()
+get_sub_admins()
+delete_sub_admin()
 
-를
-
-```text
-author_id
-```
-
-로 바꾸어야 합니다.
-
-그리고 작가 등록자는 현재 로그인한 Auth user가 실제 그 작가인지 서버에서 검증해야 합니다.
-
----
-
-# 7. 현재 회차 구조도 이전 DB와 혼재되어 있습니다
-
-코드:
-
-```js
-is_free
-is_ad_free
-content
-image_urls
-```
-
-를 사용합니다.
-
-하지만 제가 최종 Production DB에서 권장한 구조는:
-
-```text
-episodes
- ├─ access_policy
-
-episode_contents
- └─ text_content
-
-episode_panels
- └─ image_url
-```
-
-입니다.
-
-따라서 현재 `fetchWorksFromSupabase()`는 Production DB와 맞지 않습니다.
-
----
-
-# 8. 더 심각한 문제: `fetchWorksFromSupabase()`가 잠긴 본문까지 가져옵니다
-
-현재:
-
-```js
-const { data: episodes } = await supabaseClient
-  .from('episodes')
-  .select('*')
-```
-
-그리고:
-
-```js
-content: ep.content || ''
-```
-
-입니다.
-
-기존 DB에서는 `episodes.content`가 있으므로 **모든 회차 본문을 한 번에 가져올 수 있습니다.**
+뿐입니다.
 
 즉:
 
-```text
-1화 무료
-2화 무료
-3화 무료
-4화 광고 Unlock
-5화 광고 Unlock
-6화 광고 Unlock
-```
+JS → verify_admin_login()
+SQL → 없음
 
-인데도 Admin/Browser에서 전체 본문을 다운로드할 수 있는 구조입니다.
+입니다.
 
-Production DB에서는 반드시:
+그리고 RPC가 실패하면 JS가 admin_users를 직접 조회하도록 되어 있습니다.
 
-```text
+그런데 이것도 Production 보안 구조로는 적절하지 않습니다.
+
+4. admin_users의 가장 큰 보안 문제가 아직 남아 있습니다
+
+SQL에서:
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON public.admin_users
+TO anon, authenticated, service_role;
+
+가 존재합니다.
+
+이것은 이전에 제거하자고 했던 위험한 구조가 현재 업로드한 SQL에도 그대로 남아 있다는 뜻입니다.
+
+더구나 JS는:
+
+.from('admin_users')
+.select('*')
+
+로 접근합니다.
+
+따라서 현재 파일 조합은 Production 보안 기준을 충족하지 못합니다.
+
+5. create_admin_user()도 지금 상태로는 Production용이 아닙니다
+
+SQL:
+
+SECURITY DEFINER
+
+인데:
+
+SET search_path = ''
+
+가 없습니다. 그리고:
+
+GRANT EXECUTE ... TO anon, authenticated, service_role;
+
+입니다.
+
+특히 anon에게 관리자 생성 RPC를 실행할 수 있게 한 것은 매우 위험합니다.
+
+현재 코드 역시 이 RPC를 일반 브라우저에서 호출합니다.
+
+이것은 반드시 변경해야 합니다.
+
+관리자 생성은:
+
+Admin Browser
+        ↓
+Secure Admin API / Edge Function
+        ↓
+Supabase Service Role
+        ↓
+admin_users
+
+구조로 바꾸는 것이 맞습니다.
+
+6. works.author_id는 좋은 방향이지만 JS가 아직 구버전입니다
+
+SQL:
+
+works.author_id
+
+가 있습니다.
+
+JS의 createWorkInDB()는:
+
+author: ...
+
+를 여전히 넣고 있고, 뒤에서 조건부로 author_id를 넣습니다.
+
+문제는 works의 Production schema에는 author 컬럼이 없습니다.
+
+따라서 이 부분:
+
+author: typeof workData.author === 'string'
+  ? workData.author
+  : ...
+
+은 제거해야 합니다.
+
+올바른 구조
+{
+  title,
+  author_id,
+  content_type,
+  genre,
+  tags,
+  ...
+}
+
+입니다.
+
+7. 가장 치명적인 부분: Episode
+
+SQL은 이미:
+
 episodes
-    → Metadata
-
 episode_contents
-    → Protected Content
-```
+episode_panels
 
-로 분리해야 합니다.
+으로 분리했습니다.
 
-그리고 Reader는:
+그런데 JS는 아직:
 
-```text
-get_episode_content()
-```
+.from('episodes')
+.select('id, work_id, episode_number, title, is_free, is_ad_free, content, image_urls,...')
 
-같은 서버 함수/Edge Function을 통해서만 본문을 가져와야 합니다.
-
----
-
-# 9. 광고 Unlock은 현재 “기록은 되지만 믿을 수 없는 기록”입니다
-
-현재:
-
-```js
-recordEpisodeUnlock(...)
-```
-
-가 브라우저에서 직접:
-
-```js
-.from('episode_unlocks')
-.upsert(...)
-```
-
-합니다.
+를 사용합니다.
 
 그리고:
 
-```js
-unlockEpisodeWithAd()
-```
+content: ep.content
+imageUrls: ep.image_urls
 
-는 단순히 이것을 호출합니다.
+를 사용합니다.
 
-즉 실제로 광고를 봤다는 서버 검증 없이:
+즉:
 
-```text
-unlockEpisodeWithAd()
-```
+SQL
+episodes.content ❌
+episodes.image_urls ❌
 
-만 실행하면 Unlock이 될 수 있는 구조입니다.
+JS
+episodes.content ✅라고 가정
+episodes.image_urls ✅라고 가정
 
-더 나쁜 점은:
+입니다.
 
-```js
-adEventId = null
-```
+이건 즉시 수정해야 합니다.
+8. fetchEpisodeContentSecure()는 이름만 Secure입니다
 
-도 가능합니다.
+현재 코드가:
 
----
+RPC
+ ↓ 실패
+episode_contents 직접 SELECT
+ ↓ 실패
+episodes.content 직접 SELECT
 
-# 10. `logAdEvent()`도 광고 조작이 가능합니다
+순서입니다.
+
+특히 마지막:
+
+.from('episodes').select('content')
+
+은 현재 Production SQL에는 아예 해당 컬럼이 없습니다.
+
+더 중요한 것은:
+
+RPC가 실패했다고 해서 보호된 데이터를 직접 조회하는 Fallback을 두면 안 됩니다.
+
+즉:
+
+Secure RPC 실패
+→ Public Table 직접 SELECT
+
+구조는 제거해야 합니다.
+
+9. 광고 Unlock은 현재 SQL과 완전히 맞지 않습니다
+
+SQL:
+
+episode_unlocks
+ ├─ user_id UUID
+ ├─ episode_id BIGINT
+ ├─ unlock_type
+ ├─ source_event_id UUID
+ ├─ granted_at
+ ├─ expires_at
+ └─ status
+
+입니다.
+
+그런데 JS는:
+
+ad_network
+ad_event_id
+unlocked_at
+
+을 INSERT합니다.
+
+즉:
+
+SQL: source_event_id
+JS:  ad_event_id
+
+SQL: granted_at
+JS:  unlocked_at
+
+입니다.
+
+직접적인 schema mismatch입니다.
+
+10. ad_unlocks는 SQL에 없는데 JS가 사용합니다
+
+JS:
+
+.from('ad_unlocks')
+.upsert(...)
+
+를 실행합니다.
+
+그런데 현재 supabase-setup.sql에는 ad_unlocks 테이블이 없습니다.
+
+따라서 이 쿼리는 실패합니다.
+
+물론 .catch(() => {}) 때문에 개발자가 오류를 눈치채지 못할 수도 있습니다.
+
+이런 패턴도 좋지 않습니다.
+
+실패를 숨기는 catch(() => {})는 Production 코드에서는 핵심 DB 작업에 사용하지 않는 것이 좋습니다.
+
+11. 광고 보안은 아직 해결되지 않았습니다
 
 현재:
 
-```js
+logAdEvent(...)
+
+가 Browser에서 직접 ad_events INSERT합니다.
+
+그리고:
+
 reward_granted:
   eventType === 'REWARD' || eventType === 'COMPLETE'
-```
 
-입니다.
+로 판단합니다.
 
-즉 Front-end에서:
+이것은 사용자가 브라우저에서 직접:
 
-```js
-logAdEvent(..., 'REWARD')
-```
+COMPLETE
+REWARD
 
-를 호출하면 사실상:
+를 호출할 수 있다는 의미입니다.
 
-> "광고 Reward가 발생했다."
+따라서 실제 광고를 보지 않아도 Reward를 발생시키는 공격 가능성이 있습니다.
 
-라고 기록할 수 있습니다.
-
-이것은 실제 서비스에서 매우 큰 문제입니다.
-
-### 반드시 바꿔야 합니다.
-
-```text
+현재 구조는:
 Browser
-  ↓
-광고 시청
-  ↓
+ ↓
+logAdEvent()
+ ↓
+DB
+변경해야 하는 구조:
+Browser
+ ↓
 Ad Network
-  ↓
-Server-Side Verification
-  ↓
+ ↓
+Server Side Verification
+ ↓
 Edge Function
-  ↓
+ ↓
 ad_events
-  ↓
+ ↓
 episode_unlocks
-```
-
-**Browser는 Reward를 확정할 수 없어야 합니다.**
-
----
-
-# 11. 정산은 더 위험합니다
-
-현재:
-
-```js
-requestSettlement()
-```
-
-는 Browser에서 직접:
-
-```js
-author_settlements.insert(...)
-```
-
-합니다.
-
-또한:
-
-```js
-approveSettlement()
-```
-
-도:
-
-```js
-.update({
-  status: 'PAID'
-})
-```
-
-를 직접 수행합니다.
-
-즉 실제 Production에서는:
-
-```text
-작가
-→ 정산 신청
-
-관리자
-→ 지급 승인
-
-서버
-→ 잔액 검증
-
-서버
-→ 지급 처리
-
-서버
-→ Ledger 기록
-```
-
-이어야 하는데 현재는 **Frontend가 금융상태를 직접 변경**하는 구조입니다.
-
-이 부분은 반드시 수정해야 합니다.
-
----
-
-# 12. 현재 `author_earnings`는 “자동 계산”되지 않습니다
-
-코드에는:
-
-```js
-fetchAuthorEarnings()
-```
-
-는 있지만,
-
-```text
-ad_events
-→ revenue
-→ work allocation
-→ author_earnings
-```
-
-으로 만드는 실제 Calculation Engine이 없습니다.
-
-`calculateRevenue()`는 단순히:
-
-```js
-grossRevenue
-adNetworkFee
-writerPoolRatio
-```
-
-를 받아:
-
-```text
-revenue_events
-```
-
-에 넣는 함수입니다.
-
-즉 실제 광고가 발생하면 자동으로 작가 수익이 계산되는 구조가 아닙니다.
-
-### 현재 상태
-
-```text
-광고 발생
-  ↓
-ad_events 기록
-```
-
-까지만 있다가
-
-```text
-author_earnings
-```
-
-으로 자동 연결되지 않습니다.
-
----
-
-# 13. `calculateRevenue()`도 관리자가 직접 금액을 넣는 구조입니다
-
-현재:
-
-```js
-calculateRevenue(
-  periodMonth,
-  grossRevenue,
-  adNetworkFee,
-  writerPoolRatio
-)
-```
-
-즉 관리자가:
-
-```text
-grossRevenue = 10,000,000
-fee = 1,000,000
-```
-
-을 넣는 구조입니다.
-
-이것은 **실제 광고 네트워크 매출 자동 수집**이 아닙니다.
-
-Production에서는:
-
-```text
-Ad Network Report
-        ↓
-Revenue Import
-        ↓
-Revenue Reconciliation
-        ↓
-Revenue Period
-```
-
-가 되어야 합니다.
-
----
-
-# 14. 독서 이력은 “두 개의 원본”이 존재합니다
-
-현재 `readers`:
-
-```text
-reading_history JSONB
-favorites JSONB
-subscribed_authors JSONB
-```
-
-와 동시에:
-
-```text
-reading_history
-favorites
-author_subscriptions
-```
-
-테이블을 사용합니다.
-
-이것은 장기적으로 문제가 됩니다.
-
-예:
-
-```text
-readers.reading_history
-= A
-
-reading_history table
-= B
-```
-
-어느 것이 진짜인지 알 수 없습니다.
-
-### Production에서는
-
-JSONB를 제거하고:
-
-```text
-reading_history
-favorites
-author_subscriptions
-```
-
-만 SSOT로 사용해야 합니다.
-
----
-
-# 15. 실제 독자 데이터도 현재 코드는 Auth와 연결되지 않습니다
-
-현재:
-
-```js
-readerLogin(identifier, password)
-```
-
-은 `readers` table을 조회해서:
-
-```js
-reader.password_hash
-```
-
-를 비교합니다.
-
-이것은 Supabase Auth 기반 Production 설계와 맞지 않습니다.
-
-Production:
-
-```text
-supabase.auth.signInWithPassword()
-```
-
-를 사용해야 합니다.
-
-그리고:
-
-```text
-auth.users.id
-=
-readers.id
-```
-
-로 연결합니다.
-
----
-
-# 16. 작가 Login도 동일합니다
-
-현재:
-
-```js
-authorLogin()
-```
-
-도:
-
-```js
-authors.password_hash
-```
-
-를 비교합니다.
-
-하지만 Production에서는:
-
-```text
-Supabase Auth
-      ↓
-auth.users
-      ↓
-authors.auth_user_id
-```
-
-구조로 변경해야 합니다.
-
----
-
-# 17. 관리자 Login에는 즉시 제거해야 할 코드가 있습니다
-
-이 부분은 실제 Production에 절대 남으면 안 됩니다.
-
-```js
-if (
-  cleanEmail === 'admin' ||
-  cleanEmail === 'superadmin' ||
-  cleanEmail === 'admin@webnovels.com'
-)
-```
-
-그리고:
-
-```js
-cleanPw === 'admin1234'
-```
-
-또는:
-
-```js
-cleanPw === '!12345'
-```
 
 입니다.
 
-이것은 명백한 **Hardcoded Backdoor 형태**입니다.
+12. unlockEpisodeWithAdSecure()도 실제로 Secure하지 않습니다
 
-또한:
+함수 이름은 Secure이지만:
 
-```js
-password_hash === cleanPw
-```
+logAdEvent(... 'COMPLETE', ..., 20)
 
-도 제거해야 합니다.
+를 먼저 실행합니다.
 
----
+그리고 그 ID를 가지고 Unlock RPC를 호출합니다.
 
-# 18. LocalStorage는 DB 영구저장의 대체수단이 아닙니다
-
-현재 Sub Admin은:
-
-```js
-localStorage.setItem('webnovels_sub_admins', ...)
-```
-
-를 사용합니다.
-
-이것은:
-
-```text
-브라우저 A
-```
-
-에서 만든 데이터가
-
-```text
-브라우저 B
-```
-
-에서는 없습니다.
-
-또한:
-
-```text
-PC 포맷
-브라우저 데이터 삭제
-시크릿모드
-다른 컴퓨터
-```
-
-등에서 사라집니다.
-
-따라서 **LocalStorage는 UI cache 용도로만 사용하고, 영구 데이터의 원본으로 사용하면 안 됩니다.**
-
----
-
-# 19. 현재 “실시간”도 정확히 표현하면 아닙니다
-
-현재 코드 대부분은:
-
-```text
-필요할 때 SELECT
-```
-
-입니다.
+문제는 광고 서버가 이 이벤트를 검증한 것이 아니라 브라우저가 직접 만든 이벤트라는 점입니다.
 
 즉:
 
-```text
-새로운 작품 등록
-→ 다른 관리자 화면이 자동 업데이트
-```
-
-되는 구조가 아닙니다.
-
-Supabase Realtime을 실제로 사용하려면 `channel().on('postgres_changes'...)` 등의 구독 코드와 대상 테이블 publication 설정이 필요합니다. Supabase 문서에 따르면 Realtime은 모든 테이블이 자동으로 감시되는 것이 아니라 `supabase_realtime` publication에 테이블을 추가해야 하며, RLS에 의해 이벤트 수신도 제한됩니다. ([Supabase][1])
-
-또한 현재 Supabase는 새로운 서비스에서는 Broadcast를 확장성과 보안 측면에서 권장하고, Postgres Changes는 간단한 방식으로 설명하고 있습니다. ([Supabase][2])
-
-따라서 현재 코드의:
-
-```text
-CUD 발생
-→ 즉시 다른 화면 반영
-```
-
-은 **아직 구현됐다고 볼 수 없습니다.**
-
----
-
-# 20. 오히려 현재 코드의 “실시간”이라는 표현을 조심해야 합니다
-
-현재:
-
-```js
-fetchDashboardKPI()
-```
-
-를 다시 실행하면 최신 DB를 읽습니다.
-
-이것은:
-
-> **실시간 조회**
-
-이지,
-
-> **실시간 동기화**
-
-는 아닙니다.
-
-둘은 다릅니다.
-
-### 현재
-
-```text
-User A
-  ↓
-DB INSERT
-
-User B
-  ↓
-새로고침
-  ↓
-DB SELECT
-```
-
-### 원하는 구조
-
-```text
-User A
-  ↓
-DB INSERT
-  ↓
-Realtime
-  ↓
-User B UI 자동 갱신
-```
+JS 함수 이름 = Secure
+실제 보안 = ❌
 
 입니다.
 
----
+13. 가장 위험한 부분 중 하나: 광고수익이 임의의 숫자입니다
 
-# 21. DB에 정상 기록될 가능성이 높은 기능
+현재:
 
-현재 코드만 놓고 보면 다음은 **DB 저장 자체는 가능**합니다.
+revenue: 20
 
-```text
-works INSERT
-comments INSERT
-reading_history UPSERT
-favorites UPSERT
-author_subscriptions UPSERT
-episode_unlocks UPSERT
-ad_events INSERT
-author_settlements INSERT
-```
+을 사용합니다.
 
-단, 이것은 **RLS가 현재 코드가 요청하는 작업을 허용한다는 전제**입니다.
+그리고 allocateRevenue()에서는:
 
-Production RLS를 적용하면 일부는 의도적으로 막혀야 합니다.
+Number(e.revenue || 20)
 
-Supabase는 RLS와 별개로 테이블에 대한 `GRANT`가 먼저 필요하며, 정책을 작성했다고 해서 기존 `anon`/`authenticated` 테이블 권한이 자동으로 제거되는 것이 아니라고 공식적으로 설명합니다. 따라서 Production에서는 **GRANT + RLS를 함께 설계**해야 합니다. ([Supabase][3])
+를 사용합니다.
 
----
+즉 광고수익이 실제 광고 네트워크의 실적이 아니라:
 
-# 22. 현재 코드와 최종 Production DB의 가장 큰 불일치
+"광고 한 번 = 20"
 
-이 부분이 실제 개발에서 가장 중요합니다.
+으로 계산될 수 있습니다.
 
-### 현재 코드
+이것은 실제 회계용 Revenue Engine이 아닙니다.
 
-```text
-readers.password_hash
-authors.password_hash
+14. 더 큰 문제: 작가 수익을 작가 수로 균등 분배합니다
 
-works.author
-episodes.content
-episodes.image_urls
+현재:
 
-readers.reading_history
-readers.favorites
-readers.subscribed_authors
+const perAuthorPool = Math.floor(writerPool / authors.length);
 
-author_settlements.author_name
-author_settlements.bank_info
+입니다.
 
-episode_unlocks.ad_network
-episode_unlocks.ad_event_id
-```
+즉 작가 30명이 있으면:
 
-### Production DB
+Writer Pool ÷ 30
 
-```text
-Supabase Auth
+으로 동일하게 나눕니다.
 
-works.author_id
-
-episode_contents
-episode_panels
-
-reading_history
-favorites
-author_subscriptions
-
-author_settlement_accounts
-author_settlements.author_id
-
-episode_unlocks.source_event_id
-```
-
-따라서 **현재 코드와 Production DB는 그대로는 호환되지 않습니다.**
-
----
-
-# 23. 그러면 실제 데이터가 영구적으로 남느냐?
-
-정확하게 답하면:
-
-### 현재 구조
-
-**일부는 YES, 전체 시스템 기준으로는 NO입니다.**
-
-예를 들어:
-
-```text
-작품 등록
-→ works INSERT
-→ DB에 저장
-```
-
-이 부분은 정상이라면 유지됩니다.
-
-하지만:
-
-```text
-광고 시청
-→ 광고수익
-→ 작품별 배분
-→ 작가 수익
-→ 정산
-```
-
-이 전체 Chain은 현재 코드가 완성하지 못했습니다.
+작품별 조회수/광고완료/기여도와 무관합니다.
 
 따라서:
 
-> "독자 1명이 실제로 4화를 광고 보고 읽었고, 그 광고수익의 62.5%가 작품/작가에게 어떻게 배분됐고, 최종적으로 얼마를 정산받았는지"
+작품 A 광고 100만회
+작품 B 광고 10회
 
-를 장기적으로 정확하게 재현하는 구조가 **아직 완성되지 않았습니다.**
+여도 두 작가가 동일한 금액을 받을 수 있습니다.
 
----
+현재 사용자가 기획한 사업 모델의 작가별 광고 기여수익 배분 구조와 맞지 않습니다.
 
-# 24. 제가 권하는 최종 데이터 흐름
+15. author_earnings INSERT 컬럼도 SQL과 다릅니다
 
-실서비스에서는 아래를 SSOT로 만들어야 합니다.
+SQL:
 
-```text
-                    USER
-                     │
-                     ▼
-                auth.users
-                     │
-            ┌────────┴─────────┐
-            ▼                  ▼
-         readers             authors
-                               │
-                               ▼
-                             works
-                               │
-                               ▼
-                           episodes
-                               │
-                    ┌──────────┴─────────┐
-                    ▼                    ▼
-              reading_history      episode_unlocks
-                                         │
-                                    source_event_id
-                                         │
-                                         ▼
-                                     ad_events
-                                         │
-                                         ▼
-                                   revenue_ledger
-                                         │
-                              ┌──────────┴──────────┐
-                              ▼                     ▼
-                       author_earnings          platform
-                              │
-                              ▼
-                       author_settlements
-```
+author_earnings
+ ├─ author_id
+ ├─ work_id
+ ├─ period_date
+ ├─ gross_revenue
+ ├─ platform_fee
+ ├─ author_revenue
+ └─ status
 
-이 구조가 되면 **실제 발생한 기록이 계속 남고 나중에 다시 계산할 수 있습니다.**
+입니다.
 
----
+그런데 JS:
 
-# 25. 현재 코드를 살릴 것과 다시 작성할 것
+author_name
+settlement_status
 
-### 그대로 살려도 되는 부분
+를 넣습니다.
 
-```text
-fetchWorksFromSupabase()
-fetchCommentsByEpisode()
-fetchDashboardKPI() 구조
-```
+즉 이것도 schema mismatch입니다.
 
-단, 내부 Query는 Production Schema에 맞춰 수정합니다.
+16. period_date = ${periodMonth}-28도 잘못된 설계입니다
 
-### 반드시 다시 작성
+현재:
 
-```text
-adminLogin
-readerLogin
-authorLogin
+period_date: `${periodMonth}-28`
 
-recordWorkReadingView
+입니다.
 
-createWorkInDB
+예를 들어:
 
-recordEpisodeUnlock
-unlockEpisodeWithAd
-logAdEvent
+2026-02 → 2026-02-28
+2026-03 → 2026-03-28
 
-calculateRevenue
-confirmRevenue
+로 기록합니다.
 
-requestSettlement
-approveSettlement
+월별 정산을 나타내기 위해 임의의 28일을 사용하는 것은 좋지 않습니다.
 
-updateReaderActivity
-fetchReaderActivity
-```
+revenue_periods.period_month와 명확하게 연결하거나:
 
-### 새로 필요
+period_month = 2026-08-01
 
-```text
-getEpisodeMetadata()
-getEpisodeContentSecure()
+같은 기준을 사용해야 합니다.
 
-createAdSession()
-verifyAdReward()
+17. 정산도 현재 JS와 SQL이 충돌합니다
 
-incrementWorkView()
-incrementEpisodeView()
+SQL:
 
-allocateRevenue()
-getAuthorBalance()
+author_settlements
+ ├─ author_id
+ ├─ author_name_snapshot
+ ├─ bank_name_snapshot
+ ├─ account_number_snapshot
+ ├─ account_holder_snapshot
+ ├─ amount
+ └─ status
 
-requestSettlementSecure()
-approveSettlementSecure()
+입니다.
 
-subscribeToRealtimeChanges()
-```
+그런데 JS는:
 
----
+author_name
+bank_info
 
-# 26. 매우 중요한 결론
+등을 INSERT합니다.
 
-현재 코드는 **"Dummy Data를 실제 DB로 조금씩 연결해 가는 단계"**로 보입니다.
+즉 직접 INSERT는 실패할 가능성이 높습니다.
 
-하지만 지금 상태에서 실제 서비스를 오픈하면 다음 문제가 발생할 수 있습니다.
+18. requestSettlementSecure()의 Fallback도 삭제해야 합니다
 
-```text
-① DB 오류
-   ↓
-dummy 숫자 표시
+현재:
 
-② Auth 오류
-   ↓
-hardcoded login fallback
+RPC 실패
+ ↓
+requestSettlement()
+ ↓
+직접 INSERT
 
-③ 광고 완료
-   ↓
-client가 Reward 생성
+입니다.
 
-④ Unlock
-   ↓
-client가 직접 DB 변경
+그런데 Secure 함수가 실패하면 보안이 더 강해지는 것이 아니라 오히려 일반 INSERT 경로로 내려갑니다.
 
-⑤ 정산
-   ↓
-client가 직접 PAID 변경
+Production에서는:
 
-⑥ 작품 조회수
-   ↓
-동시접속 시 일부 유실
+Secure RPC 실패
+→ 실패 반환
 
-⑦ 데이터 실시간성
-   ↓
-Realtime이 아닌 재조회 방식
+이어야 합니다.
 
-⑧ DB schema
-   ↓
-구버전과 Production schema 혼재
-```
+보안 작업에 fallback은 "편의성" 때문에 넣으면 안 됩니다.
 
-따라서 **현재 상태에서 "실제 사용이 발생하면 모든 데이터가 정확히 영구 보존된다"고 판단하면 안 됩니다.**
+19. 정산 승인도 똑같은 문제입니다
 
----
+approveSettlementSecure()는 RPC 실패 시:
 
-## 27. 제가 가장 권하는 다음 작업
+author_settlements.update({
+   status: 'PAID'
+})
 
-현재 상황에서는 새로운 기능을 추가하는 것보다 먼저 **`supabase-admin.js`를 Production DB 기준으로 전면 정리하는 작업**이 우선입니다.
+으로 fallback합니다.
 
-특히 아래 4개를 먼저 해야 합니다.
+이 구조 역시 제거해야 합니다.
 
-```text
-1. Auth 전환
-   readers/authors password 제거
+그리고 더 중요한 것은:
 
-2. Schema 전환
-   현재 JS → Production v1 DB와 100% 일치
+PAID
 
-3. Transaction 보안
-   Ad / Unlock / Revenue / Settlement
-   → Server/Edge Function
+는 단순 상태 변경이 아니라
 
-4. Realtime
-   works / episodes / readers / authors / settlement
-   → Supabase Realtime
-```
+정산 가능 잔액 차감
++
+Settlement Ledger
++
+지급 Transaction
++
+Audit Log
 
-Supabase의 현재 권장 구조상 RLS, 적절한 table grants, Realtime publication/authorization을 함께 맞춰야 실제 운영에서 “실시간 + 보안”을 동시에 확보할 수 있습니다. ([Supabase][1])
+과 같이 처리되어야 합니다.
 
-**따라서 현재 코드를 기준으로 바로 수정하려면, 다음 버전은 `supabase-admin.js` 전체를 Production v1 DB에 1:1 대응하도록 다시 작성해야 합니다.** 특히 기존 `dummy fallback`, LocalStorage 영구저장, hardcoded 관리자/독자 로그인, Client-side Unlock/Settlement 처리를 모두 제거하는 것이 핵심입니다.
+20. Reader Activity는 현재 구조와 완전히 충돌합니다
 
+현재 SQL에는:
+
+readers
+
+에 다음 JSONB가 없습니다.
+
+reading_history
+favorites
+subscribed_authors
+
+그런데 JS는 계속:
+
+readerData.reading_history
+readerData.favorites
+readerData.subscribed_authors
+
+를 사용합니다.
+
+또한:
+
+updateReaderActivity()
+
+에서 해당 컬럼을 update하려고 합니다.
+
+현재 SQL 구조상 이 부분은 제거해야 합니다.
+
+21. Reader ID 타입도 잘못되어 있습니다
+
+SQL:
+
+reading_history.user_id UUID
+favorites.user_id UUID
+author_subscriptions.user_id UUID
+
+입니다.
+
+그런데 JS에서는:
+
+user_id: String(userId)
+
+입니다.
+
+Supabase Auth UUID가 문자열로 전달되는 것은 JS 관점에서는 가능하지만, 사용자가 reader1 같은 username을 넘기면 DB UUID FK와 맞지 않습니다.
+
+현재:
+
+cleanUser = username
+
+을 user_id로 사용하는 부분이 있습니다.
+
+예:
+
+user_id = "reader1"
+
+이면 Production schema에서는:
+
+user_id UUID
+
+와 맞지 않습니다.
+
+22. 댓글도 컬럼명이 바뀌었습니다
+
+SQL:
+
+nickname_snapshot
+
+인데 JS:
+
+nickname
+
+을 INSERT합니다.
+
+이 역시 수정이 필요합니다.
+
+23. 콘텐츠 검수도 컬럼명이 맞지 않습니다
+
+SQL:
+
+work_title_snapshot
+author_name_snapshot
+
+입니다.
+
+그런데 JS는:
+
+work_title
+author_name
+
+으로 INSERT/조회합니다.
+
+따라서 검수 등록 기능도 현재 SQL과 호환되지 않습니다.
+
+24. Realtime은 “코드가 존재한다”와 “실제로 작동한다”가 다릅니다
+
+JS에는:
+
+.channel('public-db-changes')
+.on('postgres_changes', ...)
+
+가 구현되어 있습니다.
+
+좋습니다.
+
+하지만 SQL 파일에는 제가 확인한 범위에서:
+
+CREATE PUBLICATION supabase_realtime
+
+또는 해당 테이블을 Realtime publication에 추가하는 설정이 없습니다.
+
+그리고 RLS/권한 역시 현재 SQL에는 Production 수준의 정책이 없습니다.
+
+따라서 Realtime JS가 있다고 해서 실제 DB 변경이 자동으로 UI에 전달된다고 단정하면 안 됩니다.
+
+25. 더 중요한 문제: Realtime 대상도 부족합니다
+
+현재 JS는:
+
+works
+episodes
+author_settlements
+reports
+
+만 구독합니다.
+
+하지만 관리자 CMS에서 실시간성이 중요한 것은:
+
+readers
+authors
+works
+episodes
+content_reviews
+reports
+ad_events
+revenue_periods
+author_earnings
+author_settlements
+
+등입니다.
+
+특히 수익/정산 Dashboard를 실시간으로 보여주려면 해당 데이터의 변경 이벤트를 별도 설계해야 합니다.
+
+26. 가장 좋은 점도 있습니다
+
+전체가 잘못된 것은 아닙니다.
+
+현재 수정된 코드에서 좋은 방향은 분명합니다.
+
+좋은 부분
+
+① Dummy KPI fallback 제거
+
+현재 KPI는 null을 기본값으로 사용하고 DB 오류 시 null을 반환합니다.
+
+이전보다 훨씬 좋아졌습니다.
+
+② 작품 ID를 max+1로 생성하던 로직 제거
+
+현재 createWorkInDB()는 DB에서 자동 ID를 받는 방향으로 개선되었습니다.
+
+③ Atomic increment RPC를 우선 사용하는 방향
+
+increment_work_view RPC를 먼저 호출하는 방향은 맞습니다. 다만 현재 SQL에 해당 RPC가 없습니다.
+
+④ Realtime 채널 코드 추가
+
+방향은 맞습니다. 다만 DB 측 publication/권한 설정까지 마쳐야 합니다.
+
+⑤ Episode Content 분리 시도
+
+fetchEpisodeContentSecure()가 episode_contents를 먼저 사용하는 것은 설계 방향 자체는 맞습니다.
+
+27. 하지만 지금 가장 중요한 것은 “양쪽을 다시 맞추는 것”입니다
+
+현재 상태는 다음과 같습니다.
+
+           현재 SQL
+              │
+       Production 구조
+              │
+              ▼
+       ┌─────────────┐
+       │             │
+       │   DB v2     │
+       │             │
+       └──────┬──────┘
+              │
+       schema mismatch
+              │
+              ▼
+       ┌─────────────┐
+       │ supabase-   │
+       │ admin.js    │
+       │ old + new   │
+       └─────────────┘
+
+즉 JS가 이전 schema와 새 schema를 동시에 지원하려고 하는 상태입니다.
+
+이 방식은 개발 초기에는 편하지만 Production에서는 상당히 위험합니다.
+
+28. 제가 최종적으로 권하는 구조
+
+이제 더 이상 "fallback"을 늘리지 않는 것이 좋습니다.
+
+DB
+Production Schema
+      ↓
+Single Source of Truth
+Frontend
+supabase-admin.js
+      ↓
+Production API contract만 사용
+실패
+DB 오류
+→ 명확한 오류 반환
+금지
+DB 오류
+→ LocalStorage
+→ Dummy Data
+→ 구 DB
+→ 다른 Table
+
+이런 식의 다중 fallback을 핵심 데이터에 적용하지 않습니다.
+
+29. 최종적으로 반드시 수정해야 할 12개
+🔴 P0
+
+1. Reader/Author Login → Supabase Auth
+
+2. Admin Login → Supabase Auth + admin profile
+
+3. episodes.content 제거 → episode_contents 사용
+
+4. episodes.image_urls 제거 → episode_panels 사용
+
+5. episode_unlocks 컬럼명 통일
+
+6. ad_events 생성 → Edge Function/SSV 전용
+
+7. Settlement Client CRUD 제거
+
+8. Revenue 계산 Client 코드 제거
+
+9. readers JSONB 활동 필드 제거
+
+10. UUID user_id 통일
+
+11. nickname → nickname_snapshot 등 컬럼명 통일
+
+12. Realtime publication + RLS + 실제 subscriber 동작 검증
+
+30. 실제 운영 관점에서 판정하면
+
+현재 코드를 그대로 운영환경에 올리는 것은 추천하지 않습니다.
+
+제가 점수를 준다면:
+
+Architecture        80 / 100
+DB 설계             78 / 100
+Frontend 연동       55 / 100
+실시간성            60 / 100
+데이터 영속성       65 / 100
+보안                35 / 100
+광고수익 Engine     30 / 100
+정산 Engine         35 / 100
+
+전체 Production Readiness: 약 50~55% 수준으로 판단합니다.
+
+가장 큰 이유는 코드 자체가 나쁘다기보다 현재 SQL과 JS가 서로 다른 버전의 데이터 모델을 동시에 사용하고 있기 때문입니다.
+
+31. 특히 “실제 데이터가 향후에도 그대로 유지되느냐?”에 대한 답
+
+지금 상태에서는:
+
+작품
+
+일부 정상 저장 가능
+
+작품 조회수
+
+DB에 기록되지만 동시접속/권한/RPC에 따라 문제가 있을 수 있음
+
+독서이력
+
+현재 UUID와 username 혼용 때문에 불안정
+
+광고
+
+이벤트 기록은 가능하지만 신뢰 가능한 광고수익 원장이라고 볼 수 없음
+
+Unlock
+
+현재는 스키마 불일치 + Client 생성 구조 때문에 Production 불가
+
+작가 수익
+
+실제 광고매출 기반이 아니므로 Production 불가
+
+정산
+
+DB record 자체는 남을 수 있지만 금융 transaction의 안전한 원장 구조는 미완성
+
+결론
+
+“실제 사용자가 들어오면 DB에 데이터가 쌓인다”는 수준은 일부 충족하지만, “모든 실제 사용자 활동과 광고수익·작가수익·정산 기록이 정확한 원장으로 장기 보존된다”는 수준은 아직 아닙니다.
+
+32. 가장 중요한 다음 조치
+
+지금은 SQL을 또 바꾸는 것보다 두 파일의 계약(Contract)을 하나로 고정하는 것이 먼저입니다.
+
+최종 구조를:
+
+WebNovels Production DB v1
+            ↕
+WebNovels API Contract v1
+            ↕
+supabase-admin.js v1
+            ↕
+Reader / Creator / Admin UI
+
+로 고정해야 합니다.
+
+그리고 supabase-admin.js에서는 다음 네 가지를 완전히 제거해야 합니다.
+
+❌ password_hash 기반 Login
+❌ LocalStorage를 영구 DB처럼 사용하는 Fallback
+❌ Client가 광고 Reward 생성
+❌ Client가 정산/수익 상태 직접 변경
+
+반대로 다음 네 가지를 넣어야 합니다.
+
+✅ Supabase Auth
+✅ Protected Episode Content API
+✅ Ad SSV → Edge Function → Unlock
+✅ Revenue Ledger → Earnings → Settlement RPC
