@@ -709,20 +709,21 @@ async function fetchWorksFromSupabase() {
 
     const { data: episodes, error: epErr } = await supabaseClient
       .from('episodes')
-      .select('*')
+      .select('id, work_id, episode_number, title, is_free, is_ad_free, content, image_urls, author_comment, status')
       .order('episode_number', { ascending: true });
 
     const epMap = {};
     if (!epErr && episodes) {
       episodes.forEach(ep => {
         if (!epMap[ep.work_id]) epMap[ep.work_id] = [];
+        const isFree = ep.is_free !== false && Number(ep.episode_number) <= 3;
         epMap[ep.work_id].push({
           id: ep.id,
           episodeNumber: ep.episode_number,
           title: ep.title,
-          isFree: ep.is_free,
-          isAdFree: ep.is_ad_free,
-          content: ep.content || '',
+          isFree: isFree,
+          isAdFree: ep.is_ad_free ?? !isFree,
+          content: isFree ? (ep.content || '') : '', // 잠긴 회차 본문은 사전 다운로드 차단
           imageUrls: ep.image_urls || [],
           authorComment: ep.author_comment || '',
           status: ep.status || 'PUBLISHED'
@@ -1349,25 +1350,43 @@ async function resolveActionQueueItemInDB(item) {
 // ============================================================
 // [Step 4] Protected Episode Content & Secure Settlement RPC
 // ============================================================
-async function fetchEpisodeContentSecure(episodeId) {
-  if (!supabaseClient || !episodeId) return null;
+async function fetchEpisodeContentSecure(episodeId, workId = null, episodeNumber = null) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return null;
   try {
-    const { data, error } = await supabaseClient.rpc('get_episode_content', {
-      p_episode_id: Number(episodeId)
-    });
-
-    if (error) {
-      console.warn('[fetchEpisodeContentSecure Error]', error.message);
-      // Fallback: 일반 테이블 조회 시도
-      const { data: fbData } = await supabaseClient
-        .from('episode_contents')
-        .select('text_content')
-        .eq('episode_id', Number(episodeId))
-        .single();
-      return fbData?.text_content || null;
+    // 1. RPC 호출 시도 (get_episode_content)
+    if (episodeId) {
+      try {
+        const { data, error } = await supabaseClient.rpc('get_episode_content', {
+          p_episode_id: Number(episodeId)
+        });
+        if (!error && data && data.length > 0 && data[0].text_content) {
+          return data[0].text_content;
+        }
+      } catch (rpcErr) {}
     }
 
-    return (data && data.length > 0) ? data[0].text_content : null;
+    // 2. episode_contents 테이블에서 조회
+    if (episodeId) {
+      try {
+        const { data: fbData } = await supabaseClient
+          .from('episode_contents')
+          .select('text_content')
+          .eq('episode_id', Number(episodeId))
+          .single();
+        if (fbData?.text_content) return fbData.text_content;
+      } catch (e) {}
+    }
+
+    // 3. episodes 테이블 본문 조회 (workId + episodeNumber 또는 episodeId 기반)
+    let query = supabaseClient.from('episodes').select('content');
+    if (episodeId) {
+      query = query.eq('id', Number(episodeId));
+    } else if (workId && episodeNumber) {
+      query = query.eq('work_id', Number(workId)).eq('episode_number', Number(episodeNumber));
+    }
+    const { data: epRow } = await query.single();
+    return epRow?.content || null;
   } catch (err) {
     console.warn('[fetchEpisodeContentSecure Exception]', err);
     return null;

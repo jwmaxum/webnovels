@@ -771,7 +771,7 @@ window.openWorkDetailDirect = function(workId) {
 // ----------------------------------------------------
 // [Reader View] Direct Opener
 // ----------------------------------------------------
-window.openReaderDirect = function(workId, epNumber) {
+window.openReaderDirect = async function(workId, epNumber) {
   const targetWorkId = Number(workId);
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetWorkId) || SAMPLE_WORKS[0];
   activeWork = work;
@@ -860,7 +860,15 @@ window.openReaderDirect = function(workId, epNumber) {
     if (webtoonViewerEl) webtoonViewerEl.style.display = 'none';
     if (textBodyEl) {
       textBodyEl.style.display = 'block';
-      const rawContent = ep.content || `본 회차는 ${epNum}회차 입니다.\n\n[${work.title} - ${ep.title}]\n광고를 보면 다음 회차가 연속으로 해금됩니다.`;
+      
+      // 본문이 미리 로드되지 않은 경우 보안 함수로 실시간 로드
+      let contentText = ep.content;
+      if (!contentText && window.WebNovelsAdmin?.fetchEpisodeContentSecure) {
+        contentText = await window.WebNovelsAdmin.fetchEpisodeContentSecure(ep.id, work.id, epNum);
+        if (contentText) ep.content = contentText;
+      }
+
+      const rawContent = contentText || `본 회차는 ${epNum}회차 입니다.\n\n[${work.title} - ${ep.title}]\n광고를 보면 다음 회차가 연속으로 해금됩니다.`;
       textBodyEl.innerHTML = rawContent.split('\n\n').map(p => `<p style="margin-bottom: 1.4em; line-height: 1.8;">${p.replace(/\n/g, '<br>')}</p>`).join('');
     }
   }
