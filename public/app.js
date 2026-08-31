@@ -2308,10 +2308,136 @@ function renderRevenueEvents(events) {
   `).join('');
 }
 
-// ---- 관리자 대시보드 로드 ----
-window.loadAdminDashboard = function() {
-  if (typeof switchAdminSubTab === 'function') {
-    switchAdminSubTab('dashboard');
+// 정산 신청 목록 로드 및 렌더링
+window.loadSettlementsList = async function() {
+  const container = document.getElementById('settlementsContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-loading-placeholder p-4 text-center">
+      <div class="spinner mb-2"></div>
+      <p class="text-muted">정산 신청 내역 DB 조회 중...</p>
+    </div>
+  `;
+
+  let settlements = [];
+  try {
+    if (window.WebNovelsAdmin?.fetchPendingSettlements) {
+      settlements = await window.WebNovelsAdmin.fetchPendingSettlements();
+    }
+  } catch (err) {
+    console.warn('[loadSettlementsList Error]', err);
+  }
+
+  if (!settlements || settlements.length === 0) {
+    container.innerHTML = '<p class="text-muted p-4 text-center">현재 대기 중인 정산 신청 내역이 없습니다.</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="table-responsive">
+      <table class="table" style="width:100%; font-size:0.88rem; text-align:left;">
+        <thead>
+          <tr style="color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.08);">
+            <th class="p-3">신청일시</th>
+            <th class="p-3">작가명</th>
+            <th class="p-3">신청금액</th>
+            <th class="p-3">정산 입금계좌</th>
+            <th class="p-3">상태</th>
+            <th class="p-3" style="text-align:right;">조치</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${settlements.map(s => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+              <td class="p-3 text-muted">${(s.requested_at || s.created_at || '').substring(0, 16).replace('T', ' ')}</td>
+              <td class="p-3"><strong>${s.author_name || s.author_name_snapshot || `작가 #${s.author_id}`}</strong></td>
+              <td class="p-3" style="color:var(--accent-emerald); font-weight:700;">₩${Number(s.amount).toLocaleString()}</td>
+              <td class="p-3 text-muted">${s.bank_info || `${s.bank_name_snapshot || ''} ${s.account_number_snapshot || ''}`}</td>
+              <td class="p-3"><span class="badge badge-accent">${s.status}</span></td>
+              <td class="p-3" style="text-align:right;">
+                <button class="btn btn-primary btn-sm" onclick="handleApproveSettlement(${s.id})">송금 승인 (PAID)</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
+// 정산 승인 핸들러
+window.handleApproveSettlement = async function(settlementId) {
+  if (!confirm(`정산 ID #${settlementId}에 대해 입금 승인(PAID) 처리를 진행하시겠습니까?`)) return;
+
+  try {
+    let res = null;
+    if (window.WebNovelsAdmin?.approveSettlementSecure) {
+      res = await window.WebNovelsAdmin.approveSettlementSecure(settlementId, '최고관리자');
+    }
+
+    if (res?.success) {
+      showToast(`✅ 정산 ID #${settlementId} 지급이 안전하게 승인 완료되었습니다.`);
+      window.loadSettlementsList();
+    } else {
+      showToast(`❌ 정산 승인 실패: ${res?.error || '알 수 없는 오류'}`);
+    }
+  } catch (err) {
+    showToast(`❌ 오류: ${err.message}`);
+  }
+};
+
+// 수익배분 집계 실행 핸들러
+window.handleRevenueCalculation = async function() {
+  const periodMonth = document.getElementById('revPeriodMonth')?.value || '2026-08';
+  const grossRev = Number(document.getElementById('revGrossRevenue')?.value || 10000000);
+  const adFee = Number(document.getElementById('revAdNetworkFee')?.value || 2000000);
+  const poolRatio = Number(document.getElementById('revWriterPoolRatio')?.value || 0.625);
+
+  try {
+    let res = null;
+    if (window.WebNovelsAdmin?.allocateRevenue) {
+      res = await window.WebNovelsAdmin.allocateRevenue(periodMonth);
+    } else if (window.WebNovelsAdmin?.calculateRevenue) {
+      res = await window.WebNovelsAdmin.calculateRevenue(periodMonth, grossRev, adFee, poolRatio);
+    }
+
+    if (res?.success) {
+      showToast(`🎉 ${periodMonth}월 62.5% 작가 수익 풀 배분 집계가 성공적으로 완료되었습니다!`);
+      if (window.WebNovelsAdmin?.fetchRevenueEvents) {
+        const events = await window.WebNovelsAdmin.fetchRevenueEvents();
+        renderRevenueEvents(events);
+      }
+    } else {
+      showToast(`❌ 집계 실패: ${res?.error || '알 수 없는 오류'}`);
+    }
+  } catch (err) {
+    showToast(`❌ 집계 예외: ${err.message}`);
+  }
+};
+
+// 정산 최종 마감 핸들러
+window.handleRevenueConfirm = async function() {
+  const periodMonth = document.getElementById('revConfirmMonth')?.value || '2026-08';
+  if (!confirm(`${periodMonth}월 정산 마감 처리를 진행하시겠습니까? (Confirmed 승인)`)) return;
+
+  try {
+    let res = null;
+    if (window.WebNovelsAdmin?.confirmRevenue) {
+      res = await window.WebNovelsAdmin.confirmRevenue(periodMonth);
+    }
+
+    if (res?.success) {
+      showToast(`🔒 ${periodMonth}월 정산이 최종 확정(Confirmed) 마감되었습니다.`);
+      if (window.WebNovelsAdmin?.fetchRevenueEvents) {
+        const events = await window.WebNovelsAdmin.fetchRevenueEvents();
+        renderRevenueEvents(events);
+      }
+    } else {
+      showToast(`❌ 마감 실패: ${res?.error || '알 수 없는 오류'}`);
+    }
+  } catch (err) {
+    showToast(`❌ 마감 예외: ${err.message}`);
   }
 };
 
