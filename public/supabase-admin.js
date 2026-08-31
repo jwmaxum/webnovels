@@ -991,30 +991,79 @@ async function addCommentToEpisode(workId, episodeId, userId, nickname, content,
 // ============================================================
 
 async function fetchSubAdmins() {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient) return [];
   try {
+    // 1. Try RPC get_sub_admins first (Security Definer RPC)
+    try {
+      const { data: rpcData, error: rpcErr } = await supabaseClient.rpc('get_sub_admins');
+      if (!rpcErr && Array.isArray(rpcData) && rpcData.length > 0) {
+        return rpcData;
+      }
+      if (!rpcErr && Array.isArray(rpcData)) {
+        // RPC returned empty array, but check direct table as well
+      }
+    } catch (e) {}
+
+    // 2. Direct table query
     const { data, error } = await supabaseClient
       .from('admin_users')
-      .select('*')
+      .select('id, username, nickname, email, role, permissions, is_active, created_at')
       .eq('role', 'SUB_ADMIN')
       .order('created_at', { ascending: false });
-    if (!error && data) return data;
+
+    if (!error && Array.isArray(data)) return data;
+    if (error) {
+      console.warn('[fetchSubAdmins Warning] DB 조회 제한:', error.message);
+    }
     return [];
   } catch (e) {
+    console.error('[fetchSubAdmins Error]', e);
     return [];
   }
 }
 
-async function createSubAdmin(subAdminData) {
+async function createSubAdmin(arg1, arg2, arg3, arg4, arg5) {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+
+  let username, password, nickname, email, permissions;
+  if (typeof arg1 === 'object' && arg1 !== null) {
+    username = arg1.username;
+    password = arg1.password || '!password123';
+    nickname = arg1.nickname || arg1.username;
+    email = arg1.email || `${username}@webnovel-admin.com`;
+    permissions = arg1.permissions || ['DASHBOARD'];
+  } else {
+    username = arg1;
+    password = arg2 || '!password123';
+    nickname = arg3 || username;
+    email = arg4 || `${username}@webnovel-admin.com`;
+    permissions = Array.isArray(arg5) ? arg5 : ['DASHBOARD'];
+  }
+
   try {
+    // 1. Try RPC create_admin_user first
+    try {
+      const { data: rpcRes, error: rpcErr } = await supabaseClient.rpc('create_admin_user', {
+        p_username: username,
+        p_password: password,
+        p_email: email,
+        p_nickname: nickname,
+        p_permissions: JSON.stringify(permissions)
+      });
+      if (!rpcErr && rpcRes && rpcRes.success) {
+        return { success: true, id: rpcRes.id };
+      }
+    } catch (e) {}
+
+    // 2. Direct insert fallback
     const payload = {
-      id: window.crypto?.randomUUID ? window.crypto.randomUUID() : `00000000-0000-0000-0000-${Date.now()}`,
-      username: subAdminData.username,
-      email: subAdminData.email,
-      nickname: subAdminData.nickname || subAdminData.username,
+      username,
+      email,
+      nickname,
       role: 'SUB_ADMIN',
-      permissions: subAdminData.permissions || ['DASHBOARD'],
+      permissions: permissions,
       is_active: true
     };
 
@@ -1022,11 +1071,13 @@ async function createSubAdmin(subAdminData) {
     if (error) throw error;
     return { success: true, admin: data };
   } catch (err) {
+    console.error('[createSubAdmin Error]', err);
     return { success: false, error: err.message };
   }
 }
 
 async function updateSubAdminPermissions(subAdminId, permissions) {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient) return { success: false, error: 'DB 미연결' };
   try {
     const { data, error } = await supabaseClient
@@ -1041,8 +1092,18 @@ async function updateSubAdminPermissions(subAdminId, permissions) {
 }
 
 async function deleteSubAdmin(subAdminId) {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient) return { success: false, error: 'DB 미연결' };
   try {
+    // 1. Try RPC delete_sub_admin first
+    try {
+      const { data: rpcRes, error: rpcErr } = await supabaseClient.rpc('delete_sub_admin', {
+        p_id: String(subAdminId)
+      });
+      if (!rpcErr && rpcRes?.success) return { success: true };
+    } catch (e) {}
+
+    // 2. Direct delete fallback
     const { data, error } = await supabaseClient
       .from('admin_users')
       .delete()
