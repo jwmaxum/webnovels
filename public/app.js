@@ -20,6 +20,7 @@
 // ============================================================
 
 const API_BASE = '/api';
+var cdgHeroInterval = null;
 
 // ============================================================
 // [Helper] createDefault6Episodes
@@ -238,20 +239,12 @@ let currentFontSize = 18;
 // ============================================================
 // [Entry] Safe Multi-Stage Initialization (DOMContentLoaded + readyState fallback)
 // ============================================================
-// [Entry] Safe Multi-Stage Initialization (DOMContentLoaded + readyState fallback)
-// ============================================================
 function runBootstrap() {
   try {
     initWebNovelsApp();
   } catch (err) {
     console.error('[WebNovels Bootstrap Error]', err);
   }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', runBootstrap);
-} else {
-  runBootstrap();
 }
 
 // ============================================================
@@ -410,7 +403,6 @@ async function initWebNovelsApp() {
 // ============================================================
 // [CDG PLAY Aesthetics] Home Works Renderer & Helpers
 // ============================================================
-let cdgHeroInterval = null;
 
 const getWorkCover = (w) => {
   if (!w) return '/images/stormqueen_oath.jpg';
@@ -556,7 +548,7 @@ function renderGenreRecommendations(selectedGenre = '전체') {
   }
 
   container.innerHTML = filtered.map(w => renderCdgWorkCardHtml(w)).join('');
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
 // Main Home Works Orchestrator (CMS Curation Flags Driven)
@@ -633,8 +625,8 @@ async function renderHomeWorks() {
       }).join('');
     }
 
-    if (window.lucide) {
-      lucide.createIcons();
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
     }
   } catch (error) {
     console.error('CDG PLAY 랜딩페이지 작품 로드 실패:', error);
@@ -673,7 +665,7 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
       </article>
     `;
   }).join('');
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
 // ----------------------------------------------------
@@ -708,12 +700,12 @@ function renderSearchResults(query = '') {
       </div>
       ${fallback.map(renderSearchResultItem).join('')}
     `;
-    if (window.lucide) lucide.createIcons();
+    if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     return;
   }
 
   container.innerHTML = results.slice(0, 8).map(renderSearchResultItem).join('');
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
 function renderSearchResultItem(work) {
@@ -942,7 +934,7 @@ function renderReaderRecommendations(currentWorkId) {
 
   const others = SAMPLE_WORKS.filter(w => Number(w.id) !== Number(currentWorkId)).slice(0, 4);
   container.innerHTML = others.map(w => renderCdgWorkCardHtml(w)).join('');
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
 function saveReadingProgress(workId, epNum) {
@@ -993,7 +985,7 @@ function renderLibraryContent() {
     `).join('');
   }
 
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
 function updateFavoriteButtons(workId) {
@@ -1773,6 +1765,53 @@ window.fetchCreatorDashboardData = async function() {
   if (window.lucide) window.lucide.createIcons();
 };
 
+async function handleCreatorSettlementReq(amountParam) {
+  let author = currentLoggedAuthor;
+  if (!author) {
+    const authorStr = localStorage.getItem('webnovels_author');
+    if (authorStr) {
+      try { author = JSON.parse(authorStr); } catch (e) {}
+    }
+  }
+  if (!author && Array.isArray(SAMPLE_AUTHORS) && SAMPLE_AUTHORS.length > 0) {
+    author = SAMPLE_AUTHORS[0];
+  }
+
+  if (!author) {
+    showToast('⚠️ 작가 로그인이 필요합니다.');
+    return;
+  }
+
+  const payableRevenue = typeof amountParam === 'number' && !isNaN(amountParam) ? amountParam : 
+    (Number(document.getElementById('creatorSettlementPayableAmount')?.textContent?.replace(/[^0-9]/g, '')) || 0);
+
+  if (payableRevenue <= 0) {
+    showToast('⚠️ 현재 출금 가능한 정산 잔여액이 없습니다.');
+    return;
+  }
+
+  const penName = author.pen_name || author.penName || author.username || '연재 작가';
+  const confirmed = confirm(`[정산금 출금 신청]\n\n신청 작가: ${penName}\n출금 신청액: ₩${payableRevenue.toLocaleString()}\n\n해당 금액으로 정산 출금을 신청하시겠습니까?`);
+  if (!confirmed) return;
+
+  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.requestSettlementSecure === 'function') {
+    showToast('⏳ 정산금 출금 신청을 처리 중입니다...');
+    const bank = author.bank_info || author.bankInfo || '국민은행 999-888-777666';
+    const res = await window.WebNovelsAdmin.requestSettlementSecure(author.id, payableRevenue, bank);
+    if (res.success) {
+      showToast(`🎉 ₩${payableRevenue.toLocaleString()} 정산금 출금 신청이 완료되었습니다! (심사 대기)`);
+      if (typeof window.fetchCreatorDashboardData === 'function') {
+        await window.fetchCreatorDashboardData();
+      }
+    } else {
+      showToast(`❌ 출금 신청 실패: ${res.error || '오류 발생'}`);
+    }
+  } else {
+    showToast('❌ 정산 서비스 연동 상태를 확인할 수 없습니다.');
+  }
+}
+window.handleCreatorSettlementReq = handleCreatorSettlementReq;
+
 window.prepareNewEpisodeForWork = function(workId) {
   switchCreatorTab('new-ep');
   const sel = document.getElementById('newEpWorkSelect');
@@ -2197,7 +2236,7 @@ async function loadAdminDashboard() {
   }
 
   // Lucide 아이콘 재렌더
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
 // 독자 회원 (readers) 실시간 DB 로드 및 렌더링
@@ -4299,7 +4338,7 @@ function renderReaderRecommendations(currentWorkId) {
 
   const others = SAMPLE_WORKS.filter(w => Number(w.id) !== Number(currentWorkId)).slice(0, 4);
   container.innerHTML = others.map(w => renderCdgWorkCardHtml(w)).join('');
-  if (window.lucide) lucide.createIcons({ root: container });
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons({ root: container });
 }
 
 // 🪙 포인트로 회차 즉시 열람 (100P 차감)
@@ -4531,24 +4570,8 @@ async function handleMemberLogin() {
 
     showToast('❌ 아이디 또는 비밀번호가 일치하지 않거나 등록되지 않은 계정입니다.');
   } catch (err) {
+    console.error('[handleMemberLogin Error]', err);
     showToast(`❌ 로그인 처리 오류: ${err.message}`);
-  }
-}
-    localStorage.setItem('webnovels_token', `reader-token-${userObj.id}`);
-    localStorage.removeItem('webnovels_author');
-
-    if (remoteActivity && typeof syncUserActivityToStorage === 'function') {
-      syncUserActivityToStorage(remoteActivity);
-    }
-
-    updateMemberHeader(userObj);
-    renderLibraryContent();
-    closeAllModals();
-    showToast(`🎉 ${userObj.nickname}님 환영합니다! 로그인되었습니다.`);
-    switchWebNovelsView('view-mypage');
-  } catch (globalErr) {
-    console.error('[handleMemberLogin Unexpected Error]', globalErr);
-    showToast('❌ 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
   }
 }
 
@@ -6282,3 +6305,15 @@ if (typeof window !== 'undefined') {
     }
   });
 }
+
+// ------------------------------------------------------------
+// [Execution] Bootstrap initialization after all declarations
+// ------------------------------------------------------------
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runBootstrap);
+  } else {
+    runBootstrap();
+  }
+}
+
