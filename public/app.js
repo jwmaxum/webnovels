@@ -527,13 +527,17 @@ function renderGenreRecommendations(selectedGenre = '전체') {
   let filtered = SAMPLE_WORKS;
   if (selectedGenre !== '전체') {
     if (selectedGenre === '19+ 성인') {
-      filtered = SAMPLE_WORKS.filter(w => w.rating === 'AGE_19' || w.genre === '성인');
+      filtered = SAMPLE_WORKS.filter(w => w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인')));
     } else {
-      filtered = SAMPLE_WORKS.filter(w => (w.genre && w.genre.includes(selectedGenre)) || (selectedGenre.includes(w.genre)));
+      filtered = SAMPLE_WORKS.filter(w => {
+        if (!w.genre) return false;
+        if (Array.isArray(w.genre)) return w.genre.some(g => String(g).includes(selectedGenre));
+        return String(w.genre).includes(selectedGenre);
+      });
     }
   }
 
-  if (filtered.length === 0) {
+  if (!filtered || filtered.length === 0) {
     filtered = SAMPLE_WORKS.slice(0, 4);
   }
 
@@ -544,35 +548,45 @@ function renderGenreRecommendations(selectedGenre = '전체') {
 // Main Home Works Orchestrator (CMS Curation Flags Driven)
 async function renderHomeWorks() {
   try {
-    // 1. HERO Carousel (관리자가 지정한 isTopRecommended 작품 우선 배치, 부족 시 상위 작품)
-    const topRecommended = SAMPLE_WORKS.filter(w => w.isTopRecommended);
+    if (!SAMPLE_WORKS || SAMPLE_WORKS.length === 0) {
+      console.warn('[renderHomeWorks] SAMPLE_WORKS가 비어있습니다.');
+      return;
+    }
+
+    const isTop = (w) => !!(w.isTopRecommended || w.is_top_recommended);
+    const isPopular = (w) => !!(w.isPopularWork || w.is_popular_work);
+    const isNew = (w) => !!(w.isNewWork || w.is_new_work);
+    const isComp = (w) => !!(w.isCompleted || w.is_completed);
+
+    // 1. HERO Carousel
+    const topRecommended = SAMPLE_WORKS.filter(isTop);
     const heroWorks = topRecommended.length >= 2 
       ? topRecommended 
-      : [...topRecommended, ...SAMPLE_WORKS.filter(w => !w.isTopRecommended)].slice(0, 3);
-    renderCdgHeroSlider(heroWorks);
+      : [...topRecommended, ...SAMPLE_WORKS.filter(w => !isTop(w))].slice(0, 3);
+    renderCdgHeroSlider(heroWorks.length > 0 ? heroWorks : SAMPLE_WORKS.slice(0, 3));
 
-    // 2. 🔥 지금 가장 많이 읽는 작품 (관리자 지정 isPopularWork 작품 우선 + Top 4 Ranking 배지)
+    // 2. 🔥 지금 가장 많이 읽는 작품
     const trendingContainer = document.getElementById('trendingWorksGrid');
     if (trendingContainer) {
-      const populars = SAMPLE_WORKS.filter(w => w.isPopularWork);
+      const populars = SAMPLE_WORKS.filter(isPopular);
       const top4 = populars.length >= 4 
         ? populars.slice(0, 4) 
-        : [...populars, ...SAMPLE_WORKS.filter(w => !w.isPopularWork)].slice(0, 4);
+        : [...populars, ...SAMPLE_WORKS.filter(w => !isPopular(w))].slice(0, 4);
 
-      trendingContainer.innerHTML = top4.map((w, idx) => {
+      trendingContainer.innerHTML = (top4.length > 0 ? top4 : SAMPLE_WORKS.slice(0, 4)).map((w, idx) => {
         return renderCdgWorkCardHtml(w, { rank: idx + 1 });
       }).join('');
     }
 
-    // 3. ✨ 새로운 작품 (관리자 지정 isNewWork 작품 우선)
+    // 3. ✨ 새로운 작품
     const newWorksContainer = document.getElementById('newWorksGrid');
     if (newWorksContainer) {
-      const news = SAMPLE_WORKS.filter(w => w.isNewWork);
+      const news = SAMPLE_WORKS.filter(isNew);
       const new4 = news.length >= 4 
         ? news.slice(0, 4) 
-        : [...news, ...SAMPLE_WORKS.filter(w => !w.isNewWork)].slice(0, 4);
+        : [...news, ...SAMPLE_WORKS.filter(w => !isNew(w))].slice(0, 4);
 
-      newWorksContainer.innerHTML = new4.map(w => {
+      newWorksContainer.innerHTML = (new4.length > 0 ? new4 : SAMPLE_WORKS.slice(0, 4)).map(w => {
         return renderCdgWorkCardHtml(w, { badge: 'NEW' });
       }).join('');
     }
@@ -580,32 +594,31 @@ async function renderHomeWorks() {
     // 4. 장르별 추천 (기본: 전체)
     renderGenreRecommendations('전체');
 
-    // 5. 🎨 인기 웹툰 (Webtoons Grid)
+    // 5. 🎨 인기 웹툰
     const webtoonsContainer = document.getElementById('webtoonsGrid');
     if (webtoonsContainer) {
-      const webtoons = SAMPLE_WORKS.filter(w => w.contentType === 'WEBTOON');
+      const webtoons = SAMPLE_WORKS.filter(w => w.contentType === 'WEBTOON' || w.content_type === 'WEBTOON');
       const list = webtoons.length > 0 ? webtoons : SAMPLE_WORKS.slice(0, 2);
       webtoonsContainer.innerHTML = list.map(w => renderCdgWorkCardHtml(w, { badge: 'NEW' })).join('');
     }
 
-    // 6. 🏆 완결 명작 모음 (관리자 지정 isCompleted 작품 우선)
+    // 6. 🏆 완결 명작 모음
     const completedContainer = document.getElementById('completedWorksGrid');
     if (completedContainer) {
-      const completed = SAMPLE_WORKS.filter(w => w.isCompleted);
-      const list = completed.length > 0 ? completed : [SAMPLE_WORKS[6], SAMPLE_WORKS[7]].filter(Boolean);
+      const completed = SAMPLE_WORKS.filter(isComp);
+      const list = completed.length > 0 ? completed : SAMPLE_WORKS.slice(2, 4);
       completedContainer.innerHTML = list.map(w => renderCdgWorkCardHtml(w, { badge: 'FREE' })).join('');
     }
 
-    // 7. 오늘의 무료 작품 (대표 무료 작품 4선)
+    // 7. 오늘의 무료 작품
     const todayFreeContainer = document.getElementById('todayFreeGrid');
     if (todayFreeContainer) {
-      const free4 = [SAMPLE_WORKS[0], SAMPLE_WORKS[1], SAMPLE_WORKS[3], SAMPLE_WORKS[5]].filter(Boolean);
+      const free4 = SAMPLE_WORKS.slice(0, 4);
       todayFreeContainer.innerHTML = free4.map(w => {
         return renderCdgWorkCardHtml(w, { badge: 'FREE' });
       }).join('');
     }
 
-    // Initialize Lucide Icons for dynamic content
     if (window.lucide) {
       lucide.createIcons();
     }
@@ -623,14 +636,15 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
 
   const filtered = SAMPLE_WORKS.filter(w => {
     if (genreFilter === 'ALL' || genreFilter === '전체') return true;
-    if (genreFilter === '19+ 성인') return w.rating === 'AGE_19' || w.genre === '성인';
-    return w.genre.includes(genreFilter);
+    if (genreFilter === '19+ 성인') return w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
+    const gStr = Array.isArray(w.genre) ? w.genre.join(' ') : (w.genre || '');
+    return gStr.includes(genreFilter);
   });
 
   container.innerHTML = filtered.map(w => {
-    const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+    const isAdult = w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
     const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
-    const tagText = isAdult ? '19+ 성인' : w.genre;
+    const tagText = isAdult ? '19+ 성인' : (Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'));
     const cover = getWorkCover(w);
     const rawViews = Number(w.viewCount ?? w.view_count ?? 0);
     const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
@@ -5184,16 +5198,24 @@ window.handleSaveProfile = async function(event) {
 // ----------------------------------------------------
 // UI Modal & Toast Helpers
 // ----------------------------------------------------
-function openModal(id) {
+// UI Modal & Toast Helpers
+// ----------------------------------------------------
+window.openModal = function(id) {
   const m = document.getElementById(id);
   if (m) m.classList.add('active');
+};
+function openModal(id) {
+  window.openModal(id);
 }
 
-function closeAllModals() {
+window.closeAllModals = function() {
   document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+};
+function closeAllModals() {
+  window.closeAllModals();
 }
 
-function showToast(msg) {
+window.showToast = function(msg) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
@@ -5205,6 +5227,9 @@ function showToast(msg) {
   setTimeout(() => {
     toast.remove();
   }, 3000);
+};
+function showToast(msg) {
+  window.showToast(msg);
 }
 
 
