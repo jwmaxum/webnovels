@@ -6295,3 +6295,43 @@ window.loadCreatorStudioEarnings = async function(authorId) {
 window.showAdminMenuNotice = function(menuKey) {
   showToast(`📌 [${menuKey}] 관리자 메뉴로 진입했습니다.`);
 };
+
+// ============================================================
+// [Realtime Sync] 웹소켓 기반 다중 브라우저 실시간 UI 자동 동기화
+// ============================================================
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    if (window.WebNovelsAdmin?.setupRealtimeSubscriptions) {
+      window.WebNovelsAdmin.setupRealtimeSubscriptions({
+        onWorksChange: async (payload) => {
+          console.log('⚡ [Realtime UI] Works 갱신 수신:', payload.eventType);
+          if (window.WebNovelsAdmin?.fetchWorksFromSupabase) {
+            const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+            if (dbWorks && dbWorks.length > 0) {
+              SAMPLE_WORKS.length = 0;
+              SAMPLE_WORKS.push(...dbWorks);
+              if (typeof renderHomeRankingList === 'function') renderHomeRankingList();
+              if (typeof renderDiscoverGrid === 'function') renderDiscoverGrid();
+            }
+          }
+          if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
+        },
+        onEpisodesChange: async (payload) => {
+          console.log('⚡ [Realtime UI] Episodes 갱신 수신:', payload.eventType);
+          if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
+        },
+        onSettlementsChange: (payload) => {
+          console.log('⚡ [Realtime UI] Settlements 갱신 수신:', payload.eventType);
+          if (typeof window.loadSettlementsList === 'function') window.loadSettlementsList();
+          if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
+        },
+        onReportsChange: (payload) => {
+          console.log('⚡ [Realtime UI] Reports 갱신 수신:', payload.eventType);
+          if (typeof window.renderDashboardActionQueuePreview === 'function') {
+            window.renderDashboardActionQueuePreview();
+          }
+        }
+      });
+    }
+  });
+}

@@ -35,7 +35,7 @@ if (typeof window !== 'undefined') {
 }
 
 // ============================================================
-// [Auth] 관리자 인증 (Admin Authentication)
+// [Auth] 관리자 인증 (Admin Authentication - DB 정규화)
 // ============================================================
 async function adminLogin(email, password) {
   const cleanEmail = String(email).trim().toLowerCase();
@@ -45,8 +45,12 @@ async function adminLogin(email, password) {
     initSupabaseAdmin();
   }
 
-  // 1. Supabase RPC verify_admin_login 시도
-  if (supabaseClient) {
+  if (!supabaseClient) {
+    return { success: false, error: '데이터베이스 연결이 초기화되지 않았습니다.' };
+  }
+
+  try {
+    // 1. Supabase RPC verify_admin_login 호출 시도
     try {
       const { data, error } = await supabaseClient.rpc('verify_admin_login', {
         p_email: cleanEmail,
@@ -57,39 +61,27 @@ async function adminLogin(email, password) {
         currentAdmin = data.admin;
         return { success: true, admin: data.admin };
       }
+    } catch (rpcErr) {}
 
-      const { data: adminUsers, error: queryError } = await supabaseClient
-        .from('admin_users')
-        .select('*')
-        .or(`email.ilike.${cleanEmail},username.ilike.${cleanEmail}`);
+    // 2. admin_users 테이블 직접 조회 및 안전한 인증 검증
+    const { data: adminUsers, error: queryError } = await supabaseClient
+      .from('admin_users')
+      .select('*')
+      .or(`email.ilike.${cleanEmail},username.ilike.${cleanEmail}`);
 
-      if (!queryError && adminUsers && adminUsers.length > 0) {
-        const adminUser = adminUsers[0];
-        if (adminUser.password_hash === cleanPw || cleanPw === '!12345' || cleanPw === 'admin1234') {
-          currentAdmin = adminUser;
-          return { success: true, admin: adminUser };
-        }
+    if (!queryError && adminUsers && adminUsers.length > 0) {
+      const adminUser = adminUsers[0];
+      if (adminUser.password_hash === cleanPw || adminUser.password_hash === `!${cleanPw}`) {
+        currentAdmin = adminUser;
+        return { success: true, admin: adminUser };
       }
-    } catch (err) {
-      console.warn('[adminLogin DB Warning]', err.message);
     }
-  }
 
-  // 2. 기본/오프라인 Super Admin Fallback 계정 매칭
-  if ((cleanEmail === 'admin' || cleanEmail === 'superadmin' || cleanEmail === 'admin@webnovels.com') && 
-      (cleanPw === 'admin1234' || cleanPw === '!12345' || cleanPw === 'admin')) {
-    const fallbackAdmin = {
-      id: 'admin-root',
-      username: 'admin',
-      nickname: '최고관리자',
-      email: 'admin@webnovels.com',
-      role: 'SUPER_ADMIN'
-    };
-    currentAdmin = fallbackAdmin;
-    return { success: true, admin: fallbackAdmin };
+    return { success: false, error: '관리자 이메일 또는 비밀번호가 일치하지 않습니다.' };
+  } catch (err) {
+    console.error('[adminLogin Exception]', err);
+    return { success: false, error: '인증 서버 오류가 발생했습니다.' };
   }
-
-  return { success: false, error: '이메일 또는 비밀번호가 일치하지 않습니다.' };
 }
 
 function adminLogout() {
@@ -1591,11 +1583,11 @@ async function readerLogin(identifier, password) {
 
     if (!error && data && data.length > 0) {
       const reader = data[0];
-      if (reader.password_hash === cleanPw || reader.password_hash === `!${cleanPw}` || cleanPw === '!12345') {
+      if (reader.password_hash === cleanPw || reader.password_hash === `!${cleanPw}`) {
         return { success: true, reader };
       }
     }
-    return { success: false, error: '독자 계정 정보가 일치하지 않습니다.' };
+    return { success: false, error: '독자 계정 정보 또는 비밀번호가 일치하지 않습니다.' };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -1617,13 +1609,50 @@ async function authorLogin(identifier, password) {
 
     if (!error && data && data.length > 0) {
       const author = data[0];
-      if (author.password_hash === cleanPw || author.password_hash === `!${cleanPw}` || cleanPw === '!12345') {
+      if (author.password_hash === cleanPw || author.password_hash === `!${cleanPw}`) {
         return { success: true, author };
       }
     }
-    return { success: false, error: '작가 계정 정보가 일치하지 않습니다.' };
+    return { success: false, error: '작가 계정 정보 또는 비밀번호가 일치하지 않습니다.' };
   } catch (err) {
     return { success: false, error: err.message };
+  }
+}
+
+// ============================================================
+// [Realtime Subscriptions] Supabase postgres_changes 실시간 채널 구독
+// ============================================================
+let realtimeChannel = null;
+function setupRealtimeSubscriptions(callbacks = {}) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || realtimeChannel) return;
+
+  try {
+    realtimeChannel = supabaseClient
+      .channel('public-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'works' }, payload => {
+        console.log('[Realtime] Works 변경 감지:', payload.eventType);
+        if (typeof callbacks.onWorksChange === 'function') callbacks.onWorksChange(payload);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'episodes' }, payload => {
+        console.log('[Realtime] Episodes 변경 감지:', payload.eventType);
+        if (typeof callbacks.onEpisodesChange === 'function') callbacks.onEpisodesChange(payload);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'author_settlements' }, payload => {
+        console.log('[Realtime] Settlements 변경 감지:', payload.eventType);
+        if (typeof callbacks.onSettlementsChange === 'function') callbacks.onSettlementsChange(payload);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, payload => {
+        console.log('[Realtime] Reports 변경 감지:', payload.eventType);
+        if (typeof callbacks.onReportsChange === 'function') callbacks.onReportsChange(payload);
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('⚡ [Realtime] Supabase WebSocket 실시간 동기화 채널 연결 완료');
+        }
+      });
+  } catch (err) {
+    console.warn('[setupRealtimeSubscriptions Error]', err);
   }
 }
 
@@ -1780,6 +1809,7 @@ window.WebNovelsAdmin = {
   fetchActionQueueFromDB,
   resolveActionQueueItemInDB,
   submitEpisodeForReview,
-  rejectContentReview
+  rejectContentReview,
+  setupRealtimeSubscriptions
 };
 
