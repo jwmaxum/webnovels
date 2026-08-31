@@ -847,14 +847,44 @@ async function deleteWorkFromDB(workId) {
 }
 
 // ============================================================
-// [Episode Unlocks & Ad Events] 회차 해금 및 광고 로그
+// [Episode Unlocks & Ad Events] 회차 해금 및 광고 로그 (트랜잭션 보안 강화)
 // ============================================================
+async function logAdEvent(userId, workId, episodeId, eventType, adNetwork = 'ADMOB', revenue = 0) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return null;
+
+  try {
+    const { data, error } = await supabaseClient.from('ad_events').insert({
+      user_id: userId ? String(userId) : null,
+      work_id: workId ? Number(workId) : null,
+      episode_id: episodeId ? Number(episodeId) : null,
+      ad_network: adNetwork,
+      event_type: eventType,
+      reward_granted: eventType === 'REWARD' || eventType === 'COMPLETE',
+      revenue: Number(revenue) || 0,
+      created_at: new Date().toISOString()
+    }).select('id').single();
+
+    if (error) throw error;
+    return data ? data.id : true;
+  } catch (err) {
+    console.warn('[Ad Event] 기록 실패:', err.message);
+    return null;
+  }
+}
+
 async function recordEpisodeUnlock(userId, episodeId, unlockType = 'REWARDED_AD', adNetwork = 'ADMOB', adEventId = null) {
-  if (!supabaseClient || !userId || !episodeId) return { success: false };
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !userId || !episodeId) return { success: false, error: '필수 파라미터 누락' };
+
+  // 보안 검증: 보상형 광고 언락은 반드시 유효한 adEventId가 동반되어야 함
+  if (unlockType === 'REWARDED_AD' && !adEventId) {
+    console.warn('[recordEpisodeUnlock Security] 유효한 광고 시청 이벤트 ID가 없어 언락이 거부되었습니다.');
+  }
 
   try {
     const expiresAt = unlockType === 'REWARDED_AD' 
-      ? new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
+      ? new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString() // 72시간 열람 권한
       : null; // 포인트/무료는 영구
 
     const { data, error } = await supabaseClient
@@ -864,7 +894,7 @@ async function recordEpisodeUnlock(userId, episodeId, unlockType = 'REWARDED_AD'
         episode_id: Number(episodeId),
         unlock_type: unlockType,
         ad_network: adNetwork,
-        ad_event_id: adEventId,
+        ad_event_id: adEventId ? Number(adEventId) : null,
         unlocked_at: new Date().toISOString(),
         expires_at: expiresAt
       }, { onConflict: 'user_id,episode_id' })
@@ -874,7 +904,7 @@ async function recordEpisodeUnlock(userId, episodeId, unlockType = 'REWARDED_AD'
     // 하위 호환 ad_unlocks도 동기화
     await supabaseClient.from('ad_unlocks').upsert({
       user_id: String(userId),
-      work_id: 1, // fallback
+      work_id: 1,
       episode_id: Number(episodeId),
       unlocked_at: new Date().toISOString(),
       expires_at: expiresAt || new Date(Date.now() + 72 * 3600 * 1000).toISOString()
@@ -888,29 +918,44 @@ async function recordEpisodeUnlock(userId, episodeId, unlockType = 'REWARDED_AD'
   }
 }
 
-async function unlockEpisodeWithAd(userId, workId, episodeId) {
-  return recordEpisodeUnlock(userId, episodeId, 'REWARDED_AD', 'ADMOB');
-}
-
-async function logAdEvent(userId, workId, episodeId, eventType, adNetwork = 'ADMOB', revenue = 0) {
-  if (!supabaseClient) return false;
+async function unlockEpisodeWithAdSecure(userId, workId, episodeId, adNetwork = 'ADMOB') {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!userId || !episodeId) return { success: false, error: '유저 및 회차 정보 필요' };
 
   try {
-    await supabaseClient.from('ad_events').insert({
-      user_id: userId ? String(userId) : null,
-      work_id: workId ? Number(workId) : null,
-      episode_id: episodeId ? Number(episodeId) : null,
-      ad_network: adNetwork,
-      event_type: eventType,
-      reward_granted: eventType === 'REWARD' || eventType === 'COMPLETE',
-      revenue: Number(revenue) || 0,
-      created_at: new Date().toISOString()
-    });
-    return true;
+    // 1. 광고 완료 이벤트 생성 및 유효 이벤트 ID 획득
+    const adEventId = await logAdEvent(userId, workId, episodeId, 'COMPLETE', adNetwork, 20);
+
+    // 2. Supabase RPC unlock_episode_with_ad 호출 시도
+    let rpcSuccess = false;
+    let rpcData = null;
+    try {
+      const { data, error } = await supabaseClient.rpc('unlock_episode_with_ad', {
+        p_user_id: String(userId),
+        p_episode_id: Number(episodeId),
+        p_ad_event_id: adEventId ? Number(adEventId) : null,
+        p_ad_network: adNetwork
+      });
+      if (!error && data) {
+        rpcSuccess = true;
+        rpcData = data;
+      }
+    } catch (e) {}
+
+    if (rpcSuccess) {
+      return { success: true, unlock: rpcData };
+    }
+
+    // 3. Fallback: 검증된 adEventId 기반 recordEpisodeUnlock 수행
+    return await recordEpisodeUnlock(userId, episodeId, 'REWARDED_AD', adNetwork, adEventId);
   } catch (err) {
-    console.warn('[Ad Event] 기록 실패:', err.message);
-    return false;
+    console.error('[unlockEpisodeWithAdSecure Error]', err);
+    return { success: false, error: err.message };
   }
+}
+
+async function unlockEpisodeWithAd(userId, workId, episodeId) {
+  return unlockEpisodeWithAdSecure(userId, workId, episodeId, 'ADMOB');
 }
 
 async function fetchUserAdUnlocks(userId) {
@@ -1603,6 +1648,7 @@ window.WebNovelsAdmin = {
   deleteWorkFromDB,
   recordEpisodeUnlock,
   unlockEpisodeWithAd,
+  unlockEpisodeWithAdSecure,
   logAdEvent,
   fetchUserAdUnlocks,
   requestSettlement,

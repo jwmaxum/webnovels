@@ -1038,7 +1038,7 @@ window.handlePointUnlockEpisode = function() {
   }
 };
 
-// 보상형 광고 시뮬레이션 및 회차 언락
+// 보상형 광고 시뮬레이션 및 회차 언락 (보안 트랜잭션 연동)
 async function startAdSimulation() {
   const playerBox = document.getElementById('adPlayerBox');
   const timerText = document.getElementById('adTimerText');
@@ -1063,7 +1063,25 @@ async function startAdSimulation() {
         unlockedEpisodes.add(unlockKey);
       }
 
-      showToast('🎉 광고 시청 완료! 회차가 무료 해금되었습니다.');
+      // Supabase DB에 보안 광고 언락 트랜잭션 기록
+      let savedUser = null;
+      try {
+        savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+      } catch(e) {}
+
+      const currentUserId = savedUser ? (savedUser.id || savedUser.username) : 'guest-reader';
+      const currentWorkId = window._pendingAdUnlockWorkId || 1;
+      const currentEpNum = window._pendingAdUnlockEpNum || 4;
+
+      if (window.WebNovelsAdmin?.unlockEpisodeWithAdSecure) {
+        try {
+          await window.WebNovelsAdmin.unlockEpisodeWithAdSecure(currentUserId, currentWorkId, currentEpNum, 'ADMOB');
+        } catch (adErr) {
+          console.warn('[Ad Unlock DB Sync Warning]', adErr);
+        }
+      }
+
+      showToast('🎉 광고 시청 완료! 회차가 무료 해금되었습니다. (72시간 열람)');
       closeAllModals();
 
       if (window._pendingAdUnlockWorkId && window._pendingAdUnlockEpNum) {
