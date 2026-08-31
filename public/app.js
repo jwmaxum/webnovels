@@ -238,12 +238,20 @@ let currentFontSize = 18;
 // ============================================================
 // [Entry] Safe Multi-Stage Initialization (DOMContentLoaded + readyState fallback)
 // ============================================================
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+// [Entry] Safe Multi-Stage Initialization (DOMContentLoaded + readyState fallback)
+// ============================================================
+function runBootstrap() {
+  try {
     initWebNovelsApp();
-  });
+  } catch (err) {
+    console.error('[WebNovels Bootstrap Error]', err);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runBootstrap);
 } else {
-  initWebNovelsApp();
+  runBootstrap();
 }
 
 // ============================================================
@@ -251,10 +259,28 @@ if (document.readyState === 'loading') {
 // [Purpose] Lucide 아이콘 렌더링, 이벤트 리스너 바인딩, Supabase/API 실시간 데이터 로드, 세션 복원 및 메인 홈 렌더링
 // ============================================================
 async function initWebNovelsApp() {
-  lucide.createIcons();
-  bindWebNovelsEvents();
+  try {
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  } catch (e) {}
 
-  // 1. [즉시 1차 렌더링] 로컬 30개 데이터셋 또는 기본 데이터 렌더링
+  try {
+    bindWebNovelsEvents();
+  } catch (e) {
+    console.error('[bindWebNovelsEvents Error]', e);
+  }
+
+  // 1. [즉시 동기 렌더링] 기본 10개 작품 즉시 화면 표출 (0.01초 렌더링)
+  try {
+    renderHomeWorks();
+    renderDiscoverWorks();
+    renderSearchResults();
+  } catch (e) {
+    console.error('[Initial Render Error]', e);
+  }
+
+  // 2. [비동기 로컬 데이터셋 보강]
   try {
     const localRes = await fetch('/dataset_30_works.json');
     if (localRes.ok) {
@@ -266,17 +292,17 @@ async function initWebNovelsApp() {
           title: w.title,
           author: w.author,
           genre: Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'),
-          rating: Array.isArray(w.genre) && w.genre.includes('19세 이상') ? 'AGE_19' : 'ALL',
+          rating: (Array.isArray(w.genre) && w.genre.includes('19세 이상')) || w.rating === 'AGE_19' ? 'AGE_19' : 'ALL',
           aiUsageType: 'NONE',
           contentType: w.contentType || 'NOVEL',
           coverUrl: w.coverImage ? (w.coverImage.startsWith('/') ? w.coverImage : `/images/${w.coverImage}`) : '/images/stormqueen_oath.jpg',
-          description: w.description,
+          description: w.description || '',
           viewCount: Number(w.viewCount ?? w.view_count ?? 0),
           episodesCount: 6,
-          isCompleted: !!w.isCompleted,
-          isTopRecommended: !!w.isTopRecommended,
-          isPopularWork: !!w.isPopularWork,
-          isNewWork: !!w.isNewWork,
+          isCompleted: !!(w.isCompleted || w.is_completed),
+          isTopRecommended: !!(w.isTopRecommended || w.is_top_recommended),
+          isPopularWork: !!(w.isPopularWork || w.is_popular_work),
+          isNewWork: !!(w.isNewWork || w.is_new_work),
           episodes: createDefault6Episodes(w.title)
         })));
         if (localData.readers) {
@@ -287,29 +313,21 @@ async function initWebNovelsApp() {
           SAMPLE_AUTHORS.length = 0;
           SAMPLE_AUTHORS.push(...localData.authors);
         }
+        renderHomeWorks();
+        renderDiscoverWorks();
       }
     }
-  } catch(e) {
-    // offline/fallback
-  }
+  } catch(e) {}
 
-  renderHomeWorks();
-  renderDiscoverWorks();
-  renderSearchResults();
-
-  // 2. Supabase 클라이언트 초기화 & 실시간 DB 연동
+  // 3. [Supabase 실시간 DB 연동]
   if (window.WebNovelsAdmin) {
-    window.WebNovelsAdmin.init();
-    
-    // Supabase DB에서 30개 작품 및 회차 실데이터 fetch
     try {
+      window.WebNovelsAdmin.init();
       const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
       if (remoteWorks && remoteWorks.length > 0) {
-        console.log('[App Init] Supabase DB 실시간 작품 로드 성공:', remoteWorks.length);
+        console.log('⚡ [App Init] Supabase DB 실시간 30개 작품 로드 성공:', remoteWorks.length);
         SAMPLE_WORKS.length = 0;
         SAMPLE_WORKS.push(...remoteWorks);
-        
-        // 실데이터 기반으로 2차 리렌더링
         renderHomeWorks();
         renderDiscoverWorks();
         renderSearchResults();
@@ -318,22 +336,18 @@ async function initWebNovelsApp() {
       console.warn('[App Init] Supabase 작품 로드 예외:', err);
     }
 
-    // Supabase DB에서 독자 & 작가 실데이터 fetch
     try {
       const remoteReaders = await window.WebNovelsAdmin.fetchReadersFromSupabase();
       if (remoteReaders && remoteReaders.length > 0) {
         SAMPLE_READERS.length = 0;
         SAMPLE_READERS.push(...remoteReaders);
       }
-
       const remoteAuthors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
       if (remoteAuthors && remoteAuthors.length > 0) {
         SAMPLE_AUTHORS.length = 0;
         SAMPLE_AUTHORS.push(...remoteAuthors);
       }
-    } catch(err) {
-      console.warn('[App Init] Supabase 사용자 로드 예외:', err);
-    }
+    } catch(err) {}
   }
 
   // Event-Driven 실시간 데이터 변경 리스너 등록
