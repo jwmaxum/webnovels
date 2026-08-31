@@ -794,34 +794,34 @@
                   </div>
                 </div>
 
-                <!-- 2. 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 vs 웹툰) -->
-                <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.3);">
+                <!-- 2. 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 & 웹툰 & 연재/완결 가로 Row 정렬) -->
+                <div class="card glass-panel p-4 mb-4" style="border-radius: 10px; border: 1px solid var(--border-color); background: rgba(18, 18, 24, 0.85);">
                   <div class="flex-between mb-3">
-                    <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                      <i data-lucide="layers" class="icon-indigo"></i> 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 & 웹툰 1:1 완벽 구분)
+                    <h3 style="margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; font-weight: 700; color: #fff;">
+                      <i data-lucide="layers" class="icon-indigo" style="color: var(--color-brand-primary);"></i> 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 & 웹툰 1:1 완벽 구분)
                     </h3>
-                    <span class="badge badge-primary">실시간 DB 동기화</span>
+                    <span class="badge badge-primary" style="background: rgba(255,42,122,0.15); color: var(--cdg-pink); border: 1px solid rgba(255,42,122,0.3); font-size: 0.75rem; font-weight: 700; padding: 4px 10px;">⚡ 실시간 DB 동기화</span>
                   </div>
-                  <div class="grid-4-col gap-3">
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #8b5cf6;">
-                      <div class="text-muted small">📖 웹소설 (NOVEL)</div>
-                      <div style="font-size: 1.5rem; font-weight: 800; color: #a78bfa; margin-top: 4px;" id="kpiNovelsCount">17작품</div>
-                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;" id="kpiNovelEpisodesCount">102 에피소드 (텍스트)</div>
+                  <div class="content-status-row grid-4-col" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%;">
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(139,92,246,0.25); border-left: 4px solid #8b5cf6; background: rgba(139,92,246,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
+                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">📖 웹소설 (NOVEL)</div>
+                      <div style="font-size: 1.55rem; font-weight: 800; color: #a78bfa; margin: 4px 0 2px;" id="kpiNovelsCount">20작품</div>
+                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;" id="kpiNovelEpisodesCount">120 에피소드 (텍스트)</div>
                     </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #ec4899;">
-                      <div class="text-muted small">🎨 웹툰 (WEBTOON)</div>
-                      <div style="font-size: 1.5rem; font-weight: 800; color: #f472b6; margin-top: 4px;" id="kpiWebtoonsCount">13작품</div>
-                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;" id="kpiWebtoonEpisodesCount">78 에피소드 (컷 이미지)</div>
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(236,72,153,0.25); border-left: 4px solid #ec4899; background: rgba(236,72,153,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
+                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">🎨 웹툰 (WEBTOON)</div>
+                      <div style="font-size: 1.55rem; font-weight: 800; color: #f472b6; margin: 4px 0 2px;" id="kpiWebtoonsCount">10작품</div>
+                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;" id="kpiWebtoonEpisodesCount">60 에피소드 (컷 이미지)</div>
                     </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid var(--accent-emerald);">
-                      <div class="text-muted small">🟢 정상 연재중</div>
-                      <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;" id="kpiOngoingCount">25작품</div>
-                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">정기 발행 진행</div>
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(16,185,129,0.25); border-left: 4px solid var(--accent-emerald); background: rgba(16,185,129,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
+                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">🟢 정상 연재중</div>
+                      <div style="font-size: 1.55rem; font-weight: 800; color: var(--accent-emerald); margin: 4px 0 2px;" id="kpiOngoingCount">25작품</div>
+                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;">정기 발행 진행</div>
                     </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border-left: 3px solid #38bdf8;">
-                      <div class="text-muted small">🏁 완결 작품</div>
-                      <div style="font-size: 1.5rem; font-weight: 800; color: #38bdf8; margin-top: 4px;" id="kpiCompletedCount">5작품</div>
-                      <div class="text-muted small" style="font-size: 0.75rem; margin-top: 2px;">전체 회차 완결</div>
+                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(56,189,248,0.25); border-left: 4px solid #38bdf8; background: rgba(56,189,248,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
+                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">🏁 완결 작품</div>
+                      <div style="font-size: 1.55rem; font-weight: 800; color: #38bdf8; margin: 4px 0 2px;" id="kpiCompletedCount">5작품</div>
+                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;">전체 회차 완결</div>
                     </div>
                   </div>
                 </div>

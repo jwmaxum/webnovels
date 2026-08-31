@@ -249,12 +249,16 @@ async function fetchDashboardKPI() {
     const { count: authorsCount } = await supabaseClient.from('authors').select('*', { count: 'exact', head: true });
     if (typeof authorsCount === 'number') totalAuthors = authorsCount;
 
-    // 3. works count & views
-    const { data: worksData } = await supabaseClient.from('works').select('id, content_type, view_count');
+    // 3. works count & views & status
+    let ongoingCount = 0;
+    let completedCount = 0;
+    const { data: worksData } = await supabaseClient.from('works').select('id, content_type, view_count, status');
     if (worksData) {
       totalWorks = worksData.length;
       novelCount = worksData.filter(w => w.content_type !== 'WEBTOON').length;
       webtoonCount = worksData.filter(w => w.content_type === 'WEBTOON').length;
+      ongoingCount = worksData.filter(w => w.status !== 'COMPLETED').length;
+      completedCount = worksData.filter(w => w.status === 'COMPLETED').length;
       totalViews = worksData.reduce((sum, w) => sum + (Number(w.view_count) || 0), 0);
     }
 
@@ -288,6 +292,8 @@ async function fetchDashboardKPI() {
       total_views: totalViews,
       novel_count: novelCount,
       webtoon_count: webtoonCount,
+      ongoing_count: ongoingCount,
+      completed_count: completedCount,
       total_revenue: calculatedTotalRevenue,
       total_author_revenue: calculatedAuthorRevenue
     };

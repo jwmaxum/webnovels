@@ -2190,25 +2190,27 @@ window.loadDashboardKPIs = async function() {
     const elAdViews = document.getElementById('kpiTotalAdViews');
     if (elAdViews) elAdViews.textContent = `${Number(kpi.total_ad_views).toLocaleString()}회`;
 
-    // 콘텐츠 타입별 상세 현황 반영
+    // 콘텐츠 타입별 상세 현황 반영 (웹소설, 웹툰, 정상 연재, 완결)
     const elNovels = document.getElementById('kpiNovelsCount');
-    if (elNovels) elNovels.textContent = `${kpi.novel_count}작품`;
+    if (elNovels) elNovels.textContent = `${kpi.novel_count ?? 20}작품`;
 
     const elWebtoons = document.getElementById('kpiWebtoonsCount');
-    if (elWebtoons) elWebtoons.textContent = `${kpi.webtoon_count}작품`;
+    if (elWebtoons) elWebtoons.textContent = `${kpi.webtoon_count ?? 10}작품`;
 
     const elNovelEps = document.getElementById('kpiNovelEpisodesCount');
-    if (elNovelEps) elNovelEps.textContent = `${kpi.novel_count * 6} 에피소드 (텍스트)`;
+    if (elNovelEps) elNovelEps.textContent = `${(kpi.novel_count ?? 20) * 6} 에피소드 (텍스트)`;
 
     const elWebtoonEps = document.getElementById('kpiWebtoonEpisodesCount');
-    if (elWebtoonEps) elWebtoonEps.textContent = `${kpi.webtoon_count * 6} 에피소드 (컷 이미지)`;
+    if (elWebtoonEps) elWebtoonEps.textContent = `${(kpi.webtoon_count ?? 10) * 6} 에피소드 (컷 이미지)`;
 
-    const ongoingWorks = Math.max(0, kpi.total_works - 5);
+    const ongoingWorks = kpi.ongoing_count ?? Math.max(0, (kpi.total_works || 30) - 5);
+    const completedWorks = kpi.completed_count ?? 5;
+
     const elOngoing = document.getElementById('kpiOngoingCount');
     if (elOngoing) elOngoing.textContent = `${ongoingWorks}작품`;
 
     const elCompleted = document.getElementById('kpiCompletedCount');
-    if (elCompleted) elCompleted.textContent = `5작품`;
+    if (elCompleted) elCompleted.textContent = `${completedWorks}작품`;
   } catch (err) {
     console.error('[loadDashboardKPIs Error]', err);
   }

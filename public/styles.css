@@ -2624,6 +2624,50 @@ body[data-user-role="AUTHOR"] .cp-nav-link.nav-admin {
   }
 }
 
+/* ---- Grid Layout Utilities ---- */
+.grid-4-col {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.grid-3-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.grid-2-col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.content-status-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  .grid-4-col,
+  .content-status-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .grid-4-col,
+  .content-status-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+
 /* ---- Admin Dashboard KPI Cards ---- */
 .kpi-grid {
   display: grid;
