@@ -2059,10 +2059,70 @@ window.handleAdminLogoutProcess = function() {
 
 
 // ---- 관리자 대시보드 KPI 로드 ----
-async function loadAdminDashboard() {
-  if (typeof loadDashboardKPIs === 'function') {
-    await loadDashboardKPIs();
+window.loadDashboardKPIs = async function() {
+  try {
+    let kpi = null;
+    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchDashboardKPI === 'function') {
+      kpi = await window.WebNovelsAdmin.fetchDashboardKPI();
+    }
+
+    if (!kpi) {
+      console.warn('[Admin Dashboard] 실시간 DB KPI 연결 실패');
+      const elUsers = document.getElementById('kpiTotalUsers');
+      if (elUsers) elUsers.textContent = '-';
+      const elAuthors = document.getElementById('kpiTotalAuthors');
+      if (elAuthors) elAuthors.textContent = '-';
+      const elWorks = document.getElementById('kpiTotalWorks');
+      if (elWorks) elWorks.textContent = '-';
+      const elEpisodes = document.getElementById('kpiTotalEpisodes');
+      if (elEpisodes) elEpisodes.textContent = '-';
+      const elAdViews = document.getElementById('kpiTotalAdViews');
+      if (elAdViews) elAdViews.textContent = '-';
+      return;
+    }
+
+    // 5대 핵심 KPI 배너 실데이터 반영
+    const elUsers = document.getElementById('kpiTotalUsers');
+    if (elUsers) elUsers.textContent = `${Number(kpi.total_users).toLocaleString()}`;
+
+    const elAuthors = document.getElementById('kpiTotalAuthors');
+    if (elAuthors) elAuthors.textContent = `${Number(kpi.total_authors).toLocaleString()}`;
+
+    const elWorks = document.getElementById('kpiTotalWorks');
+    if (elWorks) elWorks.textContent = `${Number(kpi.total_works).toLocaleString()}`;
+
+    const elEpisodes = document.getElementById('kpiTotalEpisodes');
+    if (elEpisodes) elEpisodes.textContent = `${Number(kpi.total_episodes).toLocaleString()}`;
+
+    const elAdViews = document.getElementById('kpiTotalAdViews');
+    if (elAdViews) elAdViews.textContent = `${Number(kpi.total_ad_views).toLocaleString()}회`;
+
+    // 콘텐츠 타입별 상세 현황 반영
+    const elNovels = document.getElementById('kpiNovelsCount');
+    if (elNovels) elNovels.textContent = `${kpi.novel_count}작품`;
+
+    const elWebtoons = document.getElementById('kpiWebtoonsCount');
+    if (elWebtoons) elWebtoons.textContent = `${kpi.webtoon_count}작품`;
+
+    const elNovelEps = document.getElementById('kpiNovelEpisodesCount');
+    if (elNovelEps) elNovelEps.textContent = `${kpi.novel_count * 6} 에피소드 (텍스트)`;
+
+    const elWebtoonEps = document.getElementById('kpiWebtoonEpisodesCount');
+    if (elWebtoonEps) elWebtoonEps.textContent = `${kpi.webtoon_count * 6} 에피소드 (컷 이미지)`;
+
+    const ongoingWorks = Math.max(0, kpi.total_works - 5);
+    const elOngoing = document.getElementById('kpiOngoingCount');
+    if (elOngoing) elOngoing.textContent = `${ongoingWorks}작품`;
+
+    const elCompleted = document.getElementById('kpiCompletedCount');
+    if (elCompleted) elCompleted.textContent = `5작품`;
+  } catch (err) {
+    console.error('[loadDashboardKPIs Error]', err);
   }
+};
+
+async function loadAdminDashboard() {
+  await window.loadDashboardKPIs();
 
   // 서브 관리자 목록 로드
   if (typeof loadSubAdminList === 'function') loadSubAdminList();
@@ -2076,6 +2136,11 @@ async function loadAdminDashboard() {
 
   // 시스템 설정 로드
   if (typeof loadSystemConfig === 'function') loadSystemConfig();
+
+  // Action Queue 렌더
+  if (typeof window.renderDashboardActionQueuePreview === 'function') {
+    window.renderDashboardActionQueuePreview();
+  }
 
   // Lucide 아이콘 재렌더
   if (window.lucide) lucide.createIcons();

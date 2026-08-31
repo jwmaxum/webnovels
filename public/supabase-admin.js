@@ -103,21 +103,21 @@ function getCurrentAdmin() {
 // ============================================================
 // [Function] fetchDashboardKPI
 // [Purpose] Supabase DB의 실제 테이블 카운트를 쿼리하여 실시간 대시보드 KPI 반환
-// [Returns] Promise<Object> - 실시간 통계 데이터 객체
+// [Returns] Promise<Object|null> - 실시간 통계 데이터 객체 (실패 시 null)
 // ============================================================
 async function fetchDashboardKPI() {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient) return null;
 
   try {
-    // 실시간 DB 데이터 카운트 쿼리 (10독자 / 30작가 / 30작품 / 180회차 실시간 반영)
-    let totalUsers = 10;
-    let totalAuthors = 30;
-    let totalWorks = 30;
-    let totalEpisodes = 180;
+    let totalUsers = null;
+    let totalAuthors = null;
+    let totalWorks = null;
+    let totalEpisodes = null;
     let totalAdViews = 0;
     let totalViews = 0;
-    let novelCount = 17;
-    let webtoonCount = 13;
+    let novelCount = 0;
+    let webtoonCount = 0;
 
     // 1. 등록 독자 수 (readers)
     try {
@@ -167,7 +167,7 @@ async function fetchDashboardKPI() {
       console.warn('[Dashboard KPI] ad_events 카운트 에러:', e.message);
     }
 
-    // platform_stats 테이블도 함께 조회하여 백업으로 사용하거나 덮어쓰기
+    // 6. 실제 플랫폼 통계 & 매출 원장 집계 조회
     let dbStats = {};
     try {
       const { data } = await supabaseClient
@@ -180,57 +180,72 @@ async function fetchDashboardKPI() {
       }
     } catch (e) {}
 
-    const finalAdViews = totalAdViews || Number(dbStats.total_ad_views || 0);
+    // 실제 revenue_events에서 집계된 순매출 계산
+    let calculatedTotalRevenue = Number(dbStats.total_revenue || 0);
+    let calculatedAuthorRevenue = Number(dbStats.total_author_revenue || 0);
+    try {
+      const { data: revEvents } = await supabaseClient
+        .from('revenue_events')
+        .select('gross_revenue, writer_pool');
+      if (revEvents && revEvents.length > 0) {
+        calculatedTotalRevenue = revEvents.reduce((sum, r) => sum + (Number(r.gross_revenue) || 0), 0);
+        calculatedAuthorRevenue = revEvents.reduce((sum, r) => sum + (Number(r.writer_pool) || 0), 0);
+      }
+    } catch (e) {}
+
+    const finalAdViews = (typeof totalAdViews === 'number') ? totalAdViews : Number(dbStats.total_ad_views || 0);
 
     return {
-      total_users: totalUsers,
-      total_authors: totalAuthors,
-      total_works: totalWorks,
-      total_episodes: totalEpisodes,
+      total_users: totalUsers !== null ? totalUsers : (dbStats.total_users ?? 0),
+      total_authors: totalAuthors !== null ? totalAuthors : (dbStats.total_authors ?? 0),
+      total_works: totalWorks !== null ? totalWorks : (dbStats.total_works ?? 0),
+      total_episodes: totalEpisodes !== null ? totalEpisodes : (dbStats.total_episodes ?? 0),
       total_ad_views: finalAdViews,
       total_views: totalViews || Number(dbStats.total_views || 0),
       novel_count: novelCount,
       webtoon_count: webtoonCount,
-      total_revenue: dbStats.total_revenue || (finalAdViews * 200),
-      total_author_revenue: dbStats.total_author_revenue || ((finalAdViews * 200) * 0.625)
+      total_revenue: calculatedTotalRevenue,
+      total_author_revenue: calculatedAuthorRevenue
     };
   } catch (err) {
-    console.warn('[Dashboard KPI] 전체 조회 예외:', err.message);
-    return {
-      total_users: 10,
-      total_authors: 30,
-      total_works: 30,
-      total_episodes: 180,
-      total_ad_views: 0,
-      total_views: 0,
-      novel_count: 17,
-      webtoon_count: 13
-    };
+    console.error('[Dashboard KPI] 실시간 DB 조회 실패:', err.message);
+    return null;
   }
 }
 
 // ============================================================
-// [Works] 실제 독자 열람 시 조회수 실시간 증가
+// [Works] 실제 독자 열람 시 조회수 실시간 원자적(Atomic) 증가
 // ============================================================
 async function recordWorkReadingView(workId, episodeNumber) {
   if (!supabaseClient || !workId) return;
 
   try {
-    // 1. works 테이블의 view_count 실시간 +1
-    const { data: workData } = await supabaseClient
-      .from('works')
-      .select('view_count')
-      .eq('id', Number(workId))
-      .single();
+    // 1. Supabase RPC increment_work_view 원자적 호출 시도
+    let rpcSuccess = false;
+    try {
+      const { error: rpcErr } = await supabaseClient.rpc('increment_work_view', {
+        p_work_id: Number(workId)
+      });
+      if (!rpcErr) rpcSuccess = true;
+    } catch (e) {}
 
-    if (workData) {
-      await supabaseClient
+    // 2. RPC 미등록 시 fallback update
+    if (!rpcSuccess) {
+      const { data: workData } = await supabaseClient
         .from('works')
-        .update({ view_count: (Number(workData.view_count) || 0) + 1 })
-        .eq('id', Number(workId));
+        .select('view_count')
+        .eq('id', Number(workId))
+        .single();
+
+      if (workData) {
+        await supabaseClient
+          .from('works')
+          .update({ view_count: (Number(workData.view_count) || 0) + 1 })
+          .eq('id', Number(workId));
+      }
     }
 
-    // 2. episodes 테이블 view_count 실시간 +1
+    // 3. 회차 조회수 증가
     if (episodeNumber) {
       const { data: epData } = await supabaseClient
         .from('episodes')
@@ -248,7 +263,7 @@ async function recordWorkReadingView(workId, episodeNumber) {
       }
     }
   } catch (e) {
-    console.warn('[recordWorkReadingView] DB 업데이트 오류:', e.message);
+    console.warn('[recordWorkReadingView Warning]', e.message);
   }
 }
 
@@ -774,24 +789,12 @@ async function updateWorkAdminSetting(workId, updateData) {
 async function createWorkInDB(workData) {
   if (!supabaseClient) return { success: false, error: 'Supabase 미연동' };
   try {
-    // 1. max(id) 조회하여 안전한 다음 id 부여
-    let nextId = Date.now() % 1000000;
-    try {
-      const { data: maxW } = await supabaseClient
-        .from('works')
-        .select('id')
-        .order('id', { ascending: false })
-        .limit(1);
-      if (maxW && maxW.length > 0) nextId = Number(maxW[0].id) + 1;
-    } catch(e) {}
-
     const cleanCover = workData.cover_image || workData.coverUrl || workData.coverImage || '/images/stormqueen_oath.jpg';
     const finalCover = (cleanCover.startsWith('http://') || cleanCover.startsWith('https://') || cleanCover.startsWith('/'))
       ? cleanCover
       : `/images/${cleanCover}`;
 
     const payload = {
-      id: workData.id || nextId,
       title: workData.title,
       author: typeof workData.author === 'string' ? workData.author : (workData.author?.penName || '작자미상'),
       content_type: workData.contentType || workData.content_type || 'NOVEL',
@@ -808,6 +811,13 @@ async function createWorkInDB(workData) {
       is_popular_work: !!(workData.isPopularWork || workData.is_popular_work),
       is_new_work: true
     };
+
+    if (workData.id) {
+      payload.id = Number(workData.id);
+    }
+    if (workData.author_id || workData.authorId) {
+      payload.author_id = Number(workData.author_id || workData.authorId);
+    }
 
     const { data, error } = await supabaseClient
       .from('works')
