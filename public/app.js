@@ -4786,16 +4786,22 @@ async function handleMemberSignup() {
       localStorage.removeItem('webnovels_author');
 
       // Supabase readers 테이블 실시간 등록 동기화
-      if (window.WebNovelsAdmin?.updateReaderActivity) {
-        window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
+      if (window.WebNovelsAdmin?.createReaderInDB) {
+        const createdRes = await window.WebNovelsAdmin.createReaderInDB({
+          username: userObj.username,
           email: userObj.email,
           nickname: userObj.nickname,
           password: password,
+          phone: userObj.phone,
           isAdultVerified: false,
           readingHistory: [],
           favorites: [],
           subscribedAuthors: []
         });
+        if (createdRes?.success && createdRes.reader) {
+          userObj.id = createdRes.reader.id;
+          localStorage.setItem('webnovels_user', JSON.stringify(userObj));
+        }
       }
 
       updateMemberHeader(userObj);
@@ -4809,7 +4815,7 @@ async function handleMemberSignup() {
     // Cloudflare Pages 등 정적 호스팅 환경에서는 로컬 세션으로 자동 처리
   }
 
-  // 2. 로컬/정적 환경 회원가입 처리
+  // 2. 로컬/정적 환경 회원가입 처리 (Supabase DB 직접 생성)
   const userObj = {
     id: 'user-' + Date.now(),
     username: effectiveUsername,
@@ -4820,22 +4826,31 @@ async function handleMemberSignup() {
     role: 'READER'
   };
 
+  // Supabase readers 테이블 실시간 등록
+  if (window.WebNovelsAdmin?.createReaderInDB) {
+    try {
+      const createdRes = await window.WebNovelsAdmin.createReaderInDB({
+        username: userObj.username,
+        email: userObj.email,
+        nickname: userObj.nickname,
+        password: password,
+        phone: userObj.phone,
+        isAdultVerified: false,
+        readingHistory: [],
+        favorites: [],
+        subscribedAuthors: []
+      });
+      if (createdRes?.success && createdRes.reader) {
+        userObj.id = createdRes.reader.id;
+      }
+    } catch (e) {
+      console.warn('[Signup createReaderInDB Error]', e);
+    }
+  }
+
   localStorage.setItem('webnovels_token', `token-${userObj.id}`);
   localStorage.setItem('webnovels_user', JSON.stringify(userObj));
   localStorage.removeItem('webnovels_author');
-
-  // Supabase readers 테이블 실시간 등록 동기화
-  if (window.WebNovelsAdmin?.updateReaderActivity) {
-    window.WebNovelsAdmin.updateReaderActivity(userObj.username || userObj.email, {
-      email: userObj.email,
-      nickname: userObj.nickname,
-      password: password,
-      isAdultVerified: false,
-      readingHistory: [],
-      favorites: [],
-      subscribedAuthors: []
-    });
-  }
 
   updateMemberHeader(userObj);
   renderLibraryContent();

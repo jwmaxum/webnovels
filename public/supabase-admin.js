@@ -1133,6 +1133,69 @@ async function updateReaderProfileInDB(userId, profileData) {
   }
 }
 
+async function checkReaderExists(username, email) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return false;
+  try {
+    const u = String(username || '').trim();
+    const e = String(email || '').trim();
+    const query = supabaseClient.from('readers').select('id');
+    if (u && e) {
+      query.or(`username.ilike.${u},email.ilike.${e}`);
+    } else if (u) {
+      query.ilike('username', u);
+    } else if (e) {
+      query.ilike('email', e);
+    } else {
+      return false;
+    }
+    const { data, error } = await query;
+    return !error && data && data.length > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function createReaderInDB(userData) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !userData) return { success: false, error: 'DB 미연결' };
+  try {
+    let nextId = 12;
+    const { data: topRows } = await supabaseClient.from('readers').select('id').order('id', { ascending: false }).limit(1);
+    if (topRows && topRows.length > 0 && typeof topRows[0].id === 'number') {
+      nextId = topRows[0].id + 1;
+    }
+
+    const cleanUsername = String(userData.username || userData.nickname || `reader_${Date.now()}`).trim();
+    const cleanEmail = String(userData.email || `${cleanUsername}@webnovels.com`).trim();
+
+    const payload = {
+      id: nextId,
+      username: cleanUsername,
+      email: cleanEmail,
+      nickname: userData.nickname || cleanUsername,
+      password_hash: userData.password || '!12345',
+      phone: userData.phone || '미입력',
+      is_adult_verified: !!userData.isAdultVerified,
+      subscription_status: userData.subscription_status || '일반 회원',
+      reading_history: userData.readingHistory || [],
+      favorites: userData.favorites || [],
+      subscribed_authors: userData.subscribedAuthors || [],
+      status: 'ACTIVE'
+    };
+
+    const { data, error } = await supabaseClient.from('readers').insert([payload]).select().single();
+    if (error) {
+      console.warn('[createReaderInDB Error]', error);
+      return { success: false, error: error.message };
+    }
+    return { success: true, reader: data };
+  } catch (err) {
+    console.error('[createReaderInDB Error]', err);
+    return { success: false, error: err.message };
+  }
+}
+
 // ============================================================
 // 07. COMMENTS & COMMUNITY
 // ============================================================
@@ -1377,6 +1440,8 @@ window.WebNovelsAdmin = {
   fetchReaderActivity,
   updateReaderActivity,
   updateReaderProfileInDB,
+  checkReaderExists,
+  createReaderInDB,
   fetchDashboardKPI,
   fetchWorksFromSupabase,
   fetchEpisodeContentSecure,
