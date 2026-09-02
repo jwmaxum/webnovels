@@ -894,56 +894,243 @@ async function fetchPendingSettlements() {
 }
 
 // ============================================================
-// 06. READER ACTIVITIES (Dedicated Tables)
+// 06. READER ACTIVITIES (Supabase DB 실시간 동기화)
 // ============================================================
 
-async function recordReadingProgressInDB(userId, workId, episodeId, progress = 100) {
+async function fetchReaderActivity(identifier) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !identifier) return null;
+  try {
+    const cleanId = String(identifier).trim();
+    let query = supabaseClient.from('readers').select('*');
+    if (!isNaN(cleanId) && Number(cleanId) > 0) {
+      query = query.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
+    } else {
+      query = query.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
+    }
+
+    const { data: rows, error } = await query;
+    if (error || !rows || rows.length === 0) {
+      return null;
+    }
+
+    const reader = rows[0];
+    let readingHistory = Array.isArray(reader.reading_history) ? reader.reading_history : [];
+    let favorites = Array.isArray(reader.favorites) ? reader.favorites.map(Number) : [];
+    let subscribedAuthors = Array.isArray(reader.subscribed_authors) ? reader.subscribed_authors : [];
+
+    return {
+      id: reader.id,
+      username: reader.username,
+      nickname: reader.nickname || reader.username,
+      email: reader.email,
+      phone: reader.phone,
+      isAdultVerified: !!reader.is_adult_verified,
+      subscription_status: reader.subscription_status || '일반 회원',
+      readingHistory,
+      favorites,
+      subscribedAuthors
+    };
+  } catch (err) {
+    console.error('[fetchReaderActivity Error]', err);
+    return null;
+  }
+}
+
+async function updateReaderActivity(identifier, activityData) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !identifier || !activityData) return { success: false };
+  try {
+    const cleanId = String(identifier).trim();
+    const updatePayload = {};
+    if (activityData.readingHistory !== undefined) updatePayload.reading_history = activityData.readingHistory;
+    if (activityData.favorites !== undefined) updatePayload.favorites = activityData.favorites;
+    if (activityData.subscribedAuthors !== undefined) updatePayload.subscribed_authors = activityData.subscribedAuthors;
+    if (activityData.isAdultVerified !== undefined) updatePayload.is_adult_verified = !!activityData.isAdultVerified;
+    if (activityData.nickname !== undefined) updatePayload.nickname = activityData.nickname;
+
+    let query = supabaseClient.from('readers').update(updatePayload);
+    if (!isNaN(cleanId) && Number(cleanId) > 0) {
+      query = query.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
+    } else {
+      query = query.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn('[updateReaderActivity Error]', error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    console.error('[updateReaderActivity Error]', err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function recordReadingProgressInDB(userId, workId, episodeNumber, progress = 100) {
   if (!supabaseClient || !userId || !workId) return;
   try {
-    const payload = {
-      user_id: typeof userId === 'string' && userId.length >= 32 ? userId : null,
-      work_id: Number(workId),
-      episode_id: episodeId ? Number(episodeId) : null,
-      progress: Number(progress),
-      last_read_at: new Date().toISOString()
-    };
-    await supabaseClient.from('reading_history').insert(payload).catch(() => {});
-  } catch (e) {}
+    const cleanId = String(userId).trim();
+    const id = Number(workId);
+    const num = Number(episodeNumber) || 1;
+
+    // 1. readers 테이블에서 기존 독서이력 조회 후 최신순 Upsert
+    const { data: rows } = await supabaseClient
+      .from('readers')
+      .select('id, reading_history')
+      .or(`id.eq.${!isNaN(cleanId) ? Number(cleanId) : -1},username.ilike.${cleanId},email.ilike.${cleanId}`);
+
+    if (rows && rows.length > 0) {
+      const reader = rows[0];
+      let history = Array.isArray(reader.reading_history) ? [...reader.reading_history] : [];
+      history = history.filter(item => Number(item.workId) !== id);
+      history.unshift({
+        workId: id,
+        episodeNumber: num,
+        progress: Number(progress) || 100,
+        updatedAt: new Date().toISOString()
+      });
+      if (history.length > 20) history = history.slice(0, 20);
+
+      await supabaseClient
+        .from('readers')
+        .update({ reading_history: history })
+        .eq('id', reader.id);
+    }
+
+    // 2. UUID 사용자인 경우 정규화 reading_history 테이블에도 Upsert 시도
+    if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-')) {
+      await supabaseClient.from('reading_history').upsert({
+        user_id: userId,
+        work_id: id,
+        episode_id: num,
+        progress: Number(progress) || 100,
+        last_read_at: new Date().toISOString()
+      }, { onConflict: 'user_id,episode_id' }).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('[recordReadingProgressInDB Error]', e);
+  }
 }
 
 async function toggleFavoriteInDB(userId, workId, isAdding = true) {
   if (!supabaseClient || !userId || !workId) return;
   try {
-    if (isAdding) {
-      await supabaseClient.from('favorites').insert({
-        user_id: typeof userId === 'string' && userId.length >= 32 ? userId : null,
-        work_id: Number(workId)
-      }).catch(() => {});
-    } else {
-      await supabaseClient.from('favorites').delete()
-        .eq('user_id', userId)
-        .eq('work_id', Number(workId))
-        .catch(() => {});
+    const cleanId = String(userId).trim();
+    const id = Number(workId);
+
+    const { data: rows } = await supabaseClient
+      .from('readers')
+      .select('id, favorites')
+      .or(`id.eq.${!isNaN(cleanId) ? Number(cleanId) : -1},username.ilike.${cleanId},email.ilike.${cleanId}`);
+
+    if (rows && rows.length > 0) {
+      const reader = rows[0];
+      let favs = Array.isArray(reader.favorites) ? [...reader.favorites] : [];
+      if (isAdding) {
+        if (!favs.includes(id)) favs.push(id);
+      } else {
+        favs = favs.filter(f => Number(f) !== id);
+      }
+      await supabaseClient
+        .from('readers')
+        .update({ favorites: favs })
+        .eq('id', reader.id);
     }
-  } catch (e) {}
+
+    if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-')) {
+      if (isAdding) {
+        await supabaseClient.from('favorites').upsert({
+          user_id: userId,
+          work_id: id
+        }, { onConflict: 'user_id,work_id' }).catch(() => {});
+      } else {
+        await supabaseClient.from('favorites').delete()
+          .eq('user_id', userId)
+          .eq('work_id', id)
+          .catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.warn('[toggleFavoriteInDB Error]', e);
+  }
 }
 
-async function toggleSubscriptionInDB(userId, authorId, isAdding = true) {
-  if (!supabaseClient || !userId || !authorId) return;
+async function toggleSubscriptionInDB(userId, authorNameOrId, isAdding = true) {
+  if (!supabaseClient || !userId || !authorNameOrId) return;
   try {
-    if (isAdding) {
-      await supabaseClient.from('author_subscriptions').insert({
-        user_id: typeof userId === 'string' && userId.length >= 32 ? userId : null,
-        author_id: Number(authorId),
-        notification_enabled: true
-      }).catch(() => {});
-    } else {
-      await supabaseClient.from('author_subscriptions').delete()
-        .eq('user_id', userId)
-        .eq('author_id', Number(authorId))
-        .catch(() => {});
+    const cleanId = String(userId).trim();
+    const authorVal = typeof authorNameOrId === 'object' ? (authorNameOrId.penName || authorNameOrId.pen_name || authorNameOrId.name) : String(authorNameOrId).trim();
+
+    const { data: rows } = await supabaseClient
+      .from('readers')
+      .select('id, subscribed_authors')
+      .or(`id.eq.${!isNaN(cleanId) ? Number(cleanId) : -1},username.ilike.${cleanId},email.ilike.${cleanId}`);
+
+    if (rows && rows.length > 0) {
+      const reader = rows[0];
+      let subs = Array.isArray(reader.subscribed_authors) ? [...reader.subscribed_authors] : [];
+      if (isAdding) {
+        if (!subs.includes(authorVal)) subs.push(authorVal);
+      } else {
+        subs = subs.filter(s => String(s).trim() !== authorVal);
+      }
+      await supabaseClient
+        .from('readers')
+        .update({ subscribed_authors: subs })
+        .eq('id', reader.id);
     }
-  } catch (e) {}
+
+    if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-') && !isNaN(authorVal)) {
+      if (isAdding) {
+        await supabaseClient.from('author_subscriptions').upsert({
+          user_id: userId,
+          author_id: Number(authorVal),
+          notification_enabled: true
+        }, { onConflict: 'user_id,author_id' }).catch(() => {});
+      } else {
+        await supabaseClient.from('author_subscriptions').delete()
+          .eq('user_id', userId)
+          .eq('author_id', Number(authorVal))
+          .catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.warn('[toggleSubscriptionInDB Error]', e);
+  }
+}
+
+async function updateReaderProfileInDB(userId, profileData) {
+  if (!supabaseClient || !userId || !profileData) return { success: false };
+  try {
+    const cleanId = String(userId).trim();
+    const updatePayload = {};
+    if (profileData.nickname !== undefined) updatePayload.nickname = profileData.nickname;
+    if (profileData.phone !== undefined) updatePayload.phone = profileData.phone;
+    if (profileData.is_adult_verified !== undefined) {
+      updatePayload.is_adult_verified = !!profileData.is_adult_verified;
+      if (profileData.is_adult_verified) updatePayload.adult_verified_at = new Date().toISOString();
+    }
+    if (profileData.subscription_status !== undefined) updatePayload.subscription_status = profileData.subscription_status;
+
+    let query = supabaseClient.from('readers').update(updatePayload);
+    if (!isNaN(cleanId) && Number(cleanId) > 0) {
+      query = query.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
+    } else {
+      query = query.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn('[updateReaderProfileInDB Error]', error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    console.error('[updateReaderProfileInDB Error]', err);
+    return { success: false, error: err.message };
+  }
 }
 
 // ============================================================
@@ -1187,6 +1374,9 @@ window.WebNovelsAdmin = {
   authorLogin,
   fetchReadersFromSupabase,
   fetchAuthorsFromSupabase,
+  fetchReaderActivity,
+  updateReaderActivity,
+  updateReaderProfileInDB,
   fetchDashboardKPI,
   fetchWorksFromSupabase,
   fetchEpisodeContentSecure,
