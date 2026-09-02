@@ -948,45 +948,6 @@ function saveReadingProgress(workId, epNum) {
 
 
 
-function renderLibraryContent() {
-  const contList = document.getElementById('libraryContinueList');
-  const favList = document.getElementById('libraryFavoritesList');
-  const authList = document.getElementById('libraryAuthorsList');
-
-  const history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
-  const favorites = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
-
-  if (contList) {
-    if (history.length === 0) {
-      contList.innerHTML = `<p class="text-muted p-4">최근 읽은 작품이 없습니다.</p>`;
-    } else {
-      const works = history.map(h => {
-        const w = SAMPLE_WORKS.find(item => Number(item.id) === Number(h.workId));
-        return w ? { ...w, lastEp: h.epNum } : null;
-      }).filter(Boolean);
-      contList.innerHTML = works.map(w => renderCdgWorkCardHtml(w)).join('');
-    }
-  }
-
-  if (favList) {
-    const favWorks = SAMPLE_WORKS.filter(w => favorites.includes(w.id));
-    favList.innerHTML = favWorks.length > 0 
-      ? favWorks.map(w => renderCdgWorkCardHtml(w)).join('') 
-      : `<p class="text-muted p-4">관심 등록된 작품이 없습니다.</p>`;
-  }
-
-  if (authList) {
-    authList.innerHTML = SAMPLE_AUTHORS.slice(0, 4).map(a => `
-      <div class="card glass-panel p-3 text-center" style="border-radius: 8px;">
-        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--color-brand-secondary), var(--accent-rose)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 8px;">${a.pen_name[0]}</div>
-        <strong>${a.pen_name}</strong>
-        <div class="text-muted small">${a.work_title || '대표작 연재중'}</div>
-      </div>
-    `).join('');
-  }
-
-  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
-}
 
 function updateFavoriteButtons(workId) {
   const favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
@@ -3862,13 +3823,18 @@ window.openAuthorWorksDirect = function(authorName) {
   openModal('modalAuthorWorks');
 };
 
-function renderLibraryContent() {
+async function renderLibraryContent(skipRemote = false) {
   const continueContainer = document.getElementById('libraryContinueList');
   const favoriteContainer = document.getElementById('libraryFavoritesList');
   const authorContainer = document.getElementById('libraryAuthorsList');
   const statReadingEl = document.getElementById('statReadingCount');
   const statFavEl = document.getElementById('statFavoriteCount');
   const statAuthorEl = document.getElementById('statAuthorCount');
+
+  let savedUser = null;
+  try {
+    savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  } catch (e) {}
 
   let history = [];
   try {
@@ -3889,6 +3855,36 @@ function renderLibraryContent() {
     subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
   } catch (e) {
     subAuthors = [];
+  }
+
+  // [Self-Healing] 로그인 상태에서 로컬 활동 데이터가 비어있다면, DB에서 즉시 Fetch 및 복원
+  if (!skipRemote && savedUser && (history.length === 0 && favs.length === 0 && subAuthors.length === 0) && window.WebNovelsAdmin?.fetchReaderActivity && !window._isFetchingLibrary) {
+    window._isFetchingLibrary = true;
+    try {
+      const userIdent = savedUser.username || savedUser.email || savedUser.id;
+      const remote = await window.WebNovelsAdmin.fetchReaderActivity(userIdent);
+      if (remote) {
+        if (remote.readingHistory && Array.isArray(remote.readingHistory) && remote.readingHistory.length > 0) {
+          history = remote.readingHistory;
+          localStorage.setItem('webnovels_reading_history', JSON.stringify(history));
+        }
+        if (remote.favorites && Array.isArray(remote.favorites) && remote.favorites.length > 0) {
+          favs = remote.favorites.map(Number);
+          localStorage.setItem('webnovels_favorites', JSON.stringify(favs));
+        }
+        if (remote.subscribedAuthors && Array.isArray(remote.subscribedAuthors) && remote.subscribedAuthors.length > 0) {
+          subAuthors = remote.subscribedAuthors;
+          localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(subAuthors));
+        }
+        if (remote.isAdultVerified !== undefined) {
+          window._isAdultVerified = !!remote.isAdultVerified;
+        }
+      }
+    } catch (err) {
+      console.warn('[renderLibraryContent Auto-Fetch Error]', err);
+    } finally {
+      window._isFetchingLibrary = false;
+    }
   }
 
   // 좌측 프로필 통계 숫자 실시간 반영
