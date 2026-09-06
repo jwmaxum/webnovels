@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=92">
+  <link rel="stylesheet" href="/styles.css?v=93">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -160,7 +160,10 @@
         <!-- 모바일 직하단 검색 입력창 (UI_mobile.md: 🔍 작품명, 작가 검색) -->
         <div class="mobile-search-bar-wrap" id="mobileSearchBarWrap" onclick="openModal('modalSearch')">
           <div class="mobile-search-bar">
-            <i data-lucide="search" class="mobile-search-icon"></i>
+            <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px; color: #8b8f9e; margin-right: 10px; flex-shrink: 0;">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
             <span class="mobile-search-placeholder">작품명, 작가 검색</span>
           </div>
         </div>
