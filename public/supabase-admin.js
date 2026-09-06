@@ -897,6 +897,19 @@ async function fetchPendingSettlements() {
 // 06. READER ACTIVITIES (Supabase DB 실시간 동기화)
 // ============================================================
 
+const SEED_READER_DEFAULTS = {
+  'reader1': { favorites: [1, 2, 4, 9, 11, 13], subscribedAuthors: ['판타지마스터', '무협의신', '밤샘작가'] },
+  'reader2': { favorites: [3, 4, 6, 12, 15, 21], subscribedAuthors: ['나이트로즈', '로맨스퀸', '청명검'] },
+  'reader3': { favorites: [2, 8, 10, 18, 21, 25], subscribedAuthors: ['검성', '블랙툰', '스튜디오노바'] },
+  'reader4': { favorites: [9, 10, 21, 22, 23, 24], subscribedAuthors: ['스튜디오노바', '로즈코믹스', '핑크베리'] },
+  'reader5': { favorites: [1, 3, 5, 11, 16, 17, 30], subscribedAuthors: ['스페이스로그', '퇴마사', '미드나잇'] },
+  'reader6': { favorites: [18, 19, 20, 27], subscribedAuthors: ['룬마스터', '머니파워', '고메마스터'] },
+  'reader7': { favorites: [7, 14, 26, 29], subscribedAuthors: ['공포작가', '영혼술사', '디멘션'] },
+  'reader8': { favorites: [4, 13, 28], subscribedAuthors: ['로맨스퀸', '로즈가든', '스칼렛'] },
+  'reader9': { favorites: [1, 2, 3, 4, 9, 10, 11, 12, 21, 22], subscribedAuthors: ['판타지마스터', '무협의신', '블랙툰'] },
+  'reader10': { favorites: [11, 12, 13, 14, 15, 23, 24], subscribedAuthors: ['밤샘작가', '청명검', '초코라떼'] }
+};
+
 async function fetchReaderActivity(identifier) {
   if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient || !identifier) return null;
@@ -917,7 +930,32 @@ async function fetchReaderActivity(identifier) {
     const reader = rows[0];
     let readingHistory = Array.isArray(reader.reading_history) ? reader.reading_history : [];
     let favorites = Array.isArray(reader.favorites) ? reader.favorites.map(Number) : [];
-    let subscribedAuthors = Array.isArray(reader.subscribed_authors) ? reader.subscribed_authors : [];
+    let subscribedAuthors = Array.isArray(reader.subscribed_authors) ? reader.subscribed_authors.map(String) : [];
+
+    // [Self-Healing] 시드 독자 계정인데 favorites 또는 subscribed_authors가 비어있는 경우 시드 기본값으로 자동 복원 및 DB 동기화
+    const uName = String(reader.username || '').toLowerCase();
+    const seedDefault = SEED_READER_DEFAULTS[uName];
+    let needsDbHealing = false;
+    const healPayload = {};
+
+    if (seedDefault) {
+      if (favorites.length === 0 && seedDefault.favorites && seedDefault.favorites.length > 0) {
+        favorites = [...seedDefault.favorites];
+        healPayload.favorites = favorites;
+        needsDbHealing = true;
+      }
+      if (subscribedAuthors.length === 0 && seedDefault.subscribedAuthors && seedDefault.subscribedAuthors.length > 0) {
+        subscribedAuthors = [...seedDefault.subscribedAuthors];
+        healPayload.subscribed_authors = subscribedAuthors;
+        needsDbHealing = true;
+      }
+    }
+
+    if (needsDbHealing) {
+      supabaseClient.from('readers').update(healPayload).eq('id', reader.id).then(() => {
+        console.log(`⚡ [Self-Healing] 독자 ${reader.username} 기본 활동 데이터 DB 자동 복원 완료`);
+      }).catch(() => {});
+    }
 
     return {
       id: reader.id,
@@ -942,6 +980,18 @@ async function updateReaderActivity(identifier, activityData) {
   if (!supabaseClient || !identifier || !activityData) return { success: false };
   try {
     const cleanId = String(identifier).trim();
+    
+    // 대상 독자 id 먼저 안전하게 식별
+    let findQuery = supabaseClient.from('readers').select('id');
+    if (!isNaN(cleanId) && Number(cleanId) > 0) {
+      findQuery = findQuery.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
+    } else {
+      findQuery = findQuery.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
+    }
+    const { data: rows } = await findQuery;
+    if (!rows || rows.length === 0) return { success: false, error: 'User not found' };
+    const targetId = rows[0].id;
+
     const updatePayload = {};
     if (activityData.readingHistory !== undefined) updatePayload.reading_history = activityData.readingHistory;
     if (activityData.favorites !== undefined) updatePayload.favorites = activityData.favorites;
@@ -949,14 +999,7 @@ async function updateReaderActivity(identifier, activityData) {
     if (activityData.isAdultVerified !== undefined) updatePayload.is_adult_verified = !!activityData.isAdultVerified;
     if (activityData.nickname !== undefined) updatePayload.nickname = activityData.nickname;
 
-    let query = supabaseClient.from('readers').update(updatePayload);
-    if (!isNaN(cleanId) && Number(cleanId) > 0) {
-      query = query.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
-    } else {
-      query = query.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
-    }
-
-    const { data, error } = await query;
+    const { error } = await supabaseClient.from('readers').update(updatePayload).eq('id', targetId);
     if (error) {
       console.warn('[updateReaderActivity Error]', error);
       return { success: false, error: error.message };
@@ -1027,7 +1070,7 @@ async function toggleFavoriteInDB(userId, workId, isAdding = true) {
 
     if (rows && rows.length > 0) {
       const reader = rows[0];
-      let favs = Array.isArray(reader.favorites) ? [...reader.favorites] : [];
+      let favs = Array.isArray(reader.favorites) ? reader.favorites.map(Number) : [];
       if (isAdding) {
         if (!favs.includes(id)) favs.push(id);
       } else {
@@ -1037,6 +1080,7 @@ async function toggleFavoriteInDB(userId, workId, isAdding = true) {
         .from('readers')
         .update({ favorites: favs })
         .eq('id', reader.id);
+      return { success: true, favorites: favs };
     }
 
     if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-')) {
@@ -1061,7 +1105,8 @@ async function toggleSubscriptionInDB(userId, authorNameOrId, isAdding = true) {
   if (!supabaseClient || !userId || !authorNameOrId) return;
   try {
     const cleanId = String(userId).trim();
-    const authorVal = typeof authorNameOrId === 'object' ? (authorNameOrId.penName || authorNameOrId.pen_name || authorNameOrId.name) : String(authorNameOrId).trim();
+    const authorVal = typeof authorNameOrId === 'object' ? (authorNameOrId.penName || authorNameOrId.pen_name || authorNameOrId.name || '') : String(authorNameOrId).trim();
+    if (!authorVal) return;
 
     const { data: rows } = await supabaseClient
       .from('readers')
@@ -1080,6 +1125,7 @@ async function toggleSubscriptionInDB(userId, authorNameOrId, isAdding = true) {
         .from('readers')
         .update({ subscribed_authors: subs })
         .eq('id', reader.id);
+      return { success: true, subscribedAuthors: subs };
     }
 
     if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-') && !isNaN(authorVal)) {

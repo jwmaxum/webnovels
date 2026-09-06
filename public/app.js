@@ -949,45 +949,7 @@ function saveReadingProgress(workId, epNum) {
 
 
 
-function updateFavoriteButtons(workId) {
-  const favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
-  const isFav = favs.includes(workId);
-  const btn1 = document.getElementById('btnDetailFavorite');
-  if (btn1) btn1.innerHTML = `<i data-lucide="heart" style="${isFav ? 'fill:var(--cdg-pink);color:var(--cdg-pink);' : ''}"></i> ${isFav ? '관심작 등록됨' : '관심 등록'}`;
-}
-
-function updateSubscribeButtons(authorName) {
-  const subs = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
-  const isSub = subs.includes(authorName);
-  const btn = document.getElementById('btnDetailSubscribe');
-  if (btn) btn.innerHTML = `<i data-lucide="bell" style="${isSub ? 'fill:#38bdf8;color:#38bdf8;' : ''}"></i> ${isSub ? '작가 구독중' : '작가 구독'}`;
-}
-
-window.toggleFavoriteWork = function(workId) {
-  let favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
-  if (favs.includes(workId)) {
-    favs = favs.filter(id => id !== workId);
-    showToast('관심 작품에서 해제되었습니다.');
-  } else {
-    favs.push(workId);
-    showToast('💖 관심 작품에 추가되었습니다.');
-  }
-  localStorage.setItem('webnovels_favorites', JSON.stringify(favs));
-  updateFavoriteButtons(workId);
-};
-
-window.toggleSubscribeAuthor = function(authorName) {
-  let subs = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
-  if (subs.includes(authorName)) {
-    subs = subs.filter(a => a !== authorName);
-    showToast('작가 구독을 취소했습니다.');
-  } else {
-    subs.push(authorName);
-    showToast('🔔 작가를 구독했습니다. 새 회차가 발행되면 알림을 받습니다.');
-  }
-  localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(subs));
-  updateSubscribeButtons(authorName);
-};
+// [통합] 관심작품 및 작가구독 토글/버튼 업데이트 함수는 DB 실시간 동기화가 통합된 단일 구현체(라인 3645~)를 사용합니다.
 
 window.handleComingSoonEpisode = function(epNum) {
   showToast(`📖 제 ${epNum}화는 작가가 집필 중입니다! (Coming Soon)`);
@@ -3572,7 +3534,7 @@ function hasLooseMatch(haystack, query) {
 }
 
 // ============================================================
-// [Helper] 사용자 활동 데이터(독서이력, 관심작품, 구독작가, 성인인증) 로컬 동기화
+// [Helper] 사용자 활동 데이터(독서이력, 관심작품, 구독작가, 성인인증) 로컬/DB 양방향 동기화
 // ============================================================
 function syncUserActivityToStorage(data) {
   if (!data) return;
@@ -3580,16 +3542,49 @@ function syncUserActivityToStorage(data) {
   if (data.readingHistory && Array.isArray(data.readingHistory)) {
     localStorage.setItem('webnovels_reading_history', JSON.stringify(data.readingHistory));
   }
+
+  // [Dual Persistence Merge] 관심작품 동기화
   if (data.favorites && Array.isArray(data.favorites)) {
-    localStorage.setItem('webnovels_favorites', JSON.stringify(data.favorites.map(Number)));
+    const remoteFavs = data.favorites.map(Number);
+    let localFavs = [];
+    try {
+      localFavs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]').map(Number);
+    } catch(e) {}
+
+    let mergedFavs = remoteFavs;
+    if (remoteFavs.length === 0 && localFavs.length > 0) {
+      mergedFavs = localFavs;
+      const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+      if (savedUser && window.WebNovelsAdmin?.updateReaderActivity) {
+        window.WebNovelsAdmin.updateReaderActivity(savedUser.username || savedUser.email || savedUser.id, { favorites: localFavs });
+      }
+    }
+    localStorage.setItem('webnovels_favorites', JSON.stringify(mergedFavs));
   }
+
+  // [Dual Persistence Merge] 구독작가 동기화
   if (data.subscribedAuthors && Array.isArray(data.subscribedAuthors)) {
-    localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(data.subscribedAuthors));
+    const remoteSubs = data.subscribedAuthors.map(String);
+    let localSubs = [];
+    try {
+      localSubs = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]').map(String);
+    } catch(e) {}
+
+    let mergedSubs = remoteSubs;
+    if (remoteSubs.length === 0 && localSubs.length > 0) {
+      mergedSubs = localSubs;
+      const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+      if (savedUser && window.WebNovelsAdmin?.updateReaderActivity) {
+        window.WebNovelsAdmin.updateReaderActivity(savedUser.username || savedUser.email || savedUser.id, { subscribedAuthors: localSubs });
+      }
+    }
+    localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(mergedSubs));
   }
+
   if (data.isAdultVerified !== undefined) {
     window._isAdultVerified = !!data.isAdultVerified;
   }
-  renderLibraryContent();
+  renderLibraryContent(true);
 }
 
 // ---- 읽기 기록 및 관심작품 / 구독 작가 관리 (내 서재 실시간 연동) ----
@@ -3642,7 +3637,7 @@ function saveReadingProgress(workId, epNum) {
   }
 }
 
-function toggleFavoriteWork(workId) {
+async function toggleFavoriteWork(workId) {
   try {
     let favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
     const id = Number(workId);
@@ -3658,17 +3653,16 @@ function toggleFavoriteWork(workId) {
     }
     localStorage.setItem('webnovels_favorites', JSON.stringify(favs));
     updateFavoriteButtons(id);
-    renderLibraryContent();
+    renderLibraryContent(true);
 
-    // Supabase DB 실시간 즉시 저장 (readers 테이블 및 favorites 테이블)
+    // Supabase DB 실시간 즉시 저장 (readers 테이블 favorites 컬럼)
     const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
     if (savedUser) {
       const userIdent = savedUser.username || savedUser.email || savedUser.id;
       if (window.WebNovelsAdmin?.toggleFavoriteInDB) {
-        window.WebNovelsAdmin.toggleFavoriteInDB(userIdent, id, isFav);
-      }
-      if (window.WebNovelsAdmin?.updateReaderActivity) {
-        window.WebNovelsAdmin.updateReaderActivity(userIdent, { favorites: favs });
+        await window.WebNovelsAdmin.toggleFavoriteInDB(userIdent, id, isFav);
+      } else if (window.WebNovelsAdmin?.updateReaderActivity) {
+        await window.WebNovelsAdmin.updateReaderActivity(userIdent, { favorites: favs });
       }
     }
 
@@ -3684,6 +3678,7 @@ function toggleFavoriteWork(workId) {
     console.warn('[Favorite Toggle Error]', err);
   }
 }
+window.toggleFavoriteWork = toggleFavoriteWork;
 
 function updateFavoriteButtons(workId) {
   const favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
@@ -3704,9 +3699,9 @@ function updateFavoriteButtons(workId) {
   if (window.lucide) window.lucide.createIcons();
 }
 
-function toggleSubscribeAuthor(authorData) {
+async function toggleSubscribeAuthor(authorData) {
   try {
-    const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name) : authorData) || '작자미상';
+    const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name || authorData.name) : authorData) || '작자미상';
     let subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
     let isSub = false;
 
@@ -3722,17 +3717,16 @@ function toggleSubscribeAuthor(authorData) {
     
     localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(subAuthors));
     updateSubscribeButtons(authorName);
-    renderLibraryContent();
+    renderLibraryContent(true);
 
-    // Supabase DB 실시간 즉시 저장 (readers 테이블 및 author_subscriptions 테이블)
+    // Supabase DB 실시간 즉시 저장 (readers 테이블 subscribed_authors 컬럼)
     const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
     if (savedUser) {
       const userIdent = savedUser.username || savedUser.email || savedUser.id;
       if (window.WebNovelsAdmin?.toggleSubscriptionInDB) {
-        window.WebNovelsAdmin.toggleSubscriptionInDB(userIdent, authorName, isSub);
-      }
-      if (window.WebNovelsAdmin?.updateReaderActivity) {
-        window.WebNovelsAdmin.updateReaderActivity(userIdent, { subscribedAuthors: subAuthors });
+        await window.WebNovelsAdmin.toggleSubscriptionInDB(userIdent, authorName, isSub);
+      } else if (window.WebNovelsAdmin?.updateReaderActivity) {
+        await window.WebNovelsAdmin.updateReaderActivity(userIdent, { subscribedAuthors: subAuthors });
       }
     }
 
@@ -3752,10 +3746,10 @@ function toggleSubscribeAuthor(authorData) {
     console.warn('[Subscribe Toggle Error]', err);
   }
 }
-
+window.toggleSubscribeAuthor = toggleSubscribeAuthor;
 
 function updateSubscribeButtons(authorData) {
-  const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name) : authorData) || '작자미상';
+  const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name || authorData.name) : authorData) || '작자미상';
   const subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
   const isSubbed = subAuthors.includes(authorName);
   const btnSub = document.getElementById('btnDetailSubscribe');
@@ -3857,22 +3851,22 @@ async function renderLibraryContent(skipRemote = false) {
     subAuthors = [];
   }
 
-  // [Self-Healing] 로그인 상태에서 로컬 활동 데이터가 비어있다면, DB에서 즉시 Fetch 및 복원
-  if (!skipRemote && savedUser && (history.length === 0 && favs.length === 0 && subAuthors.length === 0) && window.WebNovelsAdmin?.fetchReaderActivity && !window._isFetchingLibrary) {
+  // [Self-Healing] 로그인 상태에서 로컬 활동 데이터가 결측되어 있다면, DB에서 즉시 Fetch 및 복원
+  if (!skipRemote && savedUser && (history.length === 0 || favs.length === 0 || subAuthors.length === 0) && window.WebNovelsAdmin?.fetchReaderActivity && !window._isFetchingLibrary) {
     window._isFetchingLibrary = true;
     try {
       const userIdent = savedUser.username || savedUser.email || savedUser.id;
       const remote = await window.WebNovelsAdmin.fetchReaderActivity(userIdent);
       if (remote) {
-        if (remote.readingHistory && Array.isArray(remote.readingHistory) && remote.readingHistory.length > 0) {
+        if (history.length === 0 && remote.readingHistory && Array.isArray(remote.readingHistory) && remote.readingHistory.length > 0) {
           history = remote.readingHistory;
           localStorage.setItem('webnovels_reading_history', JSON.stringify(history));
         }
-        if (remote.favorites && Array.isArray(remote.favorites) && remote.favorites.length > 0) {
+        if (favs.length === 0 && remote.favorites && Array.isArray(remote.favorites) && remote.favorites.length > 0) {
           favs = remote.favorites.map(Number);
           localStorage.setItem('webnovels_favorites', JSON.stringify(favs));
         }
-        if (remote.subscribedAuthors && Array.isArray(remote.subscribedAuthors) && remote.subscribedAuthors.length > 0) {
+        if (subAuthors.length === 0 && remote.subscribedAuthors && Array.isArray(remote.subscribedAuthors) && remote.subscribedAuthors.length > 0) {
           subAuthors = remote.subscribedAuthors;
           localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(subAuthors));
         }
@@ -4942,8 +4936,14 @@ async function loadMyProfile() {
         updateMemberHeader(user);
 
         if (window.WebNovelsAdmin?.fetchReaderActivity) {
-          const remoteAct = await window.WebNovelsAdmin.fetchReaderActivity(user.username || user.email);
-          if (remoteAct) syncUserActivityToStorage(remoteAct);
+          const remoteAct = await window.WebNovelsAdmin.fetchReaderActivity(user.username || user.email || user.id);
+          if (remoteAct) {
+            syncUserActivityToStorage(remoteAct);
+            if (remoteAct.isAdultVerified !== undefined) user.isAdultVerified = remoteAct.isAdultVerified;
+            if (remoteAct.nickname) user.nickname = remoteAct.nickname;
+            localStorage.setItem('webnovels_user', JSON.stringify(user));
+            updateMemberHeader(user);
+          }
         }
         return;
       } catch (e) {
