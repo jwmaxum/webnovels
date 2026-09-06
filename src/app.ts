@@ -37,8 +37,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// Web SPA Frontend Page Serving
-app.get(['/', '/admin'], (req: Request, res: Response) => {
+// Web SPA Frontend Page Serving (독자 홈, 관리자 CMS, 작가 스튜디오 분리 접속 지원)
+app.get(['/', '/admin', '/creator'], (req: Request, res: Response) => {
   res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 

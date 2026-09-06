@@ -42,80 +42,163 @@
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
-
-    <!-- Top Navigation Header (Desktop & Mobile Header) -->
-    <header class="webnovels-header nav" id="mainHeader">
-      <div class="header-inner">
-        <!-- CDG PLAY Style Brand Logo -->
-        <a href="#home" class="brand-link cp-brand" id="brandLink" title="webnovels 홈으로">
+    <!-- PC 전용 좌측 고정 사이드바 (UI_pc.md 레이아웃 표준: 240px 너비) -->
+    <aside class="cdg-desktop-sidebar" id="desktopSidebar">
+      <div class="sidebar-brand-area">
+        <a href="#home" class="brand-link cp-brand" onclick="switchWebNovelsView('view-home')" title="webnovels 홈으로">
           <svg class="cdg-heart-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
           <span class="brand-text">web<span class="brand-highlight">novels</span></span>
         </a>
+      </div>
 
-        <!-- Desktop Navigation Menu (독자, 작가, 관리자 3대 사용자 영역 연동) -->
-        <nav class="desktop-nav">
-          <a href="#home" class="nav-link active" data-target="view-home"><i data-lucide="book-open" style="width:14px;height:14px;display:inline;vertical-align:middle;"></i> 독자 홈</a>
-          <a href="#creator" class="nav-link nav-highlight" data-target="view-creator"><i data-lucide="feather" style="width:14px;height:14px;display:inline;vertical-align:middle;"></i> 작가센터</a>
-          <a href="#admin" class="nav-link nav-admin" data-target="view-admin-cms"><i data-lucide="shield" style="width:14px;height:14px;display:inline;vertical-align:middle;"></i> 운영자 Admin</a>
-          <a href="#library" class="nav-link" data-target="view-mypage">내 서재</a>
-        </nav>
-
-        <!-- Header Actions: 검색 🔍 + 포인트 + 로그인 -->
-        <div class="header-actions">
-          <div class="user-points-badge" id="headerPointsBadge" style="display:inline-flex; align-items:center; gap:4px; background:rgba(255,42,122,0.12); border:1px solid rgba(255,42,122,0.3); border-radius:20px; padding:4px 10px; font-size:0.78rem; font-weight:700; color:var(--cdg-pink);">
-            🪙 <span id="headerPointsValue">1,000P</span>
-          </div>
-          <button class="btn btn-icon btn-ghost" id="btnSearchOpen" title="작품/작가 검색" aria-label="검색">
-            <i data-lucide="search"></i>
+      <nav class="sidebar-nav-container">
+        <!-- 1. 주요 메뉴 -->
+        <div class="sidebar-nav-group">
+          <div class="sidebar-group-label">주요 메뉴</div>
+          <button type="button" class="sidebar-nav-item active" data-side-target="view-home" onclick="switchWebNovelsView('view-home')">
+            <i data-lucide="home" class="sidebar-nav-icon"></i>
+            <span>홈</span>
           </button>
-          <div class="user-profile-menu" id="userProfileMenu">
-            <button class="btn btn-primary btn-sm" id="btnHeaderLogin">로그인</button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Sub-Category Navigation Bar (독자 홈: 웹소설 | 웹툰 | 장르 | 랭킹 | 신작 | 완결작) -->
-    <nav class="cdg-sub-nav" id="subCategoryNav">
-      <div class="cdg-sub-nav-inner">
-        <button class="cdg-tab-item active" data-subtab="novel">웹소설</button>
-        <button class="cdg-tab-item" data-subtab="webtoon">웹툰</button>
-        <button class="cdg-tab-item" data-subtab="genre">장르</button>
-        <button class="cdg-tab-item" data-subtab="ranking">랭킹</button>
-        <button class="cdg-tab-item" data-subtab="new">신작</button>
-        <button class="cdg-tab-item" data-subtab="completed">완결작</button>
-      </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main class="webnovels-body">
-
-      <!-- View 1: Home View (Mobile Optimized Landing Page) -->
-      <section id="view-home" class="main-view active">
-
-        <!-- 1. HERO / Featured Works Carousel -->
-        <div class="cdg-hero-container" id="heroFeaturedSection">
-          <div class="cdg-hero-slider" id="cdgHeroSlider">
-            <!-- Dynamic Hero Slides -->
-          </div>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-novel" onclick="openNovelFilterHome()">
+            <i data-lucide="book-open" class="sidebar-nav-icon"></i>
+            <span>웹소설</span>
+          </button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-webtoon" onclick="scrollToSection('webtoonsSection')">
+            <i data-lucide="palette" class="sidebar-nav-icon"></i>
+            <span>웹툰</span>
+          </button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-ranking" onclick="scrollToSection('trendingWorksSection')">
+            <i data-lucide="trophy" class="sidebar-nav-icon"></i>
+            <span>랭킹</span>
+          </button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-new" onclick="scrollToSection('newWorksSection')">
+            <i data-lucide="sparkles" class="sidebar-nav-icon"></i>
+            <span>최신</span>
+          </button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-completed" onclick="scrollToSection('completedWorksSection')">
+            <i data-lucide="check-circle-2" class="sidebar-nav-icon"></i>
+            <span>완결</span>
+          </button>
         </div>
 
-        <!-- Continue Reading Section (Optional) -->
-        <div class="container" id="sectionContinueReading" style="display: none; padding-top: 10px;">
-          <div class="continue-reading-card glass-panel" onclick="openReaderDirect(1, 1)">
-            <img src="/images/stormqueen_oath.jpg" alt="대적자" class="continue-thumb">
-            <div class="continue-info">
-              <h4>대적자: 신을 삼킨 기사</h4>
-              <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: 75%;"></div>
-              </div>
-              <span class="progress-text">1화 읽는 중 (75% 완료)</span>
+        <div class="sidebar-nav-divider"></div>
+
+        <!-- 2. 탐색 (장르 퀵 링크) -->
+        <div class="sidebar-nav-group">
+          <div class="sidebar-group-label">탐색</div>
+          <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('로맨스')">
+            <span class="genre-dot">●</span> <span>로맨스</span>
+          </button>
+          <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('로맨스 판타지')">
+            <span class="genre-dot">●</span> <span>로판</span>
+          </button>
+          <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('판타지')">
+            <span class="genre-dot">●</span> <span>판타지</span>
+          </button>
+          <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('현대 판타지')">
+            <span class="genre-dot">●</span> <span>현대판타지</span>
+          </button>
+          <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('무협')">
+            <span class="genre-dot">●</span> <span>무협</span>
+          </button>
+        </div>
+
+        <div class="sidebar-nav-divider"></div>
+
+        <!-- 3. 내 서재 -->
+        <div class="sidebar-nav-group">
+          <div class="sidebar-group-label">내 서재</div>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-mypage" onclick="switchWebNovelsView('view-mypage')">
+            <i data-lucide="library" class="sidebar-nav-icon"></i>
+            <span>내 서재</span>
+          </button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-favorites" onclick="openLibraryTab('favorites')">
+            <i data-lucide="heart" class="sidebar-nav-icon"></i>
+            <span>관심작</span>
+          </button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-authors" onclick="openLibraryTab('authors')">
+            <i data-lucide="bell" class="sidebar-nav-icon"></i>
+            <span>구독작가</span>
+          </button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content Wrapper (PC 240px 좌측 여백 적용) -->
+    <div class="main-content-wrapper" id="mainContentWrapper">
+
+      <!-- Top Navigation Header (UI_pc.md & UI_mobile.md 통합 헤더) -->
+      <header class="webnovels-header" id="mainHeader">
+        <div class="header-inner">
+          <!-- 모바일 전용 브랜드 로고 -->
+          <a href="#home" class="brand-link cp-brand mobile-only-brand" id="brandLink" onclick="switchWebNovelsView('view-home')" title="webnovels 홈으로">
+            <svg class="cdg-heart-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <span class="brand-text">web<span class="brand-highlight">novels</span></span>
+          </a>
+
+          <!-- PC 중앙 검색바 (UI_pc.md: 🔍 작품명, 작가명을 검색) -->
+          <div class="desktop-header-search" id="desktopHeaderSearch" onclick="openModal('modalSearch')">
+            <i data-lucide="search" class="search-input-icon"></i>
+            <input type="text" class="desktop-search-input" id="inputSearchHeader" placeholder="작품명, 작가명을 검색하세요" readonly>
+          </div>
+
+          <!-- Header Actions: 포인트 🪙 1,000P + 👤 프로필/로그인 -->
+          <div class="header-actions">
+            <div class="user-points-badge" id="headerPointsBadge">
+              🪙 <span id="headerPointsValue">1,000P</span>
             </div>
-            <button class="btn btn-primary btn-sm">계속 읽기 <i data-lucide="chevron-right"></i></button>
+            <div class="user-profile-menu" id="userProfileMenu">
+              <button class="btn btn-primary btn-sm" id="btnHeaderLogin">로그인</button>
+            </div>
           </div>
         </div>
+
+        <!-- 모바일 직하단 검색 입력창 (UI_mobile.md: 🔍 작품명, 작가 검색) -->
+        <div class="mobile-search-bar-wrap" id="mobileSearchBarWrap" onclick="openModal('modalSearch')">
+          <div class="mobile-search-bar">
+            <i data-lucide="search" class="mobile-search-icon"></i>
+            <span class="mobile-search-placeholder">작품명, 작가 검색</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="webnovels-body">
+
+        <!-- View 1: Home View (PC & Mobile 메인 홈) -->
+        <section id="view-home" class="main-view active">
+
+          <!-- 📖 계속 읽기 섹션 (UI_pc.md & UI_mobile.md 최상단 표준 배치) -->
+          <div class="continue-reading-home-wrap" id="sectionContinueReading">
+            <div class="continue-reading-card glass-panel" id="continueReadingCardHome" onclick="openTopContinueReading()">
+              <img src="/images/stormqueen_oath.jpg" alt="표지" class="continue-thumb" id="continueCardCover">
+              <div class="continue-info">
+                <div class="continue-badge-row">
+                  <span class="badge badge-accent continue-badge"><i data-lucide="book-open" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> 계속 읽기</span>
+                  <span class="continue-pct" id="continueCardPct">75% 읽음</span>
+                </div>
+                <h3 class="continue-title" id="continueCardTitle">대적자: 신을 삼킨 기사</h3>
+                <p class="continue-meta text-muted" id="continueCardMeta">제 1화 읽는 중 · 판타지</p>
+                <div class="progress-bar-bg continue-progress-bg">
+                  <div class="progress-bar-fill continue-progress-fill" id="continueCardFill" style="width: 75%;"></div>
+                </div>
+              </div>
+              <button class="btn btn-primary continue-action-btn" id="continueCardBtn">
+                <i data-lucide="play" style="width:14px;height:14px;fill:currentColor;"></i> 계속 읽기
+              </button>
+            </div>
+          </div>
+
+          <!-- 1. HERO / Featured Works Carousel -->
+          <div class="cdg-hero-container" id="heroFeaturedSection">
+            <div class="cdg-hero-slider" id="cdgHeroSlider">
+              <!-- Dynamic Hero Slides -->
+            </div>
+          </div>
 
         <!-- 2. 🔥 지금 가장 많이 읽는 작품 (Top 4 Ranking) -->
         <section class="cdg-section" id="trendingWorksSection">
@@ -385,6 +468,9 @@
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="btn btn-outline btn-sm" id="btnCreatorBackToHome" onclick="switchWebNovelsView('view-home')">
+                  <i data-lucide="arrow-left"></i> 독자 홈으로
+                </button>
                 <button class="btn btn-outline btn-sm" id="btnAuthorLogout" style="display: none;" onclick="handleAuthorLogoutProcess()">
                   <i data-lucide="log-out"></i> 작가 로그아웃
                 </button>
@@ -699,6 +785,9 @@
                   <span class="badge badge-accent" id="adminRoleBadge">미로그인</span>
                   <button class="btn btn-ghost btn-sm" id="btnAdminLogout" style="display:none;" onclick="handleAdminLogoutProcess()">로그아웃</button>
                 </div>
+                <button class="btn btn-outline btn-sm w-full mt-2" id="btnAdminBackToHome" onclick="switchWebNovelsView('view-home')" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.8rem; padding: 6px 10px;">
+                  <i data-lucide="arrow-left"></i> 독자 홈으로 이동
+                </button>
               </div>
 
               <nav class="admin-sidebar-menu">
@@ -1630,30 +1719,7 @@
       </section>
 
     </main>
-
-    <!-- Mobile Bottom Navigation (design.md Section 4.1) -->
-    <nav class="mobile-bottom-nav">
-      <a href="#home" class="bottom-nav-item active" data-target="view-home">
-        <i data-lucide="home"></i>
-        <span>홈</span>
-      </a>
-      <a href="#discover" class="bottom-nav-item" data-target="view-discover">
-        <i data-lucide="compass"></i>
-        <span>탐색</span>
-      </a>
-      <a href="#library" class="bottom-nav-item" data-target="view-mypage">
-        <i data-lucide="bookmark"></i>
-        <span>보관함</span>
-      </a>
-      <a href="#creator" class="bottom-nav-item" data-target="view-creator">
-        <i data-lucide="feather"></i>
-        <span>스튜디오</span>
-      </a>
-      <a href="#mypage" class="bottom-nav-item" data-target="view-mypage">
-        <i data-lucide="user"></i>
-        <span>MY</span>
-      </a>
-    </nav>
+    </div> <!-- /#mainContentWrapper -->
 
     <!-- Modal: Rewarded Ad & Point Dual Unlock Bottom Sheet Modal (UX.md & improve3.md) -->
     <div class="modal-backdrop modal-bottom-sheet-backdrop" id="modalAdUnlock">
@@ -2228,29 +2294,125 @@
     <!-- Toast Notification Overlay -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Mobile Bottom Navigation Bar (모바일 전용 하단 5대 고정 탭) -->
+    <!-- Mobile More Menu Bottom Sheet Modal (UI_mobile.md) -->
+    <div class="modal-backdrop modal-bottom-sheet-backdrop" id="modalMobileMore">
+      <div class="modal-dialog modal-bottom-sheet glass-panel mobile-more-sheet">
+        <div class="sheet-handle-bar">
+          <div class="sheet-handle"></div>
+        </div>
+        <div class="mobile-more-content">
+          <!-- User Profile Summary Card -->
+          <div class="mobile-more-user-box glass-panel p-4 mb-3">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="user-avatar" id="mMoreAvatar" style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-brand-gradient); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: #fff;">👤</div>
+                <div>
+                  <div style="font-weight: 700; font-size: 1.05rem;" id="mMoreUserEmail">로그인이 필요합니다</div>
+                  <div class="text-muted small" id="mMoreAdultStatus">🔞 성인 미인증</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="badge badge-accent" id="mMorePointBadge" style="font-size: 0.82rem; padding: 4px 8px; cursor: pointer;" onclick="openWalletModal()">🪙 1,000 P</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reader Shortcuts -->
+          <div class="mobile-more-section mb-3">
+            <div class="mobile-more-title">내 서재 및 열람</div>
+            <div class="mobile-more-grid">
+              <button class="mobile-more-btn" onclick="openLibraryTabDirect('continue')">
+                <i data-lucide="clock" class="text-indigo"></i>
+                <span>이어보기</span>
+              </button>
+              <button class="mobile-more-btn" onclick="openLibraryTabDirect('favorites')">
+                <i data-lucide="heart" class="text-pink"></i>
+                <span>관심 작품</span>
+              </button>
+              <button class="mobile-more-btn" onclick="openLibraryTabDirect('authors')">
+                <i data-lucide="bell" class="text-amber"></i>
+                <span>구독 작가</span>
+              </button>
+              <button class="mobile-more-btn" onclick="openWalletModal()">
+                <i data-lucide="wallet" class="text-emerald"></i>
+                <span>포인트 충전</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Portals (Separated /creator, /admin) -->
+          <div class="mobile-more-section mb-3">
+            <div class="mobile-more-title">창작 및 관리 포털 분리 접속</div>
+            <div class="mobile-more-list">
+              <a href="/creator" class="mobile-more-list-item" id="linkMoreCreator" onclick="handleDirectPortalClick(event, 'creator')">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="portal-icon-box creator"><i data-lucide="feather"></i></span>
+                  <div>
+                    <div style="font-weight: 600;">작가 스튜디오 (Creator Portal)</div>
+                    <div class="text-muted" style="font-size: 0.76rem;">작품 연재, 회차 등록, 독자 반응 통계 및 정산</div>
+                  </div>
+                </div>
+                <i data-lucide="chevron-right" class="text-muted"></i>
+              </a>
+              <a href="/admin" class="mobile-more-list-item" id="linkMoreAdmin" onclick="handleDirectPortalClick(event, 'admin')">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="portal-icon-box admin"><i data-lucide="shield"></i></span>
+                  <div>
+                    <div style="font-weight: 600;">관리자 관제탑 (Admin CMS)</div>
+                    <div class="text-muted" style="font-size: 0.76rem;">전체 회원, 심사, 매출 지표 및 5대 검수 콘솔</div>
+                  </div>
+                </div>
+                <i data-lucide="chevron-right" class="text-muted"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Settings & Auth -->
+          <div class="mobile-more-section">
+            <div class="mobile-more-list">
+              <div class="mobile-more-list-item" style="cursor: pointer;" onclick="toggleAdultContentMode()">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <i data-lucide="shield-alert" style="color: #EF4444;"></i>
+                  <span>19+ 성인 콘텐츠 필터</span>
+                </div>
+                <span id="mMoreAdultToggleLabel" class="badge badge-outline">ON</span>
+              </div>
+              <button class="mobile-more-list-item w-full text-left" id="btnMoreAuthAction" onclick="handleMoreAuthClick()" style="background:none; border:none; color:inherit; width:100%; font:inherit;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <i data-lucide="log-in" id="mMoreAuthIcon"></i>
+                  <span id="mMoreAuthLabel">로그인 / 회원가입</span>
+                </div>
+                <i data-lucide="chevron-right" class="text-muted"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar (UI_mobile.md 5대 고정 탭: 홈, 랭킹, 탐색, 서재, 더보기) -->
     <nav class="cdg-mobile-bottom-nav" id="mobileBottomNav">
       <div class="cdg-bottom-nav-inner">
         <a href="#home" class="bottom-nav-item active" data-target="view-home" id="bnavHome">
           <i data-lucide="home" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">홈</span>
         </a>
+        <a href="#ranking" class="bottom-nav-item" data-target="view-discover" data-sub="ranking" id="bnavRanking" onclick="openRankingFromNav(event)">
+          <i data-lucide="trending-up" class="bottom-nav-icon"></i>
+          <span class="bottom-nav-label">랭킹</span>
+        </a>
         <a href="#discover" class="bottom-nav-item" data-target="view-discover" id="bnavDiscover">
           <i data-lucide="compass" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">탐색</span>
         </a>
         <a href="#library" class="bottom-nav-item" data-target="view-mypage" id="bnavLibrary">
-          <i data-lucide="book-marked" class="bottom-nav-icon"></i>
+          <i data-lucide="bookmark" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">내 서재</span>
         </a>
-        <a href="#creator" class="bottom-nav-item" data-target="view-creator" id="bnavCreator">
-          <i data-lucide="feather" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">작가센터</span>
-        </a>
-        <a href="#admin" class="bottom-nav-item" data-target="view-admin-cms" id="bnavAdmin">
-          <i data-lucide="shield" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">관리자</span>
-        </a>
+        <button type="button" class="bottom-nav-item" id="bnavMore" onclick="openMobileMoreModal(event)">
+          <i data-lucide="more-horizontal" class="bottom-nav-icon"></i>
+          <span class="bottom-nav-label">더보기</span>
+        </button>
       </div>
     </nav>
 

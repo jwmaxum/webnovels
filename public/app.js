@@ -269,6 +269,8 @@ async function initWebNovelsApp() {
     renderHomeWorks();
     renderDiscoverWorks();
     renderSearchResults();
+    renderContinueReadingHome();
+    initRouteHandler();
   } catch (e) {
     console.error('[Initial Render Error]', e);
   }
@@ -1080,16 +1082,38 @@ window.handlePassAdultVerify = async function() {
 };
 
 function bindWebNovelsEvents() {
-  // Navigation
-  document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(link => {
+  // Navigation (Header nav, Mobile bottom nav, Desktop sidebar)
+  document.querySelectorAll('.nav-link, .bottom-nav-item, .cdg-sidebar-item').forEach(link => {
     link.addEventListener('click', (e) => {
-      e.preventDefault();
       const targetView = link.getAttribute('data-target');
+      if (!targetView) return;
+      e.preventDefault();
       const href = link.getAttribute('href');
-      if (href) window.location.hash = href;
+      if (href && href.startsWith('#')) window.location.hash = href;
       switchWebNovelsView(targetView, link);
     });
   });
+
+  // PC Desktop & Mobile Header Search Bars
+  const bindFastSearch = (inputId) => {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const triggerSearchModal = () => {
+      openModal('modalSearch');
+      const gInput = document.getElementById('globalSearchInput');
+      if (gInput) {
+        gInput.value = el.value || '';
+        renderSearchResults(gInput.value);
+        setTimeout(() => gInput.focus(), 50);
+      }
+    };
+    el.addEventListener('focus', triggerSearchModal);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') triggerSearchModal();
+    });
+  };
+  bindFastSearch('desktopHeaderSearchInput');
+  bindFastSearch('mobileSearchInput');
 
   // Header login button
   document.getElementById('btnHeaderLogin')?.addEventListener('click', () => {
@@ -1947,6 +1971,39 @@ function switchWebNovelsView(viewId, activeLink) {
 
   // 페이지 상단으로 스크롤 이동
   window.scrollTo({ top: 0, behavior: 'instant' });
+
+  // [UX Redesign] 포털 분리 (/creator, /admin) 풀스크린 모드 및 브라우저 URL 동기화
+  if (viewId === 'view-creator') {
+    document.body.classList.add('portal-fullscreen-mode');
+    if (window.location.pathname !== '/creator') {
+      try { window.history.pushState({ view: viewId }, '', '/creator'); } catch(e) {}
+    }
+  } else if (viewId === 'view-admin-cms') {
+    document.body.classList.add('portal-fullscreen-mode');
+    if (window.location.pathname !== '/admin') {
+      try { window.history.pushState({ view: viewId }, '', '/admin'); } catch(e) {}
+    }
+  } else {
+    document.body.classList.remove('portal-fullscreen-mode');
+    if (window.location.pathname === '/creator' || window.location.pathname === '/admin') {
+      try { window.history.pushState({ view: viewId }, '', '/'); } catch(e) {}
+    }
+  }
+
+  // 데스크톱 사이드바 활성 탭 동기화
+  document.querySelectorAll('.cdg-sidebar-item').forEach(item => {
+    const target = item.getAttribute('data-target');
+    if (target === viewId) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // 홈 뷰 복귀 시 최상단 '계속 읽기' 카드 갱신
+  if (viewId === 'view-home') {
+    renderContinueReadingHome();
+  }
 }
 
 // ============================================================
@@ -6302,6 +6359,249 @@ window.loadCreatorStudioEarnings = async function(authorId) {
 
 window.showAdminMenuNotice = function(menuKey) {
   showToast(`📌 [${menuKey}] 관리자 메뉴로 진입했습니다.`);
+};
+
+// ============================================================
+// [UX Redesign] Routing, Continue Reading, and Mobile Navigation Handlers
+// ============================================================
+
+/**
+ * 1. URL 기반 포털 분리 라우팅 (/creator, /admin)
+ */
+function initRouteHandler() {
+  const pathname = (window.location.pathname || '').toLowerCase();
+  const hash = (window.location.hash || '').toLowerCase();
+
+  if (pathname === '/creator' || hash === '#creator') {
+    switchWebNovelsView('view-creator');
+  } else if (pathname === '/admin' || hash === '#admin') {
+    switchWebNovelsView('view-admin-cms');
+  } else if (hash === '#discover') {
+    switchWebNovelsView('view-discover');
+  } else if (hash === '#library') {
+    switchWebNovelsView('view-mypage');
+  }
+
+  window.addEventListener('popstate', () => {
+    const curPath = (window.location.pathname || '').toLowerCase();
+    if (curPath === '/creator') {
+      switchWebNovelsView('view-creator');
+    } else if (curPath === '/admin') {
+      switchWebNovelsView('view-admin-cms');
+    } else {
+      switchWebNovelsView('view-home');
+    }
+  });
+}
+window.initRouteHandler = initRouteHandler;
+
+/**
+ * 2. 최상단 '계속 읽기' 카드 동적 렌더링
+ */
+function renderContinueReadingHome() {
+  const wrap = document.getElementById('continueReadingHomeWrap');
+  if (!wrap) return;
+
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+  } catch (e) {
+    history = [];
+  }
+
+  if (!history || !Array.isArray(history) || history.length === 0) {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+
+  const latest = history[0];
+  const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(latest.workId));
+  if (!work) {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+
+  const totalEps = Number(work.episodesCount) || 6;
+  const currentEp = Number(latest.epNum) || 1;
+  const progressPct = Math.min(100, Math.max(10, Math.round((currentEp / totalEps) * 100)));
+  const coverSrc = work.coverUrl || '/images/stormqueen_oath.jpg';
+
+  wrap.style.display = 'block';
+  wrap.innerHTML = `
+    <div class="continue-reading-card">
+      <div class="continue-reading-left">
+        <img src="${coverSrc}" alt="표지" class="continue-cover-img" onerror="this.src='/images/cover_fantasy.png'">
+        <div class="continue-info">
+          <span class="continue-badge-tag"><i data-lucide="sparkles" style="width:12px;height:12px;"></i> 읽던 작품 이어보기</span>
+          <div class="continue-title">${escapeHtml(work.title)}</div>
+          <div class="continue-sub">제 ${currentEp}화 읽는 중 (총 ${totalEps}화) · ${work.genre || '웹소설'}</div>
+          <div class="continue-progress-wrap">
+            <div class="continue-progress-bar">
+              <div class="continue-progress-fill" style="width: ${progressPct}%;"></div>
+            </div>
+            <span class="continue-progress-text">${progressPct}% 읽음</span>
+          </div>
+        </div>
+      </div>
+      <div class="continue-btn-action">
+        <button class="btn btn-primary btn-sm" onclick="openEpisodeDirect(${work.id}, ${currentEp})" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; font-weight:700;">
+          <i data-lucide="play" style="width:14px;height:14px;"></i> 이어보기
+        </button>
+      </div>
+    </div>
+  `;
+
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+window.renderContinueReadingHome = renderContinueReadingHome;
+
+/**
+ * 3. 회차 즉시 열람 헬퍼
+ */
+window.openEpisodeDirect = function(workId, epNum) {
+  if (typeof window.openEpisode === 'function') {
+    window.openEpisode(workId, epNum);
+  } else if (typeof openWorkDetail === 'function') {
+    openWorkDetail(workId);
+  }
+};
+
+/**
+ * 4. 장르 클릭 시 탐색 뷰 및 해당 장르 필터 자동 적용
+ */
+window.openGenreDiscover = function(genre) {
+  switchWebNovelsView('view-discover');
+  setTimeout(() => {
+    const pills = document.querySelectorAll('.filter-pills .pill');
+    let matched = false;
+    pills.forEach(pill => {
+      if (pill.textContent.trim() === genre) {
+        pill.click();
+        matched = true;
+      }
+    });
+    if (!matched && pills[0]) pills[0].click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 50);
+};
+
+/**
+ * 5. 내 서재 특정 탭으로 바로 이동
+ */
+window.openLibraryTabDirect = function(tabName) {
+  closeModal('modalMobileMore');
+  switchWebNovelsView('view-mypage');
+  setTimeout(() => {
+    const tabBtn = document.querySelector(`.library-tabs button[data-library-tab="${tabName}"]`);
+    if (tabBtn) tabBtn.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 50);
+};
+
+/**
+ * 6. 모바일 하단 랭킹 탭 클릭
+ */
+window.openRankingFromNav = function(event) {
+  if (event) event.preventDefault();
+  switchWebNovelsView('view-home');
+  setTimeout(() => {
+    const rankingEl = document.getElementById('curatedRankingSection') || document.getElementById('homeRankingSection');
+    if (rankingEl) {
+      rankingEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 60);
+};
+
+/**
+ * 7. 모바일 더보기 모달 열기 및 정보 동기화
+ */
+window.openMobileMoreModal = function(event) {
+  if (event) event.preventDefault();
+
+  let savedUser = null;
+  try {
+    savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  } catch (e) {}
+
+  const emailEl = document.getElementById('mMoreUserEmail');
+  const adultEl = document.getElementById('mMoreAdultStatus');
+  const pointEl = document.getElementById('mMorePointBadge');
+  const authLabel = document.getElementById('mMoreAuthLabel');
+  const authIcon = document.getElementById('mMoreAuthIcon');
+
+  if (savedUser && savedUser.email) {
+    if (emailEl) emailEl.textContent = savedUser.nickname || savedUser.email.split('@')[0];
+    const isAdult = !!(savedUser.isAdultVerified || savedUser.is_adult_verified || window._isAdultVerified);
+    if (adultEl) adultEl.textContent = isAdult ? '🔞 19+ 성인 인증 완료' : '🔞 성인 미인증';
+    const pts = savedUser.points ?? userPoints ?? 1000;
+    if (pointEl) pointEl.textContent = `🪙 ${pts.toLocaleString()} P`;
+    if (authLabel) authLabel.textContent = '로그아웃';
+    if (authIcon) authIcon.setAttribute('data-lucide', 'log-out');
+  } else {
+    if (emailEl) emailEl.textContent = '로그인이 필요합니다';
+    if (adultEl) adultEl.textContent = '🔞 성인 미인증';
+    if (pointEl) pointEl.textContent = `🪙 ${(userPoints || 1000).toLocaleString()} P`;
+    if (authLabel) authLabel.textContent = '로그인 / 회원가입';
+    if (authIcon) authIcon.setAttribute('data-lucide', 'log-in');
+  }
+
+  openModal('modalMobileMore');
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+};
+
+/**
+ * 8. 포털 분리 (/creator, /admin) 바로가기 클릭 처리
+ */
+window.handleDirectPortalClick = function(event, portal) {
+  if (event) event.preventDefault();
+  closeModal('modalMobileMore');
+
+  if (portal === 'creator') {
+    switchWebNovelsView('view-creator');
+    showToast('✍️ 작가 전용 스튜디오(/creator)에 접속했습니다.');
+  } else if (portal === 'admin') {
+    switchWebNovelsView('view-admin-cms');
+    showToast('🛡️ 관리자 관제탑(/admin)에 접속했습니다.');
+  }
+};
+
+/**
+ * 9. 더보기 시트에서 로그인/로그아웃 버튼 클릭
+ */
+window.handleMoreAuthClick = function() {
+  closeModal('modalMobileMore');
+  const token = localStorage.getItem('webnovels_token');
+  if (token) {
+    if (typeof handleUserLogoutProcess === 'function') {
+      handleUserLogoutProcess();
+    } else {
+      localStorage.removeItem('webnovels_token');
+      localStorage.removeItem('webnovels_user');
+      showToast('로그아웃 되었습니다.');
+      location.reload();
+    }
+  } else {
+    openModal('modalAuth');
+  }
+};
+
+/**
+ * 10. 성인 콘텐츠 필터 모드 토글
+ */
+window.toggleAdultContentMode = function() {
+  const lbl = document.getElementById('mMoreAdultToggleLabel');
+  if (lbl) {
+    const isCurrentlyOn = lbl.textContent === 'ON';
+    lbl.textContent = isCurrentlyOn ? 'OFF' : 'ON';
+    lbl.className = isCurrentlyOn ? 'badge badge-outline' : 'badge badge-accent';
+    showToast(isCurrentlyOn ? '19+ 성인 콘텐츠가 필터링(숨김)됩니다.' : '19+ 성인 콘텐츠가 노출됩니다.');
+  }
 };
 
 // ============================================================
