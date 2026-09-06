@@ -734,7 +734,7 @@ function normalizeSearchText(text) {
 // ----------------------------------------------------
 // [Work Detail View] Direct Opener
 // ----------------------------------------------------
-window.openWorkDetailDirect = function(workId) {
+window.openWorkDetailDirect = function(workId, shouldPushState = true) {
   const targetId = Number(workId);
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetId) || SAMPLE_WORKS[0];
   activeWork = work;
@@ -787,13 +787,19 @@ window.openWorkDetailDirect = function(workId) {
     }).join('');
   }
 
-  switchWebNovelsView('view-work-detail');
+  switchWebNovelsView('view-work-detail', null, false);
+  if (shouldPushState) {
+    const targetUrl = `/works/${work.id}`;
+    if (window.location.pathname !== targetUrl) {
+      try { window.history.pushState({ path: targetUrl }, '', targetUrl); } catch (e) {}
+    }
+  }
 };
 
 // ----------------------------------------------------
 // [Reader View] Direct Opener
 // ----------------------------------------------------
-window.openReaderDirect = async function(workId, epNumber) {
+window.openReaderDirect = async function(workId, epNumber, shouldPushState = true) {
   const targetWorkId = Number(workId);
   const work = SAMPLE_WORKS.find(w => Number(w.id) === targetWorkId) || SAMPLE_WORKS[0];
   activeWork = work;
@@ -898,7 +904,13 @@ window.openReaderDirect = async function(workId, epNumber) {
   renderReaderComments(work.id, epNum);
   renderReaderRecommendations(work.id);
 
-  switchWebNovelsView('view-reader');
+  switchWebNovelsView('view-reader', null, false);
+  if (shouldPushState) {
+    const readerUrl = `/read/${work.id}/${epNum}`;
+    if (window.location.pathname !== readerUrl) {
+      try { window.history.pushState({ path: readerUrl }, '', readerUrl); } catch (e) {}
+    }
+  }
   window.scrollTo({ top: 0, behavior: 'instant' });
 };
 
@@ -1358,7 +1370,7 @@ function bindWebNovelsEvents() {
 }
 
 // 작가센터 7대 탭 전환 함수
-window.switchCreatorTab = function(tabKey) {
+window.switchCreatorTab = function(tabKey, shouldPushState = true) {
   document.querySelectorAll('#creatorTabsBar [data-creator-tab]').forEach(b => b.classList.remove('active'));
   const activeBtn = document.querySelector(`#creatorTabsBar [data-creator-tab="${tabKey}"]`);
   if (activeBtn) activeBtn.classList.add('active');
@@ -1368,6 +1380,23 @@ window.switchCreatorTab = function(tabKey) {
   if (targetPanel) targetPanel.style.display = 'block';
 
   if (window.lucide) window.lucide.createIcons();
+
+  if (shouldPushState) {
+    const tabUrlMap = {
+      'works': 'works',
+      'new-ep': 'episodes',
+      'status': 'status',
+      'stats': 'stats',
+      'ad-rev': 'settlement',
+      'sales-rev': 'settlement',
+      'settlements': 'settlement'
+    };
+    const subRoute = tabUrlMap[tabKey] || tabKey;
+    const targetUrl = `/creator/${subRoute}`;
+    if (window.location.pathname !== targetUrl) {
+      try { window.history.pushState({ path: targetUrl }, '', targetUrl); } catch (e) {}
+    }
+  }
 };
 
 // 예약 발행 일시 입력창 토글
@@ -1920,7 +1949,7 @@ let isAdminLoggedIn = false;
 let currentActiveView = 'view-home';
 let lastMainView = 'view-home';
 
-function switchWebNovelsView(viewId, activeLink) {
+function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   // 관리자 메뉴 접근 시 로그인 검증
   if (viewId === 'view-admin-cms' && !isAdminLoggedIn) {
     openModal('modalAdminLogin');
@@ -1972,21 +2001,24 @@ function switchWebNovelsView(viewId, activeLink) {
   // 페이지 상단으로 스크롤 이동
   window.scrollTo({ top: 0, behavior: 'instant' });
 
-  // [UX Redesign] 포털 분리 (/creator, /admin) 풀스크린 모드 및 브라우저 URL 동기화
-  if (viewId === 'view-creator') {
+  // [Improvement Step 1] 포털 분리 풀스크린 모드 제어
+  if (viewId === 'view-creator' || viewId === 'view-admin-cms') {
     document.body.classList.add('portal-fullscreen-mode');
-    if (window.location.pathname !== '/creator') {
-      try { window.history.pushState({ view: viewId }, '', '/creator'); } catch(e) {}
-    }
-  } else if (viewId === 'view-admin-cms') {
-    document.body.classList.add('portal-fullscreen-mode');
-    if (window.location.pathname !== '/admin') {
-      try { window.history.pushState({ view: viewId }, '', '/admin'); } catch(e) {}
-    }
   } else {
     document.body.classList.remove('portal-fullscreen-mode');
-    if (window.location.pathname === '/creator' || window.location.pathname === '/admin') {
-      try { window.history.pushState({ view: viewId }, '', '/'); } catch(e) {}
+  }
+
+  // [Improvement Step 1] Semantic URL 동기화 (improve1.md)
+  if (shouldPushState) {
+    let targetPath = null;
+    if (viewId === 'view-home') targetPath = '/home';
+    else if (viewId === 'view-discover') targetPath = '/discover';
+    else if (viewId === 'view-mypage') targetPath = '/library';
+    else if (viewId === 'view-creator') targetPath = '/creator';
+    else if (viewId === 'view-admin-cms') targetPath = '/admin';
+
+    if (targetPath && !window.location.pathname.startsWith(targetPath)) {
+      try { window.history.pushState({ view: viewId, path: targetPath }, '', targetPath); } catch(e) {}
     }
   }
 
@@ -5873,7 +5905,7 @@ window.loadDashboardKPIs = async function() {
 // ----------------------------------------------------
 // Admin Sub-Tab Switcher (Left Sidebar Navigation & 16 Menus Routing)
 // ----------------------------------------------------
-window.switchAdminSubTab = function(tabName) {
+window.switchAdminSubTab = function(tabName, shouldPushState = true) {
   const adminUser = window.WebNovelsAdmin?.getCurrentAdmin?.() || JSON.parse(localStorage.getItem('webnovels_admin_user') || localStorage.getItem('webnovels_user') || 'null');
 
   // RBAC 권한 매핑
@@ -5922,6 +5954,13 @@ window.switchAdminSubTab = function(tabName) {
   document.querySelectorAll('.admin-nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.subtab === tabName);
   });
+
+  if (shouldPushState) {
+    const targetUrl = tabName === 'dashboard' ? '/admin' : `/admin/${tabName}`;
+    if (window.location.pathname !== targetUrl) {
+      try { window.history.pushState({ path: targetUrl }, '', targetUrl); } catch (e) {}
+    }
+  }
 
   // 3. 모바일 화면(<=768px)인 경우 탭 클릭 시 메인 컨텐츠로 스크롤
   if (window.innerWidth <= 768) {
@@ -6366,31 +6405,112 @@ window.showAdminMenuNotice = function(menuKey) {
 // ============================================================
 
 /**
- * 1. URL 기반 포털 분리 라우팅 (/creator, /admin)
+ * 1. 계층적 Semantic URL 라우터 엔진 (improve1.md)
  */
-function initRouteHandler() {
-  const pathname = (window.location.pathname || '').toLowerCase();
+function resolveRoute(pathname, isInitial = false) {
+  const rawPath = (pathname || window.location.pathname || '/').toLowerCase();
   const hash = (window.location.hash || '').toLowerCase();
+  const path = rawPath.replace(/\/$/, '') || '/';
+  const parts = path.split('/').filter(Boolean);
 
-  if (pathname === '/creator' || hash === '#creator') {
-    switchWebNovelsView('view-creator');
-  } else if (pathname === '/admin' || hash === '#admin') {
-    switchWebNovelsView('view-admin-cms');
-  } else if (hash === '#discover') {
-    switchWebNovelsView('view-discover');
-  } else if (hash === '#library') {
-    switchWebNovelsView('view-mypage');
+  console.log(`🧭 [SPA Semantic Router] Resolving route: "${path}" (initial: ${isInitial})`);
+
+  // 1. 홈 경로 (/ 또는 /home)
+  if (parts.length === 0 || parts[0] === 'home' || hash === '#home') {
+    switchWebNovelsView('view-home', null, false);
+    return;
   }
 
-  window.addEventListener('popstate', () => {
-    const curPath = (window.location.pathname || '').toLowerCase();
-    if (curPath === '/creator') {
-      switchWebNovelsView('view-creator');
-    } else if (curPath === '/admin') {
-      switchWebNovelsView('view-admin-cms');
+  // 2. 탐색 경로 (/discover)
+  if (parts[0] === 'discover' || hash === '#discover') {
+    switchWebNovelsView('view-discover', null, false);
+    return;
+  }
+
+  // 3. 작품 상세 경로 (/works/:id)
+  if (parts[0] === 'works') {
+    const workId = parts[1] ? Number(parts[1]) : 1;
+    if (typeof openWorkDetailDirect === 'function') {
+      openWorkDetailDirect(workId, false);
     } else {
-      switchWebNovelsView('view-home');
+      switchWebNovelsView('view-work-detail', null, false);
     }
+    return;
+  }
+
+  // 4. 회차 읽기 경로 (/read/:workId/:epNum)
+  if (parts[0] === 'read') {
+    const workId = parts[1] ? Number(parts[1]) : 1;
+    const epNum = parts[2] ? Number(parts[2]) : 1;
+    if (typeof openReaderDirect === 'function') {
+      openReaderDirect(workId, epNum, false);
+    } else if (typeof openEpisodeDirect === 'function') {
+      openEpisodeDirect(workId, epNum, false);
+    } else {
+      switchWebNovelsView('view-reader', null, false);
+    }
+    return;
+  }
+
+  // 5. 내 서재 경로 (/library 또는 /library/:tab)
+  if (parts[0] === 'library' || hash === '#library') {
+    const subTab = parts[1] || 'continue'; // continue, favorites, authors
+    switchWebNovelsView('view-mypage', null, false);
+    if (typeof openLibraryTabDirect === 'function') {
+      openLibraryTabDirect(subTab, false);
+    }
+    return;
+  }
+
+  // 6. 작가센터 경로 (/creator 또는 /creator/:sub)
+  if (parts[0] === 'creator' || hash === '#creator') {
+    const subTab = parts[1] || 'works';
+    switchWebNovelsView('view-creator', null, false);
+    if (typeof switchCreatorTab === 'function') {
+      const tabMap = {
+        'works': 'works',
+        'episodes': 'new-ep',
+        'status': 'status',
+        'stats': 'stats',
+        'settlement': 'settlements',
+        'settlements': 'settlements'
+      };
+      const actualTab = tabMap[subTab] || subTab;
+      switchCreatorTab(actualTab, false);
+    }
+    return;
+  }
+
+  // 7. 관리자 CMS 경로 (/admin 또는 /admin/:sub)
+  if (parts[0] === 'admin' || hash === '#admin') {
+    const subTab = parts[1] || 'dashboard';
+    switchWebNovelsView('view-admin-cms', null, false);
+    if (typeof switchAdminSubTab === 'function') {
+      switchAdminSubTab(subTab, false);
+    }
+    return;
+  }
+
+  // 기본 매칭 실패 시 홈으로 fallback
+  switchWebNovelsView('view-home', null, false);
+}
+window.resolveRoute = resolveRoute;
+
+function navigateTo(path, pushState = true) {
+  if (pushState && window.location.pathname !== path) {
+    try {
+      window.history.pushState({ path }, '', path);
+    } catch (e) {}
+  }
+  resolveRoute(path, false);
+}
+window.navigateTo = navigateTo;
+
+function initRouteHandler() {
+  resolveRoute(window.location.pathname, true);
+
+  window.addEventListener('popstate', () => {
+    resolveRoute(window.location.pathname, false);
   });
 }
 window.initRouteHandler = initRouteHandler;
@@ -6539,9 +6659,15 @@ window.openGenreDiscover = function(genre) {
 /**
  * 5. 내 서재 특정 탭으로 바로 이동
  */
-window.openLibraryTabDirect = function(tabName) {
+window.openLibraryTabDirect = function(tabName, shouldPushState = true) {
   closeModal('modalMobileMore');
-  switchWebNovelsView('view-mypage');
+  switchWebNovelsView('view-mypage', null, false);
+  if (shouldPushState) {
+    const targetUrl = tabName === 'continue' ? '/library' : `/library/${tabName}`;
+    if (window.location.pathname !== targetUrl) {
+      try { window.history.pushState({ path: targetUrl }, '', targetUrl); } catch (e) {}
+    }
+  }
   setTimeout(() => {
     const tabBtn = document.querySelector(`.library-tabs button[data-library-tab="${tabName}"]`);
     if (tabBtn) tabBtn.click();
