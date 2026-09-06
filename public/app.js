@@ -1991,8 +1991,8 @@ function switchWebNovelsView(viewId, activeLink) {
   }
 
   // 데스크톱 사이드바 활성 탭 동기화
-  document.querySelectorAll('.cdg-sidebar-item').forEach(item => {
-    const target = item.getAttribute('data-target');
+  document.querySelectorAll('.sidebar-nav-item, .cdg-sidebar-item').forEach(item => {
+    const target = item.getAttribute('data-side-target') || item.getAttribute('data-target');
     if (target === viewId) {
       item.classList.add('active');
     } else {
@@ -6399,7 +6399,7 @@ window.initRouteHandler = initRouteHandler;
  * 2. 최상단 '계속 읽기' 카드 동적 렌더링
  */
 function renderContinueReadingHome() {
-  const wrap = document.getElementById('continueReadingHomeWrap');
+  const wrap = document.getElementById('continueReadingHomeWrap') || document.getElementById('sectionContinueReading');
   if (!wrap) return;
 
   let history = [];
@@ -6409,16 +6409,10 @@ function renderContinueReadingHome() {
     history = [];
   }
 
-  if (!history || !Array.isArray(history) || history.length === 0) {
-    wrap.innerHTML = '';
-    wrap.style.display = 'none';
-    return;
-  }
-
-  const latest = history[0];
-  const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(latest.workId));
+  // 독서 기록이 없을 때: 샘플 첫 번째 작품으로 기본 표시하거나 숨김
+  const latest = (history && history.length > 0) ? history[0] : { workId: 1, epNum: 1 };
+  const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(latest.workId)) || SAMPLE_WORKS[0];
   if (!work) {
-    wrap.innerHTML = '';
     wrap.style.display = 'none';
     return;
   }
@@ -6430,23 +6424,23 @@ function renderContinueReadingHome() {
 
   wrap.style.display = 'block';
   wrap.innerHTML = `
-    <div class="continue-reading-card">
-      <div class="continue-reading-left">
-        <img src="${coverSrc}" alt="표지" class="continue-cover-img" onerror="this.src='/images/cover_fantasy.png'">
-        <div class="continue-info">
-          <span class="continue-badge-tag"><i data-lucide="sparkles" style="width:12px;height:12px;"></i> 읽던 작품 이어보기</span>
-          <div class="continue-title">${escapeHtml(work.title)}</div>
-          <div class="continue-sub">제 ${currentEp}화 읽는 중 (총 ${totalEps}화) · ${work.genre || '웹소설'}</div>
-          <div class="continue-progress-wrap">
-            <div class="continue-progress-bar">
-              <div class="continue-progress-fill" style="width: ${progressPct}%;"></div>
-            </div>
-            <span class="continue-progress-text">${progressPct}% 읽음</span>
+    <div class="continue-reading-card" onclick="openEpisodeDirect(${work.id}, ${currentEp})">
+      <div class="continue-reading-left" style="display:flex; align-items:center; gap:16px; flex:1; min-width:0;">
+        <img src="${coverSrc}" alt="표지" class="continue-thumb continue-cover-img" onerror="this.src='/images/cover_fantasy.png'">
+        <div class="continue-info" style="flex:1; min-width:0;">
+          <div class="continue-badge-row" style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span class="badge badge-accent continue-badge"><i data-lucide="book-open" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> 계속 읽기</span>
+            <span class="continue-pct" style="font-size:0.76rem; font-weight:700; color:var(--cdg-pink);">${progressPct}% 읽음</span>
+          </div>
+          <div class="continue-title" style="font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(work.title)}</div>
+          <div class="continue-meta continue-sub" style="font-size:0.82rem; color:#9499ad; margin-bottom:8px;">제 ${currentEp}화 읽는 중 (총 ${totalEps}화) · ${work.genre || '웹소설'}</div>
+          <div class="continue-progress-bg continue-progress-wrap" style="width:100%; max-width:280px; height:6px; background:rgba(255,255,255,0.12); border-radius:4px; overflow:hidden;">
+            <div class="continue-progress-fill" style="height:100%; width:${progressPct}%; background:linear-gradient(90deg, var(--cdg-pink), #ff758c); border-radius:4px;"></div>
           </div>
         </div>
       </div>
-      <div class="continue-btn-action">
-        <button class="btn btn-primary btn-sm" onclick="openEpisodeDirect(${work.id}, ${currentEp})" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; font-weight:700;">
+      <div class="continue-btn-action" style="flex-shrink:0;">
+        <button class="btn btn-primary btn-sm continue-action-btn" onclick="event.stopPropagation(); openEpisodeDirect(${work.id}, ${currentEp})" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:10px; font-weight:700;">
           <i data-lucide="play" style="width:14px;height:14px;"></i> 이어보기
         </button>
       </div>
@@ -6458,6 +6452,59 @@ function renderContinueReadingHome() {
   }
 }
 window.renderContinueReadingHome = renderContinueReadingHome;
+
+/**
+ * 사이드바 메뉴 헬퍼 함수들 (UI_pc.md 전용 인터랙션)
+ */
+window.openNovelFilterHome = function() {
+  switchWebNovelsView('view-discover');
+  setTimeout(() => {
+    const pills = document.querySelectorAll('.filter-pills .pill');
+    if (pills && pills[0]) pills[0].click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 50);
+};
+
+window.scrollToSection = function(sectionId) {
+  if (currentActiveView !== 'view-home') {
+    switchWebNovelsView('view-home');
+  }
+  setTimeout(() => {
+    let el = document.getElementById(sectionId);
+    if (!el && sectionId === 'trendingWorksSection') el = document.getElementById('curatedRankingSection') || document.querySelector('.trending-section');
+    if (!el && sectionId === 'webtoonsSection') el = document.querySelector('.webtoons-section') || document.getElementById('discoverWorksGrid');
+    if (!el && sectionId === 'newWorksSection') el = document.querySelector('.new-works-section') || document.getElementById('homeWorksGrid');
+    if (!el && sectionId === 'completedWorksSection') el = document.querySelector('.completed-section') || document.getElementById('homeWorksGrid');
+
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 350, behavior: 'smooth' });
+    }
+  }, 60);
+};
+
+window.openLibraryTab = function(tabName) {
+  if (typeof window.openLibraryTabDirect === 'function') {
+    window.openLibraryTabDirect(tabName);
+  } else {
+    switchWebNovelsView('view-mypage');
+  }
+};
+
+window.openTopContinueReading = function() {
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+  } catch (e) {}
+
+  if (history && history.length > 0) {
+    const latest = history[0];
+    openEpisodeDirect(latest.workId, latest.epNum || 1);
+  } else {
+    openEpisodeDirect(SAMPLE_WORKS[0].id, 1);
+  }
+};
 
 /**
  * 3. 회차 즉시 열람 헬퍼
