@@ -1246,17 +1246,33 @@ async function createReaderInDB(userData) {
 // 07. COMMENTS & COMMUNITY
 // ============================================================
 
-async function fetchCommentsByEpisode(episodeId) {
-  if (!supabaseClient || !episodeId) return [];
+async function fetchCommentsByEpisode(arg1, arg2) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
   try {
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from('comments')
-      .select('id, user_id, nickname_snapshot, work_id, episode_id, parent_id, content, likes_count, created_at')
-      .eq('episode_id', Number(episodeId))
+      .select('id, user_id, nickname, nickname_snapshot, work_id, episode_id, parent_id, content, likes_count, created_at')
       .eq('is_deleted', false)
-      .eq('is_blocked', false)
-      .order('created_at', { ascending: true });
-    if (!error && data) return data;
+      .eq('is_blocked', false);
+
+    if (arg2 !== undefined && arg2 !== null) {
+      // (workId, episodeId) 전달 시
+      query = query.eq('work_id', Number(arg1)).eq('episode_id', Number(arg2));
+    } else if (arg1) {
+      // (episodeId) 단독 전달 시
+      query = query.eq('episode_id', Number(arg1));
+    } else {
+      return [];
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: true });
+    if (!error && Array.isArray(data)) {
+      return data.map(c => ({
+        ...c,
+        nickname: c.nickname_snapshot || c.nickname || '독자'
+      }));
+    }
     return [];
   } catch (e) {
     return [];

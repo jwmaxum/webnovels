@@ -1056,8 +1056,8 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     btnNext.onclick = () => openReaderDirect(work.id, epNum + 1);
   }
 
-  // 5. 회차별 독자 댓글 및 대댓글 렌더링 (Step 4 연동)
-  loadEpisodeComments(workId, epNum);
+  // 5. 회차별 독자 댓글 및 대댓글 렌더링 (실제 DB 연동)
+  loadEpisodeComments(work.id, ep.id || epNum);
 
   // 6. 추천 작품 렌더링
   renderReaderRecommendations(work.id);
@@ -1069,7 +1069,9 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
 
 // 회차별 댓글 렌더링 (대댓글 트리 지원)
 function renderReaderComments(workId, epNum) {
-  loadEpisodeComments(workId, epNum);
+  const currentWork = (typeof activeWork !== 'undefined' && activeWork) ? activeWork : null;
+  const targetEp = currentWork?.episodes?.find(e => Number(e.episodeNumber) === Number(epNum));
+  loadEpisodeComments(workId, targetEp?.id || epNum);
 }
 
 // 독자 댓글 등록 (하위 호환)
@@ -2060,34 +2062,8 @@ window.loadEpisodeComments = async function(workId, episodeId) {
       comments = await window.WebNovelsAdmin.fetchCommentsByEpisode(workId, episodeId);
     }
 
-    if (!comments || comments.length === 0) {
-      // 기본 데모 댓글 제공
-      comments = [
-        {
-          id: 'demo-c1',
-          parent_id: null,
-          nickname: '달빛독자',
-          content: '주인공 검술 묘사가 너무 생생하고 박진감 넘치네요! 다음 화가 정말 기대됩니다.',
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          likes_count: 14
-        },
-        {
-          id: 'demo-c2',
-          parent_id: 'demo-c1',
-          nickname: '무협매니아',
-          content: '맞아요, 특히 마지막 검기 폭발 장면은 역대급 연출이었습니다.',
-          created_at: new Date(Date.now() - 1800000).toISOString(),
-          likes_count: 5
-        },
-        {
-          id: 'demo-c3',
-          parent_id: null,
-          nickname: '소설러버',
-          content: '광고 보고 바로 5화까지 정주행 완료했습니다. 작가님 응원합니다!',
-          created_at: new Date(Date.now() - 7200000).toISOString(),
-          likes_count: 21
-        }
-      ];
+    if (!comments) {
+      comments = [];
     }
 
     // 최상위 댓글과 대댓글 분리
