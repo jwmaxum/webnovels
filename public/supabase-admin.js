@@ -253,9 +253,38 @@ async function fetchDashboardKPI() {
       totalViews = worksData.reduce((sum, w) => sum + (Number(w.view_count) || 0), 0);
     }
 
-    // 4. episodes count
-    const { count: epCount } = await supabaseClient.from('episodes').select('*', { count: 'exact', head: true });
+    // 4. episodes count & 타입별 에피소드 & 오늘 발행 현황 집계
+    let novelEpisodes = 0;
+    let webtoonEpisodes = 0;
+    let todayPublished = 0;
+    let todayScheduled = 0;
+
+    const { data: epData, count: epCount } = await supabaseClient
+      .from('episodes')
+      .select('id, work_id, status, created_at, scheduled_at', { count: 'exact' });
+
     if (typeof epCount === 'number') totalEpisodes = epCount;
+
+    if (epData && worksData) {
+      const webtoonWorkIds = new Set(worksData.filter(w => w.content_type === 'WEBTOON').map(w => w.id));
+      epData.forEach(ep => {
+        if (webtoonWorkIds.has(ep.work_id)) {
+          webtoonEpisodes++;
+        } else {
+          novelEpisodes++;
+        }
+
+        // 오늘 일자 (2026-08-22) 기준 발행 및 예약 카운트
+        const dateStr = ep.scheduled_at || ep.created_at;
+        if (dateStr && String(dateStr).startsWith('2026-08-22')) {
+          if (ep.status === 'SCHEDULED') {
+            todayScheduled++;
+          } else {
+            todayPublished++;
+          }
+        }
+      });
+    }
 
     // 5. ad_events count
     const { count: adCount } = await supabaseClient.from('ad_events').select('*', { count: 'exact', head: true });
@@ -283,6 +312,10 @@ async function fetchDashboardKPI() {
       total_views: totalViews,
       novel_count: novelCount,
       webtoon_count: webtoonCount,
+      novel_episodes: novelEpisodes,
+      webtoon_episodes: webtoonEpisodes,
+      today_published: todayPublished,
+      today_scheduled: todayScheduled + todayPublished,
       ongoing_count: ongoingCount,
       completed_count: completedCount,
       total_revenue: calculatedTotalRevenue,
@@ -290,6 +323,33 @@ async function fetchDashboardKPI() {
     };
   } catch (err) {
     console.error('[Dashboard KPI] 조회 실패:', err);
+    return null;
+  }
+}
+
+// ============================================================
+// 02-B. EPISODES SUMMARY STATS (실시간 회차 통계 집계)
+// ============================================================
+async function fetchEpisodeSummaryStats() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return null;
+
+  try {
+    const [allRes, pubRes, schedRes, draftRes] = await Promise.all([
+      supabaseClient.from('episodes').select('*', { count: 'exact', head: true }),
+      supabaseClient.from('episodes').select('*', { count: 'exact', head: true }).or('status.eq.PUBLISHED,status.is.null'),
+      supabaseClient.from('episodes').select('*', { count: 'exact', head: true }).eq('status', 'SCHEDULED'),
+      supabaseClient.from('episodes').select('*', { count: 'exact', head: true }).eq('status', 'DRAFT')
+    ]);
+
+    return {
+      total: allRes.count ?? 0,
+      published: pubRes.count ?? 0,
+      scheduled: schedRes.count ?? 0,
+      draft: draftRes.count ?? 0
+    };
+  } catch (err) {
+    console.error('[WebNovelsAdmin] fetchEpisodeSummaryStats Error:', err);
     return null;
   }
 }
@@ -392,6 +452,188 @@ async function fetchWorksFromSupabase() {
     });
   } catch (err) {
     console.error('[fetchWorksFromSupabase Error]', err);
+    return null;
+  }
+}
+
+// [Fetch Episodes By Work ID with Full Metadata]
+async function fetchEpisodesByWorkId(workId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('episodes')
+      .select('id, work_id, episode_number, title, access_policy, author_comment, status, scheduled_at, view_count, is_free, is_ad_free, content, image_urls, created_at')
+      .eq('work_id', Number(workId))
+      .order('episode_number', { ascending: true });
+
+    if (error) {
+      console.warn('[fetchEpisodesByWorkId] 조회 에러:', error);
+      return [];
+    }
+
+    return (data || []).map(ep => ({
+      id: ep.id,
+      workId: ep.work_id,
+      episodeNumber: ep.episode_number,
+      title: ep.title,
+      isFree: ep.is_free,
+      isAdFree: ep.is_ad_free,
+      status: ep.status || 'PUBLISHED',
+      scheduledAt: ep.scheduled_at,
+      viewCount: Number(ep.view_count || 0),
+      views: Number(ep.view_count || 0),
+      content: ep.content,
+      imageUrls: Array.isArray(ep.image_urls) ? ep.image_urls : (ep.image_urls ? [ep.image_urls] : []),
+      authorComment: ep.author_comment || '',
+      createdAt: ep.created_at
+    }));
+  } catch (err) {
+    console.error('[fetchEpisodesByWorkId Error]', err);
+    return [];
+  }
+}
+
+// [Fetch Publishing Calendar Events from Supabase]
+async function fetchPublishingCalendarEvents(year = 2026, month = 8) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return {};
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('episodes')
+      .select('id, scheduled_at, created_at, status, episode_number, title, work_id');
+
+    if (error || !data) {
+      console.warn('[fetchPublishingCalendarEvents] 에러:', error);
+      return {};
+    }
+
+    const eventMap = {};
+    data.forEach(ep => {
+      const dateStr = ep.scheduled_at || ep.created_at;
+      if (!dateStr) return;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return;
+      if (d.getFullYear() === Number(year) && (d.getMonth() + 1) === Number(month)) {
+        const day = d.getDate();
+        if (!eventMap[day]) {
+          eventMap[day] = { published: 0, scheduled: 0, total: 0, items: [] };
+        }
+        if (ep.status === 'SCHEDULED') {
+          eventMap[day].scheduled++;
+        } else {
+          eventMap[day].published++;
+        }
+        eventMap[day].total++;
+        eventMap[day].items.push(ep);
+      }
+    });
+
+    return eventMap;
+  } catch (err) {
+    console.error('[fetchPublishingCalendarEvents Error]', err);
+    return {};
+  }
+}
+
+// [Fetch Work Series Dashboard Live Analytics]
+async function fetchWorkSeriesDashboardData(workId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return null;
+
+  try {
+    const id = Number(workId);
+    // 1. work detail
+    const { data: work, error: wErr } = await supabaseClient
+      .from('works')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (wErr || !work) {
+      console.warn('[fetchWorkSeriesDashboardData] 작품 없음:', wErr);
+      return null;
+    }
+
+    // 2. episodes list
+    const { data: episodes } = await supabaseClient
+      .from('episodes')
+      .select('id, episode_number, title, status, created_at, scheduled_at, view_count')
+      .eq('work_id', id)
+      .order('episode_number', { ascending: true });
+
+    const epList = episodes || [];
+    const epCount = epList.length;
+
+    // 3. favorites count
+    const { count: favCount } = await supabaseClient
+      .from('favorites')
+      .select('*', { count: 'exact', head: true })
+      .eq('work_id', id);
+
+    // 4. author earnings/settlements
+    let totalRevenue = 0;
+    if (work.author_id) {
+      const { data: earnings } = await supabaseClient
+        .from('author_earnings')
+        .select('total_earnings')
+        .eq('author_id', work.author_id);
+      if (earnings && earnings.length > 0) {
+        totalRevenue = earnings.reduce((sum, r) => sum + (Number(r.total_earnings) || 0), 0);
+      }
+    }
+
+    // 5. Health score dynamic calculation
+    const isCompleted = work.status === 'COMPLETED' || work.is_completed;
+    const scoreSchedule = isCompleted ? 100 : (epCount >= 5 ? 95 : 85);
+    const scoreTraffic = Math.min(95, Math.max(60, Math.round(Number(work.view_count || 0) * 1.5 + 50)));
+    const scoreRetention = epCount > 1 ? Math.min(95, Math.max(70, Math.round(85 + (Number(favCount || 0) * 3)))) : 80;
+    const scoreStock = epCount >= 6 ? 90 : (epCount >= 3 ? 80 : 70);
+    const healthScore = Math.round((scoreSchedule + scoreTraffic + scoreRetention + scoreStock) / 4);
+
+    // 6. Latest & Next Schedule text
+    const latestEp = epList.length > 0 ? epList[epList.length - 1] : null;
+    let latestPubText = '-';
+    if (latestEp) {
+      const d = new Date(latestEp.scheduled_at || latestEp.created_at);
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      latestPubText = `${m}/${day} (제 ${latestEp.episode_number}화) - 정상 완료`;
+    }
+
+    let nextPubText = '-';
+    if (isCompleted) {
+      nextPubText = '완결 (연재 종료)';
+    } else {
+      const scheduledEp = epList.find(e => e.status === 'SCHEDULED');
+      if (scheduledEp) {
+        const d = new Date(scheduledEp.scheduled_at || scheduledEp.created_at);
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        nextPubText = `${m}/${day} (제 ${scheduledEp.episode_number}화) - 예약 대기`;
+      } else {
+        nextPubText = `제 ${epCount + 1}화 차주 연재 준비중`;
+      }
+    }
+
+    return {
+      work,
+      epCount,
+      viewTotal: Number(work.view_count || 0),
+      fansCount: Number(favCount || 0) + Number(work.like_count || 0),
+      totalRevenue,
+      healthScore,
+      scoreSchedule,
+      scoreTraffic,
+      scoreRetention,
+      scoreStock,
+      latestPubText,
+      nextPubText
+    };
+  } catch (err) {
+    console.error('[fetchWorkSeriesDashboardData Error]', err);
     return null;
   }
 }
@@ -771,9 +1013,13 @@ async function fetchRevenueEvents() {
     if (!error && data) {
       return data.map(r => ({
         period_month: String(r.period_month || '').substring(0, 7),
-        gross_revenue: r.gross_revenue,
-        writer_pool: r.writer_pool,
-        is_closed: r.is_closed
+        gross_revenue: Number(r.gross_revenue) || 0,
+        ad_network_fee: Number(r.network_fee ?? r.ad_network_fee ?? 0),
+        net_revenue: Number(r.net_revenue) || 0,
+        writer_pool_ratio: Number(r.writer_pool_ratio) || 0.625,
+        writer_pool: Number(r.writer_pool) || 0,
+        platform_revenue: Number(r.platform_revenue) || 0,
+        is_closed: !!r.is_closed
       }));
     }
     return [];
@@ -1889,6 +2135,21 @@ async function fetchAdUnitsFromDB() {
   }
 }
 
+async function fetchEventsFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('events')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
 // ============================================================
 // 10. GLOBAL EXPORT
 // ============================================================
@@ -1908,7 +2169,11 @@ window.WebNovelsAdmin = {
   checkReaderExists,
   createReaderInDB,
   fetchDashboardKPI,
+  fetchEpisodeSummaryStats,
   fetchWorksFromSupabase,
+  fetchEpisodesByWorkId,
+  fetchPublishingCalendarEvents,
+  fetchWorkSeriesDashboardData,
   fetchEpisodeContentSecure,
   createWorkInDB,
   updateWorkAdminSetting,
@@ -1945,5 +2210,6 @@ window.WebNovelsAdmin = {
   recordAuditLogInDB,
   fetchFanMeetingsFromDB,
   fetchGoodsFromDB,
-  fetchAdUnitsFromDB
+  fetchAdUnitsFromDB,
+  fetchEventsFromDB
 };
