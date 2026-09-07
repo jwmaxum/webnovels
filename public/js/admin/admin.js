@@ -224,11 +224,201 @@ window.renderReadersAdminTable = function() {
         <td class="p-3">${adultBadge}</td>
         <td class="p-3">${createdAtDisplay}</td>
         <td class="p-3">
-          <button class="btn btn-ghost btn-sm" onclick="showToast('회원 상세 정보: ${userIdDisplay} (${emailDisplay})');">상세</button>
+          <button class="btn btn-ghost btn-sm" onclick="openReaderDetailModal('${r.id}')">상세</button>
         </td>
       </tr>
     `;
   }).join('');
+};
+
+// ---- 독자 회원 상세 모달 열기 ----
+window.openReaderDetailModal = async function(readerId) {
+  let reader = (SAMPLE_READERS || []).find(r => String(r.id) === String(readerId));
+  if (!reader && window.supabaseClient) {
+    try {
+      const { data } = await window.supabaseClient.from('readers').select('*').eq('id', readerId).single();
+      if (data) reader = data;
+    } catch(e) {}
+  }
+  if (!reader) {
+    showToast('독자 회원 정보를 찾을 수 없습니다.');
+    return;
+  }
+
+  const modal = document.getElementById('modalReaderDetail');
+  if (!modal) return;
+
+  const username = reader.username || `usr_${reader.id}`;
+  const titleEl = document.getElementById('readerDetailModalTitle');
+  if (titleEl) titleEl.textContent = `독자 회원 상세 정보 및 계정 관리 (${username})`;
+
+  const elId = document.getElementById('readerDetailId');
+  if (elId) elId.value = reader.id;
+  const elDispId = document.getElementById('readerDetailDisplayId');
+  if (elDispId) elDispId.value = reader.id;
+  const elUser = document.getElementById('readerDetailUsername');
+  if (elUser) elUser.value = username;
+  const elNick = document.getElementById('readerDetailNickname');
+  if (elNick) elNick.value = reader.nickname || '';
+  const elMail = document.getElementById('readerDetailEmail');
+  if (elMail) elMail.value = reader.email || '';
+  const elPhone = document.getElementById('readerDetailPhone');
+  if (elPhone) elPhone.value = reader.phone || '';
+  const elCreated = document.getElementById('readerDetailCreatedAt');
+  if (elCreated) elCreated.value = reader.created_at ? new Date(reader.created_at).toLocaleString() : '-';
+
+  const subSelect = document.getElementById('readerDetailSubStatus');
+  if (subSelect) subSelect.value = reader.subscription_status || '일반 회원';
+
+  const adultSelect = document.getElementById('readerDetailAdultVerified');
+  if (adultSelect) adultSelect.value = String(!!reader.is_adult_verified);
+
+  const statusSelect = document.getElementById('readerDetailStatus');
+  if (statusSelect) statusSelect.value = reader.status || 'ACTIVE';
+
+  const pwInput = document.getElementById('readerDetailNewPassword');
+  if (pwInput) pwInput.value = '';
+
+  openModal('modalReaderDetail');
+};
+
+// ---- 독자 기본 인적정보 수정 저장 ----
+window.handleSaveReaderInfo = async function(event) {
+  if (event) event.preventDefault();
+  const readerId = document.getElementById('readerDetailId')?.value;
+  if (!readerId) return;
+
+  const nickname = document.getElementById('readerDetailNickname')?.value.trim();
+  const email = document.getElementById('readerDetailEmail')?.value.trim();
+  const phone = document.getElementById('readerDetailPhone')?.value.trim();
+  const subscription_status = document.getElementById('readerDetailSubStatus')?.value;
+  const is_adult_verified = document.getElementById('readerDetailAdultVerified')?.value === 'true';
+  const status = document.getElementById('readerDetailStatus')?.value;
+
+  const saveBtn = document.getElementById('btnSaveReaderInfo');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = '저장 중...';
+  }
+
+  try {
+    const payload = {
+      nickname: nickname || null,
+      email,
+      phone: phone || null,
+      subscription_status,
+      is_adult_verified,
+      status
+    };
+
+    let success = false;
+    if (window.WebNovelsAdmin?.updateReaderByAdmin) {
+      const res = await window.WebNovelsAdmin.updateReaderByAdmin(readerId, payload);
+      success = !!res?.success;
+    } else if (window.supabaseClient) {
+      const { error } = await window.supabaseClient.from('readers').update(payload).eq('id', readerId);
+      success = !error;
+    }
+
+    if (success) {
+      showToast(`✅ 독자 회원 (${email}) 정보가 성공적으로 수정되었습니다.`);
+      closeAllModals();
+      await window.loadAdminUsers(true);
+      if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
+    } else {
+      showToast('❌ 독자 회원 정보 수정 실패. 다시 시도해주세요.');
+    }
+  } catch (err) {
+    console.error('[handleSaveReaderInfo Error]', err);
+    showToast('❌ 수정 중 오류 발생: ' + err.message);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i data-lucide="save"></i> 인적 정보 변경사항 저장';
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+};
+
+// ---- 독자 비밀번호 강제 변경 ----
+window.handleChangeReaderPassword = async function(event) {
+  if (event) event.preventDefault();
+  const readerId = document.getElementById('readerDetailId')?.value;
+  const newPw = document.getElementById('readerDetailNewPassword')?.value.trim();
+
+  if (!readerId || !newPw) {
+    showToast('새 비밀번호를 입력해주세요.');
+    return;
+  }
+
+  const changeBtn = document.getElementById('btnChangeReaderPw');
+  if (changeBtn) {
+    changeBtn.disabled = true;
+    changeBtn.textContent = '변경 중...';
+  }
+
+  try {
+    let success = false;
+    if (window.WebNovelsAdmin?.changeReaderPasswordByAdmin) {
+      const res = await window.WebNovelsAdmin.changeReaderPasswordByAdmin(readerId, newPw);
+      success = !!res?.success;
+    } else if (window.supabaseClient) {
+      const pwHash = newPw.startsWith('!') ? newPw : `!${newPw}`;
+      const { error } = await window.supabaseClient.from('readers').update({ password_hash: pwHash }).eq('id', readerId);
+      success = !error;
+    }
+
+    if (success) {
+      showToast('🔑 독자 회원의 비밀번호가 성공적으로 변경되었습니다.');
+      const pwEl = document.getElementById('readerDetailNewPassword');
+      if (pwEl) pwEl.value = '';
+    } else {
+      showToast('❌ 비밀번호 변경 실패. 다시 시도해주세요.');
+    }
+  } catch (err) {
+    console.error('[handleChangeReaderPassword Error]', err);
+    showToast('❌ 비밀번호 변경 중 오류: ' + err.message);
+  } finally {
+    if (changeBtn) {
+      changeBtn.disabled = false;
+      changeBtn.textContent = '비밀번호 즉시 변경';
+    }
+  }
+};
+
+// ---- 독자 회원 영구 삭제 ----
+window.handleDeleteReader = async function() {
+  const readerId = document.getElementById('readerDetailId')?.value;
+  const username = document.getElementById('readerDetailUsername')?.value || readerId;
+
+  if (!readerId) return;
+
+  if (!confirm(`⚠️ 정말로 독자 회원 "${username}" 계정을 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 북마크 및 열람 기록이 삭제됩니다.`)) {
+    return;
+  }
+
+  try {
+    let success = false;
+    if (window.WebNovelsAdmin?.deleteReaderByAdmin) {
+      const res = await window.WebNovelsAdmin.deleteReaderByAdmin(readerId);
+      success = !!res?.success;
+    } else if (window.supabaseClient) {
+      const { error } = await window.supabaseClient.from('readers').delete().eq('id', readerId);
+      success = !error;
+    }
+
+    if (success) {
+      showToast(`🗑️ 독자 회원 "${username}" 계정이 DB에서 영구 삭제되었습니다.`);
+      closeAllModals();
+      await window.loadAdminUsers(true);
+      if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
+    } else {
+      showToast('❌ 독자 회원 삭제 실패. 다시 시도해주세요.');
+    }
+  } catch (err) {
+    console.error('[handleDeleteReader Error]', err);
+    showToast('❌ 삭제 중 오류 발생: ' + err.message);
+  }
 };
 
 // 등록 작가 (authors) 실시간 DB 로드 및 렌더링

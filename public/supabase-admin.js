@@ -1675,6 +1675,81 @@ async function updateReaderProfileInDB(userId, profileData) {
   }
 }
 
+// ---- 관리자 전용 독자 회원 정보 수정 ----
+async function updateReaderByAdmin(readerId, payload) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !readerId || !payload) return { success: false, error: '유효하지 않은 요청' };
+
+  try {
+    const updateData = {};
+    if (payload.nickname !== undefined) updateData.nickname = payload.nickname;
+    if (payload.email !== undefined) updateData.email = payload.email;
+    if (payload.phone !== undefined) updateData.phone = payload.phone;
+    if (payload.subscription_status !== undefined) updateData.subscription_status = payload.subscription_status;
+    if (payload.status !== undefined) updateData.status = payload.status;
+    if (payload.is_adult_verified !== undefined) {
+      updateData.is_adult_verified = !!payload.is_adult_verified;
+      if (payload.is_adult_verified) updateData.adult_verified_at = new Date().toISOString();
+    }
+
+    const { data, error } = await supabaseClient
+      .from('readers')
+      .update(updateData)
+      .eq('id', readerId)
+      .select();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error('[updateReaderByAdmin Error]', err);
+    return { success: false, error: err.message };
+  }
+}
+
+// ---- 관리자 전용 독자 회원 비밀번호 변경 ----
+async function changeReaderPasswordByAdmin(readerId, newPassword) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !readerId || !newPassword) return { success: false, error: '유효하지 않은 요청' };
+
+  try {
+    const cleanPw = String(newPassword).trim();
+    // 현재 시스템의 비밀번호 형식 '!비밀번호' 호환
+    const pwHash = cleanPw.startsWith('!') ? cleanPw : `!${cleanPw}`;
+
+    const { data, error } = await supabaseClient
+      .from('readers')
+      .update({ password_hash: pwHash })
+      .eq('id', readerId)
+      .select();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error('[changeReaderPasswordByAdmin Error]', err);
+    return { success: false, error: err.message };
+  }
+}
+
+// ---- 관리자 전용 독자 회원 삭제 ----
+async function deleteReaderByAdmin(readerId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !readerId) return { success: false, error: '유효하지 않은 요청' };
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('readers')
+      .delete()
+      .eq('id', readerId)
+      .select();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error('[deleteReaderByAdmin Error]', err);
+    return { success: false, error: err.message };
+  }
+}
+
 async function checkReaderExists(username, email) {
   if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient) return false;
@@ -2168,6 +2243,9 @@ window.WebNovelsAdmin = {
   updateReaderProfileInDB,
   checkReaderExists,
   createReaderInDB,
+  updateReaderByAdmin,
+  changeReaderPasswordByAdmin,
+  deleteReaderByAdmin,
   fetchDashboardKPI,
   fetchEpisodeSummaryStats,
   fetchWorksFromSupabase,

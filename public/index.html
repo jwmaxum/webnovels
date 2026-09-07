@@ -2040,6 +2040,119 @@
           </form>
         </div>
       </div>
+    <!-- Modal: Reader Detail & Management (Admin) -->
+    <div class="modal-backdrop" id="modalReaderDetail">
+      <div class="modal-dialog glass-panel dialog-lg" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+          <h3>👤 <span id="readerDetailModalTitle">독자 회원 상세 정보 및 계정 관리</span></h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <!-- 1. 기본 인적 정보 수정 폼 -->
+          <form id="formEditReaderDetail" onsubmit="handleSaveReaderInfo(event)">
+            <input type="hidden" id="readerDetailId" value="">
+            
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <h4 style="margin: 0 0 14px 0; font-size: 1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="user"></i> 기본 인적 정보 및 계정 상태
+              </h4>
+              
+              <div class="grid-2-col gap-3 mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="small text-muted">회원 고유 ID (System)</label>
+                  <input type="text" id="readerDetailDisplayId" class="admin-input" readonly style="opacity: 0.7; cursor: not-allowed;">
+                </div>
+                <div class="form-group">
+                  <label class="small text-muted">로그인 아이디 (Username)</label>
+                  <input type="text" id="readerDetailUsername" class="admin-input" readonly style="opacity: 0.7; cursor: not-allowed;">
+                </div>
+              </div>
+
+              <div class="grid-2-col gap-3 mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="small text-muted">닉네임</label>
+                  <input type="text" id="readerDetailNickname" class="admin-input" placeholder="닉네임 입력">
+                </div>
+                <div class="form-group">
+                  <label class="small text-muted">이메일 주소</label>
+                  <input type="email" id="readerDetailEmail" class="admin-input" placeholder="example@webnovels.com" required>
+                </div>
+              </div>
+
+              <div class="grid-2-col gap-3 mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="small text-muted">연락처 (휴대폰 번호)</label>
+                  <input type="text" id="readerDetailPhone" class="admin-input" placeholder="+82-010-0000-0000">
+                </div>
+                <div class="form-group">
+                  <label class="small text-muted">가입 일시</label>
+                  <input type="text" id="readerDetailCreatedAt" class="admin-input" readonly style="opacity: 0.7; cursor: not-allowed;">
+                </div>
+              </div>
+
+              <div class="grid-3-col gap-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="small text-muted">구독 상태</label>
+                  <select id="readerDetailSubStatus" class="admin-input">
+                    <option value="일반 회원">일반 회원</option>
+                    <option value="프리미엄 구독중">프리미엄 구독중</option>
+                    <option value="VIP 회원">VIP 회원</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="small text-muted">PASS 성인 인증</label>
+                  <select id="readerDetailAdultVerified" class="admin-input">
+                    <option value="false">미인증</option>
+                    <option value="true">🔞 인증 완료</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="small text-muted">계정 상태</label>
+                  <select id="readerDetailStatus" class="admin-input">
+                    <option value="ACTIVE">ACTIVE (정상)</option>
+                    <option value="SUSPENDED">SUSPENDED (이용정지)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mt-3" style="text-align: right;">
+                <button type="submit" id="btnSaveReaderInfo" class="btn btn-primary btn-sm">
+                  <i data-lucide="save"></i> 인적 정보 변경사항 저장
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- 2. 비밀번호 강제 변경 -->
+          <form id="formChangeReaderPw" onsubmit="handleChangeReaderPassword(event)" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="key"></i> 비밀번호 강제 변경 / 재설정
+            </h4>
+            <p class="text-muted small mb-3">회원이 비밀번호를 분실했거나 계정 보호를 위해 관리자 권한으로 새 비밀번호를 부여합니다.</p>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="password" id="readerDetailNewPassword" class="admin-input" placeholder="새 비밀번호 입력 (예: !12345)" required style="flex: 1;">
+              <button type="submit" id="btnChangeReaderPw" class="btn btn-outline btn-sm" style="white-space: nowrap;">
+                비밀번호 즉시 변경
+              </button>
+            </div>
+          </form>
+
+          <!-- 3. 위험 구역 (계정 삭제) -->
+          <div style="background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 16px;">
+            <div class="flex-between" style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="color: #ef4444; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="alert-triangle"></i> 위험 구역 (Danger Zone)
+                </strong>
+                <p class="text-muted small mt-1 mb-0">해당 회원을 DB에서 영구 삭제합니다. 열람 기록 및 북마크가 모두 소멸됩니다.</p>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm style-danger" onclick="handleDeleteReader()" style="color: #ef4444; border-color: rgba(239,68,68,0.4); white-space: nowrap;">
+                🗑️ 회원 영구 삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal: Write New Episode (Creator Studio) -->
