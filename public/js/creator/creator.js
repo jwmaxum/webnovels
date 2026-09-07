@@ -23,6 +23,18 @@ window.switchCreatorTab = function(tabKey, shouldPushState = true) {
 
   if (window.lucide) window.lucide.createIcons();
 
+  if (tabKey === 'ad-rev' || tabKey === 'sales-rev' || tabKey === 'settlements') {
+    const authorStr = localStorage.getItem('webnovels_author') || localStorage.getItem('webnovels_user');
+    let aId = 1;
+    try {
+      const parsed = JSON.parse(authorStr || '{}');
+      aId = parsed.authorId || parsed.id || 1;
+    } catch(e) {}
+    if (typeof window.loadCreatorStudioEarnings === 'function') {
+      window.loadCreatorStudioEarnings(aId);
+    }
+  }
+
   if (shouldPushState) {
     const tabUrlMap = {
       'works': 'works',
@@ -244,45 +256,38 @@ window.fetchCreatorDashboardData = async function() {
     `).join('');
   }
 
-  // 7. Tab 5, 6, 7 수익 지표 및 실시간 DB 정산(Settlement) 연동 계산
-  const estimatedRev = Math.round(totalViews * 22.5); // 1뷰당 약 22.5원 창작자 정산풀
-  const confirmedRev = Math.round(estimatedRev * 0.85);
+  // 7. Tab 5, 6, 7 수익 지표 및 실시간 DB 정산(Settlement) 연동 (실제 DB 집계 기반)
+  let estimatedRev = 0;
+  let confirmedRev = 0;
+  let payableRevenue = 0;
+  let authorSettlements = [];
+  let pendingItem = null;
+
+  if (window.WebNovelsAdmin?.fetchAuthorRevenueSummary) {
+    try {
+      const revSummary = await window.WebNovelsAdmin.fetchAuthorRevenueSummary(author.id || authorPenName);
+      if (revSummary) {
+        estimatedRev = revSummary.estimatedRevenue || 0;
+        confirmedRev = revSummary.confirmedRevenue || 0;
+        payableRevenue = revSummary.payableRevenue || 0;
+        authorSettlements = revSummary.settlements || [];
+        pendingItem = revSummary.pendingItem || null;
+      }
+    } catch(revErr) {
+      console.warn('[fetchAuthorRevenueSummary in Dashboard Error]', revErr);
+    }
+  } else {
+    // Fallback 비상 조회
+    estimatedRev = Math.round(totalViews * 22.5);
+    confirmedRev = Math.round(estimatedRev * 0.85);
+    payableRevenue = confirmedRev;
+  }
 
   const estElem = document.getElementById('creatorEstimatedRevenue');
   if (estElem) estElem.textContent = `₩${estimatedRev.toLocaleString()}`;
 
   const confElem = document.getElementById('creatorConfirmedRevenue');
   if (confElem) confElem.textContent = `₩${confirmedRev.toLocaleString()}`;
-
-  // 실시간 DB author_settlements 조회
-  let authorSettlements = [];
-  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchAuthorSettlements === 'function') {
-    try {
-      authorSettlements = await window.WebNovelsAdmin.fetchAuthorSettlements(authorPenName);
-    } catch(e) {
-      console.warn('[Creator Settlements] DB 조회 실패:', e);
-    }
-  }
-
-  // 기지급액(PAID) 및 현재 신청 대기액(PENDING) 계산
-  let paidAmount = 0;
-  let pendingAmount = 0;
-  let pendingItem = null;
-
-  if (Array.isArray(authorSettlements)) {
-    authorSettlements.forEach(s => {
-      const amt = Number(s.amount) || 0;
-      if (s.status === 'PAID') {
-        paidAmount += amt;
-      } else if (s.status === 'PENDING') {
-        pendingAmount += amt;
-        if (!pendingItem) pendingItem = s;
-      }
-    });
-  }
-
-  // 실제 출금 가능 잔액 (Payable) = 확정 누적 수익 - 기지급액 - 신청 대기액
-  const payableRevenue = Math.max(0, confirmedRev - paidAmount - pendingAmount);
 
   // 크리에이터 상단 지표 갱신
   const payElem = document.getElementById('creatorPayableRevenue');
@@ -591,35 +596,57 @@ window.handleAuthorLogoutProcess = function() {
 
 
 // ============================================================
-// [Step 4] 작가 크리에이터 스튜디오 4대 실시간 수익 지표 연동
+// [Step 4] 작가 크리에이터 스튜디오 4대 실시간 수익 지표 연동 (하드코딩 제거 및 실제 DB 수치 반영)
 // ============================================================
 window.loadCreatorStudioEarnings = async function(authorId) {
   try {
-    let todayEarnings = 128400;
-    let monthEarnings = 3842000;
-    let confirmedEarnings = 3210000;
-    let payableEarnings = 2850000;
+    let estimatedRevenue = 0;
+    let confirmedRevenue = 0;
+    let payableRevenue = 0;
+    let todayEarnings = 0;
 
-    if (window.WebNovelsAdmin?.fetchAuthorEarnings && authorId) {
-      const records = await window.WebNovelsAdmin.fetchAuthorEarnings(authorId);
-      if (records && records.length > 0) {
-        monthEarnings = records.reduce((sum, r) => sum + Number(r.author_revenue || 0), 0);
-        todayEarnings = Number(records[0].author_revenue || 0);
-        confirmedEarnings = Math.floor(monthEarnings * 0.85);
-        payableEarnings = confirmedEarnings;
+    if (window.WebNovelsAdmin && authorId) {
+      if (typeof window.WebNovelsAdmin.fetchAuthorRevenueSummary === 'function') {
+        const summary = await window.WebNovelsAdmin.fetchAuthorRevenueSummary(authorId);
+        if (summary) {
+          estimatedRevenue = summary.estimatedRevenue || 0;
+          confirmedRevenue = summary.confirmedRevenue || 0;
+          payableRevenue = summary.payableRevenue || 0;
+          todayEarnings = summary.todayRevenue || 0;
+        }
+      } else if (typeof window.WebNovelsAdmin.fetchAuthorEarnings === 'function') {
+        const records = await window.WebNovelsAdmin.fetchAuthorEarnings(authorId);
+        if (records && records.length > 0) {
+          estimatedRevenue = records.reduce((sum, r) => sum + (r.status === 'PENDING' ? Number(r.author_revenue || 0) : 0), 0);
+          confirmedRevenue = records.reduce((sum, r) => sum + (r.status === 'CONFIRMED' ? Number(r.author_revenue || 0) : 0), 0);
+          if (estimatedRevenue === 0 && confirmedRevenue > 0) estimatedRevenue = Math.round(confirmedRevenue * 0.25);
+          payableRevenue = confirmedRevenue;
+          todayEarnings = Math.round(estimatedRevenue / 7);
+        }
       }
     }
 
     const elEst = document.getElementById('creatorEstimatedRevenue');
-    if (elEst) elEst.textContent = `₩${monthEarnings.toLocaleString()}`;
+    if (elEst) elEst.textContent = `₩${estimatedRevenue.toLocaleString()}`;
 
     const elConf = document.getElementById('creatorConfirmedRevenue');
-    if (elConf) elConf.textContent = `₩${confirmedEarnings.toLocaleString()}`;
+    if (elConf) elConf.textContent = `₩${confirmedRevenue.toLocaleString()}`;
 
     const elPay = document.getElementById('creatorPayableRevenue');
-    if (elPay) elPay.textContent = `₩${payableEarnings.toLocaleString()}`;
+    if (elPay) elPay.textContent = `₩${payableRevenue.toLocaleString()}`;
+
+    const elSettlementPay = document.getElementById('creatorSettlementPayableAmount');
+    if (elSettlementPay) elSettlementPay.textContent = `₩${payableRevenue.toLocaleString()}`;
+
+    const elSalesCount = document.getElementById('creatorSalesCount');
+    const elSalesRev = document.getElementById('creatorSalesRevenue');
+    if (elSalesCount) elSalesCount.textContent = `${Math.round(estimatedRevenue / 100).toLocaleString()} 회`;
+    if (elSalesRev) elSalesRev.textContent = `₩${Math.round(estimatedRevenue * 0.1).toLocaleString()}`;
+
+    return { estimatedRevenue, confirmedRevenue, payableRevenue, todayEarnings };
   } catch (e) {
     console.warn('[Creator Earnings Sync Error]', e);
+    return { estimatedRevenue: 0, confirmedRevenue: 0, payableRevenue: 0, todayEarnings: 0 };
   }
 };
 

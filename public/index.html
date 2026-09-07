@@ -637,17 +637,17 @@
             <div class="creator-kpi-grid mb-4" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
               <div class="card glass-panel text-center p-4">
                 <small class="text-muted">실시간 예상 광고수익</small>
-                <h2 class="amount-title text-indigo" id="creatorEstimatedRevenue">₩1,245,000</h2>
-                <small class="text-muted">광고 조회수 54,200회 기반</small>
+                <h2 class="amount-title text-indigo" id="creatorEstimatedRevenue">₩0</h2>
+                <small class="text-muted" id="creatorEstimatedSubtext">DB 실시간 집계</small>
               </div>
               <div class="card glass-panel text-center p-4">
                 <small class="text-muted">마감 확정 광고수익</small>
-                <h2 class="amount-title text-emerald" id="creatorConfirmedRevenue">₩980,000</h2>
+                <h2 class="amount-title text-emerald" id="creatorConfirmedRevenue">₩0</h2>
                 <small class="text-muted">창작자 정산풀(62.5%)</small>
               </div>
               <div class="card glass-panel text-center p-4">
                 <small class="text-muted">출금 가능 정산금</small>
-                <h2 class="amount-title text-amber" id="creatorPayableRevenue">₩980,000</h2>
+                <h2 class="amount-title text-amber" id="creatorPayableRevenue">₩0</h2>
                 <button class="btn btn-primary btn-sm w-full mt-3" onclick="switchCreatorTab('settlements')">
                   <i data-lucide="wallet"></i> 정산 신청하기
                 </button>
@@ -663,11 +663,11 @@
               <div class="grid-2-col gap-4" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                 <div class="glass-panel p-4">
                   <span class="text-muted small">당월 포인트 회차 판매수</span>
-                  <h2 style="font-size:1.6rem; font-weight:800; color:var(--cdg-pink); margin:6px 0;">3,420 회</h2>
+                  <h2 id="creatorSalesCount" style="font-size:1.6rem; font-weight:800; color:var(--cdg-pink); margin:6px 0;">0 회</h2>
                 </div>
                 <div class="glass-panel p-4">
                   <span class="text-muted small">당월 포인트 정산 누적액</span>
-                  <h2 style="font-size:1.6rem; font-weight:800; color:#10B981; margin:6px 0;">₩342,000</h2>
+                  <h2 id="creatorSalesRevenue" style="font-size:1.6rem; font-weight:800; color:#10B981; margin:6px 0;">₩0</h2>
                 </div>
               </div>
             </div>

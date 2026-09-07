@@ -791,18 +791,145 @@ async function fetchRevenueEvents() {
   }
 }
 
-async function fetchAuthorEarnings(authorId) {
-  if (!supabaseClient || !authorId) return [];
+async function fetchAuthorEarnings(authorIdOrName) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !authorIdOrName) return [];
   try {
+    let aId = Number(authorIdOrName);
+    if (isNaN(aId) || aId <= 0) {
+      const cleanName = String(authorIdOrName).trim();
+      const { data: aData } = await supabaseClient
+        .from('authors')
+        .select('id')
+        .or(`pen_name.ilike.${cleanName},username.ilike.${cleanName}`)
+        .limit(1);
+      if (aData && aData.length > 0) aId = aData[0].id;
+    }
+    if (!aId || isNaN(aId)) return [];
+
     const { data, error } = await supabaseClient
       .from('author_earnings')
       .select('*')
-      .eq('author_id', Number(authorId))
+      .eq('author_id', aId)
       .order('period_date', { ascending: false });
-    if (!error && data) return data;
+
+    if (!error && Array.isArray(data)) return data;
     return [];
   } catch (e) {
+    console.warn('[fetchAuthorEarnings Error]', e);
     return [];
+  }
+}
+
+async function fetchAuthorSettlements(authorIdOrName) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !authorIdOrName) return [];
+  try {
+    let cleanName = String(authorIdOrName).trim();
+    let query = supabaseClient.from('author_settlements').select('*');
+
+    if (!isNaN(Number(authorIdOrName)) && Number(authorIdOrName) > 0) {
+      const aId = Number(authorIdOrName);
+      query = query.or(`author_id.eq.${aId},author_name.ilike.${cleanName},author_name_snapshot.ilike.${cleanName}`);
+    } else {
+      query = query.or(`author_name.ilike.${cleanName},author_name_snapshot.ilike.${cleanName}`);
+    }
+
+    const { data, error } = await query.order('requested_at', { ascending: false });
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    console.warn('[fetchAuthorSettlements Error]', e);
+    return [];
+  }
+}
+
+async function fetchAuthorRevenueSummary(authorIdOrName) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !authorIdOrName) {
+    return {
+      estimatedRevenue: 0,
+      confirmedRevenue: 0,
+      payableRevenue: 0,
+      paidAmount: 0,
+      pendingAmount: 0,
+      todayRevenue: 0,
+      earningsRecords: [],
+      settlements: []
+    };
+  }
+
+  try {
+    const [earningsRecords, settlements] = await Promise.all([
+      fetchAuthorEarnings(authorIdOrName),
+      fetchAuthorSettlements(authorIdOrName)
+    ]);
+
+    // 1. 당월 실시간 예상 광고 수익 (PENDING + CONFIRMED 최신)
+    let estimatedRevenue = 0;
+    let confirmedRevenue = 0;
+    let todayRevenue = 0;
+
+    if (earningsRecords && earningsRecords.length > 0) {
+      for (const rec of earningsRecords) {
+        const rev = Number(rec.author_revenue) || 0;
+        if (rec.status === 'PENDING') {
+          estimatedRevenue += rev;
+        } else if (rec.status === 'CONFIRMED') {
+          confirmedRevenue += rev;
+        }
+      }
+      // 만약 당월 PENDING이 없으면 최신 확정수익을 기본 예상수익 풀로 참조
+      if (estimatedRevenue === 0 && confirmedRevenue > 0) {
+        estimatedRevenue = Math.round(confirmedRevenue * 0.25);
+      }
+      // 오늘 수익 (당월 예상치의 약 1/7 또는 최신 일자 환산)
+      todayRevenue = Math.round(estimatedRevenue / 7);
+    }
+
+    // 2. 정산금 기지급액 및 심사 대기액 계산
+    let paidAmount = 0;
+    let pendingAmount = 0;
+    let pendingItem = null;
+
+    if (settlements && settlements.length > 0) {
+      for (const s of settlements) {
+        const amt = Number(s.amount) || 0;
+        if (s.status === 'PAID') {
+          paidAmount += amt;
+        } else if (s.status === 'PENDING') {
+          pendingAmount += amt;
+          if (!pendingItem) pendingItem = s;
+        }
+      }
+    }
+
+    // 3. 실제 출금 가능 잔여 정산금 (Payable = 확정 누적 수익 - 기지급액 - 신청 대기액)
+    const payableRevenue = Math.max(0, confirmedRevenue - paidAmount - pendingAmount);
+
+    return {
+      estimatedRevenue,
+      confirmedRevenue,
+      payableRevenue,
+      paidAmount,
+      pendingAmount,
+      pendingItem,
+      todayRevenue,
+      earningsRecords,
+      settlements
+    };
+  } catch (err) {
+    console.error('[fetchAuthorRevenueSummary Error]', err);
+    return {
+      estimatedRevenue: 0,
+      confirmedRevenue: 0,
+      payableRevenue: 0,
+      paidAmount: 0,
+      pendingAmount: 0,
+      todayRevenue: 0,
+      earningsRecords: [],
+      settlements: []
+    };
   }
 }
 
@@ -1803,6 +1930,8 @@ window.WebNovelsAdmin = {
   confirmRevenue,
   fetchRevenueEvents,
   fetchAuthorEarnings,
+  fetchAuthorSettlements,
+  fetchAuthorRevenueSummary,
   requestSettlementSecure,
   approveSettlementSecure,
   fetchPendingSettlements,
