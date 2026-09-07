@@ -928,33 +928,68 @@ async function fetchReaderActivity(identifier) {
     }
 
     const reader = rows[0];
-    let readingHistory = Array.isArray(reader.reading_history) ? reader.reading_history : [];
+    const userKey = reader.username || String(reader.id);
+
+    // 1. readers 테이블의 JSONB 기본값 파싱
+    let readingHistory = Array.isArray(reader.reading_history) ? [...reader.reading_history] : [];
     let favorites = Array.isArray(reader.favorites) ? reader.favorites.map(Number) : [];
     let subscribedAuthors = Array.isArray(reader.subscribed_authors) ? reader.subscribed_authors.map(String) : [];
 
-    // [Self-Healing] 시드 독자 계정인데 favorites 또는 subscribed_authors가 비어있는 경우 시드 기본값으로 자동 복원 및 DB 동기화
+    // [Self-Healing] 시드 독자 기본값 복원
     const uName = String(reader.username || '').toLowerCase();
     const seedDefault = SEED_READER_DEFAULTS[uName];
-    let needsDbHealing = false;
-    const healPayload = {};
-
     if (seedDefault) {
       if (favorites.length === 0 && seedDefault.favorites && seedDefault.favorites.length > 0) {
         favorites = [...seedDefault.favorites];
-        healPayload.favorites = favorites;
-        needsDbHealing = true;
       }
       if (subscribedAuthors.length === 0 && seedDefault.subscribedAuthors && seedDefault.subscribedAuthors.length > 0) {
         subscribedAuthors = [...seedDefault.subscribedAuthors];
-        healPayload.subscribed_authors = subscribedAuthors;
-        needsDbHealing = true;
       }
     }
 
-    if (needsDbHealing) {
-      supabaseClient.from('readers').update(healPayload).eq('id', reader.id).then(() => {
-        console.log(`⚡ [Self-Healing] 독자 ${reader.username} 기본 활동 데이터 DB 자동 복원 완료`);
-      }).catch(() => {});
+    // 2. 독립 테이블(reading_history, favorites, author_subscriptions) 병렬 조회 및 Dual Persistence 스마트 머지
+    try {
+      const [favRes, subRes, histRes] = await Promise.all([
+        supabaseClient.from('favorites').select('work_id').eq('user_id', userKey),
+        supabaseClient.from('author_subscriptions').select('author_id, author_name').eq('user_id', userKey),
+        supabaseClient.from('reading_history').select('work_id, episode_id, progress, last_read_at').eq('user_id', userKey).order('last_read_at', { ascending: false })
+      ]);
+
+      // Favorites 머지
+      if (favRes.data && favRes.data.length > 0) {
+        const dbFavs = favRes.data.map(r => Number(r.work_id)).filter(id => !isNaN(id) && id > 0);
+        favorites = Array.from(new Set([...favorites, ...dbFavs]));
+      }
+
+      // Subscribed Authors 머지
+      if (subRes.data && subRes.data.length > 0) {
+        const dbSubs = subRes.data.map(r => r.author_name).filter(Boolean);
+        subscribedAuthors = Array.from(new Set([...subscribedAuthors, ...dbSubs]));
+      }
+
+      // Reading History 머지
+      if (histRes.data && histRes.data.length > 0) {
+        const dbHist = histRes.data.map(r => ({
+          workId: Number(r.work_id),
+          episodeNumber: Number(r.episode_id),
+          progress: Number(r.progress) || 100,
+          updatedAt: r.last_read_at || new Date().toISOString()
+        }));
+
+        // workId 기준으로 더 최신 기록 우선 결합
+        const histMap = new Map();
+        for (const item of [...readingHistory, ...dbHist]) {
+          const prev = histMap.get(item.workId);
+          if (!prev || new Date(item.updatedAt || 0) > new Date(prev.updatedAt || 0)) {
+            histMap.set(item.workId, item);
+          }
+        }
+        readingHistory = Array.from(histMap.values())
+          .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+          .slice(0, 30);
+      }
+    } catch (normErr) {
+      console.warn('[Dual Persistence normalized tables fetch warning]', normErr);
     }
 
     return {
@@ -981,8 +1016,8 @@ async function updateReaderActivity(identifier, activityData) {
   try {
     const cleanId = String(identifier).trim();
     
-    // 대상 독자 id 먼저 안전하게 식별
-    let findQuery = supabaseClient.from('readers').select('id');
+    // 대상 독자 레코드 식별
+    let findQuery = supabaseClient.from('readers').select('id, username');
     if (!isNaN(cleanId) && Number(cleanId) > 0) {
       findQuery = findQuery.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
     } else {
@@ -990,8 +1025,11 @@ async function updateReaderActivity(identifier, activityData) {
     }
     const { data: rows } = await findQuery;
     if (!rows || rows.length === 0) return { success: false, error: 'User not found' };
-    const targetId = rows[0].id;
+    const reader = rows[0];
+    const targetId = reader.id;
+    const userKey = reader.username || String(reader.id);
 
+    // 1. readers 테이블 JSONB 컬럼 업데이트
     const updatePayload = {};
     if (activityData.readingHistory !== undefined) updatePayload.reading_history = activityData.readingHistory;
     if (activityData.favorites !== undefined) updatePayload.favorites = activityData.favorites;
@@ -1004,6 +1042,40 @@ async function updateReaderActivity(identifier, activityData) {
       console.warn('[updateReaderActivity Error]', error);
       return { success: false, error: error.message };
     }
+
+    // 2. 독립 테이블(Dual Persistence)에도 백그라운드 동기화
+    try {
+      if (Array.isArray(activityData.favorites)) {
+        for (const wId of activityData.favorites) {
+          const numId = Number(wId);
+          if (!isNaN(numId) && numId > 0) {
+            await supabaseClient.from('favorites').upsert({
+              user_id: userKey,
+              work_id: numId
+            }, { onConflict: 'user_id,work_id' }).catch(() => {});
+          }
+        }
+      }
+
+      if (Array.isArray(activityData.readingHistory)) {
+        for (const h of activityData.readingHistory) {
+          const numId = Number(h.workId);
+          const epNum = Number(h.episodeNumber || h.episodeId || 1);
+          if (!isNaN(numId) && numId > 0) {
+            await supabaseClient.from('reading_history').upsert({
+              user_id: userKey,
+              work_id: numId,
+              episode_id: epNum,
+              progress: Number(h.progress) || 100,
+              last_read_at: h.updatedAt || new Date().toISOString()
+            }, { onConflict: 'user_id,work_id' }).catch(() => {});
+          }
+        }
+      }
+    } catch (dualErr) {
+      console.warn('[updateReaderActivity Dual Persistence sync error]', dualErr);
+    }
+
     return { success: true };
   } catch (err) {
     console.error('[updateReaderActivity Error]', err);
@@ -1012,52 +1084,62 @@ async function updateReaderActivity(identifier, activityData) {
 }
 
 async function recordReadingProgressInDB(userId, workId, episodeNumber, progress = 100) {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient || !userId || !workId) return;
   try {
     const cleanId = String(userId).trim();
     const id = Number(workId);
     const num = Number(episodeNumber) || 1;
+    const prog = Number(progress) || 100;
+    const nowIso = new Date().toISOString();
 
-    // 1. readers 테이블에서 기존 독서이력 조회 후 최신순 Upsert
+    // 대상 독자 식별
     const { data: rows } = await supabaseClient
       .from('readers')
-      .select('id, reading_history')
+      .select('id, username, reading_history')
       .or(`id.eq.${!isNaN(cleanId) ? Number(cleanId) : -1},username.ilike.${cleanId},email.ilike.${cleanId}`);
 
-    if (rows && rows.length > 0) {
-      const reader = rows[0];
+    const reader = rows && rows.length > 0 ? rows[0] : null;
+    const userKey = reader ? (reader.username || String(reader.id)) : cleanId;
+
+    // 1. readers 테이블의 JSONB 독서이력 최신순 업데이트
+    if (reader) {
       let history = Array.isArray(reader.reading_history) ? [...reader.reading_history] : [];
       history = history.filter(item => Number(item.workId) !== id);
       history.unshift({
         workId: id,
         episodeNumber: num,
-        progress: Number(progress) || 100,
-        updatedAt: new Date().toISOString()
+        progress: prog,
+        updatedAt: nowIso
       });
-      if (history.length > 20) history = history.slice(0, 20);
+      if (history.length > 30) history = history.slice(0, 30);
 
       await supabaseClient
         .from('readers')
         .update({ reading_history: history })
-        .eq('id', reader.id);
+        .eq('id', reader.id)
+        .catch(() => {});
     }
 
-    // 2. UUID 사용자인 경우 정규화 reading_history 테이블에도 Upsert 시도
-    if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-')) {
-      await supabaseClient.from('reading_history').upsert({
-        user_id: userId,
-        work_id: id,
-        episode_id: num,
-        progress: Number(progress) || 100,
-        last_read_at: new Date().toISOString()
-      }, { onConflict: 'user_id,episode_id' }).catch(() => {});
-    }
+    // 2. 독립 reading_history 테이블에 실시간 즉시 UPSERT (Dual Persistence)
+    await supabaseClient.from('reading_history').upsert({
+      user_id: String(userKey),
+      work_id: id,
+      episode_id: num,
+      progress: prog,
+      last_read_at: nowIso
+    }, { onConflict: 'user_id,work_id' }).catch(err => {
+      console.warn('[reading_history upsert warning]', err);
+    });
+
+    console.log(`⚡ [Dual Persistence] 독서 진행률 DB 동기화 완료: User ${userKey}, Work ${id}, Ep ${num}`);
   } catch (e) {
     console.warn('[recordReadingProgressInDB Error]', e);
   }
 }
 
 async function toggleFavoriteInDB(userId, workId, isAdding = true) {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient || !userId || !workId) return;
   try {
     const cleanId = String(userId).trim();
@@ -1065,12 +1147,16 @@ async function toggleFavoriteInDB(userId, workId, isAdding = true) {
 
     const { data: rows } = await supabaseClient
       .from('readers')
-      .select('id, favorites')
+      .select('id, username, favorites')
       .or(`id.eq.${!isNaN(cleanId) ? Number(cleanId) : -1},username.ilike.${cleanId},email.ilike.${cleanId}`);
 
-    if (rows && rows.length > 0) {
-      const reader = rows[0];
-      let favs = Array.isArray(reader.favorites) ? reader.favorites.map(Number) : [];
+    const reader = rows && rows.length > 0 ? rows[0] : null;
+    const userKey = reader ? (reader.username || String(reader.id)) : cleanId;
+    let favs = [];
+
+    // 1. readers 테이블의 JSONB favorites 갱신
+    if (reader) {
+      favs = Array.isArray(reader.favorites) ? reader.favorites.map(Number) : [];
       if (isAdding) {
         if (!favs.includes(id)) favs.push(id);
       } else {
@@ -1079,71 +1165,117 @@ async function toggleFavoriteInDB(userId, workId, isAdding = true) {
       await supabaseClient
         .from('readers')
         .update({ favorites: favs })
-        .eq('id', reader.id);
-      return { success: true, favorites: favs };
+        .eq('id', reader.id)
+        .catch(() => {});
     }
 
-    if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-')) {
-      if (isAdding) {
-        await supabaseClient.from('favorites').upsert({
-          user_id: userId,
-          work_id: id
-        }, { onConflict: 'user_id,work_id' }).catch(() => {});
-      } else {
-        await supabaseClient.from('favorites').delete()
-          .eq('user_id', userId)
-          .eq('work_id', id)
-          .catch(() => {});
-      }
+    // 2. 독립 favorites 테이블에 실시간 즉시 UPSERT 또는 DELETE (Dual Persistence)
+    if (isAdding) {
+      await supabaseClient.from('favorites').upsert({
+        user_id: String(userKey),
+        work_id: id
+      }, { onConflict: 'user_id,work_id' }).catch(err => {
+        console.warn('[favorites upsert warning]', err);
+      });
+    } else {
+      await supabaseClient.from('favorites').delete()
+        .eq('user_id', String(userKey))
+        .eq('work_id', id)
+        .catch(err => {
+          console.warn('[favorites delete warning]', err);
+        });
     }
+
+    console.log(`⚡ [Dual Persistence] 관심작품 DB 동기화 완료: User ${userKey}, Work ${id}, isAdding: ${isAdding}`);
+    return { success: true, favorites: favs };
   } catch (e) {
     console.warn('[toggleFavoriteInDB Error]', e);
+    return { success: false, error: e.message };
   }
 }
 
 async function toggleSubscriptionInDB(userId, authorNameOrId, isAdding = true) {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient || !userId || !authorNameOrId) return;
   try {
     const cleanId = String(userId).trim();
-    const authorVal = typeof authorNameOrId === 'object' ? (authorNameOrId.penName || authorNameOrId.pen_name || authorNameOrId.name || '') : String(authorNameOrId).trim();
-    if (!authorVal) return;
+    const rawVal = typeof authorNameOrId === 'object' 
+      ? (authorNameOrId.penName || authorNameOrId.pen_name || authorNameOrId.name || '') 
+      : String(authorNameOrId).trim();
+    if (!rawVal) return;
 
     const { data: rows } = await supabaseClient
       .from('readers')
-      .select('id, subscribed_authors')
+      .select('id, username, subscribed_authors')
       .or(`id.eq.${!isNaN(cleanId) ? Number(cleanId) : -1},username.ilike.${cleanId},email.ilike.${cleanId}`);
 
-    if (rows && rows.length > 0) {
-      const reader = rows[0];
-      let subs = Array.isArray(reader.subscribed_authors) ? [...reader.subscribed_authors] : [];
+    const reader = rows && rows.length > 0 ? rows[0] : null;
+    const userKey = reader ? (reader.username || String(reader.id)) : cleanId;
+
+    // 1. 작가 ID 및 작가명 매핑
+    let authorId = !isNaN(rawVal) ? Number(rawVal) : null;
+    let authorName = isNaN(rawVal) ? rawVal : '';
+    try {
+      if (!authorId && authorName) {
+        const { data: aRows } = await supabaseClient.from('authors').select('id, pen_name').ilike('pen_name', authorName).limit(1);
+        if (aRows && aRows.length > 0) {
+          authorId = aRows[0].id;
+          authorName = aRows[0].pen_name;
+        } else {
+          authorId = 1;
+        }
+      } else if (authorId && !authorName) {
+        const { data: aRows } = await supabaseClient.from('authors').select('id, pen_name').eq('id', authorId).limit(1);
+        if (aRows && aRows.length > 0) {
+          authorName = aRows[0].pen_name;
+        }
+      }
+    } catch (aErr) {
+      console.warn('[Author map warning]', aErr);
+    }
+    authorId = authorId || 1;
+    authorName = authorName || String(rawVal);
+
+    // 2. readers 테이블의 JSONB subscribed_authors 갱신
+    let subs = [];
+    if (reader) {
+      subs = Array.isArray(reader.subscribed_authors) ? [...reader.subscribed_authors] : [];
       if (isAdding) {
-        if (!subs.includes(authorVal)) subs.push(authorVal);
+        if (!subs.includes(authorName)) subs.push(authorName);
       } else {
-        subs = subs.filter(s => String(s).trim() !== authorVal);
+        subs = subs.filter(s => String(s).trim() !== authorName);
       }
       await supabaseClient
         .from('readers')
         .update({ subscribed_authors: subs })
-        .eq('id', reader.id);
-      return { success: true, subscribedAuthors: subs };
+        .eq('id', reader.id)
+        .catch(() => {});
     }
 
-    if (typeof userId === 'string' && userId.length >= 32 && userId.includes('-') && !isNaN(authorVal)) {
-      if (isAdding) {
-        await supabaseClient.from('author_subscriptions').upsert({
-          user_id: userId,
-          author_id: Number(authorVal),
-          notification_enabled: true
-        }, { onConflict: 'user_id,author_id' }).catch(() => {});
-      } else {
-        await supabaseClient.from('author_subscriptions').delete()
-          .eq('user_id', userId)
-          .eq('author_id', Number(authorVal))
-          .catch(() => {});
-      }
+    // 3. 독립 author_subscriptions 테이블에 실시간 즉시 UPSERT 또는 DELETE (Dual Persistence)
+    if (isAdding) {
+      await supabaseClient.from('author_subscriptions').upsert({
+        user_id: String(userKey),
+        author_id: authorId,
+        author_name: authorName,
+        notification_enabled: true
+      }, { onConflict: 'user_id,author_id' }).catch(err => {
+        console.warn('[author_subscriptions upsert warning]', err);
+      });
+    } else {
+      await supabaseClient.from('author_subscriptions').delete()
+        .eq('user_id', String(userKey))
+        .eq('author_id', authorId)
+        .catch(err => {
+          console.warn('[author_subscriptions delete warning]', err);
+        });
     }
+
+    console.log(`⚡ [Dual Persistence] 작가구독 DB 동기화 완료: User ${userKey}, Author ${authorName} (#${authorId}), isAdding: ${isAdding}`);
+    return { success: true, subscribedAuthors: subs };
   } catch (e) {
     console.warn('[toggleSubscriptionInDB Error]', e);
+    return { success: false, error: e.message };
   }
 }
 

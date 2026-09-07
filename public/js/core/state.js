@@ -249,12 +249,54 @@ let adminWorkFilterState = {
 // ============================================================
 function syncUserActivityToStorage(data) {
   if (!data) return;
-  
+  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+  const userIdent = savedUser ? (savedUser.username || savedUser.email || savedUser.id) : null;
+
+  // 1. [Dual Persistence Merge] 독서 진행률 동기화
   if (data.readingHistory && Array.isArray(data.readingHistory)) {
-    localStorage.setItem('webnovels_reading_history', JSON.stringify(data.readingHistory));
+    const remoteHist = data.readingHistory;
+    let localHist = [];
+    try {
+      localHist = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+    } catch(e) {}
+
+    const histMap = new Map();
+    // 로컬 기록 먼저 맵에 등록
+    for (const item of localHist) {
+      if (item && item.workId) histMap.set(Number(item.workId), item);
+    }
+    // 원격 기록으로 머지 (원격 또는 로컬 중 더 최신 updatedAt 보존)
+    let hasLocalNewer = false;
+    for (const rItem of remoteHist) {
+      if (!rItem || !rItem.workId) continue;
+      const wId = Number(rItem.workId);
+      const prev = histMap.get(wId);
+      if (!prev) {
+        histMap.set(wId, rItem);
+      } else {
+        const rTime = new Date(rItem.updatedAt || 0).getTime();
+        const lTime = new Date(prev.updatedAt || 0).getTime();
+        if (rTime >= lTime) {
+          histMap.set(wId, rItem);
+        } else {
+          hasLocalNewer = true;
+        }
+      }
+    }
+
+    const mergedHist = Array.from(histMap.values())
+      .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+      .slice(0, 30);
+
+    localStorage.setItem('webnovels_reading_history', JSON.stringify(mergedHist));
+
+    // 로컬에만 있는 최신 기록이 있거나 원격이 비어있었다면 DB에 실시간 푸시
+    if ((hasLocalNewer || (remoteHist.length === 0 && localHist.length > 0)) && userIdent && window.WebNovelsAdmin?.updateReaderActivity) {
+      window.WebNovelsAdmin.updateReaderActivity(userIdent, { readingHistory: mergedHist });
+    }
   }
 
-  // [Dual Persistence Merge] 관심작품 동기화
+  // 2. [Dual Persistence Merge] 관심작품 동기화
   if (data.favorites && Array.isArray(data.favorites)) {
     const remoteFavs = data.favorites.map(Number);
     let localFavs = [];
@@ -262,18 +304,17 @@ function syncUserActivityToStorage(data) {
       localFavs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]').map(Number);
     } catch(e) {}
 
-    let mergedFavs = remoteFavs;
-    if (remoteFavs.length === 0 && localFavs.length > 0) {
-      mergedFavs = localFavs;
-      const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-      if (savedUser && window.WebNovelsAdmin?.updateReaderActivity) {
-        window.WebNovelsAdmin.updateReaderActivity(savedUser.username || savedUser.email || savedUser.id, { favorites: localFavs });
-      }
-    }
+    // 합집합 머지
+    const mergedFavs = Array.from(new Set([...remoteFavs, ...localFavs])).filter(id => !isNaN(id) && id > 0);
     localStorage.setItem('webnovels_favorites', JSON.stringify(mergedFavs));
+
+    // 로컬에만 있던 관심작품이 포함되어 원격보다 늘어난 경우 DB에 실시간 동기화
+    if (mergedFavs.length > remoteFavs.length && userIdent && window.WebNovelsAdmin?.updateReaderActivity) {
+      window.WebNovelsAdmin.updateReaderActivity(userIdent, { favorites: mergedFavs });
+    }
   }
 
-  // [Dual Persistence Merge] 구독작가 동기화
+  // 3. [Dual Persistence Merge] 구독작가 동기화
   if (data.subscribedAuthors && Array.isArray(data.subscribedAuthors)) {
     const remoteSubs = data.subscribedAuthors.map(String);
     let localSubs = [];
@@ -281,15 +322,14 @@ function syncUserActivityToStorage(data) {
       localSubs = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]').map(String);
     } catch(e) {}
 
-    let mergedSubs = remoteSubs;
-    if (remoteSubs.length === 0 && localSubs.length > 0) {
-      mergedSubs = localSubs;
-      const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-      if (savedUser && window.WebNovelsAdmin?.updateReaderActivity) {
-        window.WebNovelsAdmin.updateReaderActivity(savedUser.username || savedUser.email || savedUser.id, { subscribedAuthors: localSubs });
-      }
-    }
+    // 합집합 머지
+    const mergedSubs = Array.from(new Set([...remoteSubs, ...localSubs])).filter(Boolean);
     localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(mergedSubs));
+
+    // 로컬에만 있던 구독작가가 포함되어 원격보다 늘어난 경우 DB에 실시간 동기화
+    if (mergedSubs.length > remoteSubs.length && userIdent && window.WebNovelsAdmin?.updateReaderActivity) {
+      window.WebNovelsAdmin.updateReaderActivity(userIdent, { subscribedAuthors: mergedSubs });
+    }
   }
 
   if (data.isAdultVerified !== undefined) {

@@ -328,9 +328,9 @@
 
 | 단계 | 작업 영역 | 구체적 조치 방안 |
 | :---: | :--- | :--- |
-| **Phase 1** | **DB 스키마 및 외래키 정합성 복구** | 1. `comments` 테이블의 `episode_id`가 `null`인 22개 레코드에 대해 실제 `episodes.id` 매핑 업데이트 (`UPDATE comments SET episode_id = ...`)<br>2. `episode_contents` 테이블의 RLS 정책 점검 및 anon SELECT 권한 허용 또는 RPC 함수 복구 |
-| **Phase 2** | **관리자 7대 정적 탭 동적 렌더러 전환** | 1. `adminTab-comments`: Supabase `reports` 테이블 8건을 조회하여 동적 테이블 렌더링 (`loadAdminReports()`) 및 블라인드 RPC 연결<br>2. `adminTab-review`: `content_reviews` 테이블 조회 및 실제 승인/반려 UPDATE 로직 구현<br>3. `adminTab-security`: `audit_logs` 테이블 실시간 SELECT 및 바인딩<br>4. `fanmeeting`, `goods`, `events`: DB에 실데이터 INSERT하거나 "등록된 내역이 없습니다" Empty State UI로 변경 |
-| **Phase 3** | **독자 활동 데이터 영구 동기화 (Dual Persistence 완성)** | 1. 독서 진행률, 관심작품, 구독작가를 LocalStorage뿐만 아니라 Supabase `reading_history`, `favorites`, `author_subscriptions` 테이블에 실시간 INSERT/UPSERT<br>2. 로그인 시 DB에서 우선 복원하여 로컬에 머지하도록 동기화 파이프라인 완성 |
+| **Phase 1** | **DB 스키마 및 외래키 정합성 복구 (완료)** | 1. `comments` 테이블 22개 레코드 `episode_id` 매핑 복구 및 닉네임 스냅샷 정규화 완료<br>2. `episode_contents` RLS 정책 허용 및 `get_episode_content` RPC 복구 완료 |
+| **Phase 2** | **관리자 7대 정적 탭 동적 렌더러 전환 (완료)** | 1. `reports`, `content_reviews`, `audit_logs`, `fan_meetings`, `goods`, `ad_units` 실시간 Supabase DB 조회 및 동적 렌더링 완료<br>2. 하드코딩 제거 및 실제 상태 제어(승인/반려/블라인드) 완비 |
+| **Phase 3** | **독자 활동 데이터 영구 동기화 (Dual Persistence 완성 - 완료)** | 1. `reading_history`, `favorites`, `author_subscriptions` DB 스키마 보완 (`user_id text`, UNIQUE 제약, RLS 허용) 및 기존 11명 시드 독자 활동 데이터 독립 테이블 마이그레이션 완료<br>2. `supabase-admin.js`: `readers` JSONB와 3개 독립 정규화 테이블 간 실시간 즉시 INSERT/UPSERT/DELETE 구현 완료<br>3. `state.js` & `reader.js`: 로그인/앱 초기화 시 DB 최신 복원 및 로컬 양방향 스마트 머지 파이프라인 완성 |
 | **Phase 4** | **작가 스튜디오 수익 지표 실데이터 연동** | 1. `author_earnings` 테이블에 월별/일별 정산 집계 데이터 생성 및 연동<br>2. `loadCreatorStudioEarnings`의 4대 하드코딩 기본값(`384만 원` 등)을 제거하고 실제 DB 합산값 또는 0원 표출 |
 | **Phase 5** | **보안 취약점 및 하드코딩 백도어 제거** | 1. `supabase-admin.js`의 `admin1234`, `!12345` 우회 로그인 분기 전면 삭제<br>2. Supabase Auth 또는 Bcrypt 해시 검증을 통한 표준 인증 체계로 일원화 |
 | **Phase 6** | **시드 데이터 및 정적 JSON 의존성 축소** | 1. `SAMPLE_WORKS`, `SAMPLE_READERS`, `SAMPLE_AUTHORS`를 단순 비상용 Fallback으로 격하<br>2. `dataset_30_works.json`의 1번 작품명을 DB와 동일한 `"폭풍의 여왕 서약"`으로 일치화하거나 Supabase 직접 조회를 기본 SSOT로 고정 |

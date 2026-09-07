@@ -346,35 +346,34 @@ function normalizeSearchText(text) {
 
 // --- 3. 내 서재(Library) & 관심작품/구독작가/독서기록 ---
 
-function saveReadingProgress(workId, epNum) {
+function saveReadingProgress(workId, epNum, progress = 100) {
   try {
     let history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
     const id = Number(workId);
     const num = Number(epNum);
+    const prog = Number(progress) || 100;
 
     // 기존 해당 작품 기록 제거 후 최신 순으로 상단에 추가
     history = history.filter(item => Number(item.workId) !== id);
     history.unshift({
       workId: id,
       episodeNumber: num,
+      progress: prog,
       updatedAt: new Date().toISOString()
     });
 
-    // 최대 20개까지만 보관
-    if (history.length > 20) history = history.slice(0, 20);
+    // 최대 30개까지만 보관
+    if (history.length > 30) history = history.slice(0, 30);
     localStorage.setItem('webnovels_reading_history', JSON.stringify(history));
 
-    console.log(`[Reading Progress Saved] Work ${id}, Episode ${num}`);
+    console.log(`[Reading Progress Saved] Work ${id}, Episode ${num}, Progress ${prog}%`);
 
-    // Supabase DB 실시간 즉시 저장 (readers 테이블 및 reading_history 테이블)
+    // Supabase DB 실시간 즉시 저장 (readers 테이블 및 reading_history 독립 테이블 Dual Persistence)
     const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
     if (savedUser) {
       const userIdent = savedUser.username || savedUser.email || savedUser.id;
       if (window.WebNovelsAdmin?.recordReadingProgressInDB) {
-        window.WebNovelsAdmin.recordReadingProgressInDB(userIdent, id, num);
-      }
-      if (window.WebNovelsAdmin?.updateReaderActivity) {
-        window.WebNovelsAdmin.updateReaderActivity(userIdent, { readingHistory: history });
+        window.WebNovelsAdmin.recordReadingProgressInDB(userIdent, id, num, prog);
       }
     }
 
@@ -609,31 +608,22 @@ async function renderLibraryContent(skipRemote = false) {
     subAuthors = [];
   }
 
-  // [Self-Healing] 로그인 상태에서 로컬 활동 데이터가 결측되어 있다면, DB에서 즉시 Fetch 및 복원
-  if (!skipRemote && savedUser && (history.length === 0 || favs.length === 0 || subAuthors.length === 0) && window.WebNovelsAdmin?.fetchReaderActivity && !window._isFetchingLibrary) {
+  // [Self-Healing] 로그인 상태에서 서재 렌더링 시 DB에서 최신 활동 데이터 Fetch 및 스마트 복원
+  if (!skipRemote && savedUser && window.WebNovelsAdmin?.fetchReaderActivity && !window._isFetchingLibrary) {
     window._isFetchingLibrary = true;
     try {
       const userIdent = savedUser.username || savedUser.email || savedUser.id;
       const remote = await window.WebNovelsAdmin.fetchReaderActivity(userIdent);
-      if (remote) {
-        if (history.length === 0 && remote.readingHistory && Array.isArray(remote.readingHistory) && remote.readingHistory.length > 0) {
-          history = remote.readingHistory;
-          localStorage.setItem('webnovels_reading_history', JSON.stringify(history));
-        }
-        if (favs.length === 0 && remote.favorites && Array.isArray(remote.favorites) && remote.favorites.length > 0) {
-          favs = remote.favorites.map(Number);
-          localStorage.setItem('webnovels_favorites', JSON.stringify(favs));
-        }
-        if (subAuthors.length === 0 && remote.subscribedAuthors && Array.isArray(remote.subscribedAuthors) && remote.subscribedAuthors.length > 0) {
-          subAuthors = remote.subscribedAuthors;
-          localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(subAuthors));
-        }
-        if (remote.isAdultVerified !== undefined) {
-          window._isAdultVerified = !!remote.isAdultVerified;
-        }
+      if (remote && typeof syncUserActivityToStorage === 'function') {
+        syncUserActivityToStorage(remote);
+        try {
+          history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+          favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]').map(Number);
+          subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
+        } catch(e) {}
       }
     } catch (err) {
-      console.warn('[renderLibraryContent Auto-Fetch Error]', err);
+      console.warn('[renderLibraryContent Remote Fetch Error]', err);
     } finally {
       window._isFetchingLibrary = false;
     }
@@ -1061,6 +1051,24 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
 
   // 6. 추천 작품 렌더링
   renderReaderRecommendations(work.id);
+
+  // 7. 실시간 독서 스크롤 진행률 추적 (DB 실시간 동기화)
+  if (window._readerScrollCleanup) window._readerScrollCleanup();
+  let scrollTimeout = null;
+  const onReaderScroll = () => {
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const container = document.getElementById('view-reader');
+      if (!container || container.classList.contains('hidden') || container.style.display === 'none') return;
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight <= 0) return;
+      const currentScroll = window.scrollY;
+      const pct = Math.min(100, Math.max(10, Math.round((currentScroll / totalHeight) * 100)));
+      saveReadingProgress(work.id, epNum, pct);
+    }, 500);
+  };
+  window.addEventListener('scroll', onReaderScroll, { passive: true });
+  window._readerScrollCleanup = () => window.removeEventListener('scroll', onReaderScroll);
 
   switchWebNovelsView('view-reader');
   window.scrollTo({ top: 0, behavior: 'instant' });
