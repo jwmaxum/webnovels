@@ -1487,6 +1487,159 @@ function setupRealtimeSubscriptions(callbacks = {}) {
 }
 
 // ============================================================
+// ============================================================
+// 09-1. PHASE 2 ADMIN CMS SERVICES (REPORTS, REVIEWS, LOGS, FANMEETINGS, GOODS, ADS)
+// ============================================================
+
+async function fetchReportsFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('reports')
+      .select('id, reporter_id, target_type, target_id, reason, status, resolved_action, created_at')
+      .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function resolveReportInDB(reportId, action = '블라인드 처리') {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !reportId) return { success: false, error: 'DB 미연결' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('reports')
+      .update({
+        status: 'RESOLVED',
+        resolved_action: action
+      })
+      .eq('id', reportId)
+      .select()
+      .single();
+    if (error) throw error;
+    return { success: true, data };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+async function fetchContentReviewsFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('content_reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function updateContentReviewInDB(reviewId, status = 'APPROVED', rejectReason = null) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !reviewId) return { success: false, error: 'DB 미연결' };
+  try {
+    const admin = currentAdmin || { nickname: '최고관리자' };
+    const { data, error } = await supabaseClient
+      .from('content_reviews')
+      .update({
+        status,
+        reject_reason: rejectReason,
+        reviewer_name: admin.nickname || '관리자',
+        reviewed_at: new Date().toISOString()
+      })
+      .eq('id', reviewId)
+      .select()
+      .single();
+    if (error) throw error;
+    return { success: true, data };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+async function fetchAuditLogsFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('audit_logs')
+      .select('id, admin_id, action, target_type, target_id, new_data, ip_address, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function recordAuditLogInDB(action, targetType, targetId, newData = {}) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient.from('audit_logs').insert({
+      action,
+      target_type: targetType,
+      target_id: String(targetId),
+      new_data: newData,
+      ip_address: '127.0.0.1'
+    });
+  } catch (e) {}
+}
+
+async function fetchFanMeetingsFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('fan_meetings')
+      .select('*')
+      .order('event_at', { ascending: true });
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function fetchGoodsFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('goods')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function fetchAdUnitsFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('ad_units')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!error && Array.isArray(data)) return data;
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// ============================================================
 // 10. GLOBAL EXPORT
 // ============================================================
 
@@ -1531,5 +1684,14 @@ window.WebNovelsAdmin = {
   updateSubAdminPermissions,
   deleteSubAdmin,
   fetchSystemConfig,
-  setupRealtimeSubscriptions
+  setupRealtimeSubscriptions,
+  fetchReportsFromDB,
+  resolveReportInDB,
+  fetchContentReviewsFromDB,
+  updateContentReviewInDB,
+  fetchAuditLogsFromDB,
+  recordAuditLogInDB,
+  fetchFanMeetingsFromDB,
+  fetchGoodsFromDB,
+  fetchAdUnitsFromDB
 };

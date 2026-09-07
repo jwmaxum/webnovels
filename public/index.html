@@ -1346,65 +1346,54 @@
 
               <!-- Menu 6: Content Review -->
               <div id="adminTab-review" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
                     <h2><i data-lucide="check-square" class="icon-indigo"></i> CONTENT_REVIEW (콘텐츠 심사)</h2>
-                    <p class="text-muted">신규 등록 작품 및 회차 심사 대기목록 · 승인 및 반려 처리</p>
+                    <p class="text-muted">신규 등록 작품 및 회차 심사 대기목록 · 승인 및 반려 실시간 처리</p>
                   </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminContentReviews(true)">
+                    <i data-lucide="refresh-cw"></i> 새로고침
+                  </button>
                 </div>
                 <div class="card glass-panel p-6">
-                  <div class="episode-row">
-                    <div>
-                      <strong>[신규 연재 신청] 무림 대공의 환생 (작가: 검신)</strong>
-                      <div class="text-muted small">신청일: 2026-08-12 | 장르: 무협</div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                      <button class="btn btn-success btn-sm" onclick="showToast('작품 연재가 승인되었습니다.');">승인</button>
-                      <button class="btn btn-outline btn-sm style-danger" onclick="showToast('작품 연재가 반려되었습니다.');">반려</button>
-                    </div>
+                  <div id="adminReviewListContainer">
+                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>심사 목록 로딩 중...</div>
                   </div>
                 </div>
               </div>
 
               <!-- Menu 7: Comment Report -->
               <div id="adminTab-comments" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
-                    <h2><i data-lucide="message-square" class="icon-indigo"></i> COMMENT_REPORT (댓글 / 신고)</h2>
-                    <p class="text-muted">유저 신고 댓글 및 부적절한 게시글 블라인드/삭제 제재 센터</p>
+                    <h2><i data-lucide="message-square" class="icon-indigo"></i> COMMENT_REPORT (신고 관제 센터)</h2>
+                    <p class="text-muted">유저 접수 신고 내역 실시간 모니터링 · 원터치 블라인드 및 경고 제재 조치</p>
                   </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminReports(true)">
+                    <i data-lucide="refresh-cw"></i> 새로고침
+                  </button>
                 </div>
                 <div class="card glass-panel p-6">
-                  <div class="episode-row">
-                    <div>
-                      <strong>신고 사유: 부적절한 스포일러 및 비방 (신고 5건)</strong>
-                      <div class="text-muted small">댓글: "100화에서 주인공 죽습니다 ㅋㅋ" | 작성자: usr_98124</div>
-                    </div>
-                    <button class="btn btn-outline btn-sm style-danger" onclick="showToast('댓글이 블라인드 처리되었습니다.');">🗑️ 블라인드 처리</button>
+                  <div id="adminReportsListContainer">
+                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>신고 목록 로딩 중...</div>
                   </div>
                 </div>
               </div>
 
               <!-- Menu 8: Ad Platform Management -->
               <div id="adminTab-admgmt" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
                     <h2><i data-lucide="tv" class="icon-indigo"></i> AD_MGMT (광고 플랫폼)</h2>
-                    <p class="text-muted">광고 구좌(Banner, Episode End Video) 관리 · 단가(CPM/CPC) 설정</p>
+                    <p class="text-muted">실시간 DB 기반 광고 구좌 및 단가(CPM/CPC) 관리</p>
                   </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminAdUnits(true)">
+                    <i data-lucide="refresh-cw"></i> 새로고침
+                  </button>
                 </div>
                 <div class="card glass-panel p-6">
-                  <div class="grid-2-col gap-4">
-                    <div class="p-4 glass-panel">
-                      <h4>📺 회차 종료 후 동영상 광고</h4>
-                      <p class="text-muted small mt-1">평균 ECPM: ₩15,000 | 일 평균 노출: 120,000회</p>
-                      <button class="btn btn-outline btn-sm mt-3" onclick="showToast('광고 구좌 설정 모달');">구좌 설정</button>
-                    </div>
-                    <div class="p-4 glass-panel">
-                      <h4>🖼️ 홈 메인 띠 배너 광고</h4>
-                      <p class="text-muted small mt-1">평균 CPC: ₩350 | 일 평균 클릭: 8,500회</p>
-                      <button class="btn btn-outline btn-sm mt-3" onclick="showToast('광고 구좌 설정 모달');">구좌 설정</button>
-                    </div>
+                  <div id="adminAdUnitsContainer">
+                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>광고 구좌 로딩 중...</div>
                   </div>
                 </div>
               </div>
@@ -1473,66 +1462,54 @@
 
               <!-- Menu 11: Fan Meeting Management -->
               <div id="adminTab-fanmeeting" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
                     <h2><i data-lucide="smile" class="icon-indigo"></i> FAN_MEETING (팬미팅 관리)</h2>
-                    <p class="text-muted">인기 작가 온/오프라인 팬미팅 개설 · 신청 현황 및 티케팅 관리</p>
+                    <p class="text-muted">인기 작가 온/오프라인 팬미팅 개설 · 신청 현황 및 티케팅 실시간 관리</p>
                   </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminFanMeetings(true)">
+                    <i data-lucide="refresh-cw"></i> 새로고침
+                  </button>
                 </div>
                 <div class="card glass-panel p-6">
-                  <div class="episode-row">
-                    <div>
-                      <strong>[8월] 판타지마스터 작가 100만뷰 기념 온라인 팬미팅</strong>
-                      <div class="text-muted small">일시: 2026-08-25 19:00 | 정원: 500명 (신청 420명)</div>
-                    </div>
-                    <span class="badge badge-primary">모집중</span>
+                  <div id="adminFanMeetingsContainer">
+                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>팬미팅 목록 로딩 중...</div>
                   </div>
                 </div>
               </div>
 
               <!-- Menu 12: Goods Commerce -->
               <div id="adminTab-goods" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
                     <h2><i data-lucide="shopping-bag" class="icon-indigo"></i> GOODS_MGMT (굿즈 커머스)</h2>
                     <p class="text-muted">웹소설 IP 굿즈 상품 등록 · 재고 관리 · 주문 및 배송 현황</p>
                   </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminGoods(true)">
+                    <i data-lucide="refresh-cw"></i> 새로고침
+                  </button>
                 </div>
                 <div class="card glass-panel p-6">
-                  <div class="grid-2-col gap-4">
-                    <div class="p-3 glass-panel flex-between">
-                      <div>
-                        <strong>차원 이동 마법사 한정판 장패드</strong>
-                        <div class="text-muted small">판매가: ₩25,000 | 재고: 150개</div>
-                      </div>
-                      <span class="badge badge-primary">판매중</span>
-                    </div>
-                    <div class="p-3 glass-panel flex-between">
-                      <div>
-                        <strong>공작가의 비밀 하녀 아크릴 스탠드</strong>
-                        <div class="text-muted small">판매가: ₩18,000 | 재고: 80개</div>
-                      </div>
-                      <span class="badge badge-primary">판매중</span>
-                    </div>
+                  <div id="adminGoodsContainer">
+                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>굿즈 목록 로딩 중...</div>
                   </div>
                 </div>
               </div>
 
               <!-- Menu 13: Event Management -->
               <div id="adminTab-events" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
+                <div class="panel-header mb-4 flex-between">
                   <div>
                     <h2><i data-lucide="gift" class="icon-indigo"></i> EVENT_MGMT (이벤트 프로모션)</h2>
                     <p class="text-muted">신규 가입 프로모션 · 무료 이용권 쿠폰 발급 · 출석체크 이벤트</p>
                   </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminEvents(true)">
+                    <i data-lucide="refresh-cw"></i> 새로고침
+                  </button>
                 </div>
                 <div class="card glass-panel p-6">
-                  <div class="episode-row">
-                    <div>
-                      <strong>[여름 특별] 신규 가입 3,000 코인 지급 프로모션</strong>
-                      <div class="text-muted small">기간: 2026-08-01 ~ 2026-08-31</div>
-                    </div>
-                    <span class="badge badge-primary">진행중</span>
+                  <div id="adminEventsContainer">
+                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>이벤트 목록 로딩 중...</div>
                   </div>
                 </div>
               </div>

@@ -2192,8 +2192,20 @@ window.switchAdminSubTab = function(tabName, shouldPushState = true) {
     }
   } else if (tabName === 'actionqueue') {
     if (typeof renderActionQueue === 'function') renderActionQueue();
+  } else if (tabName === 'review') {
+    if (typeof loadAdminContentReviews === 'function') loadAdminContentReviews();
+  } else if (tabName === 'comments') {
+    if (typeof loadAdminReports === 'function') loadAdminReports();
+  } else if (tabName === 'admgmt') {
+    if (typeof loadAdminAdUnits === 'function') loadAdminAdUnits();
   } else if (tabName === 'settlements') {
     if (typeof loadSettlementsList === 'function') loadSettlementsList();
+  } else if (tabName === 'fanmeeting') {
+    if (typeof loadAdminFanMeetings === 'function') loadAdminFanMeetings();
+  } else if (tabName === 'goods') {
+    if (typeof loadAdminGoods === 'function') loadAdminGoods();
+  } else if (tabName === 'events') {
+    if (typeof loadAdminEvents === 'function') loadAdminEvents();
   } else if (tabName === 'analytics') {
     if (typeof loadAdminAnalytics === 'function') loadAdminAnalytics();
   } else if (tabName === 'subadmins') {
@@ -2204,6 +2216,7 @@ window.switchAdminSubTab = function(tabName, shouldPushState = true) {
     }
   } else if (tabName === 'security') {
     if (typeof loadSystemConfig === 'function') loadSystemConfig();
+    if (typeof loadAdminAuditLogs === 'function') loadAdminAuditLogs();
   }
 };
 
@@ -2362,6 +2375,363 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
 
 
 // ============================================================
+// [Phase 2 Dynamic Renderers] Content Reviews, Reports, Audit Logs, Fan Meetings, Goods, Ad Units, Events
+// ============================================================
+
+// 1. Content Review (심사 대기열 동적 렌더링)
+window.loadAdminContentReviews = async function(isManualRefresh = false) {
+  const container = document.getElementById('adminReviewListContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>실시간 심사 목록 로딩 중...</div>';
+
+  try {
+    const reviews = window.WebNovelsAdmin?.fetchContentReviewsFromDB ? await window.WebNovelsAdmin.fetchContentReviewsFromDB() : [];
+    if (!reviews || reviews.length === 0) {
+      container.innerHTML = '<div class="text-center p-6 text-muted">현재 대기 중인 콘텐츠 심사 항목이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = reviews.map(r => {
+      const isPending = r.status === 'PENDING';
+      const statusBadge = isPending 
+        ? '<span class="badge badge-warning">심사 대기중</span>' 
+        : (r.status === 'APPROVED' ? '<span class="badge badge-success">승인 완료</span>' : '<span class="badge badge-danger">반려됨</span>');
+      const timeStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : '최근';
+
+      return `
+        <div class="episode-row mb-3 p-3 glass-panel flex-between" style="border-radius: 8px; background: rgba(255,255,255,0.02);">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <strong>[연재 심사] ${r.work_title || '작품명 미정'}</strong>
+              ${statusBadge}
+            </div>
+            <div class="text-muted small mt-1">
+              신청 작가: ${r.author_name || '작가'} | 신청일: ${timeStr}
+              ${r.reviewer_name ? ` | 심사자: ${r.reviewer_name}` : ''}
+              ${r.reject_reason ? ` | 사유: <span style="color:var(--accent-rose);">${r.reject_reason}</span>` : ''}
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            ${isPending ? `
+              <button class="btn btn-success btn-sm" onclick="handleReviewAction('${r.id}', 'APPROVED', '${(r.work_title || '').replace(/'/g, "\\'")}')">승인</button>
+              <button class="btn btn-outline btn-sm style-danger" onclick="handleReviewAction('${r.id}', 'REJECTED', '${(r.work_title || '').replace(/'/g, "\\'")}')">반려</button>
+            ` : `
+              <span class="text-muted small" style="align-self:center;">조치 완료</span>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+    if (isManualRefresh) showToast('콘텐츠 심사 대기열을 실시간 동기화했습니다.');
+  } catch (e) {
+    console.warn('[loadAdminContentReviews Error]', e);
+    container.innerHTML = '<div class="text-center p-4 text-muted small">심사 목록을 불러오지 못했습니다.</div>';
+  }
+};
+
+window.handleReviewAction = async function(reviewId, status, workTitle) {
+  let rejectReason = null;
+  if (status === 'REJECTED') {
+    rejectReason = prompt(`[${workTitle}] 반려 사유를 입력해주세요:`, '연재 기준 규격 미충족');
+    if (!rejectReason) return;
+  } else {
+    if (!confirm(`[${workTitle}] 작품 연재를 공식 승인하시겠습니까?`)) return;
+  }
+
+  if (window.WebNovelsAdmin?.updateContentReviewInDB) {
+    const res = await window.WebNovelsAdmin.updateContentReviewInDB(reviewId, status, rejectReason);
+    if (res.success) {
+      showToast(status === 'APPROVED' ? `🎉 [${workTitle}] 작품 연재가 승인되었습니다.` : `⚠️ [${workTitle}] 작품 연재가 반려되었습니다.`);
+      if (window.WebNovelsAdmin?.recordAuditLogInDB) {
+        window.WebNovelsAdmin.recordAuditLogInDB('CONTENT_REVIEW_' + status, 'CONTENT_REVIEW', reviewId, { workTitle, status });
+      }
+      loadAdminContentReviews(false);
+    } else {
+      showToast(`❌ 심사 처리 실패: ${res.error || '오류 발생'}`);
+    }
+  }
+};
+
+// 2. Comment & Work Reports (신고 관제 센터 동적 렌더링)
+window.loadAdminReports = async function(isManualRefresh = false) {
+  const container = document.getElementById('adminReportsListContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>실시간 신고 목록 로딩 중...</div>';
+
+  try {
+    const reports = window.WebNovelsAdmin?.fetchReportsFromDB ? await window.WebNovelsAdmin.fetchReportsFromDB() : [];
+    if (!reports || reports.length === 0) {
+      container.innerHTML = '<div class="text-center p-6 text-muted">현재 접수된 미처리 신고 내역이 없습니다. (클린 커뮤니티 유지중)</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="table-responsive">
+        <table style="width:100%; font-size:0.85rem; text-align:left; border-collapse:collapse;">
+          <thead>
+            <tr style="color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.08);">
+              <th class="p-2">유형</th>
+              <th class="p-2">신고 사유</th>
+              <th class="p-2">신고자</th>
+              <th class="p-2">접수일</th>
+              <th class="p-2">상태</th>
+              <th class="p-2" style="text-align:right;">조치</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reports.map(rep => {
+              const isPending = rep.status === 'PENDING';
+              const statusBadge = isPending 
+                ? '<span class="badge badge-warning">접수 대기</span>' 
+                : `<span class="badge badge-primary">${rep.resolved_action || '조치완료'}</span>`;
+              const typeBadge = rep.target_type === 'COMMENT' 
+                ? '<span class="badge badge-outline">댓글</span>' 
+                : '<span class="badge badge-accent">작품</span>';
+              const timeStr = rep.created_at ? new Date(rep.created_at).toLocaleDateString() : '-';
+
+              return `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                  <td class="p-2">${typeBadge}</td>
+                  <td class="p-2">
+                    <strong style="color:#fff;">${rep.reason || '신고 접수'}</strong>
+                    <div class="text-muted small">대상 ID: ${rep.target_id || '-'}</div>
+                  </td>
+                  <td class="p-2 text-muted">${rep.reporter_id || '익명'}</td>
+                  <td class="p-2 text-muted">${timeStr}</td>
+                  <td class="p-2">${statusBadge}</td>
+                  <td class="p-2" style="text-align:right;">
+                    ${isPending ? `
+                      <button class="btn btn-outline btn-sm style-danger" onclick="handleReportAction('${rep.id}', '블라인드 처리')" style="font-size:0.75rem; padding:3px 8px;">블라인드</button>
+                      <button class="btn btn-ghost btn-sm" onclick="handleReportAction('${rep.id}', '기각 처리')" style="font-size:0.75rem; padding:3px 8px;">기각</button>
+                    ` : `
+                      <span class="text-muted small">완결</span>
+                    `}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    if (window.lucide) window.lucide.createIcons();
+    if (isManualRefresh) showToast('유저 신고 내역을 실시간 동기화했습니다.');
+  } catch (e) {
+    console.warn('[loadAdminReports Error]', e);
+    container.innerHTML = '<div class="text-center p-4 text-muted small">신고 목록을 불러오지 못했습니다.</div>';
+  }
+};
+
+window.handleReportAction = async function(reportId, action) {
+  if (!confirm(`해당 신고 건에 대해 '${action}' 조치를 적용하시겠습니까?`)) return;
+
+  if (window.WebNovelsAdmin?.resolveReportInDB) {
+    const res = await window.WebNovelsAdmin.resolveReportInDB(reportId, action);
+    if (res.success) {
+      showToast(`🛡️ 신고 건에 대해 '${action}' 조치가 완료되었습니다.`);
+      if (window.WebNovelsAdmin?.recordAuditLogInDB) {
+        window.WebNovelsAdmin.recordAuditLogInDB('REPORT_RESOLVE', 'REPORT', reportId, { action });
+      }
+      loadAdminReports(false);
+    } else {
+      showToast(`❌ 신고 조치 실패: ${res.error || '오류 발생'}`);
+    }
+  }
+};
+
+// 3. Security Audit Logs (보안 감사 로그 동적 렌더링)
+window.loadAdminAuditLogs = async function() {
+  const tbody = document.getElementById('securityAuditLogBody');
+  if (!tbody) return;
+
+  try {
+    const logs = window.WebNovelsAdmin?.fetchAuditLogsFromDB ? await window.WebNovelsAdmin.fetchAuditLogsFromDB() : [];
+    if (!logs || logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-muted">기록된 보안 감사 로그가 없습니다.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = logs.map(l => {
+      const timeStr = l.created_at ? new Date(l.created_at).toLocaleString() : '-';
+      const actionMap = {
+        'ADMIN_LOGIN': '관리자 로그인',
+        'APPROVE_SETTLEMENT': '정산금 승인 처리',
+        'REVIEW_APPROVE': '콘텐츠 검수 승인',
+        'CONTENT_REVIEW_APPROVED': '콘텐츠 심사 승인',
+        'CONTENT_REVIEW_REJECTED': '콘텐츠 심사 반려',
+        'REPORT_RESOLVE': '신고 제재 조치'
+      };
+      const actionLabel = actionMap[l.action] || l.action || '시스템 작업';
+
+      return `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td class="p-2 text-muted">${timeStr}</td>
+          <td class="p-2 text-white">${l.admin_id ? String(l.admin_id).slice(0, 8) : 'admin'}</td>
+          <td class="p-2">${actionLabel}</td>
+          <td class="p-2 text-muted">${l.ip_address || '127.0.0.1'}</td>
+          <td class="p-2"><span class="badge badge-primary">성공</span></td>
+        </tr>
+      `;
+    }).join('');
+  } catch (e) {
+    console.warn('[loadAdminAuditLogs Error]', e);
+  }
+};
+
+// 4. Fan Meetings (팬미팅 관리 동적 렌더링)
+window.loadAdminFanMeetings = async function(isManualRefresh = false) {
+  const container = document.getElementById('adminFanMeetingsContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>팬미팅 목록 로딩 중...</div>';
+
+  try {
+    const fms = window.WebNovelsAdmin?.fetchFanMeetingsFromDB ? await window.WebNovelsAdmin.fetchFanMeetingsFromDB() : [];
+    if (!fms || fms.length === 0) {
+      container.innerHTML = `
+        <div class="text-center p-6 text-muted">
+          <p>현재 등록된 온·오프라인 팬미팅이 없습니다.</p>
+          <button class="btn btn-primary btn-sm mt-2" onclick="showToast('신규 팬미팅 개설 기능 준비 중입니다.')">
+            <i data-lucide="plus"></i> 새 팬미팅 개설하기
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = fms.map(fm => {
+      const dateStr = fm.event_at ? new Date(fm.event_at).toLocaleString() : '미정';
+      return `
+        <div class="episode-row mb-3 p-3 glass-panel flex-between" style="border-radius: 8px;">
+          <div>
+            <strong style="font-size:1.02rem;">${fm.title}</strong>
+            <div class="text-muted small mt-1">
+              일시: ${dateStr} | 장소: ${fm.location || '온라인'} | 정원: ${fm.capacity || 0}명
+            </div>
+          </div>
+          <span class="badge badge-primary">${fm.status === 'OPEN' ? '모집중' : (fm.status || '준비중')}</span>
+        </div>
+      `;
+    }).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+    if (isManualRefresh) showToast('팬미팅 현황을 실시간 동기화했습니다.');
+  } catch (e) {
+    console.warn('[loadAdminFanMeetings Error]', e);
+  }
+};
+
+// 5. Goods Commerce (굿즈 상품 동적 렌더링)
+window.loadAdminGoods = async function(isManualRefresh = false) {
+  const container = document.getElementById('adminGoodsContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>굿즈 목록 로딩 중...</div>';
+
+  try {
+    const goods = window.WebNovelsAdmin?.fetchGoodsFromDB ? await window.WebNovelsAdmin.fetchGoodsFromDB() : [];
+    if (!goods || goods.length === 0) {
+      container.innerHTML = `
+        <div class="text-center p-6 text-muted">
+          <p>등록된 공식 IP 굿즈 상품이 없습니다.</p>
+          <button class="btn btn-primary btn-sm mt-2" onclick="showToast('굿즈 상품 등록 모달 준비 중입니다.')">
+            <i data-lucide="plus"></i> 첫 굿즈 상품 등록하기
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="grid-2-col gap-4">
+        ${goods.map(g => `
+          <div class="p-3 glass-panel flex-between" style="border-radius:8px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              ${g.image_url ? `<img src="${g.image_url}" alt="${g.name}" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">` : ''}
+              <div>
+                <strong>${g.name}</strong>
+                <div class="text-muted small">판매가: ₩${Number(g.price || 0).toLocaleString()} | 재고: ${g.stock || 0}개</div>
+              </div>
+            </div>
+            <span class="badge badge-primary">${g.status === 'ON_SALE' ? '판매중' : (g.status || '대기')}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    if (window.lucide) window.lucide.createIcons();
+    if (isManualRefresh) showToast('굿즈 상품 현황을 실시간 동기화했습니다.');
+  } catch (e) {
+    console.warn('[loadAdminGoods Error]', e);
+  }
+};
+
+// 6. Ad Units (광고 구좌 및 플랫폼 관리 동적 렌더링)
+window.loadAdminAdUnits = async function(isManualRefresh = false) {
+  const container = document.getElementById('adminAdUnitsContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>광고 구좌 로딩 중...</div>';
+
+  try {
+    const ads = window.WebNovelsAdmin?.fetchAdUnitsFromDB ? await window.WebNovelsAdmin.fetchAdUnitsFromDB() : [];
+    if (!ads || ads.length === 0) {
+      container.innerHTML = '<div class="text-center p-6 text-muted">등록된 광고 구좌가 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="grid-2-col gap-4">
+        ${ads.map(ad => `
+          <div class="p-4 glass-panel" style="border-radius:8px;">
+            <div class="flex-between">
+              <h4>${ad.is_rewarded ? '📺' : '🖼️'} ${ad.name}</h4>
+              <span class="badge ${ad.is_active ? 'badge-accent' : 'badge-outline'}">${ad.is_active ? '가동중' : '중지'}</span>
+            </div>
+            <p class="text-muted small mt-2">
+              네트워크: <strong>${ad.ad_network || 'ADMOB'}</strong> | 구좌 위치: <code>${ad.placement || 'DEFAULT'}</code>
+            </p>
+            <div class="text-muted small mt-1">구좌 코드: <span style="font-family:monospace; color:#a78bfa;">${ad.ad_unit_code || '-'}</span></div>
+            <button class="btn btn-outline btn-sm mt-3" onclick="showToast('광고 구좌 설정 모달이 곧 제공됩니다.')">구좌 단가/설정 변경</button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    if (window.lucide) window.lucide.createIcons();
+    if (isManualRefresh) showToast('광고 구좌 현황을 실시간 동기화했습니다.');
+  } catch (e) {
+    console.warn('[loadAdminAdUnits Error]', e);
+  }
+};
+
+// 7. Event Management (이벤트 프로모션 동적 렌더링)
+window.loadAdminEvents = async function(isManualRefresh = false) {
+  const container = document.getElementById('adminEventsContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="episode-row mb-3 p-3 glass-panel flex-between" style="border-radius:8px;">
+      <div>
+        <strong>[웰컴 프로모션] 신규 가입 1,000 포인트 자동 지급</strong>
+        <div class="text-muted small mt-1">대상: 전원 신규 가입 독자 | 상태: 상시 운영</div>
+      </div>
+      <span class="badge badge-accent">진행중</span>
+    </div>
+    <div class="episode-row mb-3 p-3 glass-panel flex-between" style="border-radius:8px;">
+      <div>
+        <strong>[보상형 광고] 4~6화 열람 시 72시간 연속 무료 해금</strong>
+        <div class="text-muted small mt-1">대상: 웹소설 및 웹툰 독자 | 상태: 상시 가동</div>
+      </div>
+      <span class="badge badge-primary">가동중</span>
+    </div>
+  `;
+
+  if (window.lucide) window.lucide.createIcons();
+  if (isManualRefresh) showToast('이벤트 프로모션 현황을 동기화했습니다.');
+};
+
+// ============================================================
 // [Global Window Namespace Exports for Admin]
 // ============================================================
 if (typeof window !== 'undefined') {
@@ -2380,4 +2750,13 @@ if (typeof window !== 'undefined') {
   window.openAdminEpisodeDetailModal = openAdminEpisodeDetailModal;
   window.handleCreateSubAdminSubmit = handleCreateSubAdminSubmit;
   window.loadAdminDashboard = typeof loadAdminDashboard !== 'undefined' ? loadAdminDashboard : undefined;
+  window.loadAdminContentReviews = loadAdminContentReviews;
+  window.handleReviewAction = handleReviewAction;
+  window.loadAdminReports = loadAdminReports;
+  window.handleReportAction = handleReportAction;
+  window.loadAdminAuditLogs = loadAdminAuditLogs;
+  window.loadAdminFanMeetings = loadAdminFanMeetings;
+  window.loadAdminGoods = loadAdminGoods;
+  window.loadAdminAdUnits = loadAdminAdUnits;
+  window.loadAdminEvents = loadAdminEvents;
 }
