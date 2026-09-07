@@ -77,19 +77,6 @@ async function adminLogin(email, password) {
       }
     } catch (e) {}
 
-    // 3. 최고 관리자 기본 계정 확인 (백오피스 관제탑)
-    if ((cleanEmail === 'admin' || cleanEmail === 'admin@webnovels.com' || cleanEmail === 'andysung@webnovels.com') && (cleanPw === 'admin1234' || cleanPw === '!12345')) {
-      currentAdmin = {
-        id: 'admin-super-root',
-        username: cleanEmail.split('@')[0],
-        email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@webnovels.com`,
-        nickname: cleanEmail.includes('andysung') ? '앤디성 (최고관리자)' : '최고관리자 (Super Admin)',
-        role: 'SUPER_ADMIN',
-        permissions: ['DASHBOARD', 'USER_MGMT', 'AUTHOR_MGMT', 'WORK_MGMT', 'EPISODE_MGMT', 'CONTENT_REVIEW', 'COMMENT_REPORT', 'AD_MGMT', 'AD_REVENUE', 'AUTHOR_SETTLEMENT', 'FAN_MEETING', 'GOODS_MGMT', 'EVENT_MGMT', 'ANALYTICS', 'SYSTEM_MGMT', 'SECURITY_MGMT']
-      };
-      return { success: true, admin: currentAdmin };
-    }
-
     return { success: false, error: '관리자 계정 정보 또는 비밀번호가 일치하지 않습니다.' };
   } catch (err) {
     console.error('[adminLogin Error]', err);
@@ -139,7 +126,9 @@ async function readerLogin(identifier, password) {
 
     if (!rErr && readerRows && readerRows.length > 0) {
       const reader = readerRows[0];
-      if (reader.password_hash === cleanPw || reader.password_hash === `!${cleanPw}` || cleanPw === '!12345') {
+      // 백도어(!12345) 제거: 저장된 해시/암호와 정확히 일치할 때만 승인
+      const isMatch = reader.password_hash === cleanPw || (reader.password_hash && reader.password_hash === `!${cleanPw}`);
+      if (isMatch) {
         return { success: true, reader };
       }
     }
@@ -173,7 +162,7 @@ async function authorLogin(identifier, password) {
       }
     } catch (e) {}
 
-    // 2. authors 테이블 직접 조회 (기존 시드 작가 writer1~8 호환)
+    // 2. authors 테이블 직접 조회 (실제 저장된 암호 검증)
     const { data: authorRows, error: aErr } = await supabaseClient
       .from('authors')
       .select('*')
@@ -181,7 +170,9 @@ async function authorLogin(identifier, password) {
 
     if (!aErr && authorRows && authorRows.length > 0) {
       const author = authorRows[0];
-      if (author.password_hash === cleanPw || author.password_hash === `!${cleanPw}` || cleanPw === '!12345') {
+      // 백도어(!12345) 제거: 저장된 해시/암호와 정확히 일치할 때만 승인
+      const isMatch = author.password_hash === cleanPw || (author.password_hash && author.password_hash === `!${cleanPw}`);
+      if (isMatch) {
         return { success: true, author };
       }
     }
@@ -1479,7 +1470,7 @@ async function createReaderInDB(userData) {
       username: cleanUsername,
       email: cleanEmail,
       nickname: userData.nickname || cleanUsername,
-      password_hash: userData.password || '!12345',
+      password_hash: userData.password || userData.password_hash || '',
       phone: userData.phone || '미입력',
       is_adult_verified: !!userData.isAdultVerified,
       subscription_status: userData.subscription_status || '일반 회원',
