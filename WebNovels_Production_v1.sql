@@ -804,6 +804,34 @@ ALTER TABLE public.goods_orders ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PE
 
 
 /* ============================================================
+   20-1. EVENTS & PROMOTIONS
+   ============================================================ */
+
+CREATE TABLE IF NOT EXISTS public.events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  badge TEXT DEFAULT '진행중',
+  badge_class TEXT DEFAULT 'badge-accent',
+  period TEXT,
+  start_date DATE,
+  end_date DATE,
+  status TEXT NOT NULL DEFAULT 'ACTIVE',
+  views INT NOT NULL DEFAULT 0,
+  participants INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS badge TEXT DEFAULT '진행중';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS badge_class TEXT DEFAULT 'badge-accent';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS views INT DEFAULT 0;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS participants INT DEFAULT 0;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+
+
+/* ============================================================
    21. INDEXES
    ============================================================ */
 
@@ -1231,6 +1259,14 @@ DROP POLICY IF EXISTS p_admin_all_audit_logs ON public.audit_logs;
 CREATE POLICY p_admin_all_audit_logs ON public.audit_logs FOR ALL TO authenticated
 USING ((SELECT private.is_admin())) WITH CHECK ((SELECT private.is_admin()));
 
+DROP POLICY IF EXISTS p_admin_all_events ON public.events;
+CREATE POLICY p_admin_all_events ON public.events FOR ALL TO authenticated
+USING ((SELECT private.is_admin())) WITH CHECK ((SELECT private.is_admin()));
+
+DROP POLICY IF EXISTS p_public_select_events ON public.events;
+CREATE POLICY p_public_select_events ON public.events FOR SELECT TO anon, authenticated
+USING (status = 'ACTIVE' OR is_active = true);
+
 
 /* ============================================================
    28. GRANTS & REVOKES
@@ -1247,6 +1283,7 @@ GRANT SELECT ON public.platform_stats TO anon;
 GRANT SELECT ON public.system_config TO anon;
 GRANT SELECT ON public.fan_meetings TO anon;
 GRANT SELECT ON public.goods TO anon;
+GRANT SELECT ON public.events TO anon;
 
 GRANT SELECT, UPDATE ON public.readers TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.reading_history TO authenticated;
