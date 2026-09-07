@@ -332,8 +332,7 @@
 | **Phase 2** | **관리자 7대 정적 탭 동적 렌더러 전환 (완료)** | 1. `reports`, `content_reviews`, `audit_logs`, `fan_meetings`, `goods`, `ad_units` 실시간 Supabase DB 조회 및 동적 렌더링 완료<br>2. 하드코딩 제거 및 실제 상태 제어(승인/반려/블라인드) 완비 |
 | **Phase 3** | **독자 활동 데이터 영구 동기화 (Dual Persistence 완성 - 완료)** | 1. `reading_history`, `favorites`, `author_subscriptions` DB 스키마 보완 (`user_id text`, UNIQUE 제약, RLS 허용) 및 기존 11명 시드 독자 활동 데이터 독립 테이블 마이그레이션 완료<br>2. `supabase-admin.js`: `readers` JSONB와 3개 독립 정규화 테이블 간 실시간 즉시 INSERT/UPSERT/DELETE 구현 완료<br>3. `state.js` & `reader.js`: 로그인/앱 초기화 시 DB 최신 복원 및 로컬 양방향 스마트 머지 파이프라인 완성 |
 | **Phase 4** | **작가 스튜디오 수익 지표 실데이터 연동 (완료)** | 1. `author_earnings` 테이블에 30명 작가별 90건 월별/일별 정산 집계 데이터 생성 및 RLS 정책 완비<br>2. `supabase-admin.js`에 `fetchAuthorEarnings`, `fetchAuthorSettlements`, `fetchAuthorRevenueSummary` 실시간 집계 API 구축<br>3. `creator.js` `loadCreatorStudioEarnings` 및 대시보드의 4대 하드코딩 수치(`384만 원` 등)를 전면 제거하고 실제 DB 수치(또는 0원) 동적 바인딩 완성 |
-| **Phase 5** | **보안 취약점 및 하드코딩 백도어 제거 (완료)** | 1. `supabase-admin.js`의 `admin1234`, `!12345` 우회 로그인 분기 전면 삭제 완료<br>2. DB `admin_users`에 정식 Bcrypt 해시 최고관리자 계정 등록 및 `verify_admin_login` RPC/Bcrypt 기반 표준 인증으로 일원화 완료<br>3. `readerLogin`, `authorLogin`에서 `!12345` 마스터 패스워드 우회 조건을 완전 제거하여 계정별 실제 암호 검증 체계 확립 |
-| **Phase 6** | **시드 데이터 및 정적 JSON 의존성 축소** | 1. `SAMPLE_WORKS`, `SAMPLE_READERS`, `SAMPLE_AUTHORS`를 단순 비상용 Fallback으로 격하<br>2. `dataset_30_works.json`의 1번 작품명을 DB와 동일한 `"폭풍의 여왕 서약"`으로 일치화하거나 Supabase 직접 조회를 기본 SSOT로 고정 |
+| **Phase 6** | **시드 데이터 및 정적 JSON 의존성 축소 (완료)** | 1. `SAMPLE_WORKS`, `SAMPLE_READERS`, `SAMPLE_AUTHORS`를 비상용 Fallback으로 격하 명시 및 SSOT(Supabase DB) 일원화<br>2. `dataset_30_works.json`, `state.js`, `index.html`의 1번 작품명을 DB와 완벽히 동일한 `"폭풍의 여왕 서약"`으로 일치화 완료<br>3. `app.js` 앱 기동 파이프라인에서 Supabase DB 실시간 조회를 기본 SSOT로 확립하여 동적 동기화 보장 |
 
 ---
 *본 보고서는 시스템 아키텍처 가이드라인(`gemini.md`) 및 데이터베이스 명세서(`database.md`, `WebNovels_Production_v1.sql`)와의 전수 비교를 통해 작성되었습니다.*

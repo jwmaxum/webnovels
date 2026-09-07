@@ -26,12 +26,12 @@ function createDefault6Episodes(workTitle) {
 }
 
 // ------------------------------------------------------------
-// [State] SAMPLE_WORKS (대표 8개 작품 시드 데이터 및 웹툰 2종)
+// [State] SAMPLE_WORKS (비상용 Fallback 시드 데이터 - SSOT는 Supabase DB)
 // ------------------------------------------------------------
 const SAMPLE_WORKS = [
   {
     id: 1,
-    title: "대적자: 신을 삼킨 기사",
+    title: "폭풍의 여왕 서약",
     author: "판타지마스터",
     genre: "판타지",
     rating: "ALL",
@@ -40,7 +40,7 @@ const SAMPLE_WORKS = [
     description: "신들의 몰락과 기사의 재림! 1~3화 즉시 무료 & 4~6화 광고 보고 연속 무료 열람!",
     viewCount: 42,
     episodesCount: 6,
-    episodes: createDefault6Episodes("대적자: 신을 삼킨 기사")
+    episodes: createDefault6Episodes("폭풍의 여왕 서약")
   },
   {
     id: 2,
@@ -187,7 +187,7 @@ const COMMENTS_STORE = {
 };
 
 // ------------------------------------------------------------
-// [State] SAMPLE_READERS (샘플 독자 계정 10명)
+// [State] SAMPLE_READERS (비상용 Fallback 시드 독자 - SSOT는 Supabase DB)
 // ------------------------------------------------------------
 const SAMPLE_READERS = [
   { id: 1, username: 'reader1', password_hash: '!12345', email: 'reader1@webnovels.com', phone: '+82-010-111-1111', is_adult_verified: false, subscription_status: '일반 회원' },
@@ -203,7 +203,7 @@ const SAMPLE_READERS = [
 ];
 
 // ------------------------------------------------------------
-// [State] SAMPLE_AUTHORS (10명 작가 계정: writer1~10@webnovels.com / PW: !12345)
+// [State] SAMPLE_AUTHORS (비상용 Fallback 시드 작가 - SSOT는 Supabase DB)
 // ------------------------------------------------------------
 const SAMPLE_AUTHORS = [
   { id: 1, username: 'writer1', password_hash: '!12345', email: 'writer1@webnovels.com', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666', status: '공식 인증 작가' },
