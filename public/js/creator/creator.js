@@ -658,16 +658,20 @@ window.loadCreatorStudioEarnings = async function(authorId) {
 
 
 // ============================================================
-// [Global Window Namespace Exports for Creator]
+// [Global Window Namespace Exports for Author / Creator]
 // ============================================================
 if (typeof window !== 'undefined') {
   window.switchCreatorTab = switchCreatorTab;
+  window.switchAuthorTab = switchCreatorTab;
   window.toggleScheduledTimeInput = toggleScheduledTimeInput;
   window.fetchCreatorDashboardData = fetchCreatorDashboardData;
+  window.fetchAuthorDashboardData = fetchCreatorDashboardData;
   window.handleCreateEpisodeSubmit = handleCreateEpisodeSubmit;
   window.updateWorkSerialStatus = updateWorkSerialStatus;
   window.handleCreatorSettlementReq = handleCreatorSettlementReq;
-  window.handleCreatorLogoutProcess = window.handleCreatorLogoutProcess || handleAuthorLogoutProcess;
-window.handleAuthorLogoutProcess = window.handleCreatorLogoutProcess;
+  window.handleAuthorSettlementReq = handleCreatorSettlementReq;
+  window.handleAuthorLogoutProcess = handleAuthorLogoutProcess;
+  window.handleCreatorLogoutProcess = handleAuthorLogoutProcess;
   window.loadCreatorStudioEarnings = loadCreatorStudioEarnings;
+  window.loadAuthorStudioEarnings = loadCreatorStudioEarnings;
 }

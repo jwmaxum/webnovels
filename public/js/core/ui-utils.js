@@ -78,11 +78,11 @@ const getWorkCover = (w) => {
 };
 window.getWorkCover = getWorkCover;
 
-// 작품 크리에이터명/작가명 추출 헬퍼
-const getCreatorName = (w) => (typeof (w?.creator || w?.author) === 'object' ? ((w?.creator || w?.author)?.penName || (w?.creator || w?.author)?.pen_name || (w?.creator || w?.author)?.name) : (w?.creator || w?.author)) || '작자미상';
-const getAuthorName = getCreatorName;
-window.getCreatorName = getCreatorName;
+// 작품 작가명/크리에이터명 추출 헬퍼
+const getAuthorName = (w) => (typeof (w?.author || w?.creator) === 'object' ? ((w?.author || w?.creator)?.penName || (w?.author || w?.creator)?.pen_name || (w?.author || w?.creator)?.name) : (w?.author || w?.creator)) || '작자미상';
+const getCreatorName = getAuthorName;
 window.getAuthorName = getAuthorName;
+window.getCreatorName = getCreatorName;
 
 // 관심작품 버튼 UI 상태 갱신
 function updateFavoriteButtons(workId) {
@@ -105,17 +105,17 @@ function updateFavoriteButtons(workId) {
 }
 window.updateFavoriteButtons = updateFavoriteButtons;
 
-// 크리에이터/작가 구독 버튼 UI 상태 갱신
-function updateSubscribeButtons(creatorData) {
-  const creatorName = (typeof creatorData === 'object' ? (creatorData?.penName || creatorData?.pen_name || creatorData?.name) : creatorData) || '작자미상';
-  const subCreators = JSON.parse(localStorage.getItem('webnovels_subscribed_creators') || localStorage.getItem('webnovels_subscribed_authors') || '[]');
-  const isSubbed = subCreators.includes(creatorName);
+// 작가 구독 버튼 UI 상태 갱신
+function updateSubscribeButtons(authorData) {
+  const authorName = (typeof authorData === 'object' ? (authorData?.penName || authorData?.pen_name || authorData?.name) : authorData) || '작자미상';
+  const subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || localStorage.getItem('webnovels_subscribed_creators') || '[]');
+  const isSubbed = subAuthors.includes(authorName);
   const btnSub = document.getElementById('btnDetailSubscribe');
 
   if (btnSub) {
     btnSub.innerHTML = isSubbed
-      ? '<i data-lucide="user-check" style="color: var(--primary-color);"></i> 크리에이터 구독중'
-      : '<i data-lucide="user-plus"></i> 크리에이터 구독';
+      ? '<i data-lucide="user-check" style="color: var(--primary-color);"></i> 작가 구독중'
+      : '<i data-lucide="user-plus"></i> 작가 구독';
   }
   if (window.lucide) window.lucide.createIcons();
 }

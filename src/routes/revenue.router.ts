@@ -53,12 +53,13 @@ revenueRouter.post('/settlement/request', async (req: Request, res: Response) =>
 // 3. 관리자 월별 광고 매출 및 기여도 분배 계산
 revenueRouter.post('/admin/calculate', async (req: Request, res: Response) => {
   try {
-    const { periodMonth, grossRevenue, adNetworkFee, writerPoolRatio, creatorPoolRatio } = req.body;
-    const activeRatio = creatorPoolRatio !== undefined ? Number(creatorPoolRatio) : (writerPoolRatio ? Number(writerPoolRatio) : 0.625);
+    const { periodMonth, grossRevenue, adNetworkFee, authorPoolRatio, creatorPoolRatio, writerPoolRatio } = req.body;
+    const activeRatio = authorPoolRatio !== undefined ? Number(authorPoolRatio) : (creatorPoolRatio !== undefined ? Number(creatorPoolRatio) : (writerPoolRatio ? Number(writerPoolRatio) : 0.625));
     const result = await RevenueEngineService.calculateMonthlyRevenue(
       periodMonth,
       Number(grossRevenue),
       Number(adNetworkFee),
+      activeRatio,
       activeRatio,
       activeRatio
     );

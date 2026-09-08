@@ -64,16 +64,16 @@ creatorRouter.post('/register', authenticateToken, async (req: AuthRequest, res:
       }
     });
 
-    // User Role CREATOR 및 AUTHOR 변경
+    // User Role AUTHOR 변경
     await db.user.update({
       where: { id: userId },
-      data: { role: 'CREATOR' }
+      data: { role: 'AUTHOR' }
     });
 
     return res.status(201).json({
-      message: '크리에이터(작가) 등록이 성공적으로 완료되었습니다.',
-      creator: author,
-      author
+      message: '작가 등록이 성공적으로 완료되었습니다.',
+      author,
+      creator: author
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
@@ -82,7 +82,7 @@ creatorRouter.post('/register', authenticateToken, async (req: AuthRequest, res:
 
 // ============================================================
 // [Route] GET /api/creator/dashboard
-// [Purpose] 크리에이터 스튜디오 메인 대시보드 데이터 (작품수, 총 열람수, 광고 뷰수, 3대 수익 지표) 조회
+// [Purpose] 작가 스튜디오 메인 대시보드 데이터 (작품수, 총 열람수, 광고 뷰수, 3대 수익 지표) 조회
 // [API Integration] RevenueEngineService.getAuthorRevenueDashboard(authorId) 호출
 // ============================================================
 creatorRouter.get('/dashboard', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -95,7 +95,7 @@ creatorRouter.get('/dashboard', authenticateToken, async (req: AuthRequest, res:
     });
 
     if (!author) {
-      return res.status(403).json({ error: '크리에이터 등록이 필요합니다.' });
+      return res.status(403).json({ error: '작가 등록이 필요합니다.' });
     }
 
     const revenueDashboard = await RevenueEngineService.getAuthorRevenueDashboard(author.id);
@@ -340,3 +340,4 @@ creatorRouter.put('/profile', authenticateToken, async (req: AuthRequest, res: R
   }
 });
 
+export const authorRouter = creatorRouter;

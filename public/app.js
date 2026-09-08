@@ -121,17 +121,17 @@ function bindWebNovelsEvents() {
     if (typeof handleMemberSignup === 'function') handleMemberSignup();
   });
 
-  (document.getElementById('authForm-signup-creator') || document.getElementById('authForm-signup-author'))?.addEventListener('submit', (event) => {
+  (document.getElementById('authForm-signup-author') || document.getElementById('authForm-signup-creator'))?.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (typeof handleCreatorSignup === 'function') handleCreatorSignup();
-    else if (typeof handleAuthorSignup === 'function') handleAuthorSignup();
+    if (typeof handleAuthorSignup === 'function') handleAuthorSignup();
+    else if (typeof handleCreatorSignup === 'function') handleCreatorSignup();
   });
 
   document.getElementById('btnCheckNickname')?.addEventListener('click', () => {
     if (typeof checkNicknameDuplicate === 'function') checkNicknameDuplicate();
   });
 
-  (document.getElementById('btnCheckCreatorPenName') || document.getElementById('btnCheckAuthorPenName'))?.addEventListener('click', () => {
+  (document.getElementById('btnCheckAuthorPenName') || document.getElementById('btnCheckCreatorPenName'))?.addEventListener('click', () => {
     if (typeof checkAuthorPenNameDuplicate === 'function') checkAuthorPenNameDuplicate();
   });
 
@@ -559,16 +559,16 @@ async function initWebNovelsApp() {
     }
   });
 
-  const onCreatorsChanged = async () => {
-    console.log('[Event-Driven Realtime] creators-changed 이벤트 수신 -> 크리에이터 목록 UI 동기화');
-    if (typeof loadAdminCreators === 'function') {
-      await loadAdminCreators(true);
-    } else if (typeof loadAdminAuthors === 'function') {
+  const onAuthorsChanged = async () => {
+    console.log('[Event-Driven Realtime] authors-changed 이벤트 수신 -> 작가 목록 UI 동기화');
+    if (typeof loadAdminAuthors === 'function') {
       await loadAdminAuthors(true);
+    } else if (typeof loadAdminCreators === 'function') {
+      await loadAdminCreators(true);
     }
   };
-  window.addEventListener('webnovels:creators-changed', onCreatorsChanged);
-  window.addEventListener('webnovels:authors-changed', onCreatorsChanged);
+  window.addEventListener('webnovels:authors-changed', onAuthorsChanged);
+  window.addEventListener('webnovels:creators-changed', onAuthorsChanged);
 
   // 로그인 프로필 세션 복원 및 헤더 동기화
   if (typeof loadMyProfile === 'function') await loadMyProfile();

@@ -216,16 +216,16 @@ const SAMPLE_READERS = [
 // [State] SAMPLE_AUTHORS (비상용 Fallback 시드 작가 - SSOT는 Supabase DB)
 // ------------------------------------------------------------
 const SAMPLE_AUTHORS = [
-  { id: 1, username: 'creator1', password_hash: '!12345', email: 'creator1@webnovels.com', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666', status: '공식 인증 작가' },
-  { id: 2, username: 'creator2', password_hash: '!12345', email: 'creator2@webnovels.com', pen_name: '무협의신', work_title: '천마의 귀환', birthdate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bank_info: '신한은행 110-222-333444', status: '공식 인증 작가' },
-  { id: 3, username: 'creator3', password_hash: '!12345', email: 'creator3@webnovels.com', pen_name: '나이트로즈', work_title: '금기의 계약', birthdate: '1992-08-12', address: '경기도 성남시 분당구 판교로 78', bank_info: '우리은행 1002-555-666777', status: '공식 인증 작가' },
-  { id: 4, username: 'creator4', password_hash: '!12345', email: 'creator4@webnovels.com', pen_name: '로맨스퀸', work_title: '황제의 유일한 후궁', birthdate: '1994-11-03', address: '서울특별시 마포구 월드컵북로 99', bank_info: '하나은행 222-333-444555', status: '공식 인증 작가' },
-  { id: 5, username: 'creator5', password_hash: '!12345', email: 'creator5@webnovels.com', pen_name: '스페이스로그', work_title: '성간 항로: 마지막 항해사', birthdate: '1988-03-30', address: '대전광역시 유성구 대학로 100', bank_info: '농협 301-777-888999', status: '공식 인증 작가' },
-  { id: 6, username: 'creator6', password_hash: '!12345', email: 'creator6@webnovels.com', pen_name: '도시마법사', work_title: '서울에 나타난 마왕', birthdate: '1995-07-07', address: '서울특별시 송파구 올림픽로 200', bank_info: '카카오뱅크 3333-01-234567', status: '공식 인증 작가' },
-  { id: 7, username: 'creator7', password_hash: '!12345', email: 'creator7@webnovels.com', pen_name: '공포작가', work_title: '죽은 자들의 학교', birthdate: '1991-10-31', address: '부산광역시 해운대구 센텀서로 30', bank_info: '기업은행 010-9999-8888', status: '공식 인증 작가' },
-  { id: 8, username: 'creator8', password_hash: '!12345', email: 'creator8@webnovels.com', pen_name: '검성', work_title: '검의 전설: 천하제일인', birthdate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bank_info: '대구은행 508-12-345678', status: '공식 인증 작가' },
-  { id: 9, username: 'creator9', password_hash: '!12345', email: 'creator9@webnovels.com', pen_name: '스튜디오노바', work_title: '[웹툰] 신의 기사단', birthdate: '1993-04-10', address: '서울특별시 마포구 독막로 50', bank_info: '국민은행 111-222-333444', status: '공식 인증 작가' },
-  { id: 10, username: 'creator10', password_hash: '!12345', email: 'creator10@webnovels.com', pen_name: '로즈코믹스', work_title: '[웹툰] 황후의 비밀 화원', birthdate: '1996-09-18', address: '서울특별시 강남구 학동로 20', bank_info: '신한은행 333-444-555666', status: '공식 인증 작가' }
+  { id: 1, username: 'author1', password_hash: '!12345', email: 'author1@webnovels.com', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666', status: '공식 인증 작가' },
+  { id: 2, username: 'author2', password_hash: '!12345', email: 'author2@webnovels.com', pen_name: '무협의신', work_title: '천마의 귀환', birthdate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bank_info: '신한은행 110-222-333444', status: '공식 인증 작가' },
+  { id: 3, username: 'author3', password_hash: '!12345', email: 'author3@webnovels.com', pen_name: '나이트로즈', work_title: '금기의 계약', birthdate: '1992-08-12', address: '경기도 성남시 분당구 판교로 78', bank_info: '우리은행 1002-555-666777', status: '공식 인증 작가' },
+  { id: 4, username: 'author4', password_hash: '!12345', email: 'author4@webnovels.com', pen_name: '로맨스퀸', work_title: '황제의 유일한 후궁', birthdate: '1994-11-03', address: '서울특별시 마포구 월드컵북로 99', bank_info: '하나은행 222-333-444555', status: '공식 인증 작가' },
+  { id: 5, username: 'author5', password_hash: '!12345', email: 'author5@webnovels.com', pen_name: '스페이스로그', work_title: '성간 항로: 마지막 항해사', birthdate: '1988-03-30', address: '대전광역시 유성구 대학로 100', bank_info: '농협 301-777-888999', status: '공식 인증 작가' },
+  { id: 6, username: 'author6', password_hash: '!12345', email: 'author6@webnovels.com', pen_name: '도시마법사', work_title: '서울에 나타난 마왕', birthdate: '1995-07-07', address: '서울특별시 송파구 올림픽로 200', bank_info: '카카오뱅크 3333-01-234567', status: '공식 인증 작가' },
+  { id: 7, username: 'author7', password_hash: '!12345', email: 'author7@webnovels.com', pen_name: '공포작가', work_title: '죽은 자들의 학교', birthdate: '1991-10-31', address: '부산광역시 해운대구 센텀서로 30', bank_info: '기업은행 010-9999-8888', status: '공식 인증 작가' },
+  { id: 8, username: 'author8', password_hash: '!12345', email: 'author8@webnovels.com', pen_name: '검성', work_title: '검의 전설: 천하제일인', birthdate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bank_info: '대구은행 508-12-345678', status: '공식 인증 작가' },
+  { id: 9, username: 'author9', password_hash: '!12345', email: 'author9@webnovels.com', pen_name: '스튜디오노바', work_title: '[웹툰] 신의 기사단', birthdate: '1993-04-10', address: '서울특별시 마포구 독막로 50', bank_info: '국민은행 111-222-333444', status: '공식 인증 작가' },
+  { id: 10, username: 'author10', password_hash: '!12345', email: 'author10@webnovels.com', pen_name: '로즈코믹스', work_title: '[웹툰] 황후의 비밀 화원', birthdate: '1996-09-18', address: '서울특별시 강남구 학동로 20', bank_info: '신한은행 333-444-555666', status: '공식 인증 작가' }
 ];
 
 // ------------------------------------------------------------
@@ -238,8 +238,8 @@ let currentTheme = 'theme-dark';
 let currentFontSize = 18;
 let currentActiveView = 'view-home';
 let lastMainView = 'view-home';
-let currentLoggedCreator = null;
-let currentLoggedAuthor = currentLoggedCreator;
+let currentLoggedAuthor = null;
+let currentLoggedCreator = currentLoggedAuthor;
 
 // 독자 보유 포인트 상태 (기본 1,000P)
 let userPoints = parseInt(localStorage.getItem('webnovels_user_points') || '1000', 10);
@@ -325,7 +325,7 @@ function syncUserActivityToStorage(data) {
     }
   }
 
-  // 3. [Dual Persistence Merge] 구독 크리에이터 동기화
+  // 3. [Dual Persistence Merge] 구독 작가 동기화
   const incomingSubs = data.subscribedCreators || data.subscribedAuthors;
   if (incomingSubs && Array.isArray(incomingSubs)) {
     const remoteSubs = incomingSubs.map(String);
@@ -361,8 +361,8 @@ if (typeof window !== 'undefined') {
   window.SAMPLE_WORKS = SAMPLE_WORKS;
   window.COMMENTS_STORE = COMMENTS_STORE;
   window.SAMPLE_READERS = SAMPLE_READERS;
-  window.SAMPLE_CREATORS = SAMPLE_CREATORS;
-  window.SAMPLE_AUTHORS = SAMPLE_CREATORS;
+  window.SAMPLE_AUTHORS = SAMPLE_AUTHORS;
+  window.SAMPLE_CREATORS = SAMPLE_AUTHORS;
   window.activeWork = activeWork;
   window.activeEpisodeId = activeEpisodeId;
   window.unlockedEpisodes = unlockedEpisodes;
@@ -370,8 +370,8 @@ if (typeof window !== 'undefined') {
   window.currentFontSize = currentFontSize;
   window.currentActiveView = currentActiveView;
   window.lastMainView = lastMainView;
-  window.currentLoggedCreator = currentLoggedCreator;
-  window.currentLoggedAuthor = currentLoggedCreator;
+  window.currentLoggedAuthor = currentLoggedAuthor;
+  window.currentLoggedCreator = currentLoggedAuthor;
   window.userPoints = userPoints;
   window.ACTION_QUEUE_ITEMS = ACTION_QUEUE_ITEMS;
   window.adminWorkFilterState = adminWorkFilterState;

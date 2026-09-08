@@ -423,8 +423,8 @@ window.handleDeleteReader = async function() {
   }
 };
 
-// 등록 크리에이터 (creators) 실시간 DB 로드 및 렌더링
-window.loadAdminCreators = async function(forceRefresh = false) {
+// 등록 작가 (authors) 실시간 DB 로드 및 렌더링
+window.loadAdminAuthors = async function(forceRefresh = false) {
   const container = document.getElementById('adminCreatorsContainer') || document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-creators .card') || document.querySelector('#adminTab-authors .card');
   if (!container) return;
 
@@ -442,10 +442,10 @@ window.loadAdminCreators = async function(forceRefresh = false) {
     }
   }
 
-  if (typeof renderCreatorsAdminGrid === 'function') renderCreatorsAdminGrid(); else renderAuthorsAdminGrid();
+  if (typeof renderAuthorsAdminGrid === "function") renderAuthorsAdminGrid(); else renderCreatorsAdminGrid();
 };
 
-window.renderCreatorsAdminGrid = function() {
+window.renderAuthorsAdminGrid = function() {
   const container = document.getElementById('adminCreatorsContainer') || document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-creators .card') || document.querySelector('#adminTab-authors .card');
   if (!container) return;
 
@@ -578,7 +578,7 @@ window.handleRevenueCalculation = async function() {
   const periodMonth = document.getElementById('revPeriodMonth')?.value || '2026-08';
   const grossRev = Number(document.getElementById('revGrossRevenue')?.value || 0);
   const adFee = Number(document.getElementById('revAdNetworkFee')?.value || 0);
-  const poolRatio = Number((document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
+  const poolRatio = Number((document.getElementById('revAuthorPoolRatio') || document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
 
   try {
     let res = null;
@@ -2074,7 +2074,7 @@ window.handleRevenueCalculation = async function() {
   const periodMonth = document.getElementById('revPeriodMonth')?.value;
   const grossRevenue = Number(document.getElementById('revGrossRevenue')?.value || 0);
   const adNetworkFee = Number(document.getElementById('revAdNetworkFee')?.value || 0);
-  const writerPoolRatio = Number((document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
+  const writerPoolRatio = Number((document.getElementById('revAuthorPoolRatio') || document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
 
   const result = window.WebNovelsAdmin
     ? await window.WebNovelsAdmin.calculateRevenue(periodMonth, grossRevenue, adNetworkFee, writerPoolRatio)
@@ -2443,7 +2443,7 @@ window.loadDashboardKPIs = async function() {
     const elTotalWorks = document.getElementById('kpiTotalWorks');
     if (elTotalWorks) elTotalWorks.textContent = `${finalTotalWorks}`;
 
-    const elTotalAuthors = document.getElementById('kpiTotalCreators') || document.getElementById('kpiTotalAuthors');
+    const elTotalAuthors = document.getElementById('kpiTotalAuthors') || document.getElementById('kpiTotalCreators');
     if (elTotalAuthors) elTotalAuthors.textContent = `${finalTotalAuthors}`;
 
     const elTotalEpisodes = document.getElementById('kpiTotalEpisodes');
@@ -2584,9 +2584,9 @@ window.switchAdminSubTab = function(tabName, shouldPushState = true) {
     if (typeof loadDashboardKPIs === 'function') loadDashboardKPIs();
   } else if (tabName === 'users') {
     if (typeof loadAdminUsers === 'function') loadAdminUsers();
-  } else if (tabName === 'creators' || tabName === 'authors') {
-    if (typeof loadAdminCreators === 'function') loadAdminCreators();
-    else if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
+  } else if (tabName === 'authors' || tabName === 'creators') {
+    if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
+    else if (typeof loadAdminCreators === 'function') loadAdminCreators();
   } else if (tabName === 'works') {
     if (typeof renderAdminWorks === 'function') renderAdminWorks();
   } else if (tabName === 'episodes') {
@@ -2658,7 +2658,7 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
     // 1. 최신 당월 데이터 추출 및 상단 4대 KPI 갱신
     const currentMonthData = revenueEvents.length > 0 ? (revenueEvents.find(e => e.period_month === '2026-08') || revenueEvents[0]) : null;
     const grossEl = document.getElementById('analyticsGrossRev');
-    const writerEl = (document.getElementById('analyticsCreatorPool') || document.getElementById('analyticsWriterPool'));
+    const writerEl = (document.getElementById('analyticsAuthorPool') || document.getElementById('analyticsCreatorPool') || document.getElementById('analyticsWriterPool'));
     const platformEl = document.getElementById('analyticsPlatformRev');
 
     if (currentMonthData) {
@@ -3246,5 +3246,5 @@ if (typeof window !== 'undefined') {
 // ============================================================
 // [Creator/Author Compatibility Bridge]
 // ============================================================
-window.loadAdminAuthors = window.loadAdminCreators || window.loadAdminAuthors;
-window.renderAuthorsAdminGrid = window.renderCreatorsAdminGrid || window.renderAuthorsAdminGrid;
+window.loadAdminCreators = window.loadAdminAuthors;
+window.renderCreatorsAdminGrid = window.renderAuthorsAdminGrid;

@@ -54,7 +54,7 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const userRole = (role === 'CREATOR' || role === 'AUTHOR') ? 'CREATOR' : 'READER';
+    const userRole = (role === 'AUTHOR' || role === 'CREATOR') ? 'AUTHOR' : 'READER';
     
     // 프로필 데이터 준비
     const profileData: any = {
@@ -72,7 +72,7 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
         nickname,
         phone: phone || null,
         role: userRole,
-        isAdultVerified: userRole === 'CREATOR', // 크리에이터/작가는 기본 성인인증 간주
+        isAdultVerified: userRole === 'AUTHOR', // 작가는 기본 성인인증 간주
         profile: {
           create: profileData
         }
@@ -80,7 +80,7 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
       select: { id: true, email: true, username: true, nickname: true, role: true, isAdultVerified: true }
     });
 
-    if (userRole === 'CREATOR' && penName) {
+    if (userRole === 'AUTHOR' && penName) {
       const bankName = bankInfo ? bankInfo.split(' ')[0] : '미등록은행';
       const accountNumber = bankInfo ? bankInfo.split(' ').slice(1).join(' ') : '미등록계좌';
       

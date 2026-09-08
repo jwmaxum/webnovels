@@ -156,8 +156,8 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 5. 내 서재 경로 (/library 또는 /library/:tab)
   if (parts[0] === 'library' || hash === '#library') {
-    let subTab = parts[1] || 'continue'; // continue, favorites, creators
-    if (subTab === 'authors') subTab = 'creators';
+    let subTab = parts[1] || 'continue'; // continue, favorites, authors
+    if (subTab === 'creators') subTab = 'authors';
     switchWebNovelsView('view-mypage', null, false);
     if (typeof openLibraryTabDirect === 'function') {
       openLibraryTabDirect(subTab, false);
@@ -165,8 +165,8 @@ function resolveRoute(pathname, isInitial = false) {
     return;
   }
 
-  // 6. 작가센터 경로 (/creator 또는 /creator/:sub)
-  if (parts[0] === 'creator' || hash === '#creator') {
+  // 6. 작가센터 경로 (/author 또는 /creator)
+  if (parts[0] === 'author' || parts[0] === 'creator' || hash === '#author' || hash === '#creator') {
     const subTab = parts[1] || 'works';
     switchWebNovelsView('view-creator', null, false);
     if (typeof switchCreatorTab === 'function') {
@@ -187,7 +187,7 @@ function resolveRoute(pathname, isInitial = false) {
   // 7. 관리자 CMS 경로 (/admin 또는 /admin/:sub)
   if (parts[0] === 'admin' || hash === '#admin') {
     let subTab = parts[1] || 'dashboard';
-    if (subTab === 'authors') subTab = 'creators';
+    if (subTab === 'creators') subTab = 'authors';
     switchWebNovelsView('view-admin-cms', null, false);
     if (typeof switchAdminSubTab === 'function') {
       switchAdminSubTab(subTab, false);

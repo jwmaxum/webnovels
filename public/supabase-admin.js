@@ -979,7 +979,7 @@ async function allocateRevenue(periodMonth = '2026-08') {
       await supabaseClient.from('author_earnings').insert(earningsRows).catch(() => {});
     }
 
-    return { success: true, period: revPeriod, creatorPool: writerPool, writerPool };
+    return { success: true, period: revPeriod, authorPool: writerPool, creatorPool: writerPool, writerPool };
   } catch (err) {
     console.error('[allocateRevenue Error]', err);
     return { success: false, error: err.message };

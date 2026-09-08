@@ -1295,14 +1295,14 @@ async function handleMemberLogin() {
             pen_name: author.pen_name || author.username,
             bio: author.bio || '',
             status: author.status || 'APPROVED',
-            role: 'CREATOR'
+            role: 'AUTHOR'
           };
+          localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
           localStorage.setItem('webnovels_creator', JSON.stringify(authorObj));
-      localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
-          localStorage.setItem('webnovels_token', `creator-${authorObj.id}`);
+          localStorage.setItem('webnovels_token', `author-${authorObj.id}`);
           localStorage.removeItem('webnovels_user');
           
-          updateMemberHeader({ ...authorObj, role: 'CREATOR' });
+          updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
           closeAllModals();
           showToast(`✍️ 작가 로그인 성공! (${authorObj.pen_name} 작가님)`);
           switchWebNovelsView('view-creator');
@@ -1674,12 +1674,12 @@ async function handleAuthorSignup() {
     status: '공식 인증 작가'
   };
 
-  localStorage.setItem('webnovels_token', `creator-${authorObj.id}`);
+  localStorage.setItem('webnovels_token', `author-${authorObj.id}`);
+  localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
   localStorage.setItem('webnovels_creator', JSON.stringify(authorObj));
-      localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
   localStorage.removeItem('webnovels_user');
 
-  updateMemberHeader({ ...authorObj, role: 'CREATOR' });
+  updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
   closeAllModals();
   showToast(`✍️ ${penName} 작가님 회원가입이 완료되었습니다!`);
   switchWebNovelsView('view-creator');

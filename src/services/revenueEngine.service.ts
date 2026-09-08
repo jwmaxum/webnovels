@@ -30,13 +30,15 @@ export class RevenueEngineService {
     grossRevenue: number,
     adNetworkFee: number,
     writerPoolRatio: number = 0.625,
-    creatorPoolRatio?: number
+    creatorPoolRatio?: number,
+    authorPoolRatio?: number
   ) {
-    const activePoolRatio = creatorPoolRatio !== undefined ? creatorPoolRatio : writerPoolRatio;
+    const activePoolRatio = authorPoolRatio !== undefined ? authorPoolRatio : (creatorPoolRatio !== undefined ? creatorPoolRatio : writerPoolRatio);
     const netRevenue = Math.max(0, grossRevenue - adNetworkFee);
-    const creatorPool = netRevenue * activePoolRatio;
-    const writerPool = creatorPool;
-    const platformRevenue = netRevenue - creatorPool;
+    const authorPool = netRevenue * activePoolRatio;
+    const creatorPool = authorPool;
+    const writerPool = authorPool;
+    const platformRevenue = netRevenue - authorPool;
 
     // 1. RevenueEvent 기록 생성 또는 업데이트
     const revenueEvent = await db.revenueEvent.create({
@@ -46,7 +48,7 @@ export class RevenueEngineService {
         adNetworkFee,
         netRevenue,
         writerPoolRatio: activePoolRatio,
-        writerPool: creatorPool,
+        writerPool: authorPool,
         platformRevenue,
         isClosed: false
       }
@@ -107,10 +109,11 @@ export class RevenueEngineService {
     return {
       revenueEvent,
       totalWorksProcessed: works.length,
+      authorPool,
       creatorPool,
       writerPool,
-      creatorRevenuesCount: authorRevenues.length,
-      authorRevenuesCount: authorRevenues.length
+      authorRevenuesCount: authorRevenues.length,
+      creatorRevenuesCount: authorRevenues.length
     };
   }
 
