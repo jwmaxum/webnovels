@@ -54,7 +54,7 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const userRole = role === 'AUTHOR' ? 'AUTHOR' : 'READER';
+    const userRole = (role === 'CREATOR' || role === 'AUTHOR') ? 'CREATOR' : 'READER';
     
     // 프로필 데이터 준비
     const profileData: any = {
@@ -72,7 +72,7 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
         nickname,
         phone: phone || null,
         role: userRole,
-        isAdultVerified: userRole === 'AUTHOR', // 작가는 기본 성인인증 간주 (예시)
+        isAdultVerified: userRole === 'CREATOR', // 크리에이터/작가는 기본 성인인증 간주
         profile: {
           create: profileData
         }
@@ -80,7 +80,7 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
       select: { id: true, email: true, username: true, nickname: true, role: true, isAdultVerified: true }
     });
 
-    if (userRole === 'AUTHOR' && penName) {
+    if (userRole === 'CREATOR' && penName) {
       const bankName = bankInfo ? bankInfo.split(' ')[0] : '미등록은행';
       const accountNumber = bankInfo ? bankInfo.split(' ').slice(1).join(' ') : '미등록계좌';
       
@@ -224,9 +224,11 @@ authRouter.post('/login', async (req: Request, res: Response) => {
         role: user.role,
         isAdultVerified: user.isAdultVerified,
         permissions: parsedPermissions,
+        creatorId: user.author?.id,
         authorId: user.author?.id,
         readingHistory: formattedReadingHistory,
         favorites: formattedFavorites,
+        subscribedCreators: formattedSubscribedAuthors,
         subscribedAuthors: formattedSubscribedAuthors
       }
     });
@@ -384,9 +386,11 @@ authRouter.get('/me', authenticateToken, async (req: AuthRequest, res: Response)
         role: user.role,
         phone: user.phone,
         isAdultVerified: user.isAdultVerified,
+        creator: user.author,
         author: user.author,
         readingHistory: formattedReadingHistory,
         favorites: formattedFavorites,
+        subscribedCreators: formattedSubscribedAuthors,
         subscribedAuthors: formattedSubscribedAuthors
       }
     });
@@ -442,28 +446,30 @@ authRouter.post('/reading-history', authenticateToken, async (req: AuthRequest, 
 });
 
 // ============================================================
-// [Route] POST /api/auth/subscribe-author
-// [Purpose] 작가 구독 토글 서버 DB 동기화
+// [Route] POST /api/auth/subscribe-creator & /api/auth/subscribe-author
+// [Purpose] 크리에이터/작가 구독 토글 서버 DB 동기화
 // ============================================================
-authRouter.post('/subscribe-author', authenticateToken, async (req: AuthRequest, res: Response) => {
+authRouter.post(['/subscribe-creator', '/subscribe-author'], authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const { authorName, authorId } = req.body;
+    const { authorName, creatorName, authorId, creatorId } = req.body;
+    const targetName = creatorName || authorName;
+    const targetId = creatorId || authorId;
 
-    if (!authorName && !authorId) {
-      return res.status(400).json({ error: 'authorName 또는 authorId가 필요합니다.' });
+    if (!targetName && !targetId) {
+      return res.status(400).json({ error: 'creatorName(authorName) 또는 creatorId(authorId)가 필요합니다.' });
     }
 
-    // 작가 조회
+    // 크리에이터/작가 조회
     let author = null;
-    if (authorId) {
-      author = await db.author.findUnique({ where: { id: String(authorId) } });
-    } else if (authorName) {
-      author = await db.author.findFirst({ where: { penName: String(authorName) } });
+    if (targetId) {
+      author = await db.author.findUnique({ where: { id: String(targetId) } });
+    } else if (targetName) {
+      author = await db.author.findFirst({ where: { penName: String(targetName) } });
     }
 
     if (!author) {
-      return res.json({ success: true, isSubscribed: true, message: '작가 구독이 등록되었습니다.' });
+      return res.json({ success: true, isSubscribed: true, message: '크리에이터 구독이 등록되었습니다.' });
     }
 
     const existing = await db.authorSubscription.findUnique({

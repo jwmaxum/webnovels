@@ -32,6 +32,7 @@ const SAMPLE_WORKS = [
   {
     id: 1,
     title: "폭풍의 여왕 서약",
+    creator: "판타지마스터",
     author: "판타지마스터",
     genre: "판타지",
     rating: "ALL",
@@ -45,6 +46,7 @@ const SAMPLE_WORKS = [
   {
     id: 2,
     title: "천마의 귀환",
+    creator: "무협의신",
     author: "무협의신",
     genre: "무협",
     rating: "ALL",
@@ -58,6 +60,7 @@ const SAMPLE_WORKS = [
   {
     id: 3,
     title: "금기의 계약",
+    creator: "나이트로즈",
     author: "나이트로즈",
     genre: "성인",
     rating: "AGE_19",
@@ -71,6 +74,7 @@ const SAMPLE_WORKS = [
   {
     id: 4,
     title: "황제의 유일한 후궁",
+    creator: "로맨스퀸",
     author: "로맨스퀸",
     genre: "로맨스",
     rating: "ALL",
@@ -84,6 +88,7 @@ const SAMPLE_WORKS = [
   {
     id: 5,
     title: "성간 항로: 마지막 항해사",
+    creator: "스페이스로그",
     author: "스페이스로그",
     genre: "SF",
     rating: "ALL",
@@ -97,6 +102,7 @@ const SAMPLE_WORKS = [
   {
     id: 6,
     title: "서울에 나타난 마왕",
+    creator: "도시마법사",
     author: "도시마법사",
     genre: "현대 판타지",
     rating: "ALL",
@@ -110,6 +116,7 @@ const SAMPLE_WORKS = [
   {
     id: 7,
     title: "죽은 자들의 학교",
+    creator: "공포작가",
     author: "공포작가",
     genre: "호러",
     rating: "ALL",
@@ -123,6 +130,7 @@ const SAMPLE_WORKS = [
   {
     id: 8,
     title: "검의 전설: 천하제일인",
+    creator: "검성",
     author: "검성",
     genre: "무협",
     rating: "ALL",
@@ -138,6 +146,7 @@ const SAMPLE_WORKS = [
   {
     id: 9,
     title: "[웹툰] 신의 기사단",
+    creator: "판타지마스터",
     author: "판타지마스터",
     genre: "판타지",
     rating: "ALL",
@@ -158,6 +167,7 @@ const SAMPLE_WORKS = [
   {
     id: 10,
     title: "[웹툰] 황후의 비밀 화원",
+    creator: "로맨스퀸",
     author: "로맨스퀸",
     genre: "로맨스",
     rating: "ALL",
@@ -206,16 +216,16 @@ const SAMPLE_READERS = [
 // [State] SAMPLE_AUTHORS (비상용 Fallback 시드 작가 - SSOT는 Supabase DB)
 // ------------------------------------------------------------
 const SAMPLE_AUTHORS = [
-  { id: 1, username: 'writer1', password_hash: '!12345', email: 'writer1@webnovels.com', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666', status: '공식 인증 작가' },
-  { id: 2, username: 'writer2', password_hash: '!12345', email: 'writer2@webnovels.com', pen_name: '무협의신', work_title: '천마의 귀환', birthdate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bank_info: '신한은행 110-222-333444', status: '공식 인증 작가' },
-  { id: 3, username: 'writer3', password_hash: '!12345', email: 'writer3@webnovels.com', pen_name: '나이트로즈', work_title: '금기의 계약', birthdate: '1992-08-12', address: '경기도 성남시 분당구 판교로 78', bank_info: '우리은행 1002-555-666777', status: '공식 인증 작가' },
-  { id: 4, username: 'writer4', password_hash: '!12345', email: 'writer4@webnovels.com', pen_name: '로맨스퀸', work_title: '황제의 유일한 후궁', birthdate: '1994-11-03', address: '서울특별시 마포구 월드컵북로 99', bank_info: '하나은행 222-333-444555', status: '공식 인증 작가' },
-  { id: 5, username: 'writer5', password_hash: '!12345', email: 'writer5@webnovels.com', pen_name: '스페이스로그', work_title: '성간 항로: 마지막 항해사', birthdate: '1988-03-30', address: '대전광역시 유성구 대학로 100', bank_info: '농협 301-777-888999', status: '공식 인증 작가' },
-  { id: 6, username: 'writer6', password_hash: '!12345', email: 'writer6@webnovels.com', pen_name: '도시마법사', work_title: '서울에 나타난 마왕', birthdate: '1995-07-07', address: '서울특별시 송파구 올림픽로 200', bank_info: '카카오뱅크 3333-01-234567', status: '공식 인증 작가' },
-  { id: 7, username: 'writer7', password_hash: '!12345', email: 'writer7@webnovels.com', pen_name: '공포작가', work_title: '죽은 자들의 학교', birthdate: '1991-10-31', address: '부산광역시 해운대구 센텀서로 30', bank_info: '기업은행 010-9999-8888', status: '공식 인증 작가' },
-  { id: 8, username: 'writer8', password_hash: '!12345', email: 'writer8@webnovels.com', pen_name: '검성', work_title: '검의 전설: 천하제일인', birthdate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bank_info: '대구은행 508-12-345678', status: '공식 인증 작가' },
-  { id: 9, username: 'writer9', password_hash: '!12345', email: 'writer9@webnovels.com', pen_name: '스튜디오노바', work_title: '[웹툰] 신의 기사단', birthdate: '1993-04-10', address: '서울특별시 마포구 독막로 50', bank_info: '국민은행 111-222-333444', status: '공식 인증 작가' },
-  { id: 10, username: 'writer10', password_hash: '!12345', email: 'writer10@webnovels.com', pen_name: '로즈코믹스', work_title: '[웹툰] 황후의 비밀 화원', birthdate: '1996-09-18', address: '서울특별시 강남구 학동로 20', bank_info: '신한은행 333-444-555666', status: '공식 인증 작가' }
+  { id: 1, username: 'creator1', password_hash: '!12345', email: 'creator1@webnovels.com', pen_name: '판타지마스터', work_title: '대적자: 신을 삼킨 기사', birthdate: '1990-01-15', address: '서울특별시 강남구 테헤란로 123', bank_info: '국민은행 999-888-777666', status: '공식 인증 작가' },
+  { id: 2, username: 'creator2', password_hash: '!12345', email: 'creator2@webnovels.com', pen_name: '무협의신', work_title: '천마의 귀환', birthdate: '1985-05-20', address: '서울특별시 서초구 반포대로 45', bank_info: '신한은행 110-222-333444', status: '공식 인증 작가' },
+  { id: 3, username: 'creator3', password_hash: '!12345', email: 'creator3@webnovels.com', pen_name: '나이트로즈', work_title: '금기의 계약', birthdate: '1992-08-12', address: '경기도 성남시 분당구 판교로 78', bank_info: '우리은행 1002-555-666777', status: '공식 인증 작가' },
+  { id: 4, username: 'creator4', password_hash: '!12345', email: 'creator4@webnovels.com', pen_name: '로맨스퀸', work_title: '황제의 유일한 후궁', birthdate: '1994-11-03', address: '서울특별시 마포구 월드컵북로 99', bank_info: '하나은행 222-333-444555', status: '공식 인증 작가' },
+  { id: 5, username: 'creator5', password_hash: '!12345', email: 'creator5@webnovels.com', pen_name: '스페이스로그', work_title: '성간 항로: 마지막 항해사', birthdate: '1988-03-30', address: '대전광역시 유성구 대학로 100', bank_info: '농협 301-777-888999', status: '공식 인증 작가' },
+  { id: 6, username: 'creator6', password_hash: '!12345', email: 'creator6@webnovels.com', pen_name: '도시마법사', work_title: '서울에 나타난 마왕', birthdate: '1995-07-07', address: '서울특별시 송파구 올림픽로 200', bank_info: '카카오뱅크 3333-01-234567', status: '공식 인증 작가' },
+  { id: 7, username: 'creator7', password_hash: '!12345', email: 'creator7@webnovels.com', pen_name: '공포작가', work_title: '죽은 자들의 학교', birthdate: '1991-10-31', address: '부산광역시 해운대구 센텀서로 30', bank_info: '기업은행 010-9999-8888', status: '공식 인증 작가' },
+  { id: 8, username: 'creator8', password_hash: '!12345', email: 'creator8@webnovels.com', pen_name: '검성', work_title: '검의 전설: 천하제일인', birthdate: '1987-12-25', address: '대구광역시 수성구 달구벌대로 500', bank_info: '대구은행 508-12-345678', status: '공식 인증 작가' },
+  { id: 9, username: 'creator9', password_hash: '!12345', email: 'creator9@webnovels.com', pen_name: '스튜디오노바', work_title: '[웹툰] 신의 기사단', birthdate: '1993-04-10', address: '서울특별시 마포구 독막로 50', bank_info: '국민은행 111-222-333444', status: '공식 인증 작가' },
+  { id: 10, username: 'creator10', password_hash: '!12345', email: 'creator10@webnovels.com', pen_name: '로즈코믹스', work_title: '[웹툰] 황후의 비밀 화원', birthdate: '1996-09-18', address: '서울특별시 강남구 학동로 20', bank_info: '신한은행 333-444-555666', status: '공식 인증 작가' }
 ];
 
 // ------------------------------------------------------------
@@ -228,7 +238,8 @@ let currentTheme = 'theme-dark';
 let currentFontSize = 18;
 let currentActiveView = 'view-home';
 let lastMainView = 'view-home';
-let currentLoggedAuthor = null;
+let currentLoggedCreator = null;
+let currentLoggedAuthor = currentLoggedCreator;
 
 // 독자 보유 포인트 상태 (기본 1,000P)
 let userPoints = parseInt(localStorage.getItem('webnovels_user_points') || '1000', 10);
@@ -314,21 +325,23 @@ function syncUserActivityToStorage(data) {
     }
   }
 
-  // 3. [Dual Persistence Merge] 구독작가 동기화
-  if (data.subscribedAuthors && Array.isArray(data.subscribedAuthors)) {
-    const remoteSubs = data.subscribedAuthors.map(String);
+  // 3. [Dual Persistence Merge] 구독 크리에이터 동기화
+  const incomingSubs = data.subscribedCreators || data.subscribedAuthors;
+  if (incomingSubs && Array.isArray(incomingSubs)) {
+    const remoteSubs = incomingSubs.map(String);
     let localSubs = [];
     try {
-      localSubs = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]').map(String);
+      localSubs = JSON.parse(localStorage.getItem('webnovels_subscribed_creators') || localStorage.getItem('webnovels_subscribed_authors') || '[]').map(String);
     } catch(e) {}
 
     // 합집합 머지
     const mergedSubs = Array.from(new Set([...remoteSubs, ...localSubs])).filter(Boolean);
+    localStorage.setItem('webnovels_subscribed_creators', JSON.stringify(mergedSubs));
     localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(mergedSubs));
 
-    // 로컬에만 있던 구독작가가 포함되어 원격보다 늘어난 경우 DB에 실시간 동기화
+    // 로컬에만 있던 구독 크리에이터가 포함되어 원격보다 늘어난 경우 DB에 실시간 동기화
     if (mergedSubs.length > remoteSubs.length && userIdent && window.WebNovelsAdmin?.updateReaderActivity) {
-      window.WebNovelsAdmin.updateReaderActivity(userIdent, { subscribedAuthors: mergedSubs });
+      window.WebNovelsAdmin.updateReaderActivity(userIdent, { subscribedCreators: mergedSubs, subscribedAuthors: mergedSubs });
     }
   }
 
@@ -348,7 +361,8 @@ if (typeof window !== 'undefined') {
   window.SAMPLE_WORKS = SAMPLE_WORKS;
   window.COMMENTS_STORE = COMMENTS_STORE;
   window.SAMPLE_READERS = SAMPLE_READERS;
-  window.SAMPLE_AUTHORS = SAMPLE_AUTHORS;
+  window.SAMPLE_CREATORS = SAMPLE_CREATORS;
+  window.SAMPLE_AUTHORS = SAMPLE_CREATORS;
   window.activeWork = activeWork;
   window.activeEpisodeId = activeEpisodeId;
   window.unlockedEpisodes = unlockedEpisodes;
@@ -356,7 +370,8 @@ if (typeof window !== 'undefined') {
   window.currentFontSize = currentFontSize;
   window.currentActiveView = currentActiveView;
   window.lastMainView = lastMainView;
-  window.currentLoggedAuthor = currentLoggedAuthor;
+  window.currentLoggedCreator = currentLoggedCreator;
+  window.currentLoggedAuthor = currentLoggedCreator;
   window.userPoints = userPoints;
   window.ACTION_QUEUE_ITEMS = ACTION_QUEUE_ITEMS;
   window.adminWorkFilterState = adminWorkFilterState;

@@ -215,8 +215,12 @@ workRouter.get('/:id', optionalAuthenticateToken, async (req: AuthRequest, res: 
     }
 
     return res.json({
-      work,
+      work: {
+        ...work,
+        creator: work.author
+      },
       isFavorite,
+      isSubscribedCreator: isSubscribedAuthor,
       isSubscribedAuthor
     });
   } catch (error: any) {

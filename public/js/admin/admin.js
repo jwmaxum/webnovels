@@ -66,6 +66,7 @@ window.handleAdminLoginProcess = async function() {
     const admin = result.admin || { id: idInput, username: idInput, nickname: idInput, role: 'SUPER_ADMIN' };
     
     // [중요] 기존 일반회원(독자/작가) 세션을 관리자 세션으로 완전히 덮어쓰기
+    localStorage.removeItem('webnovels_creator');
     localStorage.removeItem('webnovels_author');
     const adminEmail = admin.email || (idInput.includes('@') ? idInput : `${idInput}@webnovels.com`) || 'admin@webnovels.com';
     const adminNickname = admin.nickname || (admin.role === 'SUPER_ADMIN' ? '최고관리자' : (admin.username || idInput));
@@ -118,7 +119,8 @@ window.handleAdminLogoutProcess = function() {
   if (window.WebNovelsAdmin) window.WebNovelsAdmin.logout();
   localStorage.removeItem('webnovels_admin_token');
   localStorage.removeItem('webnovels_user');
-  localStorage.removeItem('webnovels_author');
+  localStorage.removeItem('webnovels_creator');
+    localStorage.removeItem('webnovels_author');
   localStorage.removeItem('webnovels_token');
   currentLoggedAuthor = null;
   window._isAdultVerified = false;
@@ -421,9 +423,9 @@ window.handleDeleteReader = async function() {
   }
 };
 
-// 등록 작가 (authors) 실시간 DB 로드 및 렌더링
-window.loadAdminAuthors = async function(forceRefresh = false) {
-  const container = document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-authors .card');
+// 등록 크리에이터 (creators) 실시간 DB 로드 및 렌더링
+window.loadAdminCreators = async function(forceRefresh = false) {
+  const container = document.getElementById('adminCreatorsContainer') || document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-creators .card') || document.querySelector('#adminTab-authors .card');
   if (!container) return;
 
   if (forceRefresh || SAMPLE_AUTHORS.length === 0) {
@@ -440,11 +442,11 @@ window.loadAdminAuthors = async function(forceRefresh = false) {
     }
   }
 
-  renderAuthorsAdminGrid();
+  if (typeof renderCreatorsAdminGrid === 'function') renderCreatorsAdminGrid(); else renderAuthorsAdminGrid();
 };
 
-window.renderAuthorsAdminGrid = function() {
-  const container = document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-authors .card');
+window.renderCreatorsAdminGrid = function() {
+  const container = document.getElementById('adminCreatorsContainer') || document.getElementById('adminAuthorsContainer') || document.querySelector('#adminTab-creators .card') || document.querySelector('#adminTab-authors .card');
   if (!container) return;
 
   if (!SAMPLE_AUTHORS || SAMPLE_AUTHORS.length === 0) {
@@ -576,7 +578,7 @@ window.handleRevenueCalculation = async function() {
   const periodMonth = document.getElementById('revPeriodMonth')?.value || '2026-08';
   const grossRev = Number(document.getElementById('revGrossRevenue')?.value || 0);
   const adFee = Number(document.getElementById('revAdNetworkFee')?.value || 0);
-  const poolRatio = Number(document.getElementById('revWriterPoolRatio')?.value || 0.625);
+  const poolRatio = Number((document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
 
   try {
     let res = null;
@@ -2072,7 +2074,7 @@ window.handleRevenueCalculation = async function() {
   const periodMonth = document.getElementById('revPeriodMonth')?.value;
   const grossRevenue = Number(document.getElementById('revGrossRevenue')?.value || 0);
   const adNetworkFee = Number(document.getElementById('revAdNetworkFee')?.value || 0);
-  const writerPoolRatio = Number(document.getElementById('revWriterPoolRatio')?.value || 0.625);
+  const writerPoolRatio = Number((document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
 
   const result = window.WebNovelsAdmin
     ? await window.WebNovelsAdmin.calculateRevenue(periodMonth, grossRevenue, adNetworkFee, writerPoolRatio)
@@ -2441,7 +2443,7 @@ window.loadDashboardKPIs = async function() {
     const elTotalWorks = document.getElementById('kpiTotalWorks');
     if (elTotalWorks) elTotalWorks.textContent = `${finalTotalWorks}`;
 
-    const elTotalAuthors = document.getElementById('kpiTotalAuthors');
+    const elTotalAuthors = document.getElementById('kpiTotalCreators') || document.getElementById('kpiTotalAuthors');
     if (elTotalAuthors) elTotalAuthors.textContent = `${finalTotalAuthors}`;
 
     const elTotalEpisodes = document.getElementById('kpiTotalEpisodes');
@@ -2515,7 +2517,8 @@ window.switchAdminSubTab = function(tabName, shouldPushState = true) {
   const permMap = {
     'dashboard': 'DASHBOARD',
     'users': 'USER_MGMT',
-    'authors': 'AUTHOR_MGMT',
+    'creators': 'CREATOR_MGMT',
+    'authors': 'CREATOR_MGMT',
     'works': 'WORK_MGMT',
     'episodes': 'EPISODE_MGMT',
     'actionqueue': 'CONTENT_REVIEW',
@@ -2581,8 +2584,9 @@ window.switchAdminSubTab = function(tabName, shouldPushState = true) {
     if (typeof loadDashboardKPIs === 'function') loadDashboardKPIs();
   } else if (tabName === 'users') {
     if (typeof loadAdminUsers === 'function') loadAdminUsers();
-  } else if (tabName === 'authors') {
-    if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
+  } else if (tabName === 'creators' || tabName === 'authors') {
+    if (typeof loadAdminCreators === 'function') loadAdminCreators();
+    else if (typeof loadAdminAuthors === 'function') loadAdminAuthors();
   } else if (tabName === 'works') {
     if (typeof renderAdminWorks === 'function') renderAdminWorks();
   } else if (tabName === 'episodes') {
@@ -2654,7 +2658,7 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
     // 1. 최신 당월 데이터 추출 및 상단 4대 KPI 갱신
     const currentMonthData = revenueEvents.length > 0 ? (revenueEvents.find(e => e.period_month === '2026-08') || revenueEvents[0]) : null;
     const grossEl = document.getElementById('analyticsGrossRev');
-    const writerEl = document.getElementById('analyticsWriterPool');
+    const writerEl = (document.getElementById('analyticsCreatorPool') || document.getElementById('analyticsWriterPool'));
     const platformEl = document.getElementById('analyticsPlatformRev');
 
     if (currentMonthData) {
@@ -3237,3 +3241,10 @@ if (typeof window !== 'undefined') {
   window.loadAdminEpisodeSummaryBar = loadAdminEpisodeSummaryBar;
   window.renderAdminCalendar = renderAdminCalendar;
 }
+
+
+// ============================================================
+// [Creator/Author Compatibility Bridge]
+// ============================================================
+window.loadAdminAuthors = window.loadAdminCreators || window.loadAdminAuthors;
+window.renderAuthorsAdminGrid = window.renderCreatorsAdminGrid || window.renderAuthorsAdminGrid;

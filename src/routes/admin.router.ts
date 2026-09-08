@@ -315,6 +315,7 @@ adminRouter.get('/dashboard', requirePermission('DASHBOARD'), async (req: AuthRe
     return res.json({
       kpi: {
         totalUsers,
+        totalCreators: totalAuthors,
         totalAuthors,
         totalWorks,
         totalEpisodes,
@@ -335,17 +336,20 @@ adminRouter.get('/dashboard', requirePermission('DASHBOARD'), async (req: AuthRe
 // ============================================================
 adminRouter.post('/revenue/calculate', requirePermission('AD_REVENUE'), async (req: AuthRequest, res: Response) => {
   try {
-    const { periodMonth, grossRevenue, adNetworkFee, writerPoolRatio } = req.body;
+    const { periodMonth, grossRevenue, adNetworkFee, writerPoolRatio, creatorPoolRatio } = req.body;
 
     if (!periodMonth || grossRevenue === undefined || adNetworkFee === undefined) {
       return res.status(400).json({ error: 'periodMonth, grossRevenue, adNetworkFee는 필수입니다.' });
     }
 
+    const activeRatio = creatorPoolRatio !== undefined ? Number(creatorPoolRatio) : (writerPoolRatio ? Number(writerPoolRatio) : 0.625);
+
     const result = await RevenueEngineService.calculateMonthlyRevenue(
       periodMonth,
       Number(grossRevenue),
       Number(adNetworkFee),
-      writerPoolRatio ? Number(writerPoolRatio) : 0.625
+      activeRatio,
+      activeRatio
     );
 
     return res.json({

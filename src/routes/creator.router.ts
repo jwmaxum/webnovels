@@ -64,14 +64,15 @@ creatorRouter.post('/register', authenticateToken, async (req: AuthRequest, res:
       }
     });
 
-    // User Role AUTHOR 변경
+    // User Role CREATOR 및 AUTHOR 변경
     await db.user.update({
       where: { id: userId },
-      data: { role: 'AUTHOR' }
+      data: { role: 'CREATOR' }
     });
 
     return res.status(201).json({
-      message: '작가 등록이 성공적으로 완료되었습니다.',
+      message: '크리에이터(작가) 등록이 성공적으로 완료되었습니다.',
+      creator: author,
       author
     });
   } catch (error: any) {
@@ -94,7 +95,7 @@ creatorRouter.get('/dashboard', authenticateToken, async (req: AuthRequest, res:
     });
 
     if (!author) {
-      return res.status(403).json({ error: '작가 등록이 필요합니다.' });
+      return res.status(403).json({ error: '크리에이터 등록이 필요합니다.' });
     }
 
     const revenueDashboard = await RevenueEngineService.getAuthorRevenueDashboard(author.id);
@@ -108,6 +109,10 @@ creatorRouter.get('/dashboard', authenticateToken, async (req: AuthRequest, res:
     }
 
     return res.json({
+      creator: {
+        id: author.id,
+        penName: author.penName
+      },
       author: {
         id: author.id,
         penName: author.penName

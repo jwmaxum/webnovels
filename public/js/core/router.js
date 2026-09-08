@@ -156,7 +156,8 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 5. 내 서재 경로 (/library 또는 /library/:tab)
   if (parts[0] === 'library' || hash === '#library') {
-    const subTab = parts[1] || 'continue'; // continue, favorites, authors
+    let subTab = parts[1] || 'continue'; // continue, favorites, creators
+    if (subTab === 'authors') subTab = 'creators';
     switchWebNovelsView('view-mypage', null, false);
     if (typeof openLibraryTabDirect === 'function') {
       openLibraryTabDirect(subTab, false);
@@ -185,7 +186,8 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 7. 관리자 CMS 경로 (/admin 또는 /admin/:sub)
   if (parts[0] === 'admin' || hash === '#admin') {
-    const subTab = parts[1] || 'dashboard';
+    let subTab = parts[1] || 'dashboard';
+    if (subTab === 'authors') subTab = 'creators';
     switchWebNovelsView('view-admin-cms', null, false);
     if (typeof switchAdminSubTab === 'function') {
       switchAdminSubTab(subTab, false);

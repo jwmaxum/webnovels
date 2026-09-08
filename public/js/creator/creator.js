@@ -24,11 +24,11 @@ window.switchCreatorTab = function(tabKey, shouldPushState = true) {
   if (window.lucide) window.lucide.createIcons();
 
   if (tabKey === 'ad-rev' || tabKey === 'sales-rev' || tabKey === 'settlements') {
-    const authorStr = localStorage.getItem('webnovels_author') || localStorage.getItem('webnovels_user');
+    const authorStr = localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author') || localStorage.getItem('webnovels_user');
     let aId = 1;
     try {
       const parsed = JSON.parse(authorStr || '{}');
-      aId = parsed.authorId || parsed.id || 1;
+      aId = parsed.creatorId || parsed.authorId || parsed.id || 1;
     } catch(e) {}
     if (typeof window.loadCreatorStudioEarnings === 'function') {
       window.loadCreatorStudioEarnings(aId);
@@ -69,7 +69,7 @@ window.toggleScheduledTimeInput = function(publishType) {
 window.fetchCreatorDashboardData = async function() {
   // 1. 세션에서 로그인된 작가 정보 확인
   let author = null;
-  const authorStr = localStorage.getItem('webnovels_author');
+  const authorStr = localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author');
   if (authorStr) {
     try {
       author = JSON.parse(authorStr);
@@ -82,7 +82,7 @@ window.fetchCreatorDashboardData = async function() {
     if (userStr) {
       try {
         const u = JSON.parse(userStr);
-        if (u.role === 'AUTHOR') {
+        if (u.role === 'CREATOR' || u.role === 'AUTHOR') {
           author = u;
         }
       } catch (e) {}
@@ -90,11 +90,15 @@ window.fetchCreatorDashboardData = async function() {
   }
 
   // 기본 작가 세션이 없으면 첫 번째 작가(writer1: 판타지마스터)로 기본 연결
-  if (!author && SAMPLE_AUTHORS.length > 0) {
-    author = SAMPLE_AUTHORS[0];
+  const sampleList = (typeof SAMPLE_CREATORS !== 'undefined' ? SAMPLE_CREATORS : SAMPLE_AUTHORS);
+  if (!author && sampleList && sampleList.length > 0) {
+    author = sampleList[0];
   }
 
+  currentLoggedCreator = author;
   currentLoggedAuthor = author;
+  window.currentLoggedCreator = author;
+  window.currentLoggedAuthor = author;
 
   if (!author) return;
 
@@ -114,9 +118,9 @@ window.fetchCreatorDashboardData = async function() {
   // 3. 해당 작가의 실제 DB 작품 필터링 (No Dummy Data)
   const authorPenName = author.pen_name || author.penName;
   const authorWorks = SAMPLE_WORKS.filter(w => 
-    w.author === authorPenName || 
+    (w.creator === authorPenName || w.author === authorPenName) || 
     (author.work_title && w.title === author.work_title) ||
-    Number(w.authorId) === Number(author.id)
+    Number(w.creatorId || w.authorId) === Number(author.id)
   );
 
   // 만약 필터 결과가 비어있으면 해당 작가의 대표작 1개 자동 매핑
@@ -389,9 +393,9 @@ window.fetchCreatorDashboardData = async function() {
 };
 
 async function handleCreatorSettlementReq(amountParam) {
-  let author = currentLoggedAuthor;
+  let author = currentLoggedCreator || currentLoggedAuthor;
   if (!author) {
-    const authorStr = localStorage.getItem('webnovels_author');
+    const authorStr = localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author');
     if (authorStr) {
       try { author = JSON.parse(authorStr); } catch (e) {}
     }
@@ -533,7 +537,8 @@ window.handleCreateEpisodeSubmit = async function(e) {
 // [Purpose] 작가가 출금 신청을 클릭했을 때 실제 DB(author_settlements)에 PENDING 상태로 INSERT하고 UI에 '신청중' 반영
 // ============================================================
 window.handleCreatorSettlementReq = async function(requestedAmount) {
-  const author = currentLoggedAuthor || SAMPLE_AUTHORS[0];
+  const sampleList = (typeof SAMPLE_CREATORS !== 'undefined' ? SAMPLE_CREATORS : SAMPLE_AUTHORS);
+  const author = currentLoggedCreator || currentLoggedAuthor || (sampleList ? sampleList[0] : null);
   const penName = author.pen_name || author.penName || author.username || '작가';
   const bankInfo = author.bank_info || author.bankInfo || '국민은행 999-888-777666';
 
@@ -662,6 +667,7 @@ if (typeof window !== 'undefined') {
   window.handleCreateEpisodeSubmit = handleCreateEpisodeSubmit;
   window.updateWorkSerialStatus = updateWorkSerialStatus;
   window.handleCreatorSettlementReq = handleCreatorSettlementReq;
-  window.handleAuthorLogoutProcess = handleAuthorLogoutProcess;
+  window.handleCreatorLogoutProcess = window.handleCreatorLogoutProcess || handleAuthorLogoutProcess;
+window.handleAuthorLogoutProcess = window.handleCreatorLogoutProcess;
   window.loadCreatorStudioEarnings = loadCreatorStudioEarnings;
 }

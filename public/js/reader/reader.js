@@ -459,7 +459,7 @@ function updateFavoriteButtons(workId) {
 async function toggleSubscribeAuthor(authorData) {
   try {
     const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name || authorData.name) : authorData) || '작자미상';
-    let subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
+    let subAuthors = JSON.parse((localStorage.getItem('webnovels_subscribed_creators') || localStorage.getItem('webnovels_subscribed_authors')) || '[]');
     let isSub = false;
 
     if (subAuthors.includes(authorName)) {
@@ -472,6 +472,7 @@ async function toggleSubscribeAuthor(authorData) {
       isSub = true;
     }
     
+    localStorage.setItem('webnovels_subscribed_creators', JSON.stringify(subAuthors));
     localStorage.setItem('webnovels_subscribed_authors', JSON.stringify(subAuthors));
     updateSubscribeButtons(authorName);
     renderLibraryContent(true);
@@ -507,7 +508,7 @@ window.toggleSubscribeAuthor = toggleSubscribeAuthor;
 
 function updateSubscribeButtons(authorData) {
   const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name || authorData.name) : authorData) || '작자미상';
-  const subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
+  const subAuthors = JSON.parse((localStorage.getItem('webnovels_subscribed_creators') || localStorage.getItem('webnovels_subscribed_authors')) || '[]');
   const isSubbed = subAuthors.includes(authorName);
   const btnSub = document.getElementById('btnDetailSubscribe');
 
@@ -577,10 +578,10 @@ window.openAuthorWorksDirect = function(authorName) {
 async function renderLibraryContent(skipRemote = false) {
   const continueContainer = document.getElementById('libraryContinueList');
   const favoriteContainer = document.getElementById('libraryFavoritesList');
-  const authorContainer = document.getElementById('libraryAuthorsList');
+  const authorContainer = document.getElementById('libraryCreatorsList') || document.getElementById('libraryAuthorsList');
   const statReadingEl = document.getElementById('statReadingCount');
   const statFavEl = document.getElementById('statFavoriteCount');
-  const statAuthorEl = document.getElementById('statAuthorCount');
+  const statAuthorEl = document.getElementById('statCreatorCount') || document.getElementById('statAuthorCount');
 
   let savedUser = null;
   try {
@@ -603,7 +604,7 @@ async function renderLibraryContent(skipRemote = false) {
 
   let subAuthors = [];
   try {
-    subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
+    subAuthors = JSON.parse((localStorage.getItem('webnovels_subscribed_creators') || localStorage.getItem('webnovels_subscribed_authors')) || '[]');
   } catch (e) {
     subAuthors = [];
   }
@@ -619,7 +620,7 @@ async function renderLibraryContent(skipRemote = false) {
         try {
           history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
           favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]').map(Number);
-          subAuthors = JSON.parse(localStorage.getItem('webnovels_subscribed_authors') || '[]');
+          subAuthors = JSON.parse((localStorage.getItem('webnovels_subscribed_creators') || localStorage.getItem('webnovels_subscribed_authors')) || '[]');
         } catch(e) {}
       }
     } catch (err) {
@@ -1254,7 +1255,8 @@ async function handleMemberLogin() {
           isAdminLoggedIn = true;
           closeAllModals();
           const admin = adminRes.admin;
-          localStorage.removeItem('webnovels_author');
+          localStorage.removeItem('webnovels_creator');
+  localStorage.removeItem('webnovels_author');
           const adminEmail = admin.email || (loginIdentifier.includes('@') ? loginIdentifier : `${loginIdentifier}@webnovels.com`);
           const adminNickname = admin.nickname || (admin.role === 'SUPER_ADMIN' ? '최고관리자' : (admin.username || loginIdentifier));
           
@@ -1293,13 +1295,14 @@ async function handleMemberLogin() {
             pen_name: author.pen_name || author.username,
             bio: author.bio || '',
             status: author.status || 'APPROVED',
-            role: 'AUTHOR'
+            role: 'CREATOR'
           };
-          localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
-          localStorage.setItem('webnovels_token', `author-${authorObj.id}`);
+          localStorage.setItem('webnovels_creator', JSON.stringify(authorObj));
+      localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
+          localStorage.setItem('webnovels_token', `creator-${authorObj.id}`);
           localStorage.removeItem('webnovels_user');
           
-          updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
+          updateMemberHeader({ ...authorObj, role: 'CREATOR' });
           closeAllModals();
           showToast(`✍️ 작가 로그인 성공! (${authorObj.pen_name} 작가님)`);
           switchWebNovelsView('view-creator');
@@ -1329,7 +1332,8 @@ async function handleMemberLogin() {
 
           localStorage.setItem('webnovels_user', JSON.stringify(userObj));
           localStorage.setItem('webnovels_token', `reader-${reader.id}`);
-          localStorage.removeItem('webnovels_author');
+          localStorage.removeItem('webnovels_creator');
+  localStorage.removeItem('webnovels_author');
 
           // Supabase DB에서 최신 활동 내역(독서이력, 관심작품, 구독작가) 즉시 조회 및 동기화
           if (window.WebNovelsAdmin?.fetchReaderActivity) {
@@ -1375,10 +1379,12 @@ async function handleMemberLogin() {
 window.handleMemberLogout = function() {
   localStorage.removeItem('webnovels_token');
   localStorage.removeItem('webnovels_user');
+  localStorage.removeItem('webnovels_creator');
   localStorage.removeItem('webnovels_author');
   localStorage.removeItem('webnovels_admin_token');
   localStorage.removeItem('webnovels_reading_history');
   localStorage.removeItem('webnovels_favorites');
+  localStorage.removeItem('webnovels_subscribed_creators');
   localStorage.removeItem('webnovels_subscribed_authors');
   isAdminLoggedIn = false;
   currentLoggedAuthor = null;
@@ -1555,7 +1561,8 @@ async function handleMemberSignup() {
       };
       localStorage.setItem('webnovels_token', data.token || `token-${userObj.id}`);
       localStorage.setItem('webnovels_user', JSON.stringify(userObj));
-      localStorage.removeItem('webnovels_author');
+      localStorage.removeItem('webnovels_creator');
+  localStorage.removeItem('webnovels_author');
 
       // Supabase readers 테이블 실시간 등록 동기화
       if (window.WebNovelsAdmin?.createReaderInDB) {
@@ -1622,6 +1629,7 @@ async function handleMemberSignup() {
 
   localStorage.setItem('webnovels_token', `token-${userObj.id}`);
   localStorage.setItem('webnovels_user', JSON.stringify(userObj));
+  localStorage.removeItem('webnovels_creator');
   localStorage.removeItem('webnovels_author');
 
   updateMemberHeader(userObj);
@@ -1666,11 +1674,12 @@ async function handleAuthorSignup() {
     status: '공식 인증 작가'
   };
 
-  localStorage.setItem('webnovels_token', `author-${authorObj.id}`);
-  localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
+  localStorage.setItem('webnovels_token', `creator-${authorObj.id}`);
+  localStorage.setItem('webnovels_creator', JSON.stringify(authorObj));
+      localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
   localStorage.removeItem('webnovels_user');
 
-  updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
+  updateMemberHeader({ ...authorObj, role: 'CREATOR' });
   closeAllModals();
   showToast(`✍️ ${penName} 작가님 회원가입이 완료되었습니다!`);
   switchWebNovelsView('view-creator');
@@ -1687,10 +1696,10 @@ function getCurrentAuthorSession() {
 
 async function loadMyProfile() {
   try {
-    const authorSession = getCurrentAuthorSession();
+    const authorSession = typeof getCurrentCreatorSession === 'function' ? getCurrentCreatorSession() : getCurrentAuthorSession();
     if (authorSession) {
       isAdminLoggedIn = false;
-      updateMemberHeader({ ...authorSession, role: 'AUTHOR' });
+      updateMemberHeader({ ...authorSession, role: 'CREATOR' });
       return;
     }
 
@@ -1747,7 +1756,7 @@ function updateMemberHeader(user) {
 
   if (user) {
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'SUB_ADMIN' || isAdminLoggedIn;
-    const isAuthor = !isAdmin && (user.role === 'AUTHOR' || !!user.pen_name);
+    const isAuthor = !isAdmin && ((user.role === 'CREATOR' || user.role === 'AUTHOR') || !!user.pen_name);
     const isReader = !isAdmin && !isAuthor;
 
     // [중요 요건] body data-user-role 속성 설정 (CSS Guard 및 JS 이중 보장)
@@ -2010,7 +2019,7 @@ window.handleSaveProfile = async function(event) {
   }
 
   try {
-    if (token && !token.startsWith('reader-token') && !token.startsWith('author-')) {
+    if (token && !token.startsWith('reader-token') && (!token.startsWith('creator-') && !token.startsWith('author-'))) {
       const res = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
@@ -2244,10 +2253,15 @@ if (typeof window !== 'undefined') {
   window.renderLibraryContent = renderLibraryContent;
   window.renderLibraryContinueList = renderLibraryContinueList;
   window.renderLibraryFavoritesList = renderLibraryFavoritesList;
-  window.renderLibraryAuthorsList = renderLibraryAuthorsList;
+  window.renderLibraryCreatorsList = renderLibraryAuthorsList;
+window.renderLibraryAuthorsList = renderLibraryAuthorsList;
   window.handleMemberLogin = handleMemberLogin;
   window.handleMemberSignup = handleMemberSignup;
-  window.handleAuthorSignup = handleAuthorSignup;
+  window.handleCreatorSignup = handleAuthorSignup;
+window.handleAuthorSignup = handleAuthorSignup;
+window.getCurrentCreatorSession = getCurrentCreatorSession;
+window.getCurrentAuthorSession = getCurrentCreatorSession;
+window.openCreatorWorksDirect = typeof openAuthorWorksDirect !== 'undefined' ? openAuthorWorksDirect : undefined;
   window.handleMemberLogout = typeof handleMemberLogout !== 'undefined' ? handleMemberLogout : undefined;
   window.handlePassAdultVerify = handlePassAdultVerify;
   window.loadMyProfile = loadMyProfile;

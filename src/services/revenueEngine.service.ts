@@ -29,11 +29,14 @@ export class RevenueEngineService {
     periodMonth: string,
     grossRevenue: number,
     adNetworkFee: number,
-    writerPoolRatio: number = 0.625
+    writerPoolRatio: number = 0.625,
+    creatorPoolRatio?: number
   ) {
+    const activePoolRatio = creatorPoolRatio !== undefined ? creatorPoolRatio : writerPoolRatio;
     const netRevenue = Math.max(0, grossRevenue - adNetworkFee);
-    const writerPool = netRevenue * writerPoolRatio;
-    const platformRevenue = netRevenue - writerPool;
+    const creatorPool = netRevenue * activePoolRatio;
+    const writerPool = creatorPool;
+    const platformRevenue = netRevenue - creatorPool;
 
     // 1. RevenueEvent 기록 생성 또는 업데이트
     const revenueEvent = await db.revenueEvent.create({
@@ -42,8 +45,8 @@ export class RevenueEngineService {
         grossRevenue,
         adNetworkFee,
         netRevenue,
-        writerPoolRatio,
-        writerPool,
+        writerPoolRatio: activePoolRatio,
+        writerPool: creatorPool,
         platformRevenue,
         isClosed: false
       }
@@ -104,7 +107,9 @@ export class RevenueEngineService {
     return {
       revenueEvent,
       totalWorksProcessed: works.length,
+      creatorPool,
       writerPool,
+      creatorRevenuesCount: authorRevenues.length,
       authorRevenuesCount: authorRevenues.length
     };
   }
@@ -257,6 +262,18 @@ export class RevenueEngineService {
       amount,
       status: 'PENDING'
     };
+  }
+
+  static async getCreatorRevenueDashboard(creatorId: string) {
+    return this.getAuthorRevenueDashboard(creatorId);
+  }
+
+  static async requestCreatorSettlementSecure(
+    creatorId: string,
+    amount: number,
+    accountSnapshot: { bankName: string; accountNumber: string; accountHolder: string }
+  ) {
+    return this.requestAuthorSettlementSecure(creatorId, amount, accountSnapshot);
   }
 }
 

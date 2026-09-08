@@ -979,7 +979,7 @@ async function allocateRevenue(periodMonth = '2026-08') {
       await supabaseClient.from('author_earnings').insert(earningsRows).catch(() => {});
     }
 
-    return { success: true, period: revPeriod, writerPool };
+    return { success: true, period: revPeriod, creatorPool: writerPool, writerPool };
   } catch (err) {
     console.error('[allocateRevenue Error]', err);
     return { success: false, error: err.message };
@@ -1366,7 +1366,8 @@ async function fetchReaderActivity(identifier) {
       subscription_status: reader.subscription_status || '일반 회원',
       readingHistory,
       favorites,
-      subscribedAuthors
+      subscribedAuthors,
+      subscribedCreators: subscribedAuthors
     };
   } catch (err) {
     console.error('[fetchReaderActivity Error]', err);
@@ -1397,7 +1398,8 @@ async function updateReaderActivity(identifier, activityData) {
     const updatePayload = {};
     if (activityData.readingHistory !== undefined) updatePayload.reading_history = activityData.readingHistory;
     if (activityData.favorites !== undefined) updatePayload.favorites = activityData.favorites;
-    if (activityData.subscribedAuthors !== undefined) updatePayload.subscribed_authors = activityData.subscribedAuthors;
+    const subsToUpdate = activityData.subscribedCreators !== undefined ? activityData.subscribedCreators : activityData.subscribedAuthors;
+    if (subsToUpdate !== undefined) updatePayload.subscribed_authors = subsToUpdate;
     if (activityData.isAdultVerified !== undefined) updatePayload.is_adult_verified = !!activityData.isAdultVerified;
     if (activityData.nickname !== undefined) updatePayload.nickname = activityData.nickname;
 
@@ -2236,8 +2238,10 @@ window.WebNovelsAdmin = {
   getCurrentAdmin,
   readerLogin,
   authorLogin,
+  creatorLogin: authorLogin,
   fetchReadersFromSupabase,
   fetchAuthorsFromSupabase,
+  fetchCreatorsFromSupabase: fetchAuthorsFromSupabase,
   fetchReaderActivity,
   updateReaderActivity,
   updateReaderProfileInDB,
@@ -2264,8 +2268,11 @@ window.WebNovelsAdmin = {
   confirmRevenue,
   fetchRevenueEvents,
   fetchAuthorEarnings,
+  fetchCreatorEarnings: fetchAuthorEarnings,
   fetchAuthorSettlements,
+  fetchCreatorSettlements: fetchAuthorSettlements,
   fetchAuthorRevenueSummary,
+  fetchCreatorRevenueSummary: fetchAuthorRevenueSummary,
   requestSettlementSecure,
   approveSettlementSecure,
   fetchPendingSettlements,

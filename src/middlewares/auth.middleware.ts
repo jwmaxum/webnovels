@@ -85,6 +85,13 @@ export function requireRole(roles: string[]) {
     if (roles.includes('ADMIN') && (req.user.role === 'SUPER_ADMIN' || req.user.role === 'SUB_ADMIN')) {
       return next();
     }
+    // CREATOR 및 AUTHOR 상호 호환 통과
+    if (roles.includes('CREATOR') && req.user.role === 'AUTHOR') {
+      return next();
+    }
+    if (roles.includes('AUTHOR') && req.user.role === 'CREATOR') {
+      return next();
+    }
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: '접근 권한이 없습니다.' });
     }

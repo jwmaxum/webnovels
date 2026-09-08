@@ -121,16 +121,17 @@ function bindWebNovelsEvents() {
     if (typeof handleMemberSignup === 'function') handleMemberSignup();
   });
 
-  document.getElementById('authForm-signup-author')?.addEventListener('submit', (event) => {
+  (document.getElementById('authForm-signup-creator') || document.getElementById('authForm-signup-author'))?.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (typeof handleAuthorSignup === 'function') handleAuthorSignup();
+    if (typeof handleCreatorSignup === 'function') handleCreatorSignup();
+    else if (typeof handleAuthorSignup === 'function') handleAuthorSignup();
   });
 
   document.getElementById('btnCheckNickname')?.addEventListener('click', () => {
     if (typeof checkNicknameDuplicate === 'function') checkNicknameDuplicate();
   });
 
-  document.getElementById('btnCheckAuthorPenName')?.addEventListener('click', () => {
+  (document.getElementById('btnCheckCreatorPenName') || document.getElementById('btnCheckAuthorPenName'))?.addEventListener('click', () => {
     if (typeof checkAuthorPenNameDuplicate === 'function') checkAuthorPenNameDuplicate();
   });
 
@@ -458,9 +459,16 @@ async function initWebNovelsApp() {
           SAMPLE_READERS.length = 0;
           SAMPLE_READERS.push(...localData.readers);
         }
-        if (localData.authors) {
-          SAMPLE_AUTHORS.length = 0;
-          SAMPLE_AUTHORS.push(...localData.authors);
+        if (localData.creators || localData.authors) {
+          const cList = localData.creators || localData.authors;
+          if (typeof SAMPLE_CREATORS !== 'undefined') {
+            SAMPLE_CREATORS.length = 0;
+            SAMPLE_CREATORS.push(...cList);
+          }
+          if (typeof SAMPLE_AUTHORS !== 'undefined') {
+            SAMPLE_AUTHORS.length = 0;
+            SAMPLE_AUTHORS.push(...cList);
+          }
         }
         if (typeof renderHomeWorks === 'function') renderHomeWorks();
         if (typeof renderDiscoverWorks === 'function') renderDiscoverWorks();
@@ -491,10 +499,17 @@ async function initWebNovelsApp() {
         SAMPLE_READERS.length = 0;
         SAMPLE_READERS.push(...remoteReaders);
       }
-      const remoteAuthors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
-      if (remoteAuthors && remoteAuthors.length > 0) {
-        SAMPLE_AUTHORS.length = 0;
-        SAMPLE_AUTHORS.push(...remoteAuthors);
+      const fetchCreators = window.WebNovelsAdmin.fetchCreatorsFromSupabase || window.WebNovelsAdmin.fetchAuthorsFromSupabase;
+      const remoteCreators = await fetchCreators();
+      if (remoteCreators && remoteCreators.length > 0) {
+        if (typeof SAMPLE_CREATORS !== 'undefined') {
+          SAMPLE_CREATORS.length = 0;
+          SAMPLE_CREATORS.push(...remoteCreators);
+        }
+        if (typeof SAMPLE_AUTHORS !== 'undefined') {
+          SAMPLE_AUTHORS.length = 0;
+          SAMPLE_AUTHORS.push(...remoteCreators);
+        }
       }
     } catch(err) {}
   }
@@ -544,12 +559,16 @@ async function initWebNovelsApp() {
     }
   });
 
-  window.addEventListener('webnovels:authors-changed', async (e) => {
-    console.log('[Event-Driven Realtime] authors-changed 이벤트 수신 -> 작가 목록 UI 동기화');
-    if (typeof loadAdminAuthors === 'function') {
+  const onCreatorsChanged = async () => {
+    console.log('[Event-Driven Realtime] creators-changed 이벤트 수신 -> 크리에이터 목록 UI 동기화');
+    if (typeof loadAdminCreators === 'function') {
+      await loadAdminCreators(true);
+    } else if (typeof loadAdminAuthors === 'function') {
       await loadAdminAuthors(true);
     }
-  });
+  };
+  window.addEventListener('webnovels:creators-changed', onCreatorsChanged);
+  window.addEventListener('webnovels:authors-changed', onCreatorsChanged);
 
   // 로그인 프로필 세션 복원 및 헤더 동기화
   if (typeof loadMyProfile === 'function') await loadMyProfile();
