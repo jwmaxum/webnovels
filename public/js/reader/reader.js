@@ -2012,13 +2012,12 @@ async function handleMemberLogin() {
           if (window.ReaderPreferencesManager) {
             window.ReaderPreferencesManager.syncRemote(reader.username || reader.email || reader.id);
           }
-            syncUserActivityToStorage({
-              readingHistory: reader.reading_history || [],
-              favorites: reader.favorites || [],
-              subscribedAuthors: reader.subscribed_authors || [],
-              isAdultVerified: reader.is_adult_verified
-            });
-          }
+          syncUserActivityToStorage({
+            readingHistory: reader.reading_history || [],
+            favorites: reader.favorites || [],
+            subscribedAuthors: reader.subscribed_authors || [],
+            isAdultVerified: reader.is_adult_verified
+          });
 
           updateMemberHeader(userObj);
           renderLibraryContent();
@@ -2030,6 +2029,58 @@ async function handleMemberLogin() {
       } catch (rErr) {
         console.warn('[Reader Login Check]', rErr);
       }
+    }
+
+    // 4. 백엔드 REST API 로그인 시도 (/api/auth/login)
+    try {
+      const apiRes = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginIdentifier, username: loginIdentifier, password })
+      });
+      if (apiRes.ok) {
+        const apiData = await apiRes.json();
+        if (apiData?.user) {
+          const user = apiData.user;
+          localStorage.setItem('webnovels_token', apiData.token || `token-${user.id}`);
+          if (user.role === 'AUTHOR' || user.role === 'CREATOR') {
+            const authorObj = {
+              id: user.author?.id || user.id,
+              username: user.username,
+              email: user.email,
+              pen_name: user.author?.penName || user.nickname || user.username,
+              role: 'AUTHOR'
+            };
+            localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
+            localStorage.setItem('webnovels_creator', JSON.stringify(authorObj));
+            localStorage.removeItem('webnovels_user');
+            updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
+            closeAllModals();
+            showToast(`✍️ 작가 로그인 성공! (${authorObj.pen_name} 작가님)`);
+            switchWebNovelsView('view-creator');
+            return;
+          } else {
+            const userObj = {
+              id: user.id,
+              username: user.username,
+              nickname: user.nickname || user.username,
+              email: user.email,
+              role: 'READER'
+            };
+            localStorage.setItem('webnovels_user', JSON.stringify(userObj));
+            localStorage.removeItem('webnovels_creator');
+            localStorage.removeItem('webnovels_author');
+            updateMemberHeader(userObj);
+            renderLibraryContent();
+            closeAllModals();
+            showToast(`🎉 ${userObj.nickname}님 환영합니다! 로그인되었습니다.`);
+            switchWebNovelsView('view-mypage');
+            return;
+          }
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[Backend Auth Login Check]', apiErr);
     }
 
     showToast('❌ 아이디 또는 비밀번호가 일치하지 않거나 등록되지 않은 계정입니다.');

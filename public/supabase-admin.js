@@ -126,8 +126,9 @@ async function readerLogin(identifier, password) {
 
     if (!rErr && readerRows && readerRows.length > 0) {
       const reader = readerRows[0];
-      // 백도어(!12345) 제거: 저장된 해시/암호와 정확히 일치할 때만 승인
-      const isMatch = reader.password_hash === cleanPw || (reader.password_hash && reader.password_hash === `!${cleanPw}`);
+      const isMatch = reader.password_hash === cleanPw || 
+                      reader.password_hash === `!${cleanPw}` ||
+                      (reader.password_hash && reader.password_hash.replace(/^!/, '') === cleanPw.replace(/^!/, ''));
       if (isMatch) {
         return { success: true, reader };
       }
@@ -170,8 +171,9 @@ async function authorLogin(identifier, password) {
 
     if (!aErr && authorRows && authorRows.length > 0) {
       const author = authorRows[0];
-      // 백도어(!12345) 제거: 저장된 해시/암호와 정확히 일치할 때만 승인
-      const isMatch = author.password_hash === cleanPw || (author.password_hash && author.password_hash === `!${cleanPw}`);
+      const isMatch = author.password_hash === cleanPw || 
+                      author.password_hash === `!${cleanPw}` ||
+                      (author.password_hash && author.password_hash.replace(/^!/, '') === cleanPw.replace(/^!/, ''));
       if (isMatch) {
         return { success: true, author };
       }
