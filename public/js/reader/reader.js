@@ -203,15 +203,21 @@ async function renderHomeWorks() {
       }).join('');
     }
 
-    // 3. ✨ 새로운 작품
+    // 3. ✨ 새로운 작품 (가장 최근 작가가 등록한 최신 신작 우선 정렬)
     const newWorksContainer = document.getElementById('newWorksGrid');
     if (newWorksContainer) {
-      const news = SAMPLE_WORKS.filter(isNew);
+      const sortedByNewest = [...SAMPLE_WORKS].sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.created_at || 0).getTime() || Number(a.id) || 0;
+        const timeB = new Date(b.createdAt || b.created_at || 0).getTime() || Number(b.id) || 0;
+        return timeB - timeA;
+      });
+
+      const news = sortedByNewest.filter(isNew);
       const new4 = news.length >= 4 
         ? news.slice(0, 4) 
-        : [...news, ...SAMPLE_WORKS.filter(w => !isNew(w))].slice(0, 4);
+        : [...news, ...sortedByNewest.filter(w => !isNew(w))].slice(0, 4);
 
-      newWorksContainer.innerHTML = (new4.length > 0 ? new4 : SAMPLE_WORKS.slice(0, 4)).map(w => {
+      newWorksContainer.innerHTML = (new4.length > 0 ? new4 : sortedByNewest.slice(0, 4)).map(w => {
         return renderCdgWorkCardHtml(w, { badge: 'NEW' });
       }).join('');
     }
