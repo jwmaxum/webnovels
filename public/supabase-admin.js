@@ -765,12 +765,19 @@ async function createWorkInDB(workData) {
   }
 }
 
-async function updateWorkAdminSetting(workId, updateData) {
+async function updateWorkAdminSetting(workId, fieldOrData, optionalValue) {
+  if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient) return { success: false, error: 'DB 미연동' };
   try {
+    let payload = {};
+    if (typeof fieldOrData === 'string') {
+      payload = { [fieldOrData]: optionalValue };
+    } else if (typeof fieldOrData === 'object' && fieldOrData !== null) {
+      payload = fieldOrData;
+    }
     const { data, error } = await supabaseClient
       .from('works')
-      .update(updateData)
+      .update(payload)
       .eq('id', Number(workId));
     if (error) throw error;
     return { success: true, data };

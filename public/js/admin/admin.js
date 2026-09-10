@@ -906,6 +906,8 @@ async function renderAdminWorks() {
       : `<span class="badge badge-outline" style="font-size:0.7rem; padding: 2px 5px;">소설</span>`;
     const authorName = (typeof w.author === 'object' ? w.author?.penName : w.author) || '작자미상';
     const curStatus = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
+    const isTop = !!(w.isTopRecommended || w.is_top_recommended);
+    const isPop = !!(w.isPopularWork || w.is_popular_work);
 
     // Status Badge & Selector
     const statusBadge = getStatusBadgeHtml(curStatus);
@@ -949,6 +951,16 @@ async function renderAdminWorks() {
               <option value="PAUSED" ${curStatus === 'PAUSED' ? 'selected' : ''}>⚫ 휴재</option>
               <option value="COMPLETED" ${curStatus === 'COMPLETED' ? 'selected' : ''}>🔵 완결</option>
             </select>
+          </div>
+        </td>
+        <td style="padding: 10px 12px; text-align: center;">
+          <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+            <button class="btn ${isTop ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="toggleWorkCurationFlag(${w.id}, 'is_top_recommended', ${!isTop})" style="font-size: 0.72rem; padding: 2px 6px; white-space: nowrap;" title="실시간 추천 TOP 5 배정">
+              🔥 추천 ${isTop ? 'ON' : 'OFF'}
+            </button>
+            <button class="btn ${isPop ? 'btn-accent' : 'btn-outline'} btn-sm" onclick="toggleWorkCurationFlag(${w.id}, 'is_popular_work', ${!isPop})" style="font-size: 0.72rem; padding: 2px 6px; white-space: nowrap;" title="지금 가장 많이 읽는 작품 배정">
+              ⭐ 인기 ${isPop ? 'ON' : 'OFF'}
+            </button>
           </div>
         </td>
         <td style="padding: 10px 12px; font-size: 0.82rem; color: var(--text-secondary);">${nextEpDate}</td>
@@ -1817,6 +1829,34 @@ async function toggleAdminSetting(workId, field, value) {
     showToast('설정 변경에 실패했습니다.');
   }
 }
+
+window.toggleWorkCurationFlag = async function(workId, flagName, newValue) {
+  try {
+    let success = false;
+    if (window.WebNovelsAdmin?.updateWorkAdminSetting) {
+      const res = await window.WebNovelsAdmin.updateWorkAdminSetting(workId, flagName, newValue);
+      if (res?.success) success = true;
+    }
+
+    if (success) {
+      const target = SAMPLE_WORKS.find(w => w.id == workId);
+      if (target) {
+        target[flagName] = newValue;
+        if (flagName === 'is_top_recommended') target.isTopRecommended = newValue;
+        if (flagName === 'is_popular_work') target.isPopularWork = newValue;
+      }
+      const label = flagName === 'is_top_recommended' ? '실시간 추천 TOP 5' : '지금 가장 많이 읽는 작품';
+      showToast(`✨ [${target?.title || workId}] ${label} 상태가 ${newValue ? '배정(ON)' : '해제(OFF)'}되었습니다. (DB 반영)`);
+      renderAdminWorks();
+      if (typeof renderHomeWorks === 'function') renderHomeWorks();
+    } else {
+      showToast('⚠️ 큐레이션 설정 저장에 실패했습니다.');
+    }
+  } catch (err) {
+    console.error('[toggleWorkCurationFlag Error]', err);
+    showToast('⚠️ 오류가 발생했습니다: ' + err.message);
+  }
+};
 
 function renderDiscoverWorks(genreFilter = 'ALL') {
   const container = document.getElementById('discoverWorksGrid');
@@ -3253,6 +3293,7 @@ if (typeof window !== 'undefined') {
   window.loadAdminEvents = loadAdminEvents;
   window.loadAdminEpisodeSummaryBar = loadAdminEpisodeSummaryBar;
   window.renderAdminCalendar = renderAdminCalendar;
+  window.toggleWorkCurationFlag = toggleWorkCurationFlag;
 }
 
 
