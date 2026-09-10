@@ -616,6 +616,36 @@ if (typeof window !== 'undefined') {
           console.log('⚡ [Realtime UI] Settlements 갱신 수신:', payload.eventType);
           if (typeof window.loadSettlementsList === 'function') window.loadSettlementsList();
           if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
+          if (typeof window.fetchCreatorDashboardData === 'function') window.fetchCreatorDashboardData();
+        },
+        onSupportsChange: (payload) => {
+          console.log('⚡ [Realtime UI] Creator Supports 갱신 수신:', payload.eventType);
+          const activeWorkElem = document.getElementById('workTopSupportersList');
+          if (activeWorkElem && typeof window.renderWorkTopSupporters === 'function') {
+            const currentWorkId = window._currentReadingWorkId || (window.activeWorkDetail && window.activeWorkDetail.id) || 1;
+            window.renderWorkTopSupporters(currentWorkId);
+          }
+          if (typeof window.loadCreatorEarningLedger === 'function') {
+            window.loadCreatorEarningLedger();
+          }
+          if (typeof window.fetchCreatorDashboardData === 'function') {
+            window.fetchCreatorDashboardData();
+          }
+        },
+        onLedgerChange: (payload) => {
+          console.log('⚡ [Realtime UI] Earning Ledger 갱신 수신:', payload.eventType);
+          if (typeof window.loadCreatorEarningLedger === 'function') {
+            window.loadCreatorEarningLedger();
+          }
+          if (typeof window.fetchCreatorDashboardData === 'function') {
+            window.fetchCreatorDashboardData();
+          }
+        },
+        onCommentsChange: (payload) => {
+          console.log('⚡ [Realtime UI] Comments 갱신 수신:', payload.eventType);
+          if (typeof window.loadEpisodeComments === 'function' && window._currentReadingWorkId && window._currentReadingEpNum) {
+            window.loadEpisodeComments(window._currentReadingWorkId, window._currentReadingEpNum);
+          }
         },
         onReportsChange: (payload) => {
           console.log('⚡ [Realtime UI] Reports 갱신 수신:', payload.eventType);

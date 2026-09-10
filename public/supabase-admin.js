@@ -2049,13 +2049,25 @@ function setupRealtimeSubscriptions(callbacks = {}) {
         console.log('⚡ [Realtime] author_settlements 변경:', payload.eventType);
         if (typeof callbacks.onSettlementsChange === 'function') callbacks.onSettlementsChange(payload);
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'creator_supports' }, payload => {
+        console.log('⚡ [Realtime] creator_supports 변경:', payload.eventType);
+        if (typeof callbacks.onSupportsChange === 'function') callbacks.onSupportsChange(payload);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'earning_ledger' }, payload => {
+        console.log('⚡ [Realtime] earning_ledger 변경:', payload.eventType);
+        if (typeof callbacks.onLedgerChange === 'function') callbacks.onLedgerChange(payload);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, payload => {
+        console.log('⚡ [Realtime] comments 변경:', payload.eventType);
+        if (typeof callbacks.onCommentsChange === 'function') callbacks.onCommentsChange(payload);
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, payload => {
         console.log('⚡ [Realtime] reports 변경:', payload.eventType);
         if (typeof callbacks.onReportsChange === 'function') callbacks.onReportsChange(payload);
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('⚡ [Realtime] Supabase WebSocket 채널 연결 완료');
+          console.log('⚡ [Realtime] Supabase WebSocket 채널 연결 완료 (7대 핵심 테이블 실시간 감지)');
         }
       });
   } catch (err) {
@@ -2453,43 +2465,15 @@ async function fetchWorkTopSupporters(workId) {
     aggregated[key].count += 1;
   }
 
-  let list = Object.values(aggregated);
-  if (list.length === 0) {
-    list = [
-      { displayName: '별빛서재', totalPoints: 35000, count: 5, isAnonymous: false },
-      { displayName: '황금독자', totalPoints: 22000, count: 3, isAnonymous: false },
-      { displayName: '익명의 후원자', totalPoints: 15000, count: 2, isAnonymous: true },
-      { displayName: '소설매니아', totalPoints: 8000, count: 2, isAnonymous: false },
-      { displayName: '달빛나그네', totalPoints: 5000, count: 1, isAnonymous: false }
-    ];
-  } else {
-    list.sort((a, b) => b.totalPoints - a.totalPoints);
-  }
-
+  const list = Object.values(aggregated);
+  list.sort((a, b) => b.totalPoints - a.totalPoints);
   return list.slice(0, 5);
 }
 
 async function fetchAuthorEarningLedger(authorId) {
-  try {
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-    if (token) {
-      const res = await fetch('/api/creator/ledger', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json && Array.isArray(json.ledger) && json.ledger.length > 0) {
-          const localLedger = JSON.parse(localStorage.getItem('creator_local_ledger') || '[]');
-          const combined = [...localLedger, ...json.ledger];
-          combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          return combined;
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('[fetchAuthorEarningLedger API call]', err);
-  }
+  let ledgerEntries = [];
 
+  // 1. Supabase earning_ledger 테이블 실제 데이터 직접 조회
   if (!supabaseClient) initSupabaseAdmin();
   if (supabaseClient && authorId) {
     try {
@@ -2498,9 +2482,9 @@ async function fetchAuthorEarningLedger(authorId) {
         .select('*')
         .eq('author_id', Number(authorId))
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
       if (!error && data && data.length > 0) {
-        return data.map(r => ({
+        ledgerEntries = data.map(r => ({
           id: r.id,
           createdAt: r.created_at,
           workTitle: `작품 #${r.work_id || '-'}`,
@@ -2516,52 +2500,30 @@ async function fetchAuthorEarningLedger(authorId) {
     }
   }
 
-  const localLedger = JSON.parse(localStorage.getItem('creator_local_ledger') || '[]');
-  const now = new Date();
-  const sampleLedger = [
-    {
-      id: 'demo-led-1',
-      createdAt: new Date(now.getTime() - 3600000 * 2).toISOString(),
-      workTitle: '환생한 대마법사의 현대 라이프',
-      sourceType: 'SUPPORT',
-      amount: 5000,
-      currency: 'POINT',
-      status: 'CONFIRMED',
-      description: '독자 후원: 별빛서재 (5,000P) - "항상 잘 보고 있습니다!"'
-    },
-    {
-      id: 'demo-led-2',
-      createdAt: new Date(now.getTime() - 86400000).toISOString(),
-      workTitle: '환생한 대마법사의 현대 라이프',
-      sourceType: 'AD',
-      amount: 42800,
-      currency: 'KRW',
-      status: 'ESTIMATED',
-      description: '일일 광고 시청 정산 풀 배분 (1,240회 리워드 뷰)'
-    },
-    {
-      id: 'demo-led-3',
-      createdAt: new Date(now.getTime() - 86400000 * 3).toISOString(),
-      workTitle: '심연을 걷는 그림자 검성',
-      sourceType: 'POINT_SALE',
-      amount: 18500,
-      currency: 'KRW',
-      status: 'CONFIRMED',
-      description: '최신 유료 선독점 회차 열람 포인트 매출'
-    },
-    {
-      id: 'demo-led-4',
-      createdAt: new Date(now.getTime() - 86400000 * 10).toISOString(),
-      workTitle: '정산 출금',
-      sourceType: 'SETTLEMENT',
-      amount: -150000,
-      currency: 'KRW',
-      status: 'SETTLED',
-      description: '신한은행 계좌 이체 완료 (정산 처리완료)'
+  // 2. 서버 백엔드 API 호출 데이터와 병합
+  try {
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (token) {
+      const res = await fetch('/api/creator/ledger', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && Array.isArray(json.ledger) && json.ledger.length > 0) {
+          const ids = new Set(ledgerEntries.map(e => e.id));
+          json.ledger.forEach(item => {
+            if (!ids.has(item.id)) ledgerEntries.push(item);
+          });
+        }
+      }
     }
-  ];
+  } catch (err) {
+    console.warn('[fetchAuthorEarningLedger API call]', err);
+  }
 
-  const combined = [...localLedger, ...sampleLedger];
+  // 3. 로컬 브라우저 세션에서 방금 발생한 후원 내역 병합
+  const localLedger = JSON.parse(localStorage.getItem('creator_local_ledger') || '[]');
+  const combined = [...localLedger, ...ledgerEntries];
   combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return combined;
 }

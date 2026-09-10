@@ -1089,36 +1089,7 @@ window.loadCreatorReaderAnalyticsVisuals = async function(selectedWorkId = null)
   const localEvents = JSON.parse(localStorage.getItem(`reader_events_work_${currentWorkId}`) || '[]');
   let combinedEvents = [...localEvents, ...rawEvents];
 
-  // 표본이 적은 경우 안정적인 데모 모델 합성 (기획서: 왜곡 방지 및 시각적 통찰 제공)
-  const isSampleEstimated = combinedEvents.length < 10;
-  if (isSampleEstimated) {
-    const now = Date.now();
-    const demoEvents = [];
-    const baseReaders = [100, 82, 68, 54, 46, 38]; // 1~6화 점진적 잔존 곡선
-    episodes.forEach((ep, idx) => {
-      const count = baseReaders[idx] || Math.max(10, 30 - idx * 4);
-      for (let i = 0; i < count; i++) {
-        const timeOffset = (i * 3600000 * 3) + (idx * 1800000);
-        demoEvents.push({
-          episode_id: ep.id || ep.episodeNumber,
-          event_type: 'OPEN',
-          progress: 10,
-          occurred_at: new Date(now - timeOffset).toISOString()
-        });
-        if (Math.random() < 0.72) {
-          demoEvents.push({
-            episode_id: ep.id || ep.episodeNumber,
-            event_type: 'COMPLETE',
-            progress: 100,
-            occurred_at: new Date(now - timeOffset + 300000).toISOString()
-          });
-        }
-      }
-    });
-    combinedEvents = demoEvents;
-  }
-
-  // 3. 상단 핵심 KPI 계산
+  // 3. 상단 핵심 KPI 계산 (Supabase DB reader_events 실제 데이터 기반)
   const openEvents = combinedEvents.filter(e => e.event_type === 'OPEN');
   const completeEvents = combinedEvents.filter(e => e.event_type === 'COMPLETE');
   const completionRate = openEvents.length > 0 ? Math.round((completeEvents.length / openEvents.length) * 100) : 0;
@@ -1135,9 +1106,7 @@ window.loadCreatorReaderAnalyticsVisuals = async function(selectedWorkId = null)
   if (elProg) elProg.textContent = `${avgProgress}%`;
   if (elCount) elCount.textContent = `${combinedEvents.length.toLocaleString()}건`;
   if (elSampleText) {
-    elSampleText.textContent = isSampleEstimated
-      ? '신규 연재 예측치 (실제 표본 축적중)'
-      : `실제 이벤트 ${combinedEvents.length}건 정밀 집계`;
+    elSampleText.textContent = `Supabase DB 실제 이벤트 ${combinedEvents.length}건 정밀 집계`;
   }
 
   // 4. 3대 분석 시각화 차트 렌더링
