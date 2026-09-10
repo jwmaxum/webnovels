@@ -177,12 +177,16 @@ function bindWebNovelsEvents() {
   });
 
   // Genre Filter Pills Event (Discover View)
-  document.querySelectorAll('.filter-pills .pill').forEach(pill => {
+  document.querySelectorAll('#discoverGenreFilters .pill').forEach(pill => {
     pill.addEventListener('click', () => {
-      document.querySelectorAll('.filter-pills .pill').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('#discoverGenreFilters .pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
       const genreText = pill.textContent.trim();
-      if (typeof renderDiscoverWorks === 'function') renderDiscoverWorks(genreText);
+      if (typeof window.setDiscoverGenreFilter === 'function') {
+        window.setDiscoverGenreFilter(genreText, pill);
+      } else if (typeof renderDiscoverWorks === 'function') {
+        renderDiscoverWorks(genreText);
+      }
     });
   });
 

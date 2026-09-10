@@ -217,7 +217,7 @@
         <section class="cdg-section" id="goldenBestSection">
           <div class="cdg-section-head">
             <h2 class="cdg-section-title">🌟 Golden Best · 신인 첫걸음</h2>
-            <span class="text-muted" style="font-size:.78rem;">최근 24시간 반응 기준 · 1~15화 작품</span>
+            <span class="golden-best-badge-note" title="누적 조회수 몰아주기가 아닌 최근 24시간 독자 반응(정독률, 관심, 유효댓글) 품질 기반 알고리즘"><i data-lucide="sparkles" style="width:12px;height:12px;display:inline;"></i> 반응 품질 기반 추천 (투명 알고리즘) · 1~15화 신작</span>
           </div>
           <div class="cdg-scroll-row" id="goldenBestWorksGrid"></div>
         </section>
@@ -313,23 +313,99 @@
           </div>
 
           <!-- Genre Filter Pills -->
-          <div class="filter-pills mb-6">
-            <button class="pill active">전체</button>
-            <button class="pill">판타지</button>
-            <button class="pill">로맨스 판타지</button>
-            <button class="pill">현대 판타지</button>
-            <button class="pill">무협</button>
-            <button class="pill">19+ 성인</button>
+          <div class="filter-pills mb-4" id="discoverGenreFilters">
+            <button type="button" class="pill active" onclick="setDiscoverGenreFilter('ALL', this)">전체</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('판타지', this)">판타지</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('로맨스 판타지', this)">로맨스 판타지</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('현대 판타지', this)">현대 판타지</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('무협', this)">무협</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('19+ 성인', this)">19+ 성인</button>
           </div>
 
-          <div class="filter-pills mb-6" id="discoverTagFilters" aria-label="세부 태그 필터">
-            <button class="pill" data-discover-tag="regression" onclick="toggleDiscoverTag('regression')">#회귀</button>
-            <button class="pill" data-discover-tag="possession" onclick="toggleDiscoverTag('possession')">#빙의</button>
-            <button class="pill" data-discover-tag="reincarnation" onclick="toggleDiscoverTag('reincarnation')">#환생</button>
-            <button class="pill" data-discover-tag="misunderstanding" onclick="toggleDiscoverTag('misunderstanding')">#착각계</button>
-            <button class="pill" data-discover-tag="catharsis" onclick="toggleDiscoverTag('catharsis')">#사이다</button>
-            <button class="pill" data-discover-tag="academy" onclick="toggleDiscoverTag('academy')">#아카데미</button>
-            <button class="pill" data-discover-tag="professional" onclick="toggleDiscoverTag('professional')">#전문직</button>
+          <!-- Comprehensive Multi-dimensional Filter Dashboard (improve3.md) -->
+          <div class="discover-filter-dashboard glass-panel mb-6" id="discoverFilterDashboard">
+            <div class="filter-dashboard-header">
+              <div class="filter-dashboard-title">
+                <i data-lucide="sliders-horizontal" class="icon-indigo"></i>
+                <span class="font-bold">상세 검색 필터</span>
+                <span class="results-counter" id="discoverResultsCount">총 0개 작품</span>
+              </div>
+              <div class="filter-dashboard-actions">
+                <button type="button" class="btn btn-sm btn-ghost" id="btnResetDiscoverFilters" onclick="resetDiscoverFilters()">
+                  <i data-lucide="rotate-ccw"></i> 필터 초기화
+                </button>
+              </div>
+            </div>
+
+            <div class="filter-dashboard-body">
+              <!-- Filter Row 1: Status & Episode Range & Age Rating & Sort -->
+              <div class="filter-row">
+                <div class="filter-group">
+                  <span class="filter-label">연재 상태</span>
+                  <div class="filter-segmented" id="filterStatusGroup">
+                    <button type="button" class="filter-chip active" data-status="ALL" onclick="setDiscoverStatus('ALL', this)">전체</button>
+                    <button type="button" class="filter-chip" data-status="ONGOING" onclick="setDiscoverStatus('ONGOING', this)">연재중</button>
+                    <button type="button" class="filter-chip" data-status="COMPLETED" onclick="setDiscoverStatus('COMPLETED', this)">완결</button>
+                  </div>
+                </div>
+
+                <div class="filter-group">
+                  <span class="filter-label">회차 수</span>
+                  <div class="filter-segmented" id="filterEpRangeGroup">
+                    <button type="button" class="filter-chip active" data-eprange="ALL" onclick="setDiscoverEpisodeRange('ALL', this)">전체</button>
+                    <button type="button" class="filter-chip" data-eprange="1-25" onclick="setDiscoverEpisodeRange('1-25', this)">단편 (1~25화)</button>
+                    <button type="button" class="filter-chip" data-eprange="26-100" onclick="setDiscoverEpisodeRange('26-100', this)">중편 (26~100화)</button>
+                    <button type="button" class="filter-chip" data-eprange="101+" onclick="setDiscoverEpisodeRange('101+', this)">장편 (101화+)</button>
+                  </div>
+                </div>
+
+                <div class="filter-group">
+                  <span class="filter-label">연령 등급</span>
+                  <div class="filter-segmented" id="filterRatingGroup">
+                    <button type="button" class="filter-chip active" data-rating="ALL" onclick="setDiscoverRating('ALL', this)">전체</button>
+                    <button type="button" class="filter-chip" data-rating="ALL_AGES" onclick="setDiscoverRating('ALL_AGES', this)">전체이용가</button>
+                    <button type="button" class="filter-chip" data-rating="AGE_15" onclick="setDiscoverRating('AGE_15', this)">15세 이상</button>
+                    <button type="button" class="filter-chip" data-rating="AGE_19" onclick="setDiscoverRating('AGE_19', this)">19세 이상</button>
+                  </div>
+                </div>
+
+                <div class="filter-group filter-group-sort">
+                  <span class="filter-label">정렬 기준</span>
+                  <select id="selectDiscoverSort" class="filter-sort-select" onchange="setDiscoverSortOrder(this.value)">
+                    <option value="latest">최신순</option>
+                    <option value="popular">인기순 (추천순)</option>
+                    <option value="views">누적 조회순</option>
+                    <option value="episodes">회차 많은순</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Filter Row 2: Tag Multi-Select Filters -->
+              <div class="filter-row filter-tags-row">
+                <div class="filter-tags-header">
+                  <span class="filter-label">키워드 태그 (다중 선택 교집합 AND)</span>
+                  <span class="text-muted small" id="activeTagsCounter">선택된 태그: 0개</span>
+                </div>
+                <div class="filter-tag-chips-wrap" id="discoverTagFilters" aria-label="세부 태그 필터">
+                  <button type="button" class="filter-tag-pill" data-discover-tag="regression" onclick="toggleDiscoverTag('regression')">#회귀</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="possession" onclick="toggleDiscoverTag('possession')">#빙의</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="reincarnation" onclick="toggleDiscoverTag('reincarnation')">#환생</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="misunderstanding" onclick="toggleDiscoverTag('misunderstanding')">#착각계</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="catharsis" onclick="toggleDiscoverTag('catharsis')">#사이다</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="academy" onclick="toggleDiscoverTag('academy')">#아카데미</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="professional" onclick="toggleDiscoverTag('professional')">#전문직</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="system" onclick="toggleDiscoverTag('system')">#시스템</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="hunter" onclick="toggleDiscoverTag('hunter')">#헌터</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="growth" onclick="toggleDiscoverTag('growth')">#성장</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="romance" onclick="toggleDiscoverTag('romance')">#로맨스</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="martial-arts" onclick="toggleDiscoverTag('martial-arts')">#무협</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="modern-fantasy" onclick="toggleDiscoverTag('modern-fantasy')">#현대판타지</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="healing" onclick="toggleDiscoverTag('healing')">#힐링</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="revenge" onclick="toggleDiscoverTag('revenge')">#복수</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="game" onclick="toggleDiscoverTag('game')">#게임빙의</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="works-grid" id="discoverWorksGrid">
@@ -377,6 +453,21 @@
                   <i data-lucide="heart-handshake"></i> 작가 응원하기
                 </button>
               </div>
+            </div>
+          </div>
+
+          <!-- Top Supporters Wall Widget (improve5.md) -->
+          <div class="work-supporters-section mt-8 mb-6 card glass-panel p-6" id="workTopSupportersWidget" style="border-radius:12px; border:1px solid var(--border-color); background:rgba(255,255,255,0.02);">
+            <div class="flex-between mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.15rem;">
+                <i data-lucide="trophy" style="color:var(--accent-amber, #F59E0B);"></i> 이 작품의 명예의 전당 (Top Supporters)
+              </h3>
+              <button class="btn btn-outline btn-sm" onclick="supportActiveWork()" style="font-size:0.82rem; padding:5px 12px;">
+                <i data-lucide="heart-handshake"></i> 나도 응원하기
+              </button>
+            </div>
+            <div class="top-supporters-list" id="workTopSupportersList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;">
+              <div class="p-3 text-center text-muted small">서포터즈 목록을 불러오고 있습니다...</div>
             </div>
           </div>
 
@@ -586,8 +677,17 @@
                   <div class="creator-editor-toolbar" aria-label="원고 작성 도구">
                     <span id="creatorWordCount" class="creator-word-count">공백 포함 0자 · 제외 0자 · 0문단</span>
                     <span class="creator-word-goal" aria-label="권장 분량">권장 4,500~5,500자</span>
-                    <button type="button" class="btn btn-ghost btn-sm" id="btnSaveDraftVersion"><i data-lucide="bookmark-plus"></i> 버전 저장</button>
-                    <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreDraftVersion"><i data-lucide="history"></i> 버전 복구</button>
+                    <div class="creator-editor-actions">
+                      <div class="creator-format-group" role="group" aria-label="서식 정돈 도구">
+                        <button type="button" class="btn btn-ghost btn-sm btn-format-tool" id="btnFormatIndent" title="각 문단 첫머리 들여쓰기 정돈"><i data-lucide="indent"></i> 들여쓰기</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-format-tool" id="btnFormatDialogue" title="대화문 앞뒤 빈 줄 정돈"><i data-lucide="message-square"></i> 대화문</button>
+                        <button type="button" class="btn btn-ghost btn-sm btn-format-tool" id="btnFormatClean" title="다중 빈 줄 및 줄끝 공백 정리"><i data-lucide="sparkles"></i> 공백 정리</button>
+                      </div>
+                      <div class="creator-version-group" role="group" aria-label="버전 이력 도구">
+                        <button type="button" class="btn btn-ghost btn-sm" id="btnSaveDraftVersion"><i data-lucide="bookmark-plus"></i> 버전 저장</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreDraftVersion"><i data-lucide="history"></i> 버전 비교·복구</button>
+                      </div>
+                    </div>
                   </div>
                   <div class="creator-word-progress" aria-hidden="true"><span id="creatorWordProgress"></span></div>
                   <textarea id="newEpContent" rows="16" class="form-input creator-editor-textarea" placeholder="웹소설 원고 본문 내용을 입력하거나, 웹툰의 경우 이미지 URL을 쉼표로 입력하세요." required></textarea>
@@ -637,29 +737,84 @@
             </div>
           </div>
 
-          <!-- Tab 4: Reader Statistics (독자통계) -->
+          <!-- Tab 4: Reader Statistics & Deep Analytics (improve6.md) -->
           <div class="creator-tab-panel" id="creatorTab-stats" style="display: none;">
-            <div class="grid-3-col gap-4 mb-4" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
-              <div class="card glass-panel p-4 text-center">
-                <div class="text-muted small">평균 완독률</div>
-                <h2 id="creatorCompletionRate" style="color:var(--cdg-pink); margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
-                <small class="text-muted">전체 연재 회차 기준</small>
+            <!-- Analytics Controls & Reliability Notice -->
+            <div class="card glass-panel p-4 mb-4" style="border-radius:10px;">
+              <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <i data-lucide="line-chart" style="color:var(--cdg-pink);"></i>
+                  <span style="font-weight:700; color:#fff;">분석 대상 작품:</span>
+                  <select id="creatorAnalyticsWorkSelect" onchange="loadCreatorReaderAnalyticsVisuals(this.value)" class="form-input" style="padding:6px 12px; font-size:0.88rem; background:#1C1C22; color:#fff; border-radius:8px; border:1px solid var(--border-color); min-width:220px;">
+                    <!-- Dynamically populated works -->
+                  </select>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadCreatorReaderAnalyticsVisuals(document.getElementById('creatorAnalyticsWorkSelect')?.value)" style="font-size:0.8rem;">
+                  <i data-lucide="refresh-cw"></i> 통계 새로고침
+                </button>
               </div>
-              <div class="card glass-panel p-4 text-center">
-                <div class="text-muted small">평균 체류시간</div>
-                <h2 id="creatorAverageProgress" style="color:#38BDF8; margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
-                <small class="text-muted">회차당 평균 독서시간</small>
-              </div>
-              <div class="card glass-panel p-4 text-center">
-                <div class="text-muted small">구독 팬 수</div>
-                <h2 id="creatorAnalyticsEvents" style="color:#10B981; margin:6px 0; font-size:1.8rem; font-weight:800;">0건</h2>
-                <small class="text-muted">작가 알림 구독자</small>
+              <div class="mt-2 text-muted" style="font-size:0.75rem; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="info" style="width:14px; height:14px; color:var(--text-muted);"></i>
+                <span>※ 본 분석은 독자 이벤트 로그에 기반한 상관관계 지표이며 인과관계를 단정하지 않습니다. 표본 10건 이상 축적 시 유효 백분율 산출</span>
               </div>
             </div>
-            <div class="card glass-panel p-6">
-              <h3><i data-lucide="trending-up" class="icon-indigo"></i> 회차별 독자 반응 및 열람 추이</h3>
-              <div id="creatorEpisodeAnalytics" style="margin-top:16px; padding:20px; background:rgba(0,0,0,0.3); border-radius:12px; text-align:center;">
-                <p class="text-muted">독자 이벤트가 쌓이면 회차별 완독·진행 추이가 표시됩니다.</p>
+
+            <!-- Top Summary KPI Grid -->
+            <div class="grid-3-col gap-4 mb-4" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+              <div class="card glass-panel p-4 text-center" style="border-radius:10px;">
+                <div class="text-muted small">평균 완독률 (Completion)</div>
+                <h2 id="creatorCompletionRate" style="color:var(--cdg-pink); margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
+                <small class="text-muted" id="creatorCompletionSampleText">유효 열람 대비 완독 비율</small>
+              </div>
+              <div class="card glass-panel p-4 text-center" style="border-radius:10px;">
+                <div class="text-muted small">평균 스크롤 진행률 (Depth)</div>
+                <h2 id="creatorAverageProgress" style="color:#38BDF8; margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
+                <small class="text-muted">회차당 평균 스크롤 도달도</small>
+              </div>
+              <div class="card glass-panel p-4 text-center" style="border-radius:10px;">
+                <div class="text-muted small">총 독서 이벤트 로그</div>
+                <h2 id="creatorAnalyticsEvents" style="color:#10B981; margin:6px 0; font-size:1.8rem; font-weight:800;">0건</h2>
+                <small class="text-muted">열람·진행·완독 수집 표본</small>
+              </div>
+            </div>
+
+            <!-- 1. Reading Funnel Chart (독서 퍼널: 1화 유입 -> 3화 -> 5화 -> 최신화) -->
+            <div class="card glass-panel p-6 mb-4" id="creatorFunnelCard" style="border-radius:12px;">
+              <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.1rem;">
+                  <i data-lucide="filter" style="color:var(--accent-amber, #F59E0B);"></i> 연재 독서 퍼널 및 잔존율 (Reading Retention Funnel)
+                </h3>
+                <span class="text-muted small">1화 진입 독자의 단계별 잔존 현황</span>
+              </div>
+              <p class="text-muted small mb-4">독자가 어느 구간에서 대량 이탈하는지 파악하여 초반 몰입도 개선 포인트를 발견할 수 있습니다.</p>
+              <div id="creatorFunnelContainer" style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Dynamically rendered horizontal funnel steps -->
+              </div>
+            </div>
+
+            <!-- 2. Episode-by-Episode Completion List & Killer Episode Highlight -->
+            <div class="card glass-panel p-6 mb-4" id="creatorEpisodeAnalyticsCard" style="border-radius:12px;">
+              <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.1rem;">
+                  <i data-lucide="trending-up" class="icon-indigo"></i> 회차별 완독률 및 이탈 분석 (Episode Retention Heatmap)
+                </h3>
+                <span class="text-muted small">완독률 80% 이상 회차 = <span style="color:#F43F5E; font-weight:700;">🔥 킬러 회차</span></span>
+              </div>
+              <div id="creatorEpisodeAnalyticsTable" style="overflow-x:auto;">
+                <!-- Dynamically rendered episode progress rows -->
+              </div>
+            </div>
+
+            <!-- 3. Recent 7 Days Reader Activity Timeline -->
+            <div class="card glass-panel p-6" id="creatorActivityTimelineCard" style="border-radius:12px;">
+              <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.1rem;">
+                  <i data-lucide="calendar-clock" style="color:#10B981;"></i> 최근 7일 독서 활동 추이 (Daily Activity Timeline)
+                </h3>
+                <span class="text-muted small">일별 열람(Open) 및 완독(Complete) 추이</span>
+              </div>
+              <div id="creatorTimelineActivity" style="display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:180px; padding:20px 10px 10px; background:rgba(0,0,0,0.25); border-radius:10px; border:1px solid var(--border-color);">
+                <!-- Dynamically rendered activity bars -->
               </div>
             </div>
           </div>
@@ -729,7 +884,7 @@
             </div>
 
             <!-- Settlement History Table -->
-            <div class="card glass-panel p-6">
+            <div class="card glass-panel p-6 mb-4">
               <div class="flex-between mb-3">
                 <h3 style="margin: 0;"><i data-lucide="history"></i> 정산 신청 및 지급 이력</h3>
                 <span class="text-muted small">실시간 DB 연동 정산 내역</span>
@@ -737,6 +892,48 @@
               <div id="creatorSettlementsHistory">
                 <div class="p-4 text-center text-muted">
                   <span class="spinner-border spinner-border-sm mr-2"></span>정산 신청 내역을 조회하고 있습니다...
+                </div>
+              </div>
+            </div>
+
+            <!-- Transparent Revenue Ledger Card (improve5.md) -->
+            <div class="card glass-panel p-6" id="creatorLedgerCard">
+              <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="receipt" style="color:var(--cdg-pink);"></i> 투명한 수익 발생 상세 원장 (Earning Ledger)
+                  </h3>
+                  <span class="text-muted small">광고, 회차 판매, 독자 후원 및 정산 지급 내역의 위변조 방지 원장</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadCreatorEarningLedger(true)" style="font-size:0.8rem;">
+                  <i data-lucide="refresh-cw"></i> 원장 새로고침
+                </button>
+              </div>
+
+              <!-- Ledger Source Filters -->
+              <div class="ledger-filter-bar mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:rgba(0,0,0,0.25); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
+                <div class="ledger-type-buttons" style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-xs btn-primary ledger-filter-btn active" data-source="ALL" onclick="filterCreatorLedger('ALL')">전체</button>
+                  <button type="button" class="btn btn-xs btn-outline ledger-filter-btn" data-source="AD" onclick="filterCreatorLedger('AD')">광고 수익</button>
+                  <button type="button" class="btn btn-xs btn-outline ledger-filter-btn" data-source="SUPPORT" onclick="filterCreatorLedger('SUPPORT')">독자 후원</button>
+                  <button type="button" class="btn btn-xs btn-outline ledger-filter-btn" data-source="POINT_SALE" onclick="filterCreatorLedger('POINT_SALE')">포인트 판매</button>
+                  <button type="button" class="btn btn-xs btn-outline ledger-filter-btn" data-source="SETTLEMENT" onclick="filterCreatorLedger('SETTLEMENT')">정산 출금</button>
+                </div>
+                <div class="ledger-status-select" style="display:flex; align-items:center; gap:6px;">
+                  <span class="text-muted small">상태:</span>
+                  <select id="creatorLedgerStatusFilter" onchange="filterCreatorLedgerStatus(this.value)" class="form-input" style="padding:4px 8px; font-size:0.8rem; background:#1C1C22; color:#fff; border-radius:6px; border:1px solid var(--border-color);">
+                    <option value="ALL">전체 상태</option>
+                    <option value="CONFIRMED">CONFIRMED (확정)</option>
+                    <option value="ESTIMATED">ESTIMATED (예상)</option>
+                    <option value="SETTLED">SETTLED (지급완료)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Ledger Table Container -->
+              <div id="creatorLedgerContainer" style="overflow-x:auto;">
+                <div class="p-4 text-center text-muted">
+                  <span class="spinner-border spinner-border-sm mr-2"></span>수익 원장 내역을 조회하고 있습니다...
                 </div>
               </div>
             </div>
@@ -1766,20 +1963,67 @@
           <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body" style="gap:16px;">
+          <!-- 1. 독서 배경 테마 (4종) -->
           <div class="form-group">
             <label class="small text-muted mb-2 block font-bold">독서 배경 테마</label>
-            <div class="theme-selector-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
-              <button class="theme-btn theme-dark active" onclick="setReaderTheme('theme-dark')">다크 블랙</button>
-              <button class="theme-btn theme-sepia" onclick="setReaderTheme('theme-sepia')">세피아</button>
-              <button class="theme-btn theme-light" onclick="setReaderTheme('theme-light')">화이트</button>
+            <div class="theme-selector-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
+              <button type="button" class="theme-btn theme-dark active" data-theme="theme-dark" onclick="window.ReaderPreferencesManager?.setTheme('theme-dark')">다크</button>
+              <button type="button" class="theme-btn theme-oled" data-theme="theme-oled" onclick="window.ReaderPreferencesManager?.setTheme('theme-oled')">OLED 블랙</button>
+              <button type="button" class="theme-btn theme-sepia" data-theme="theme-sepia" onclick="window.ReaderPreferencesManager?.setTheme('theme-sepia')">세피아</button>
+              <button type="button" class="theme-btn theme-light" data-theme="theme-light" onclick="window.ReaderPreferencesManager?.setTheme('theme-light')">화이트</button>
             </div>
           </div>
+
+          <!-- 2. 본문 글꼴 계열 (명조 / 고딕) -->
+          <div class="form-group">
+            <label class="small text-muted mb-2 block font-bold">본문 서체 (글꼴)</label>
+            <div class="pref-btn-group" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <button type="button" class="btn btn-outline pref-btn active" data-font="serif" onclick="window.ReaderPreferencesManager?.setFontFamily('serif')">
+                <i data-lucide="book-open" style="width:14px;height:14px;"></i> 가독 명조 (Serif)
+              </button>
+              <button type="button" class="btn btn-outline pref-btn" data-font="sans" onclick="window.ReaderPreferencesManager?.setFontFamily('sans')">
+                <i data-lucide="type" style="width:14px;height:14px;"></i> 깔끔 고딕 (Sans)
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. 본문 글자 크기 (14px ~ 26px) -->
           <div class="form-group">
             <label class="small text-muted mb-2 block font-bold">본문 글자 크기</label>
             <div class="font-size-control" style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);">
-              <button class="btn btn-outline btn-sm" onclick="changeFontSize(-2)" style="width:44px; height:36px; font-weight:800;">A-</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.ReaderPreferencesManager?.changeFontSize(-2)" style="width:44px; height:36px; font-weight:800;">A-</button>
               <span id="fontSizeDisplay" style="font-weight:800; font-size:1.1rem; color:var(--cdg-pink);">18px</span>
-              <button class="btn btn-outline btn-sm" onclick="changeFontSize(2)" style="width:44px; height:36px; font-weight:800;">A+</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.ReaderPreferencesManager?.changeFontSize(2)" style="width:44px; height:36px; font-weight:800;">A+</button>
+            </div>
+          </div>
+
+          <!-- 4. 줄간격 (Line Height: 1.5, 1.8, 2.2) -->
+          <div class="form-group">
+            <label class="small text-muted mb-2 block font-bold">본문 줄간격</label>
+            <div class="pref-btn-group" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+              <button type="button" class="btn btn-outline pref-btn" data-line-height="1.5" onclick="window.ReaderPreferencesManager?.setLineHeight(1.5)">좁게 (1.5)</button>
+              <button type="button" class="btn btn-outline pref-btn active" data-line-height="1.8" onclick="window.ReaderPreferencesManager?.setLineHeight(1.8)">보통 (1.8)</button>
+              <button type="button" class="btn btn-outline pref-btn" data-line-height="2.2" onclick="window.ReaderPreferencesManager?.setLineHeight(2.2)">넓게 (2.2)</button>
+            </div>
+          </div>
+
+          <!-- 5. 좌우 여백 (Horizontal Padding: 12px, 20px, 36px) -->
+          <div class="form-group">
+            <label class="small text-muted mb-2 block font-bold">본문 좌우 여백</label>
+            <div class="pref-btn-group" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+              <button type="button" class="btn btn-outline pref-btn" data-padding="12" onclick="window.ReaderPreferencesManager?.setPaddingX(12)">화면 가득</button>
+              <button type="button" class="btn btn-outline pref-btn active" data-padding="20" onclick="window.ReaderPreferencesManager?.setPaddingX(20)">기본 여백</button>
+              <button type="button" class="btn btn-outline pref-btn" data-padding="36" onclick="window.ReaderPreferencesManager?.setPaddingX(36)">여유 있게</button>
+            </div>
+          </div>
+
+          <!-- 6. 문단 간격 (Paragraph Gap: 0.8em, 1.2em, 1.6em) -->
+          <div class="form-group">
+            <label class="small text-muted mb-2 block font-bold">문단 사이 간격</label>
+            <div class="pref-btn-group" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+              <button type="button" class="btn btn-outline pref-btn" data-gap="0.8" onclick="window.ReaderPreferencesManager?.setParagraphGap(0.8)">밀착</button>
+              <button type="button" class="btn btn-outline pref-btn active" data-gap="1.2" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.2)">표준</button>
+              <button type="button" class="btn btn-outline pref-btn" data-gap="1.6" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.6)">여유</button>
             </div>
           </div>
         </div>
@@ -2302,6 +2546,31 @@
               </select>
             </div>
             <div class="form-group mb-3">
+              <div class="tag-input-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <label style="margin: 0;">작품 태그 <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(표준 태그 권장, 최대 10개)</span></label>
+                <span class="text-muted small" id="workTagCountText">0/10</span>
+              </div>
+              <input type="hidden" id="adminNewWorkTags" name="tags" value="">
+              <div class="tag-input-container" id="workTagInputContainer">
+                <div class="tag-chips-box" id="workTagChips"></div>
+                <input type="text" id="workTagSearchInput" class="tag-search-input" placeholder="태그 입력 또는 아래 퀵태그 선택 (예: 회귀, 사이다, 아카데미...)">
+                <div class="tag-autocomplete-dropdown hidden" id="tagAutocompleteDropdown"></div>
+              </div>
+              <div class="quick-tag-suggestions" id="quickTagSuggestions">
+                <span class="quick-tag-title text-muted">인기 퀵태그:</span>
+                <button type="button" class="btn-quick-tag" data-tag="regression">#회귀</button>
+                <button type="button" class="btn-quick-tag" data-tag="possession">#빙의</button>
+                <button type="button" class="btn-quick-tag" data-tag="reincarnation">#환생</button>
+                <button type="button" class="btn-quick-tag" data-tag="catharsis">#사이다</button>
+                <button type="button" class="btn-quick-tag" data-tag="misunderstanding">#착각계</button>
+                <button type="button" class="btn-quick-tag" data-tag="academy">#아카데미</button>
+                <button type="button" class="btn-quick-tag" data-tag="hunter">#헌터</button>
+                <button type="button" class="btn-quick-tag" data-tag="system">#시스템</button>
+                <button type="button" class="btn-quick-tag" data-tag="growth">#성장</button>
+                <button type="button" class="btn-quick-tag" data-tag="revenge">#복수</button>
+              </div>
+            </div>
+            <div class="form-group mb-3">
               <label>작품 설명 / 줄거리</label>
               <textarea id="adminNewWorkDesc" class="form-control" rows="3" placeholder="작품 시놉시스를 입력하세요..." required style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);"></textarea>
             </div>
@@ -2377,6 +2646,136 @@
               <i data-lucide="upload"></i> 실시간 DB에 회차 발행하기
             </button>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Author Work Comment & Clean Zone Moderation Console (improve4.md) -->
+    <div class="modal-backdrop" id="modalWorkCommentPolicy">
+      <div class="modal-dialog glass-panel" style="max-width: 560px;">
+        <div class="modal-header">
+          <h3><i data-lucide="shield-alert" class="icon-indigo"></i> <span id="policyWorkModalTitle">작품 댓글 및 클린존 관리</span></h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="policyCurrentWorkId" value="">
+          
+          <!-- 1. 댓글 허용 토글 -->
+          <div class="form-group mb-4" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
+            <div>
+              <strong style="color:#fff; display:block; margin-bottom:2px;">독자 댓글 작성 허용</strong>
+              <span class="text-muted small">비활성화 시 악플 폭격을 즉시 방어할 수 있습니다.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="policyCommentsEnabled" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- 2. 최소 열람 회차 슬라이더 -->
+          <div class="form-group mb-4" style="background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div>
+                <strong style="color:#fff; display:block; margin-bottom:2px;">댓글 작성 최소 열람 조건</strong>
+                <span class="text-muted small">1화만 보고 비방하는 악플러(체리피커)를 차단합니다.</span>
+              </div>
+              <span id="policyMinReadDisplay" class="font-bold" style="font-size:0.85rem; color:var(--cdg-pink); min-width:85px; text-align:right;">전체 독자 가능</span>
+            </div>
+            <input type="range" id="policyMinReadRange" min="0" max="30" value="0" class="form-range" style="width:100%; cursor:pointer;" oninput="updatePolicyMinReadDisplay(this.value)">
+          </div>
+
+          <!-- 3. 금칙어 사전 관리 칩 UI -->
+          <div class="form-group mb-4">
+            <label class="small text-muted block mb-1">작가 지정 금칙어 사전 (단어 입력 후 Enter 또는 추가)</label>
+            <div class="tag-input-container" style="min-height:42px; margin-bottom:6px;">
+              <div class="tag-chips-box" id="policyBlockedTermsChips"></div>
+              <input type="text" id="policyNewTermInput" class="tag-search-input" placeholder="차단할 단어 입력 후 Enter (예: 결말스포, 망작)">
+            </div>
+            <span class="text-muted" style="font-size:0.75rem;">※ 해당 단어가 포함된 댓글은 등록 시 즉시 차단 안내됩니다.</span>
+          </div>
+
+          <!-- 4. 차단 독자 목록 및 해제 -->
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label class="small text-muted block" style="margin:0;">현재 차단된 악성 독자 목록</label>
+              <span class="text-muted small" id="policyBlockedCount">0명 차단됨</span>
+            </div>
+            <div class="blocked-readers-table-box" id="policyBlockedReadersList" style="max-height:160px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; background:rgba(0,0,0,0.25);">
+              <!-- Dynamic Table of Blocked Readers -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn btn-ghost modal-close">닫기</button>
+          <button type="button" class="btn btn-primary" id="btnSaveCommentPolicy" onclick="handleSaveCommentPolicySubmit()">
+            <i data-lucide="check"></i> 설정 저장 및 즉시 적용
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Reader Support Creator (improve5.md) -->
+    <div class="modal-backdrop" id="modalSupportCreator">
+      <div class="modal-dialog glass-panel" style="max-width: 480px;">
+        <div class="modal-header">
+          <h3><i data-lucide="gift" style="color:var(--cdg-pink);"></i> <span id="supportModalWorkTitle">작가 응원 및 후원</span></h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="support-author-target-box glass-panel p-3 mb-4 text-center" style="border-radius:10px; background:rgba(255,42,122,0.06); border:1px solid rgba(255,42,122,0.2);">
+            <div class="text-muted small">응원 대상 작가 및 작품</div>
+            <h4 id="supportTargetAuthor" style="margin:4px 0 2px; color:#fff;">작가님</h4>
+            <div class="text-muted small" id="supportTargetWorkTitle">작품명</div>
+          </div>
+
+          <!-- Current Balance -->
+          <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:8px;">
+            <span class="text-muted small">내 보유 포인트 잔액:</span>
+            <strong id="supportUserPointBalance" style="color:var(--accent-amber, #F59E0B); font-size:1.05rem;">1,000 P</strong>
+          </div>
+
+          <!-- Preset Amounts -->
+          <div class="form-group mb-4">
+            <label class="small text-muted mb-2 block">후원 포인트 선택 (1,000P ~ 50,000P)</label>
+            <div class="support-preset-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+              <button type="button" class="btn btn-outline support-preset-btn" data-points="1000" onclick="selectSupportAmount(1000)">1,000P</button>
+              <button type="button" class="btn btn-outline support-preset-btn" data-points="3000" onclick="selectSupportAmount(3000)">3,000P</button>
+              <button type="button" class="btn btn-outline support-preset-btn active" data-points="5000" onclick="selectSupportAmount(5000)">5,000P</button>
+              <button type="button" class="btn btn-outline support-preset-btn" data-points="10000" onclick="selectSupportAmount(10000)">10,000P</button>
+            </div>
+          </div>
+
+          <!-- Custom Amount Input -->
+          <div class="form-group mb-4">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <label class="small text-muted block" style="margin:0;">직접 입력</label>
+              <span class="text-muted" style="font-size:0.75rem;">(최소 1,000P ~ 최대 50,000P)</span>
+            </div>
+            <div style="position:relative;">
+              <input type="number" id="supportCustomAmount" class="form-input" min="1000" max="50000" step="500" value="5000" oninput="handleSupportCustomInput(this.value)" style="width:100%; padding:10px 40px 10px 12px; font-size:1.1rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.4); border:1px solid var(--border-color); border-radius:8px;">
+              <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-weight:600;">P</span>
+            </div>
+          </div>
+
+          <!-- Cheer Message -->
+          <div class="form-group mb-4">
+            <label class="small text-muted mb-1 block">작가님께 보낼 응원 한마디</label>
+            <input type="text" id="supportCheerMessage" class="form-input" maxlength="100" placeholder="작가님 항상 건필하세요! 다음 화 기대 중입니다." style="width:100%; padding:10px; font-size:0.9rem; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--border-color); border-radius:8px;">
+          </div>
+
+          <!-- Anonymous Option -->
+          <div class="form-group mb-2">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem;">
+              <input type="checkbox" id="supportIsAnonymous">
+              <span>익명으로 후원하기 (명예의 전당에 '익명의 후원자'로 표시)</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn btn-ghost modal-close">취소</button>
+          <button type="button" class="btn btn-primary" id="btnConfirmSupport" onclick="handleConfirmSupportSubmit()">
+            <i data-lucide="gift"></i> <span id="btnSupportSubmitText">5,000P 후원하기</span>
+          </button>
         </div>
       </div>
     </div>
@@ -2505,6 +2904,49 @@
                 <i data-lucide="chevron-right" class="text-muted"></i>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Draft Version Diff & Restore (modalDraftDiff) -->
+    <div class="modal-backdrop" id="modalDraftDiff">
+      <div class="modal-dialog glass-panel dialog-lg diff-modal-dialog">
+        <div class="modal-header">
+          <h3><i data-lucide="git-compare" style="color:var(--cdg-pink);"></i> 원고 버전 비교 및 안전 복구</h3>
+          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body diff-modal-body">
+          <div class="diff-modal-layout">
+            <div class="diff-version-sidebar">
+              <div class="diff-sidebar-title"><i data-lucide="clock"></i> 저장된 버전 기록</div>
+              <div class="diff-version-list" id="diffVersionList">
+                <!-- 동적으로 버전 카드 렌더링 -->
+              </div>
+            </div>
+            <div class="diff-preview-pane">
+              <div class="diff-preview-header" id="diffPreviewHeader">
+                <span class="text-muted small">버전을 선택하면 현재 작성 중인 원고와의 차이점(Diff)을 보여줍니다.</span>
+              </div>
+              <div class="diff-sections-container" id="diffSectionsContainer">
+                <div class="diff-empty-notice">
+                  <i data-lucide="file-diff" style="width:40px; height:40px; stroke-width:1.5; color:var(--text-muted); margin-bottom:8px;"></i>
+                  <p>좌측에서 비교할 저장 버전을 선택해주세요.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer diff-modal-footer">
+          <div class="diff-legend">
+            <span class="diff-legend-item legend-del"><span class="diff-badge del"></span> 현재 원고에서 삭제됨</span>
+            <span class="diff-legend-item legend-ins"><span class="diff-badge ins"></span> 이전 버전 대비 추가됨</span>
+          </div>
+          <div class="diff-footer-buttons">
+            <button type="button" class="btn btn-ghost modal-close">닫기</button>
+            <button type="button" class="btn btn-primary" id="btnConfirmRestoreRevision" disabled>
+              <i data-lucide="rotate-ccw"></i> 선택한 버전으로 복구
+            </button>
           </div>
         </div>
       </div>

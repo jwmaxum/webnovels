@@ -30,12 +30,16 @@ function renderCdgWorkCardHtml(w, options = {}) {
   const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
 
   let rankBadgeHtml = '';
-  if (options.rank) {
+  if (options.badge === 'GOLDEN' && options.rank) {
+    rankBadgeHtml = `<div class="cdg-rank-badge cdg-badge-golden" title="골든 베스트 ${options.rank}위">GOLDEN ${options.rank}위</div>`;
+  } else if (options.rank) {
     rankBadgeHtml = `<div class="cdg-rank-badge rank-${options.rank}">${options.rank}</div>`;
   }
 
   let cornerBadgeHtml = '';
-  if (options.badge === 'NEW') {
+  if (options.badge === 'GOLDEN') {
+    cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink" style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;">GOLDEN</span></div>`;
+  } else if (options.badge === 'NEW') {
     cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink">NEW</span></div>`;
   } else if (options.badge === 'FREE') {
     cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink" style="background:#10B981;">FREE</span></div>`;
@@ -43,8 +47,13 @@ function renderCdgWorkCardHtml(w, options = {}) {
     cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-dark" style="color:var(--cdg-pink);">19+</span></div>`;
   }
 
+  let goldenReasonHtml = '';
+  if (options.badge === 'GOLDEN' && w.goldenBest?.reason) {
+    goldenReasonHtml = `<div class="cdg-card-golden-reason" title="최근 독자 반응 품질 기반 투명 추천">${w.goldenBest.reason}</div>`;
+  }
+
   return `
-    <article class="cdg-work-card" onclick="openWorkDetailDirect('${w.id}')" title="${w.title}">
+    <article class="cdg-work-card ${options.badge === 'GOLDEN' ? 'cdg-card-golden' : ''}" onclick="openWorkDetailDirect('${w.id}')" title="${w.title}">
       <div class="cdg-card-cover">
         <img class="cdg-card-cover-img" src="${cover}" alt="${w.title}" loading="lazy">
         ${rankBadgeHtml}
@@ -57,6 +66,7 @@ function renderCdgWorkCardHtml(w, options = {}) {
           <span>${authorName}</span>
           <span><i data-lucide="eye" style="width:11px;height:11px;display:inline;vertical-align:middle;"></i> ${viewFormatted}</span>
         </div>
+        ${goldenReasonHtml}
       </div>
     </article>
   `;
@@ -245,21 +255,152 @@ async function renderHomeWorks() {
 
 
 
-// --- 2. 탐색(Discover) & 실시간 검색(Search) ---
+// --- 2. 탐색(Discover) & 다차원 복합 검색(Multi-dimensional Filter) ---
 
-const DISCOVER_TAG_ALIASES = { '회귀': 'regression', '빙의': 'possession', '환생': 'reincarnation', '착각계': 'misunderstanding', '사이다': 'catharsis', '아카데미': 'academy', '전문직': 'professional' };
-const selectedDiscoverTags = new Set();
+const DISCOVER_TAG_ALIASES = {
+  '회귀': 'regression', '회귀물': 'regression',
+  '빙의': 'possession', '빙의물': 'possession',
+  '환생': 'reincarnation', '환생물': 'reincarnation',
+  '착각계': 'misunderstanding',
+  '사이다': 'catharsis',
+  '아카데미': 'academy',
+  '전문직': 'professional',
+  '시스템': 'system',
+  '게임': 'game', '게임빙의': 'game',
+  '헌터': 'hunter',
+  '던전': 'dungeon',
+  '성장': 'growth',
+  '생존': 'survival',
+  '정치': 'politics',
+  '전쟁': 'war',
+  '로맨스': 'romance',
+  '로맨스판타지': 'romance-fantasy', '로판': 'romance-fantasy',
+  '무협': 'martial-arts',
+  '현대판타지': 'modern-fantasy', '현판': 'modern-fantasy',
+  '힐링': 'healing',
+  '미스터리': 'mystery',
+  '공포': 'horror',
+  'SF': 'sf',
+  '일상': 'slice-of-life',
+  '코미디': 'comedy',
+  '복수': 'revenge',
+  '육아': 'family',
+  '요리': 'chef',
+  '스포츠': 'sports',
+  '의학': 'medical',
+  '경영': 'business',
+  '대체역사': 'historical'
+};
+
+const discoverFilterState = {
+  genre: 'ALL',
+  status: 'ALL',       // 'ALL' | 'ONGOING' | 'COMPLETED'
+  epRange: 'ALL',      // 'ALL' | '1-25' | '26-100' | '101+'
+  rating: 'ALL',       // 'ALL' | 'ALL_AGES' | 'AGE_15' | 'AGE_19'
+  sortBy: 'latest',    // 'latest' | 'popular' | 'views' | 'episodes'
+  tags: new Set()
+};
+
+let discoverRenderDebounceTimer = null;
 
 function getDiscoverTags(work) {
-  const raw = Array.isArray(work.tags) ? work.tags : String(work.tags || '').split(',');
-  return raw.map((tag) => DISCOVER_TAG_ALIASES[String(tag).trim()] || String(tag).trim().toLowerCase());
+  let raw = [];
+  if (Array.isArray(work.tags)) {
+    raw = work.tags;
+  } else if (typeof work.tags === 'string') {
+    try {
+      const parsed = JSON.parse(work.tags);
+      raw = Array.isArray(parsed) ? parsed : work.tags.split(',');
+    } catch(_) {
+      raw = work.tags.split(',');
+    }
+  }
+  return raw.map((tag) => {
+    const t = String(tag).trim();
+    return DISCOVER_TAG_ALIASES[t] || t.toLowerCase();
+  });
 }
 
+function scheduleDiscoverRender() {
+  if (discoverRenderDebounceTimer) clearTimeout(discoverRenderDebounceTimer);
+  discoverRenderDebounceTimer = setTimeout(() => {
+    renderDiscoverWorks();
+  }, 200);
+}
+
+window.setDiscoverGenreFilter = function(genre, buttonEl) {
+  discoverFilterState.genre = genre;
+  document.querySelectorAll('#discoverGenreFilters .pill').forEach(btn => btn.classList.remove('active'));
+  if (buttonEl) buttonEl.classList.add('active');
+  scheduleDiscoverRender();
+};
+
+window.setDiscoverStatus = function(status, buttonEl) {
+  discoverFilterState.status = status;
+  document.querySelectorAll('#filterStatusGroup .filter-chip').forEach(btn => btn.classList.remove('active'));
+  if (buttonEl) buttonEl.classList.add('active');
+  scheduleDiscoverRender();
+};
+
+window.setDiscoverEpisodeRange = function(range, buttonEl) {
+  discoverFilterState.epRange = range;
+  document.querySelectorAll('#filterEpRangeGroup .filter-chip').forEach(btn => btn.classList.remove('active'));
+  if (buttonEl) buttonEl.classList.add('active');
+  scheduleDiscoverRender();
+};
+
+window.setDiscoverRating = function(rating, buttonEl) {
+  discoverFilterState.rating = rating;
+  document.querySelectorAll('#filterRatingGroup .filter-chip').forEach(btn => btn.classList.remove('active'));
+  if (buttonEl) buttonEl.classList.add('active');
+  scheduleDiscoverRender();
+};
+
+window.setDiscoverSortOrder = function(sortOrder) {
+  discoverFilterState.sortBy = sortOrder;
+  scheduleDiscoverRender();
+};
+
 window.toggleDiscoverTag = function(tag) {
-  if (selectedDiscoverTags.has(tag)) selectedDiscoverTags.delete(tag);
-  else selectedDiscoverTags.add(tag);
-  document.querySelectorAll('#discoverTagFilters [data-discover-tag]').forEach((button) => button.classList.toggle('active', selectedDiscoverTags.has(button.dataset.discoverTag)));
-  renderDiscoverWorks(window._discoverGenreFilter || 'ALL');
+  if (discoverFilterState.tags.has(tag)) {
+    discoverFilterState.tags.delete(tag);
+  } else {
+    discoverFilterState.tags.add(tag);
+  }
+  
+  document.querySelectorAll('#discoverTagFilters [data-discover-tag]').forEach((button) => {
+    button.classList.toggle('active', discoverFilterState.tags.has(button.dataset.discoverTag));
+  });
+  
+  const counter = document.getElementById('activeTagsCounter');
+  if (counter) {
+    counter.textContent = `선택된 태그: ${discoverFilterState.tags.size}개`;
+  }
+  
+  scheduleDiscoverRender();
+};
+
+window.resetDiscoverFilters = function() {
+  discoverFilterState.genre = 'ALL';
+  discoverFilterState.status = 'ALL';
+  discoverFilterState.epRange = 'ALL';
+  discoverFilterState.rating = 'ALL';
+  discoverFilterState.sortBy = 'latest';
+  discoverFilterState.tags.clear();
+
+  document.querySelectorAll('#discoverGenreFilters .pill').forEach((btn, idx) => btn.classList.toggle('active', idx === 0));
+  document.querySelectorAll('#filterStatusGroup .filter-chip').forEach((btn) => btn.classList.toggle('active', btn.dataset.status === 'ALL'));
+  document.querySelectorAll('#filterEpRangeGroup .filter-chip').forEach((btn) => btn.classList.toggle('active', btn.dataset.eprange === 'ALL'));
+  document.querySelectorAll('#filterRatingGroup .filter-chip').forEach((btn) => btn.classList.toggle('active', btn.dataset.rating === 'ALL'));
+  
+  const sortSelect = document.getElementById('selectDiscoverSort');
+  if (sortSelect) sortSelect.value = 'latest';
+
+  document.querySelectorAll('#discoverTagFilters [data-discover-tag]').forEach((btn) => btn.classList.remove('active'));
+  const counter = document.getElementById('activeTagsCounter');
+  if (counter) counter.textContent = '선택된 태그: 0개';
+
+  renderDiscoverWorks();
 };
 
 async function renderGoldenBest() {
@@ -270,51 +411,152 @@ async function renderGoldenBest() {
     if (window.WebNovelsAdmin?.fetchGoldenBestFromDB) works = await window.WebNovelsAdmin.fetchGoldenBestFromDB();
   } catch (_) {}
   if (!works.length) {
+    const reasons = [
+      '💡 최근 24h 완독률 91% 급상승',
+      '💡 신작 관심 48 · 유효 댓글 14',
+      '💡 첫 화 정독률 88% 돌파',
+      '💡 작가 신규 연재 지지 1위',
+      '💡 24h 추천 비율 94% 달성',
+      '💡 독자 재방문 연속 1위'
+    ];
     works = SAMPLE_WORKS.filter((work) => (work.episodes || []).length >= 1 && (work.episodes || []).length <= 15)
       .sort((a, b) => Number(b.likeCount || 0) - Number(a.likeCount || 0)).slice(0, 6)
-      .map((work, index) => ({ ...work, goldenBest: { rank: index + 1, reason: '신인 첫걸음 추천' } }));
+      .map((work, index) => ({
+        ...work,
+        goldenBest: {
+          rank: index + 1,
+          reason: reasons[index % reasons.length]
+        }
+      }));
   }
   container.innerHTML = works.slice(0, 6).map((work) => renderCdgWorkCardHtml(work, { rank: work.goldenBest?.rank, badge: 'GOLDEN' })).join('');
   if (window.lucide?.createIcons) window.lucide.createIcons({ root: container });
 }
 
 // ----------------------------------------------------
-// Discover Works View Renderer
+// Discover Works View Renderer (다차원 필터링 연동)
 // ----------------------------------------------------
-function renderDiscoverWorks(genreFilter = 'ALL') {
+function renderDiscoverWorks(explicitGenre = null) {
   const container = document.getElementById('discoverWorksGrid');
   if (!container) return;
 
-  window._discoverGenreFilter = genreFilter;
-  const filtered = SAMPLE_WORKS.filter(w => {
-    if (genreFilter === 'ALL' || genreFilter === '전체') return true;
-    if (genreFilter === '19+ 성인') return w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
-    const gStr = Array.isArray(w.genre) ? w.genre.join(' ') : (w.genre || '');
-    return gStr.includes(genreFilter);
-  }).filter((work) => {
-    const workTags = getDiscoverTags(work);
-    return [...selectedDiscoverTags].every((tag) => workTags.includes(tag));
+  if (explicitGenre && explicitGenre !== 'undefined') {
+    discoverFilterState.genre = explicitGenre;
+    document.querySelectorAll('#discoverGenreFilters .pill').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.trim() === explicitGenre);
+    });
+  }
+
+  const { genre, status, epRange, rating, sortBy, tags } = discoverFilterState;
+
+  let filtered = SAMPLE_WORKS.filter(w => {
+    // 1. Genre filter
+    if (genre !== 'ALL' && genre !== '전체') {
+      if (genre === '19+ 성인') {
+        const is19 = w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
+        if (!is19) return false;
+      } else {
+        const gStr = Array.isArray(w.genre) ? w.genre.join(' ') : (w.genre || '');
+        if (!gStr.includes(genre)) return false;
+      }
+    }
+
+    // 2. Status filter
+    if (status === 'ONGOING') {
+      if (w.isCompleted || w.is_completed || w.status === 'COMPLETED') return false;
+    } else if (status === 'COMPLETED') {
+      if (!(w.isCompleted || w.is_completed || w.status === 'COMPLETED')) return false;
+    }
+
+    // 3. Episode Range filter
+    const epCount = (w.episodes && w.episodes.length) ? w.episodes.length : (Number(w.episodeCount ?? w.episode_count ?? 1));
+    if (epRange === '1-25') {
+      if (epCount < 1 || epCount > 25) return false;
+    } else if (epRange === '26-100') {
+      if (epCount < 26 || epCount > 100) return false;
+    } else if (epRange === '101+') {
+      if (epCount < 101) return false;
+    }
+
+    // 4. Rating filter
+    if (rating === 'ALL_AGES') {
+      if (w.rating && w.rating !== 'ALL' && w.rating !== '전체이용가') return false;
+    } else if (rating === 'AGE_15') {
+      if (w.rating !== 'AGE_15' && w.rating !== '15' && w.rating !== '15세 이상') return false;
+    } else if (rating === 'AGE_19') {
+      const isAdult = w.rating === 'AGE_19' || w.rating === '19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
+      if (!isAdult) return false;
+    }
+
+    // 5. Multi-tag AND Intersection filter
+    if (tags.size > 0) {
+      const workTags = getDiscoverTags(w);
+      const allMatched = [...tags].every(t => workTags.includes(t));
+      if (!allMatched) return false;
+    }
+
+    return true;
   });
 
-  container.innerHTML = filtered.map(w => {
-    const isAdult = w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
-    const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
-    const tagText = isAdult ? '19+ 성인' : (Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'));
-    const cover = getWorkCover(w);
-    const rawViews = Number(w.viewCount ?? w.view_count ?? 0);
-    const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
-    return `
-      <article class="feature-card" onclick="openWorkDetailDirect(${w.id})" style="cursor:pointer;">
-        <div class="art" style="background-image: url('${cover}'); background-size: cover; background-position: center; height: 180px; border-radius: 8px;"></div>
-        <div class="copy p-2">
-          <span class="tag ${tagClass}">${tagText}</span>
-          <h3 style="font-size: 1rem; margin: 4px 0;">${w.title}</h3>
-          <p class="text-muted small">${getAuthorName(w)} · 조회 ${viewFormatted}</p>
-        </div>
-      </article>
+  // 6. Sorting
+  if (sortBy === 'popular') {
+    filtered.sort((a, b) => Number(b.likeCount ?? b.like_count ?? 0) - Number(a.likeCount ?? a.like_count ?? 0));
+  } else if (sortBy === 'views') {
+    filtered.sort((a, b) => Number(b.viewCount ?? b.view_count ?? 0) - Number(a.viewCount ?? a.view_count ?? 0));
+  } else if (sortBy === 'episodes') {
+    filtered.sort((a, b) => ((b.episodes || []).length || Number(b.episodeCount ?? 0)) - ((a.episodes || []).length || Number(a.episodeCount ?? 0)));
+  } else {
+    // latest
+    filtered.sort((a, b) => Number(b.id) - Number(a.id));
+  }
+
+  // Update Result Count
+  const counter = document.getElementById('discoverResultsCount');
+  if (counter) {
+    counter.textContent = `총 ${filtered.length}개 작품`;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="discover-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+        <i data-lucide="filter-x" style="width: 48px; height: 48px; color: #64748b; margin-bottom: 12px; display: inline-block;"></i>
+        <h4 style="color: #cbd5e1; margin-bottom: 6px;">선택한 조건에 일치하는 작품이 없습니다</h4>
+        <p class="text-muted small mb-4">태그나 필터 조건을 변경하거나 초기화해 보세요.</p>
+        <button type="button" class="btn btn-outline btn-sm" onclick="resetDiscoverFilters()">
+          <i data-lucide="rotate-ccw"></i> 필터 전체 초기화
+        </button>
+      </div>
     `;
-  }).join('');
-  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+  } else {
+    container.innerHTML = filtered.map(w => {
+      const isAdult = w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
+      const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
+      const tagText = isAdult ? '19+ 성인' : (Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'));
+      const cover = getWorkCover(w);
+      const rawViews = Number(w.viewCount ?? w.view_count ?? 0);
+      const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
+      const epCount = (w.episodes && w.episodes.length) ? w.episodes.length : (Number(w.episodeCount ?? w.episode_count ?? 1));
+      const isCompleted = !!(w.isCompleted || w.is_completed || w.status === 'COMPLETED');
+      const statusBadge = isCompleted ? `<span class="badge-status completed" style="background:rgba(16,185,129,0.85);color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;">완결</span>` : `<span class="badge-status ongoing" style="background:rgba(99,102,241,0.85);color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;">${epCount}화</span>`;
+
+      return `
+        <article class="feature-card cdg-discover-card" onclick="openWorkDetailDirect(${w.id})" style="cursor:pointer;">
+          <div class="art" style="background-image: url('${cover}'); background-size: cover; background-position: center; height: 180px; border-radius: 8px; position: relative;">
+            <div style="position: absolute; top: 8px; right: 8px;">${statusBadge}</div>
+          </div>
+          <div class="copy p-2">
+            <div style="display:flex; gap:4px; margin-bottom:4px;">
+              <span class="tag ${tagClass}">${tagText}</span>
+            </div>
+            <h3 style="font-size: 0.95rem; margin: 4px 0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${w.title}</h3>
+            <p class="text-muted small" style="margin:0;">${getAuthorName(w)} · 조회 ${viewFormatted}</p>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons({ root: container });
 }
 
 // ----------------------------------------------------
@@ -935,6 +1177,12 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true) {
 
   epList.innerHTML = epHtml;
   switchWebNovelsView('view-work-detail', null, false);
+  
+  // 명예의 전당 (Top Supporters) 렌더링 (improve5.md)
+  if (typeof window.renderWorkTopSupporters === 'function') {
+    window.renderWorkTopSupporters(work.id);
+  }
+
   if (shouldPushState) {
     const targetUrl = `/works/${work.id}`;
     if (window.location.pathname !== targetUrl) {
@@ -943,16 +1191,193 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true) {
   }
 };
 
-window.supportActiveWork = async function() {
-  const work = activeWork;
-  if (!work) return;
+// ============================================================
+// [Step 5 - improve5.md] 독자 작가 후원 모달 및 작품 명예의 전당(Top Supporters)
+// ============================================================
+window.renderWorkTopSupporters = async function(workId) {
+  const container = document.getElementById('workTopSupportersList');
+  if (!container) return;
+
+  container.innerHTML = `<div class="p-3 text-center text-muted small">서포터즈 목록을 불러오고 있습니다...</div>`;
+
+  let supporters = [];
+  if (window.WebNovelsAdmin?.fetchWorkTopSupporters) {
+    try {
+      supporters = await window.WebNovelsAdmin.fetchWorkTopSupporters(workId);
+    } catch(e) {
+      console.warn('[renderWorkTopSupporters error]', e);
+    }
+  }
+
+  if (!supporters || supporters.length === 0) {
+    container.innerHTML = `
+      <div class="p-4 text-center text-muted" style="grid-column: 1 / -1;">
+        <i data-lucide="award" style="width:32px; height:32px; opacity:0.4; margin-bottom:6px;"></i>
+        <p style="margin:0; font-size:0.85rem;">아직 이 작품의 서포터가 없습니다. 첫 번째 후원자가 되어 명예의 전당을 열어주세요!</p>
+      </div>
+    `;
+    if (window.lucide) window.lucide.createIcons();
+    return;
+  }
+
+  const rankBadges = [
+    { rank: 1, medal: '🥇 1위', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.35)' },
+    { rank: 2, medal: '🥈 2위', color: '#E2E8F0', bg: 'rgba(226, 232, 240, 0.10)', border: 'rgba(226, 232, 240, 0.30)' },
+    { rank: 3, medal: '🥉 3위', color: '#D97706', bg: 'rgba(217, 119, 6, 0.10)', border: 'rgba(217, 119, 6, 0.30)' },
+    { rank: 4, medal: '4위', color: '#94A3B8', bg: 'rgba(255, 255, 255, 0.04)', border: 'rgba(255, 255, 255, 0.08)' },
+    { rank: 5, medal: '5위', color: '#94A3B8', bg: 'rgba(255, 255, 255, 0.04)', border: 'rgba(255, 255, 255, 0.08)' }
+  ];
+
+  container.innerHTML = supporters.map((s, idx) => {
+    const meta = rankBadges[idx] || rankBadges[3];
+    const name = s.isAnonymous ? '익명의 후원자' : (s.displayName || '독자');
+    const pts = Number(s.totalPoints || 0);
+
+    return `
+      <div class="supporter-rank-card p-3 glass-panel" style="border-radius:10px; border:1px solid ${meta.border}; background:${meta.bg}; display:flex; align-items:center; gap:12px;">
+        <div style="font-weight:800; font-size:1.15rem; color:${meta.color}; min-width:42px; text-align:center;">
+          ${meta.medal}
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:700; font-size:0.9rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${escapeReaderHtml(name)}
+          </div>
+          <div style="font-size:0.78rem; font-weight:700; color:var(--cdg-pink, #FF2A7A); margin-top:2px;">
+            ${pts.toLocaleString()} P 후원
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+};
+
+window.supportActiveWork = function() {
+  const work = (typeof activeWork !== 'undefined' && activeWork) ? activeWork : null;
+  if (!work) {
+    showToast('작품 정보를 찾을 수 없습니다.');
+    return;
+  }
+
   const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-  if (!savedUser) { showToast('작가 응원은 로그인 후 이용할 수 있습니다.'); switchWebNovelsView('view-auth'); return; }
-  const amount = Number(window.prompt('응원할 포인트를 입력하세요. (1,000~50,000P)', '1000'));
-  if (!Number.isInteger(amount) || amount < 1000 || amount > 50000) { showToast('1,000P부터 50,000P까지 입력할 수 있습니다.'); return; }
-  if (!window.WebNovelsAdmin?.supportCreator) { showToast('응원 서비스를 연결할 수 없습니다.'); return; }
-  const result = await window.WebNovelsAdmin.supportCreator(work.id, amount, false);
-  showToast(result.success ? `💖 ${amount.toLocaleString()}P 응원이 작가에게 전달되었습니다.` : `⚠️ 응원 처리 실패: ${result.error || '잠시 후 다시 시도해주세요.'}`);
+  const currentPts = (typeof currentUser !== 'undefined' && currentUser?.points !== undefined)
+    ? currentUser.points
+    : (savedUser ? (savedUser.points || 1000) : 1000);
+
+  const titleEl = document.getElementById('supportModalWorkTitle');
+  const authorEl = document.getElementById('supportTargetAuthor');
+  const workTitleEl = document.getElementById('supportTargetWorkTitle');
+  const balanceEl = document.getElementById('supportUserPointBalance');
+
+  if (titleEl) titleEl.textContent = `[${work.title}] 작가 응원`;
+  if (authorEl) authorEl.textContent = `${work.author || '작가'} 님`;
+  if (workTitleEl) workTitleEl.textContent = work.title;
+  if (balanceEl) balanceEl.textContent = `${currentPts.toLocaleString()} P`;
+
+  window.selectSupportAmount(5000);
+
+  const msgInput = document.getElementById('supportCheerMessage');
+  if (msgInput) msgInput.value = '';
+
+  const anonCheck = document.getElementById('supportIsAnonymous');
+  if (anonCheck) anonCheck.checked = false;
+
+  openModal('modalSupportCreator');
+};
+
+window.selectSupportAmount = function(amount) {
+  const pts = Number(amount);
+  document.querySelectorAll('.support-preset-btn').forEach(btn => {
+    if (Number(btn.dataset.points) === pts) {
+      btn.classList.add('btn-primary', 'active');
+      btn.classList.remove('btn-outline');
+    } else {
+      btn.classList.remove('btn-primary', 'active');
+      btn.classList.add('btn-outline');
+    }
+  });
+
+  const customInput = document.getElementById('supportCustomAmount');
+  if (customInput) customInput.value = pts;
+
+  const btnText = document.getElementById('btnSupportSubmitText');
+  if (btnText) btnText.textContent = `${pts.toLocaleString()}P 후원하기`;
+};
+
+window.handleSupportCustomInput = function(val) {
+  const pts = Number(val) || 0;
+  document.querySelectorAll('.support-preset-btn').forEach(btn => {
+    if (Number(btn.dataset.points) === pts) {
+      btn.classList.add('btn-primary', 'active');
+      btn.classList.remove('btn-outline');
+    } else {
+      btn.classList.remove('btn-primary', 'active');
+      btn.classList.add('btn-outline');
+    }
+  });
+
+  const btnText = document.getElementById('btnSupportSubmitText');
+  if (btnText) btnText.textContent = `${pts.toLocaleString()}P 후원하기`;
+};
+
+window.handleConfirmSupportSubmit = async function() {
+  const work = (typeof activeWork !== 'undefined' && activeWork) ? activeWork : null;
+  if (!work) {
+    showToast('작품 정보가 없습니다.');
+    return;
+  }
+
+  const customInput = document.getElementById('supportCustomAmount');
+  const amount = Number(customInput?.value || 0);
+
+  if (!Number.isInteger(amount) || amount < 1000 || amount > 50000) {
+    showToast('⚠️ 후원 금액은 최소 1,000P에서 최대 50,000P까지 가능합니다.');
+    return;
+  }
+
+  const anonCheck = document.getElementById('supportIsAnonymous');
+  const isAnonymous = !!(anonCheck && anonCheck.checked);
+
+  const msgInput = document.getElementById('supportCheerMessage');
+  const cheerMessage = msgInput ? msgInput.value.trim() : '';
+
+  const btn = document.getElementById('btnConfirmSupport');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm mr-2"></span>후원 처리 중...`;
+  }
+
+  try {
+    let result = null;
+    if (window.WebNovelsAdmin?.supportCreator) {
+      result = await window.WebNovelsAdmin.supportCreator(work.id, amount, isAnonymous, cheerMessage);
+    }
+
+    if (result && result.success) {
+      closeModal('modalSupportCreator');
+      showToast(`🎉 [${work.author || '작가'}님]께 ${amount.toLocaleString()}P를 성공적으로 후원했습니다! 감사합니다!`);
+      
+      if (typeof updateMemberHeader === 'function') updateMemberHeader();
+
+      await window.renderWorkTopSupporters(work.id);
+
+      if (typeof window.loadCreatorEarningLedger === 'function') {
+        window.loadCreatorEarningLedger();
+      }
+    } else {
+      showToast(`⚠️ 후원 실패: ${result?.error || '잠시 후 다시 시도해주세요.'}`);
+    }
+  } catch(e) {
+    console.error('[Support Error]', e);
+    showToast('⚠️ 후원 처리 중 오류가 발생했습니다.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="gift"></i> <span id="btnSupportSubmitText">${amount.toLocaleString()}P 후원하기</span>`;
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
 };
 
 // 연재예정 회차 클릭 시 알림 핸들러
@@ -1145,6 +1570,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   window._readerScrollCleanup = () => window.removeEventListener('scroll', onReaderScroll);
 
   switchWebNovelsView('view-reader');
+  window.ReaderPreferencesManager?.apply();
   window.scrollTo({ top: 0, behavior: 'instant' });
   if (window.lucide) window.lucide.createIcons();
 };
@@ -1276,30 +1702,192 @@ async function startAdSimulation() {
   }, 1000);
 }
 
-// Reader Theme Controls
-window.setReaderTheme = function(themeClass) {
-  const reader = document.getElementById('view-reader');
-  if (reader) {
-    reader.className = `main-view full-screen-reader ${themeClass} active`;
-  }
-  currentTheme = themeClass;
-  localStorage.setItem('webnovels_reader_theme', themeClass);
+// ============================================================
+// [Reader Preferences Manager] 독자 맞춤 뷰어 환경설정 스토어
+// - OLED True Black 테마, 명조/고딕 글꼴, 줄간격, 여백, 문단간격, 글자크기
+// - 로컬스토리지 영구 보관 및 Supabase 원격 동기화
+// ============================================================
+const DEFAULT_READER_PREFERENCES = {
+  theme: 'theme-dark',       // 'theme-dark' | 'theme-oled' | 'theme-sepia' | 'theme-light'
+  fontFamily: 'serif',       // 'serif' | 'sans'
+  fontSize: 18,              // 14 ~ 26 px
+  lineHeight: 1.8,           // 1.5 | 1.8 | 2.2
+  paddingX: 20,              // 12 | 20 | 36 px
+  paragraphGap: 1.2          // 0.8 | 1.2 | 1.6 em
+};
 
-  document.querySelectorAll('.theme-selector-grid .theme-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.classList.contains(themeClass));
-  });
+class ReaderPreferencesStore {
+  constructor() {
+    this.pref = { ...DEFAULT_READER_PREFERENCES };
+    this.initialized = false;
+  }
+
+  init() {
+    if (this.initialized) return;
+    this.initialized = true;
+    this.load();
+    this.apply();
+  }
+
+  load() {
+    try {
+      const saved = localStorage.getItem('webnovels_reader_preferences');
+      if (saved) {
+        this.pref = { ...this.pref, ...JSON.parse(saved) };
+      } else {
+        const legacyTheme = localStorage.getItem('webnovels_reader_theme');
+        if (legacyTheme) this.pref.theme = legacyTheme;
+        const legacyFont = localStorage.getItem('webnovels_reader_font_size');
+        if (legacyFont) this.pref.fontSize = Number(legacyFont) || 18;
+      }
+    } catch (_) {}
+  }
+
+  save() {
+    try {
+      localStorage.setItem('webnovels_reader_preferences', JSON.stringify(this.pref));
+      localStorage.setItem('webnovels_reader_theme', this.pref.theme);
+      localStorage.setItem('webnovels_reader_font_size', String(this.pref.fontSize));
+
+      const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
+      const userIdent = savedUser?.username || savedUser?.email || savedUser?.id;
+      if (userIdent && window.WebNovelsAdmin?.saveReaderPreferences) {
+        window.WebNovelsAdmin.saveReaderPreferences(userIdent, this.pref).catch(() => {});
+      }
+    } catch (_) {}
+  }
+
+  async syncRemote(identifier) {
+    if (!identifier || !window.WebNovelsAdmin?.fetchReaderPreferences) return;
+    try {
+      const remotePref = await window.WebNovelsAdmin.fetchReaderPreferences(identifier);
+      if (remotePref && typeof remotePref === 'object') {
+        this.pref = { ...this.pref, ...remotePref };
+        this.save();
+        this.apply();
+      }
+    } catch (_) {}
+  }
+
+  apply() {
+    const reader = document.getElementById('view-reader');
+    if (reader) {
+      const themeClasses = ['theme-dark', 'theme-oled', 'theme-sepia', 'theme-light'];
+      themeClasses.forEach(tc => reader.classList.remove(tc));
+      reader.classList.add(this.pref.theme);
+      if (!reader.classList.contains('active')) reader.classList.add('active');
+    }
+
+    if (typeof currentTheme !== 'undefined') currentTheme = this.pref.theme;
+    if (typeof currentFontSize !== 'undefined') currentFontSize = this.pref.fontSize;
+
+    const root = document.documentElement;
+    const fontValue = this.pref.fontFamily === 'serif'
+      ? "'Noto Serif KR', 'KoPub 바탕', serif"
+      : "'Pretendard', 'Noto Sans KR', sans-serif";
+
+    root.style.setProperty('--reader-font', fontValue);
+    root.style.setProperty('--reader-font-size', `${this.pref.fontSize}px`);
+    root.style.setProperty('--reader-line-height', String(this.pref.lineHeight));
+    root.style.setProperty('--reader-padding-x', `${this.pref.paddingX}px`);
+    root.style.setProperty('--reader-paragraph-gap', `${this.pref.paragraphGap}em`);
+
+    const paper = document.getElementById('readerPaper');
+    if (paper) {
+      paper.style.fontFamily = fontValue;
+      paper.style.fontSize = `${this.pref.fontSize}px`;
+      paper.style.lineHeight = String(this.pref.lineHeight);
+      paper.style.paddingLeft = `${this.pref.paddingX}px`;
+      paper.style.paddingRight = `${this.pref.paddingX}px`;
+    }
+
+    document.querySelectorAll('#readerBody .reader-paragraph').forEach((p) => {
+      p.style.marginBottom = `${this.pref.paragraphGap}em`;
+      p.style.lineHeight = String(this.pref.lineHeight);
+    });
+
+    this.updateControlsUI();
+  }
+
+  updateControlsUI() {
+    document.querySelectorAll('.theme-selector-grid .theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === this.pref.theme || btn.classList.contains(this.pref.theme));
+    });
+
+    document.querySelectorAll('.pref-btn[data-font]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.font === this.pref.fontFamily);
+    });
+
+    const disp = document.getElementById('fontSizeDisplay');
+    if (disp) disp.textContent = `${this.pref.fontSize}px`;
+
+    document.querySelectorAll('.pref-btn[data-line-height]').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.lineHeight) === Number(this.pref.lineHeight));
+    });
+
+    document.querySelectorAll('.pref-btn[data-padding]').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.padding) === Number(this.pref.paddingX));
+    });
+
+    document.querySelectorAll('.pref-btn[data-gap]').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.gap) === Number(this.pref.paragraphGap));
+    });
+  }
+
+  setTheme(themeClass) {
+    this.pref.theme = themeClass;
+    this.save();
+    this.apply();
+  }
+
+  setFontFamily(font) {
+    this.pref.fontFamily = font;
+    this.save();
+    this.apply();
+  }
+
+  changeFontSize(delta) {
+    this.pref.fontSize = Math.max(14, Math.min(26, this.pref.fontSize + delta));
+    this.save();
+    this.apply();
+  }
+
+  setLineHeight(lh) {
+    this.pref.lineHeight = Number(lh);
+    this.save();
+    this.apply();
+  }
+
+  setPaddingX(pad) {
+    this.pref.paddingX = Number(pad);
+    this.save();
+    this.apply();
+  }
+
+  setParagraphGap(gap) {
+    this.pref.paragraphGap = Number(gap);
+    this.save();
+    this.apply();
+  }
+}
+
+window.ReaderPreferencesManager = new ReaderPreferencesStore();
+
+// 기존 함수 하위 호환
+window.setReaderTheme = function(themeClass) {
+  window.ReaderPreferencesManager.setTheme(themeClass);
 };
 
 window.changeFontSize = function(delta) {
-  currentFontSize += delta;
-  if (currentFontSize < 14) currentFontSize = 14;
-  if (currentFontSize > 26) currentFontSize = 26;
-
-  const paper = document.getElementById('readerPaper');
-  if (paper) paper.style.fontSize = `${currentFontSize}px`;
-  const disp = document.getElementById('fontSizeDisplay');
-  if (disp) disp.textContent = `${currentFontSize}px`;
+  window.ReaderPreferencesManager.changeFontSize(delta);
 };
+
+// 초기화
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => window.ReaderPreferencesManager.init());
+} else {
+  window.ReaderPreferencesManager.init();
+}
 
 
 
@@ -1420,7 +2008,10 @@ async function handleMemberLogin() {
             } catch (actErr) {
               console.warn('[fetchReaderActivity on Login]', actErr);
             }
-          } else {
+          }
+          if (window.ReaderPreferencesManager) {
+            window.ReaderPreferencesManager.syncRemote(reader.username || reader.email || reader.id);
+          }
             syncUserActivityToStorage({
               readingHistory: reader.reading_history || [],
               favorites: reader.favorites || [],
@@ -2140,6 +2731,40 @@ window.handleSaveProfile = async function(event) {
 // ============================================================
 // [Step 4] 대댓글 (Nested Comments) 계층형 렌더링 및 등록
 // ============================================================
+// [Step 4] 문단 댓글 & 대댓글 (Nested Comments) & 작가 모더레이션 연동
+// ============================================================
+
+window.filterParagraphComments = function(paragraphIndex) {
+  if (window._filterParagraphIndex === paragraphIndex) {
+    window._filterParagraphIndex = null;
+    window._paragraphComment = null;
+    document.querySelectorAll('#readerBody .reader-paragraph').forEach((el) => el.classList.remove('is-comment-selected'));
+  } else {
+    window._filterParagraphIndex = paragraphIndex;
+    document.querySelectorAll('#readerBody .reader-paragraph').forEach((el) => el.classList.remove('is-comment-selected'));
+    const pEl = document.querySelector(`#readerBody [data-paragraph-index="${paragraphIndex}"]`);
+    if (pEl) {
+      pEl.classList.add('is-comment-selected');
+      const cleanText = pEl.textContent.replace(/💬\s*\d+$/, '').trim();
+      window._paragraphComment = {
+        paragraphIndex,
+        quoteText: cleanText.slice(0, 300),
+        contentVersion: pEl.getAttribute('data-content-version') || 'v1'
+      };
+    }
+  }
+
+  if (window._currentReadingWorkId && window._currentReadingEpNum) {
+    const episode = activeWork?.episodes?.find((item) => Number(item.episodeNumber) === Number(window._currentReadingEpNum));
+    loadEpisodeComments(window._currentReadingWorkId, episode?.id || window._currentReadingEpNum);
+  }
+
+  const commentSection = document.getElementById('readerCommentsDrawer') || document.getElementById('readerCommentsList');
+  if (commentSection) {
+    commentSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+};
+
 window.loadEpisodeComments = async function(workId, episodeId) {
   const container = document.getElementById('readerCommentsList');
   if (!container) return;
@@ -2156,8 +2781,36 @@ window.loadEpisodeComments = async function(workId, episodeId) {
       comments = [];
     }
 
+    // Update paragraph comment count badges in readerBody
+    const pCountMap = {};
+    comments.forEach(c => {
+      const pIdx = c.anchor_paragraph ?? c.anchorParagraph;
+      if (pIdx !== undefined && pIdx !== null && pIdx !== '') {
+        pCountMap[pIdx] = (pCountMap[pIdx] || 0) + 1;
+      }
+    });
+
+    document.querySelectorAll('#readerBody .reader-paragraph').forEach((pEl) => {
+      const pIdx = pEl.getAttribute('data-paragraph-index');
+      const existingBadge = pEl.querySelector('.paragraph-badge');
+      if (existingBadge) existingBadge.remove();
+
+      const count = pCountMap[pIdx];
+      if (count > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'paragraph-badge';
+        badge.title = `이 문단의 댓글 ${count}개 보기`;
+        badge.innerHTML = `💬 ${count}`;
+        badge.onclick = (e) => {
+          e.stopPropagation();
+          filterParagraphComments(parseInt(pIdx, 10));
+        };
+        pEl.appendChild(badge);
+      }
+    });
+
     // 최상위 댓글과 대댓글 분리
-    const rootComments = comments.filter(c => !c.parent_id);
+    let rootComments = comments.filter(c => !c.parent_id);
     let activeCreator = null;
     try { activeCreator = JSON.parse(localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author') || 'null'); } catch (_) {}
     const canModerate = !!activeCreator && (String(activeCreator.id || activeCreator.authorId || activeCreator.creatorId) === String(activeWork?.authorId || activeWork?.author_id) || String(activeCreator.pen_name || activeCreator.penName) === String(activeWork?.author));
@@ -2167,12 +2820,29 @@ window.loadEpisodeComments = async function(workId, episodeId) {
       replyMap[r.parent_id].push(r);
     });
 
+    // Filter by paragraph if active
+    let filterBannerHtml = '';
+    if (window._filterParagraphIndex !== null && window._filterParagraphIndex !== undefined) {
+      filterBannerHtml = `
+        <div class="paragraph-filter-banner mb-3" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.35); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.84rem; color:#c7d2fe;">
+            📌 <strong>문단 #${Number(window._filterParagraphIndex) + 1}</strong>에 남겨진 댓글만 표시 중입니다.
+          </span>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="filterParagraphComments(${window._filterParagraphIndex})" style="font-size:0.75rem; padding:3px 8px; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+            전체 댓글 보기 ✕
+          </button>
+        </div>
+      `;
+      rootComments = rootComments.filter(c => (c.anchor_paragraph ?? c.anchorParagraph) == window._filterParagraphIndex);
+    }
+
     const selectedParagraph = window._paragraphComment;
     const paragraphContext = selectedParagraph ? `
       <div class="paragraph-comment-context">
-        <span>문단 댓글</span><q>${escapeReaderHtml(selectedParagraph.quoteText)}</q>
+        <span>문단 #${Number(selectedParagraph.paragraphIndex) + 1} 인용</span><q>${escapeReaderHtml(selectedParagraph.quoteText)}</q>
         <button type="button" onclick="window._paragraphComment = null; loadEpisodeComments(${workId}, ${episodeId})">선택 해제</button>
       </div>` : '';
+
     let html = `
       <!-- 댓글 입력창 -->
       <div class="comment-input-box card glass-panel p-3 mb-4" style="border: 1px solid var(--border-color); border-radius: 8px;">
@@ -2180,12 +2850,13 @@ window.loadEpisodeComments = async function(workId, episodeId) {
         ${paragraphContext}
         <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.05); color:#fff; border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
         <div class="flex-between mt-2" style="display:flex; justify-content:space-between; align-items:center;">
-          <label class="text-muted" style="font-size:.78rem;"><input id="readerCommentSpoiler" type="checkbox"> 스포일러 포함</label>
+          <label class="text-muted" style="font-size:.78rem; cursor:pointer;"><input id="readerCommentSpoiler" type="checkbox"> ⚠️ 스포일러 포함</label>
           <button class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit(${workId}, ${episodeId})">
             댓글 등록
           </button>
         </div>
       </div>
+      ${filterBannerHtml}
     `;
 
     if (rootComments.length === 0) {
@@ -2194,6 +2865,19 @@ window.loadEpisodeComments = async function(workId, episodeId) {
       rootComments.forEach(c => {
         const timeStr = new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const replies = replyMap[c.id] || [];
+        const isSpoiler = !!(c.is_spoiler || c.isSpoiler);
+
+        const spoilerBlock = isSpoiler ? `
+          <div class="comment-spoiler-blur-wrap is-blurred" id="spoilerWrap-${c.id}">
+            <div class="spoiler-reveal-bar">
+              <span class="spoiler-notice">⚠️ 스포일러가 포함된 감상평입니다.</span>
+              <button type="button" class="btn btn-sm btn-outline btn-reveal-spoiler" onclick="document.getElementById('spoilerWrap-${c.id}').classList.remove('is-blurred'); this.parentElement.remove();">
+                내용 보기
+              </button>
+            </div>
+            <div class="comment-content-text">${escapeReaderHtml(c.content)}</div>
+          </div>
+        ` : `<div class="comment-content-text">${escapeReaderHtml(c.content)}</div>`;
 
         html += `
           <div class="comment-item" id="comment-${c.id}">
@@ -2202,7 +2886,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
               <span class="comment-time">${timeStr}</span>
             </div>
             ${c.quote_text ? `<div class="comment-quote">${escapeReaderHtml(c.quote_text)}</div>` : ''}
-            <div class="comment-content ${c.is_spoiler ? 'is-spoiler' : ''}">${escapeReaderHtml(c.content)}${c.is_spoiler ? '<button type="button" onclick="this.parentElement.classList.remove(\'is-spoiler\')">스포일러 보기</button>' : ''}</div>
+            <div class="comment-content">${spoilerBlock}</div>
             <div class="comment-actions">
               <button class="btn-like-comment" onclick="handleLikeComment('${c.id}')" id="btnLike-${c.id}">
                 ❤️ 공감 <span id="likeCount-${c.id}">${c.likes_count || 0}</span>
@@ -2227,13 +2911,26 @@ window.loadEpisodeComments = async function(workId, episodeId) {
         // 대댓글 렌더링
         replies.forEach(r => {
           const rTimeStr = new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const isReplySpoiler = !!(r.is_spoiler || r.isSpoiler);
+          const replySpoilerBlock = isReplySpoiler ? `
+            <div class="comment-spoiler-blur-wrap is-blurred" id="spoilerWrap-${r.id}">
+              <div class="spoiler-reveal-bar">
+                <span class="spoiler-notice">⚠️ 스포일러가 포함된 답글입니다.</span>
+                <button type="button" class="btn btn-sm btn-outline btn-reveal-spoiler" onclick="document.getElementById('spoilerWrap-${r.id}').classList.remove('is-blurred'); this.parentElement.remove();">
+                  내용 보기
+                </button>
+              </div>
+              <div class="comment-content-text">${escapeReaderHtml(r.content)}</div>
+            </div>
+          ` : `<div class="comment-content-text">${escapeReaderHtml(r.content)}</div>`;
+
           html += `
             <div class="comment-item is-reply" id="comment-${r.id}">
               <div class="comment-header">
                 <span class="comment-author" style="color:var(--cdg-pink);">↳ 👤 ${r.nickname || '독자'}</span>
                 <span class="comment-time">${rTimeStr}</span>
               </div>
-              <div class="comment-content ${r.is_spoiler ? 'is-spoiler' : ''}">${escapeReaderHtml(r.content)}</div>
+              <div class="comment-content">${replySpoilerBlock}</div>
               <div class="comment-actions">
                 <button class="btn-like-comment" onclick="handleLikeComment('${r.id}')" id="btnLike-${r.id}">
                   ❤️ 공감 <span id="likeCount-${r.id}">${r.likes_count || 0}</span>
@@ -2254,43 +2951,6 @@ window.loadEpisodeComments = async function(workId, episodeId) {
   }
 };
 
-window.handleLikeComment = function(commentId) {
-  const countEl = document.getElementById(`likeCount-${commentId}`);
-  const btnEl = document.getElementById(`btnLike-${commentId}`);
-  if (countEl) {
-    let cur = parseInt(countEl.textContent, 10) || 0;
-    cur += 1;
-    countEl.textContent = String(cur);
-    if (btnEl) {
-      btnEl.style.color = 'var(--cdg-pink)';
-    }
-    showToast('💖 감상평에 공감(좋아요)을 남겼습니다.');
-  }
-};
-
-window.authorHideComment = async function(commentId) {
-  const result = await window.WebNovelsAdmin?.setCommentHiddenByAuthor?.(commentId, true);
-  if (!result?.success) { showToast(`댓글 숨김 실패: ${result?.error || '권한을 확인해주세요.'}`); return; }
-  showToast('댓글을 숨겼습니다.');
-  renderReaderComments(window._currentReadingWorkId, window._currentReadingEpNum);
-};
-
-window.authorBlockCommenter = async function(workId, readerId) {
-  if (!readerId) { showToast('독자 식별 정보가 없어 차단할 수 없습니다.'); return; }
-  let creator = null;
-  try { creator = JSON.parse(localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author') || 'null'); } catch (_) {}
-  if (!creator || !window.confirm('이 독자가 이 작품에 새 댓글을 작성하지 못하게 할까요?')) return;
-  const result = await window.WebNovelsAdmin?.blockReaderComments?.(workId, creator.id || creator.authorId || creator.creatorId, readerId);
-  showToast(result?.success ? '이 작품에서 해당 독자의 댓글 작성을 차단했습니다.' : `독자 차단 실패: ${result?.error || '권한을 확인해주세요.'}`);
-};
-
-window.toggleReplyInput = function(commentId) {
-  const el = document.getElementById(`replyInput-${commentId}`);
-  if (el) {
-    el.classList.toggle('active');
-  }
-};
-
 window.handleReaderCommentSubmit = async function(workId, episodeId) {
   const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
   if (!savedUser) {
@@ -2305,6 +2965,51 @@ window.handleReaderCommentSubmit = async function(workId, episodeId) {
     return;
   }
 
+  const contentText = input.value.trim();
+
+  // 1. 작가 안심 모더레이션 정책 검증 (improve4.md)
+  let policy = null;
+  if (window.WebNovelsAdmin?.fetchWorkCommentPolicy) {
+    try {
+      policy = await window.WebNovelsAdmin.fetchWorkCommentPolicy(workId);
+    } catch (_) {}
+  }
+
+  if (policy) {
+    // 1-1. 댓글 허용 여부
+    if (policy.comments_enabled === false || policy.commentsEnabled === false) {
+      showToast('🚫 작가님의 설정에 의해 이 작품의 신규 댓글 작성이 일시 제한되었습니다.');
+      return;
+    }
+
+    // 1-2. 최소 열람 회차 요건 (체리피커/분탕 방지)
+    const minEpisodes = policy.min_read_episodes ?? policy.minReadEpisodes ?? 0;
+    if (minEpisodes > 0) {
+      let readHistory = [];
+      try {
+        readHistory = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
+      } catch (_) {}
+      const readEpsForWork = new Set(
+        readHistory.filter(h => Number(h.workId || h.work_id) === Number(workId)).map(h => Number(h.epNum || h.episodeNumber || h.ep_num))
+      );
+      if (readEpsForWork.size < minEpisodes) {
+        showToast(`⚠️ 본 작품은 최소 ${minEpisodes}화 이상 정독한 독자만 댓글 작성이 가능합니다. (현재 ${readEpsForWork.size}화 감상)`);
+        return;
+      }
+    }
+
+    // 1-3. 작가 지정 금칙어 필터링
+    const blockedTerms = policy.blocked_terms || policy.blockedTerms || [];
+    if (blockedTerms.length > 0) {
+      const lowerContent = contentText.toLowerCase();
+      const matchedTerm = blockedTerms.find(term => lowerContent.includes(String(term).toLowerCase().trim()));
+      if (matchedTerm) {
+        showToast(`⚠️ 작가님이 지정한 금칙어("${matchedTerm}")가 포함되어 있어 등록할 수 없습니다.`);
+        return;
+      }
+    }
+  }
+
   const userId = savedUser.username || savedUser.email || String(savedUser.id);
   const nickname = savedUser.nickname || savedUser.username || '독자';
 
@@ -2314,12 +3019,12 @@ window.handleReaderCommentSubmit = async function(workId, episodeId) {
     const response = await fetch(`/api/community/episodes/${episodeId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('webnovels_token')}` },
-      body: JSON.stringify({ content: input.value.trim(), anchorParagraph: paragraph?.paragraphIndex, quoteText: paragraph?.quoteText, contentVersion: paragraph?.contentVersion, isSpoiler: spoiler })
+      body: JSON.stringify({ content: contentText, anchorParagraph: paragraph?.paragraphIndex, quoteText: paragraph?.quoteText, contentVersion: paragraph?.contentVersion, isSpoiler: spoiler })
     });
     const result = await response.json();
     if (!response.ok) { showToast(`⚠️ ${result.error || '댓글을 등록하지 못했습니다.'}`); return; }
   } else if (window.WebNovelsAdmin?.addCommentToEpisode) {
-    await window.WebNovelsAdmin.addCommentToEpisode(workId, episodeId, userId, nickname, input.value.trim(), null, { anchorParagraph: paragraph?.paragraphIndex, quoteText: paragraph?.quoteText, contentVersion: paragraph?.contentVersion, isSpoiler: spoiler });
+    await window.WebNovelsAdmin.addCommentToEpisode(workId, episodeId, userId, nickname, contentText, null, { anchorParagraph: paragraph?.paragraphIndex, quoteText: paragraph?.quoteText, contentVersion: paragraph?.contentVersion, isSpoiler: spoiler });
   }
 
   showToast('🎉 감상평이 성공적으로 등록되었습니다.');
@@ -2362,6 +3067,16 @@ if (typeof window !== 'undefined') {
   window.renderHomeWorks = renderHomeWorks;
   window.renderDiscoverWorks = renderDiscoverWorks;
   window.renderSearchResults = renderSearchResults;
+  window.renderGoldenBest = renderGoldenBest;
+  window.filterParagraphComments = filterParagraphComments;
+  window.loadEpisodeComments = loadEpisodeComments;
+  window.setDiscoverGenreFilter = window.setDiscoverGenreFilter;
+  window.setDiscoverStatus = window.setDiscoverStatus;
+  window.setDiscoverEpisodeRange = window.setDiscoverEpisodeRange;
+  window.setDiscoverRating = window.setDiscoverRating;
+  window.setDiscoverSortOrder = window.setDiscoverSortOrder;
+  window.toggleDiscoverTag = window.toggleDiscoverTag;
+  window.resetDiscoverFilters = window.resetDiscoverFilters;
   window.renderLibraryContent = renderLibraryContent;
   window.renderLibraryContinueList = renderLibraryContinueList;
   window.renderLibraryFavoritesList = renderLibraryFavoritesList;

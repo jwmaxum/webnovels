@@ -10,7 +10,8 @@
     "start": "node dist/src/server.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
-    "test": "tsx scripts/verify_backend.ts"
+    "test": "tsx scripts/verify_backend.ts",
+    "test:author": "tsx scripts/verify_author_suite.ts"
   },
   "keywords": [],
   "author": "",

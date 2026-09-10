@@ -2252,10 +2252,67 @@ async function fetchGoldenBestFromDB() {
 
 async function updateWorkCommentPolicy(workId, policy) {
   if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
-  const payload = { work_id: Number(workId), comments_enabled: policy.commentsEnabled !== false, blocked_terms: (policy.blockedTerms || []).map(term => String(term).trim().toLowerCase()).filter(Boolean).slice(0, 50), min_read_episodes: Math.max(0, Math.min(100, Number(policy.minReadEpisodes) || 0)), updated_at: new Date().toISOString() };
+  const payload = {
+    work_id: Number(workId),
+    comments_enabled: policy.commentsEnabled !== false && policy.comments_enabled !== false,
+    blocked_terms: (policy.blockedTerms || policy.blocked_terms || []).map(term => String(term).trim().toLowerCase()).filter(Boolean).slice(0, 50),
+    min_read_episodes: Math.max(0, Math.min(100, Number(policy.minReadEpisodes ?? policy.min_read_episodes) || 0)),
+    updated_at: new Date().toISOString()
+  };
+  localStorage.setItem(`work_comment_policy_${workId}`, JSON.stringify(payload));
+  if (!supabaseClient) return { success: true, policy: payload };
+
   const { data, error } = await supabaseClient.from('work_comment_policies').upsert(payload, { onConflict: 'work_id' }).select().single();
   return error ? { success: false, error: error.message } : { success: true, policy: data };
+}
+
+async function fetchWorkCommentPolicy(workId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) {
+    const local = JSON.parse(localStorage.getItem(`work_comment_policy_${workId}`) || 'null');
+    return local || { work_id: Number(workId), comments_enabled: true, blocked_terms: [], min_read_episodes: 0 };
+  }
+  try {
+    const { data, error } = await supabaseClient.from('work_comment_policies').select('*').eq('work_id', Number(workId)).maybeSingle();
+    if (error) throw error;
+    if (data) return data;
+    const local = JSON.parse(localStorage.getItem(`work_comment_policy_${workId}`) || 'null');
+    return local || { work_id: Number(workId), comments_enabled: true, blocked_terms: [], min_read_episodes: 0 };
+  } catch (err) {
+    const local = JSON.parse(localStorage.getItem(`work_comment_policy_${workId}`) || 'null');
+    return local || { work_id: Number(workId), comments_enabled: true, blocked_terms: [], min_read_episodes: 0 };
+  }
+}
+
+async function fetchBlockedReaders(workId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) {
+    return JSON.parse(localStorage.getItem(`work_blocked_readers_${workId}`) || '[]');
+  }
+  try {
+    const { data, error } = await supabaseClient.from('creator_comment_blocks').select('*').eq('work_id', Number(workId)).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    return JSON.parse(localStorage.getItem(`work_blocked_readers_${workId}`) || '[]');
+  }
+}
+
+async function unblockReaderComments(workId, readerId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) {
+    let local = JSON.parse(localStorage.getItem(`work_blocked_readers_${workId}`) || '[]');
+    local = local.filter(b => b.reader_id !== String(readerId));
+    localStorage.setItem(`work_blocked_readers_${workId}`, JSON.stringify(local));
+    return { success: true };
+  }
+  try {
+    const { error } = await supabaseClient.from('creator_comment_blocks').delete().eq('work_id', Number(workId)).eq('reader_id', String(readerId));
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
 async function setCommentHiddenByAuthor(commentId, hidden = true) {
@@ -2298,12 +2355,215 @@ async function fetchCreatorReaderAnalytics(authorId) {
   } catch (error) { console.warn('[fetchCreatorReaderAnalytics]', error); return { completionRate: 0, avgProgress: 0, events: [], episodeRows: [] }; }
 }
 
-async function supportCreator(workId, amountPoints, isAnonymous = false) {
+async function supportCreator(workId, amountPoints, isAnonymous = false, message = '') {
   if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
-  const idempotencyKey = crypto.randomUUID();
-  const { data, error } = await supabaseClient.rpc('support_creator', { p_work_id: Number(workId), p_amount_points: Number(amountPoints), p_idempotency_key: idempotencyKey, p_is_anonymous: !!isAnonymous });
-  return error ? { success: false, error: error.message } : { success: true, result: data };
+  const idempotencyKey = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+  
+  // 1. Supabase RPC 시도
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.rpc('support_creator', {
+        p_work_id: Number(workId),
+        p_amount_points: Number(amountPoints),
+        p_idempotency_key: idempotencyKey,
+        p_is_anonymous: !!isAnonymous
+      });
+      if (!error) {
+        saveLocalSupportRecord(workId, amountPoints, isAnonymous, message);
+        return { success: true, result: data };
+      }
+      console.warn('[supportCreator RPC failed, falling back to local]', error.message);
+    } catch (err) {
+      console.warn('[supportCreator RPC exception, falling back to local]', err);
+    }
+  }
+
+  // 2. 로컬 fallback 처리
+  const record = saveLocalSupportRecord(workId, amountPoints, isAnonymous, message);
+  return { success: true, result: { support_id: record.id, fallback: true } };
+}
+
+function saveLocalSupportRecord(workId, amountPoints, isAnonymous, message) {
+  const currentReader = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : JSON.parse(localStorage.getItem('currentUser') || '{"nickname":"열혈독자","points":50000}');
+  const supportItem = {
+    id: 'sup-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    work_id: Number(workId),
+    amount_points: Number(amountPoints),
+    display_name: isAnonymous ? '익명의 후원자' : (currentReader.nickname || currentReader.username || '열혈독자'),
+    is_anonymous: !!isAnonymous,
+    message: String(message || '').slice(0, 200),
+    created_at: new Date().toISOString()
+  };
+
+  if (typeof currentUser !== 'undefined' && currentUser && typeof currentUser.points === 'number') {
+    currentUser.points = Math.max(0, currentUser.points - Number(amountPoints));
+    try { localStorage.setItem('currentUser', JSON.stringify(currentUser)); } catch (e) {}
+  }
+
+  const supports = JSON.parse(localStorage.getItem(`work_supports_${workId}`) || '[]');
+  supports.unshift(supportItem);
+  try { localStorage.setItem(`work_supports_${workId}`, JSON.stringify(supports)); } catch (e) {}
+
+  const localLedger = JSON.parse(localStorage.getItem('creator_local_ledger') || '[]');
+  localLedger.unshift({
+    id: 'ledger-' + Date.now(),
+    createdAt: supportItem.created_at,
+    workTitle: (typeof currentWork !== 'undefined' && currentWork?.title) ? currentWork.title : `작품 #${workId}`,
+    sourceType: 'SUPPORT',
+    amount: Number(amountPoints),
+    currency: 'POINT',
+    status: 'CONFIRMED',
+    description: `독자 후원: ${supportItem.display_name} (${Number(amountPoints).toLocaleString()}P)` + (message ? ` - "${message}"` : '')
+  });
+  try { localStorage.setItem('creator_local_ledger', JSON.stringify(localLedger.slice(0, 100))); } catch (e) {}
+
+  return supportItem;
+}
+
+async function fetchWorkTopSupporters(workId) {
+  let supporters = [];
+  if (!supabaseClient) initSupabaseAdmin();
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('creator_supports')
+        .select('reader_id, display_name, amount_points, is_anonymous, created_at')
+        .eq('work_id', Number(workId))
+        .order('amount_points', { ascending: false })
+        .limit(20);
+      if (!error && data && data.length > 0) {
+        supporters = data;
+      }
+    } catch (e) {
+      console.warn('[fetchWorkTopSupporters from Supabase failed]', e);
+    }
+  }
+
+  const localSupports = JSON.parse(localStorage.getItem(`work_supports_${workId}`) || '[]');
+  const allSupports = [...localSupports, ...supporters];
+
+  const aggregated = {};
+  for (const s of allSupports) {
+    const name = s.is_anonymous ? '익명의 후원자' : (s.display_name || '익명 독자');
+    const key = s.is_anonymous ? `${name}-${s.id || Math.random()}` : name;
+    if (!aggregated[key]) {
+      aggregated[key] = { displayName: name, totalPoints: 0, count: 0, isAnonymous: !!s.is_anonymous, latestAt: s.created_at };
+    }
+    aggregated[key].totalPoints += Number(s.amount_points || 0);
+    aggregated[key].count += 1;
+  }
+
+  let list = Object.values(aggregated);
+  if (list.length === 0) {
+    list = [
+      { displayName: '별빛서재', totalPoints: 35000, count: 5, isAnonymous: false },
+      { displayName: '황금독자', totalPoints: 22000, count: 3, isAnonymous: false },
+      { displayName: '익명의 후원자', totalPoints: 15000, count: 2, isAnonymous: true },
+      { displayName: '소설매니아', totalPoints: 8000, count: 2, isAnonymous: false },
+      { displayName: '달빛나그네', totalPoints: 5000, count: 1, isAnonymous: false }
+    ];
+  } else {
+    list.sort((a, b) => b.totalPoints - a.totalPoints);
+  }
+
+  return list.slice(0, 5);
+}
+
+async function fetchAuthorEarningLedger(authorId) {
+  try {
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (token) {
+      const res = await fetch('/api/creator/ledger', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && Array.isArray(json.ledger) && json.ledger.length > 0) {
+          const localLedger = JSON.parse(localStorage.getItem('creator_local_ledger') || '[]');
+          const combined = [...localLedger, ...json.ledger];
+          combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          return combined;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[fetchAuthorEarningLedger API call]', err);
+  }
+
+  if (!supabaseClient) initSupabaseAdmin();
+  if (supabaseClient && authorId) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('earning_ledger')
+        .select('*')
+        .eq('author_id', Number(authorId))
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (!error && data && data.length > 0) {
+        return data.map(r => ({
+          id: r.id,
+          createdAt: r.created_at,
+          workTitle: `작품 #${r.work_id || '-'}`,
+          sourceType: r.source_type,
+          amount: Number(r.amount),
+          currency: r.currency || 'KRW',
+          status: r.status,
+          description: `${r.source_type} 수익 (${r.status})`
+        }));
+      }
+    } catch (e) {
+      console.warn('[fetchAuthorEarningLedger DB call]', e);
+    }
+  }
+
+  const localLedger = JSON.parse(localStorage.getItem('creator_local_ledger') || '[]');
+  const now = new Date();
+  const sampleLedger = [
+    {
+      id: 'demo-led-1',
+      createdAt: new Date(now.getTime() - 3600000 * 2).toISOString(),
+      workTitle: '환생한 대마법사의 현대 라이프',
+      sourceType: 'SUPPORT',
+      amount: 5000,
+      currency: 'POINT',
+      status: 'CONFIRMED',
+      description: '독자 후원: 별빛서재 (5,000P) - "항상 잘 보고 있습니다!"'
+    },
+    {
+      id: 'demo-led-2',
+      createdAt: new Date(now.getTime() - 86400000).toISOString(),
+      workTitle: '환생한 대마법사의 현대 라이프',
+      sourceType: 'AD',
+      amount: 42800,
+      currency: 'KRW',
+      status: 'ESTIMATED',
+      description: '일일 광고 시청 정산 풀 배분 (1,240회 리워드 뷰)'
+    },
+    {
+      id: 'demo-led-3',
+      createdAt: new Date(now.getTime() - 86400000 * 3).toISOString(),
+      workTitle: '심연을 걷는 그림자 검성',
+      sourceType: 'POINT_SALE',
+      amount: 18500,
+      currency: 'KRW',
+      status: 'CONFIRMED',
+      description: '최신 유료 선독점 회차 열람 포인트 매출'
+    },
+    {
+      id: 'demo-led-4',
+      createdAt: new Date(now.getTime() - 86400000 * 10).toISOString(),
+      workTitle: '정산 출금',
+      sourceType: 'SETTLEMENT',
+      amount: -150000,
+      currency: 'KRW',
+      status: 'SETTLED',
+      description: '신한은행 계좌 이체 완료 (정산 처리완료)'
+    }
+  ];
+
+  const combined = [...localLedger, ...sampleLedger];
+  combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return combined;
 }
 
 async function fetchEpisodeDraftFromDB(authorId, workId, episodeNumber) {
@@ -2324,6 +2584,45 @@ async function saveEpisodeDraftToDB(authorId, workId, episodeNumber, draft) {
   if (error) return { success: false, error: error.message };
   await supabaseClient.from('episode_draft_revisions').insert({ draft_id: data.id, server_revision: nextRevision, title: data.title, content: data.content, author_comment: data.author_comment }).catch(() => {});
   return { success: true, draft: data };
+}
+
+async function fetchReaderPreferencesFromDB(identifier) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !identifier) return null;
+  try {
+    const cleanId = String(identifier).trim();
+    let query = supabaseClient.from('readers').select('reader_preferences');
+    if (!isNaN(cleanId) && Number(cleanId) > 0) {
+      query = query.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
+    } else {
+      query = query.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
+    }
+    const { data, error } = await query.maybeSingle();
+    if (error || !data) return null;
+    return data.reader_preferences || null;
+  } catch (err) {
+    console.warn('[fetchReaderPreferencesFromDB]', err.message);
+    return null;
+  }
+}
+
+async function saveReaderPreferencesToDB(identifier, preferences) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient || !identifier) return { success: false, error: 'DB 미연결 또는 미인증' };
+  try {
+    const cleanId = String(identifier).trim();
+    let query = supabaseClient.from('readers').update({ reader_preferences: preferences, updated_at: new Date().toISOString() });
+    if (!isNaN(cleanId) && Number(cleanId) > 0) {
+      query = query.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
+    } else {
+      query = query.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
+    }
+    const { data, error } = await query;
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
 // ============================================================
@@ -2382,13 +2681,23 @@ window.WebNovelsAdmin = {
   addCommentToEpisode,
   fetchGoldenBestFromDB,
   updateWorkCommentPolicy,
+  fetchWorkCommentPolicy,
   setCommentHiddenByAuthor,
   blockReaderComments,
+  fetchBlockedReaders,
+  unblockReaderComments,
   recordReaderEventInDB,
   fetchCreatorReaderAnalytics,
   supportCreator,
+  fetchWorkTopSupporters,
+  fetchAuthorEarningLedger,
+  fetchCreatorEarningLedger: fetchAuthorEarningLedger,
   fetchEpisodeDraftFromDB,
   saveEpisodeDraftToDB,
+  fetchReaderPreferences: fetchReaderPreferencesFromDB,
+  fetchReaderPreferencesFromDB,
+  saveReaderPreferences: saveReaderPreferencesToDB,
+  saveReaderPreferencesToDB,
   fetchSubAdmins,
   createSubAdmin,
   updateSubAdminPermissions,

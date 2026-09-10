@@ -1694,6 +1694,9 @@ window.handleAdminEpisodeDetailSave = async function(e, episodeId, workId) {
 
 // 신규 작품 등록 모달 열기/제출
 window.openAdminCreateWorkModal = function() {
+  if (window.TagChipsManager) {
+    window.TagChipsManager.reset();
+  }
   openModal('modalAdminCreateWork');
 };
 
@@ -1705,13 +1708,23 @@ window.handleAdminCreateWorkSubmit = async function(e) {
   const genre = document.getElementById('adminNewWorkGenre').value;
   const description = document.getElementById('adminNewWorkDesc').value.trim();
   const coverUrl = `/images/${document.getElementById('adminNewWorkCover').value}`;
+  const rawTags = document.getElementById('adminNewWorkTags')?.value || '';
+  let tags = [];
+  try {
+    tags = JSON.parse(rawTags);
+  } catch(_) {
+    tags = rawTags ? rawTags.split(',').map(s => s.trim()).filter(Boolean) : [];
+  }
+  if (!tags.length) {
+    tags = [genre, '신작'];
+  }
 
   if (!title || !author) {
     showToast('작품명과 작가명을 입력하세요.');
     return;
   }
 
-  const workData = { title, author, contentType, genre, description, coverUrl };
+  const workData = { title, author, contentType, genre, description, coverUrl, tags };
 
   if (window.WebNovelsAdmin) {
     await window.WebNovelsAdmin.createWorkInDB(workData);

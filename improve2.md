@@ -1,47 +1,74 @@
-# [Improvement Step 2] 프론트엔드 실용적 모듈화 (FSD 아키텍처 점진 도입)
+# [Improvement Step 2] 리더 개인화 환경설정 및 동기화 (improve2.md)
 
-## 1. 개요 및 배경
-현재 `public/app.js`는 약 6,700줄에 달하는 단일 파일로 구성되어 있어, 비즈니스 로직(독서 뷰어, 결제/정산, 작가 스튜디오, 관리자 CMS, Supabase 실시간 동기화)이 한곳에 집중되어 있습니다.
-무리한 React 전면 재작성 대신, **Native ES Modules(ESM) 기반의 점진적 모듈 분할**을 통해 `improve.md`의 FSD(Feature-Sliced Design) 아키텍처를 안전하게 실현합니다.
-
----
-
-## 2. 모듈 분할 디렉토리 설계 (FSD 매핑)
-
-```
-public/
-├── js/
-│   ├── core/                      # 앱의 공통 인프라 레이어
-│   │   ├── router.js              # History API 라우터 (Semantic URL 해석)
-│   │   ├── event-bus.js           # 컴포넌트 간 이벤트 발행/구독 (Decoupled)
-│   │   ├── state.js               # 전역 클라이언트 상태 (User, ActiveWork 등)
-│   │   └── ui-utils.js            # Toast, Modal, Formatters
-│   │
-│   ├── entities/                  # 도메인 모델 및 데이터 CRUD
-│   │   ├── work.js                # 작품 모델, 목록 조회, 필터링
-│   │   ├── episode.js             # 회차 모델, 잠금/해금 판별
-│   │   ├── user.js                # 독자 프로필, 포인트, 성인인증 상태
-│   │   └── author.js              # 작가 프로필, 정산 계좌
-│   │
-│   ├── features/                  # 사용자 상호작용 기능 단위
-│   │   ├── auth/                  # 로그인/회원가입/로그아웃
-│   │   ├── reader/                # 웹소설/웹툰 뷰어, 글자크기/테마, 독서진행률
-│   │   ├── library/               # 이어보기, 관심작품, 구독작가 동기화
-│   │   ├── creator/               # 원고 에디터, AI 자동검수, 연재상태 관리
-│   │   └── admin/                 # 16대 관제 메뉴, 5대 검수 콘솔
-│   │
-│   └── app.js                     # 진입점 (Entry Point: 부트스트랩 및 모듈 초기화)
-```
+## 1. 개요 및 목적
+현재 뷰어는 3가지 기본 테마(화이트/세피아/다크)와 단순 글자 크기(A-/A+)만 지원합니다. 장시간 모바일/PC로 소설을 읽는 독자의 시각 피로를 최소화하고 몰입도를 극대화하기 위해 **OLED True Black 테마, 전문 글꼴(명조/고딕) 전환, 줄간격/여백 조절, 그리고 기기 간 설정 동기화 체계**를 완성합니다.
 
 ---
 
-## 3. 점진적 마이그레이션 원칙 (Zero-Regression Principles)
+## 2. 변경 대상 파일 목록
+1. `public/index.html` : 뷰어 환경설정 모달(`modalReaderSettings`) 내 글꼴, 줄간격, 여백, OLED 블랙 UI 추가
+2. `public/js/reader/reader.js` : 리더 환경설정 스토어(`ReaderPreferencesManager`), CSS 변수 주입 로직, 동기화 연동
+3. `public/styles.css` : `--reader-font-family`, `--reader-line-height`, `--reader-padding-x`, `.theme-oled` 등 스타일 정의
+4. `database/19_reader_preferences.sql` (선택적) 또는 Supabase/Express 설정 저장 API 연동
 
-### 3.1 호환성 브릿지 (Global Bridge Pattern)
-- 기존 `index.html`의 인라인 이벤트 핸들러(예: `onclick="switchWebNovelsView(...)"`)가 중단 없이 작동할 수 있도록 `window` 전역 객체에 네임스페이스 브릿지를 유지합니다.
-- 모듈화 작업 중에도 브라우저 콘솔 오류 및 기존 기능 중단이 발생하지 않도록 샌드박스 방식으로 분할합니다.
+---
 
-### 3.2 단계별 전환 로드맵
-1. **Phase 2-1 (Core 추출)**: 라우터(`router.js`)와 전역 상태(`state.js`)를 먼저 분리하여 1단계 URL 라우팅과 완벽 결합.
-2. **Phase 2-2 (독자 기능 분리)**: 웹소설 뷰어(`reader.js`), 서재(`library.js`) 기능 분리.
-3. **Phase 2-3 (포털 기능 분리)**: 작가 스튜디오(`creator.js`) 및 관리자 관제탑(`admin.js`) 분리.
+## 3. 세부 기능 개발 명세
+
+### 3.1 테마 확장: OLED True Black (`theme-oled`)
+- 완벽한 `#000000` 배경 및 부드러운 회색조 텍스트(`#E2E8F0`)를 적용하여 스마트폰 배터리 절약 및 암실 독서 시 눈부심 완벽 차단.
+- 테마 선택 버튼에 `다크 블랙`, `OLED 블랙`, `세피아`, `화이트` 4종 그리드 배치.
+
+### 3.2 독서 타이포그래피 개인화 옵션
+1. **글꼴 계열 (Font Family)**:
+   - **가독 명조 (Serif)**: `KoPub 바탕`, `Noto Serif KR` — 정통 문학/소설 몰입감
+   - **깔끔 고딕 (Sans-serif)**: `Pretendard`, `Noto Sans KR` — 모바일 빠른 가독성
+2. **줄간격 (Line Height)**:
+   - 1.5배 (좁게), 1.8배 (보통 - 기본값), 2.2배 (넓게)
+3. **좌우 여백 (Horizontal Padding)**:
+   - 12px (화면 가득), 20px (기본), 36px (여유 있게)
+4. **문단 간격 (Paragraph Gap)**:
+   - 문단 사이 여백을 0.8em ~ 1.5em 사이에서 유연하게 조절.
+
+### 3.3 로컬 & 서버 원격 동기화 파이프라인
+- **비로그인 사용자**: `localStorage('webnovels_reader_pref')`에 영구 보관.
+- **로그인 사용자**:
+  - 로그인 성공 또는 설정 변경 시 서버 API/Supabase `readers.reader_preferences` 필드로 백그라운드 동기화.
+  - 다른 브라우저나 스마트폰에서 로그인 시 기존 설정이 즉시 복원되어 동일한 독서 경험 제공.
+
+---
+
+## 4. UI 및 CSS 변수 바인딩 구조
+
+```css
+/* #readerPaper에 적용되는 CSS Custom Properties */
+.reader-paper {
+  font-family: var(--reader-font, 'Pretendard', sans-serif);
+  font-size: var(--reader-font-size, 18px);
+  line-height: var(--reader-line-height, 1.8);
+  padding-left: var(--reader-padding-x, 20px);
+  padding-right: var(--reader-padding-x, 20px);
+}
+
+.reader-paragraph {
+  margin-bottom: var(--reader-paragraph-gap, 1.2em);
+}
+
+/* OLED Black */
+.main-view.full-screen-reader.theme-oled {
+  background-color: #000000 !important;
+  color: #E2E8F0 !important;
+}
+.main-view.full-screen-reader.theme-oled .reader-paper {
+  background-color: #000000 !important;
+  color: #E2E8F0 !important;
+}
+```
+
+---
+
+## 5. 검증 체크리스트
+- [ ] 뷰어 설정 모달에서 글꼴을 명조로 변경 시 본문 글꼴이 즉시 변경되는가?
+- [ ] 줄간격 및 여백 슬라이더 조절 시 리더 본문에 실시간 반영되는가?
+- [ ] OLED 블랙 테마 선택 시 배경이 순수 블랙(`#000000`)으로 렌더링되는가?
+- [ ] 브라우저를 새로고침하거나 다음 회차로 넘어가도 개인화 설정이 온전히 유지되는가?

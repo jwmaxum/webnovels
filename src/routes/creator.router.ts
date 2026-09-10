@@ -428,6 +428,77 @@ creatorRouter.post('/settlement/request', authenticateToken, async (req: AuthReq
 });
 
 // ============================================================
+// [Route] GET /api/creator/ledger
+// [Purpose] 작가의 투명한 수익 발생 및 정산 상세 원장(Ledger) 조회
+// ============================================================
+creatorRouter.get('/ledger', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const author = await db.author.findUnique({
+      where: { userId },
+      include: {
+        works: { select: { id: true, title: true } },
+        revenues: {
+          include: { revenueEvent: true },
+          orderBy: { createdAt: 'desc' }
+        },
+        settlements: {
+          orderBy: { requestedAt: 'desc' }
+        }
+      }
+    });
+
+    if (!author) {
+      return res.status(404).json({ error: '등록된 작가 계정이 없습니다.' });
+    }
+
+    const workMap = new Map(author.works.map((w: any) => [w.id, w.title]));
+
+    // 원장 목록 조합
+    const ledgerEntries: any[] = [];
+
+    // 1. 수익 분배(광고/수익배분) 내역
+    for (const rev of author.revenues) {
+      const workTitle = rev.workId ? (workMap.get(rev.workId) || '전체 작품') : '전체 작품';
+      ledgerEntries.push({
+        id: `rev-${rev.id}`,
+        createdAt: rev.createdAt.toISOString(),
+        workTitle,
+        sourceType: 'AD',
+        amount: rev.confirmedAmount > 0 ? rev.confirmedAmount : rev.estimatedAmount,
+        currency: 'KRW',
+        status: rev.status === 'CONFIRMED' || rev.status === 'PAID' ? 'CONFIRMED' : 'ESTIMATED',
+        description: `${rev.periodMonth} 월간 광고/열람 분배 수익 (${Math.round(rev.contributionRatio * 100)}% 기여도)`
+      });
+    }
+
+    // 2. 출금/정산 신청 내역
+    for (const set of author.settlements) {
+      ledgerEntries.push({
+        id: `set-${set.id}`,
+        createdAt: set.requestedAt.toISOString(),
+        workTitle: '정산 출금',
+        sourceType: 'SETTLEMENT',
+        amount: -set.amount,
+        currency: 'KRW',
+        status: set.status === 'PAID' ? 'SETTLED' : set.status === 'CONFIRMED' ? 'CONFIRMED' : 'ESTIMATED',
+        description: `계좌 입금 정산 신청 (${set.bankInfo})`
+      });
+    }
+
+    // 최신순 정렬
+    ledgerEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return res.json({
+      authorId: author.id,
+      ledger: ledgerEntries
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || '원장 조회 실패' });
+  }
+});
+
+// ============================================================
 // [Route] PUT /api/creator/profile
 // [Purpose] 작가 프로필(필명, 소개) 및 정산 계좌 정보 수정
 // [Security] 본인 작가 계정만 수정 가능
