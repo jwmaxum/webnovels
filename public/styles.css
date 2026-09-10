@@ -4265,3 +4265,82 @@ body.portal-fullscreen-mode .main-content-wrapper {
   height: 18px;
 }
 
+/* --- Creator safe-writing editor --- */
+.creator-editor-label-row,
+.creator-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.creator-editor-toolbar {
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 8px 8px 0 0;
+  background: rgba(0,0,0,0.2);
+}
+
+.creator-draft-status,
+.creator-word-count,
+.creator-word-goal {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.creator-draft-status.is-saving { color: #facc15; }
+.creator-draft-status.is-saved { color: #4ade80; }
+.creator-draft-status.is-error { color: #f87171; }
+.creator-word-goal { margin-right: auto; }
+
+.creator-word-progress {
+  height: 3px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.08);
+}
+
+.creator-word-progress > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--cdg-pink), #a78bfa);
+  transition: width .2s ease;
+}
+
+.creator-editor-textarea {
+  width: 100%;
+  min-height: 360px;
+  resize: vertical;
+  border-radius: 0 0 8px 8px !important;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.creator-editor-help {
+  margin: 7px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.reader-paragraph { cursor: text; border-radius: 5px; transition: background .15s ease; }
+.reader-paragraph:hover, .reader-paragraph.is-comment-selected { background: rgba(255, 42, 122, .10); }
+.paragraph-comment-context { display:flex; align-items:center; gap:8px; margin:0 0 8px; padding:8px; border-left:3px solid var(--cdg-pink); background:rgba(255,42,122,.08); font-size:.78rem; }
+.paragraph-comment-context span { color:var(--cdg-pink); font-weight:700; white-space:nowrap; }
+.paragraph-comment-context q { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+.paragraph-comment-context button { background:none; border:0; color:var(--text-muted); cursor:pointer; }
+.comment-quote { margin:6px 0; padding:7px 9px; border-left:2px solid var(--cdg-pink); color:var(--text-muted); font-size:.84rem; }
+.comment-content.is-spoiler { color:transparent; background:rgba(255,255,255,.10); border-radius:4px; user-select:none; }
+.comment-content.is-spoiler button { color:#fff; background:none; border:0; cursor:pointer; margin-left:8px; }
+
+@media (max-width: 768px) {
+  .creator-editor-toolbar { align-items: flex-start; }
+  .creator-word-goal { width: 100%; order: 3; }
+  .creator-editor-textarea { min-height: 52vh; font-size: 16px; line-height: 1.8; }
+  #btnSaveDraftVersion, #btnRestoreDraftVersion { min-height: 44px; }
+}

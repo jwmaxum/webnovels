@@ -140,6 +140,46 @@ async function runVerification() {
     const workId = workData.work.id;
     console.log('   ✅ 작품 등록 완료 Title:', workData.work.title);
 
+    // 안전한 집필 초안: 소유권 기반 저장, revision 충돌 차단, 버전 이력 검증
+    const firstDraftRes = await fetch(`${baseUrl}/creator/drafts/${workId}/5`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authorUserToken}` },
+      body: JSON.stringify({ title: '제 5화 초안', content: '로컬과 서버에서 안전하게 보관할 첫 번째 원고입니다.', authorComment: '초안입니다.' })
+    });
+    const firstDraftData: any = await firstDraftRes.json();
+    if (firstDraftRes.status !== 200 || firstDraftData.draft.serverRevision !== 1) throw new Error('초안 최초 저장 검증 실패');
+
+    const conflictDraftRes = await fetch(`${baseUrl}/creator/drafts/${workId}/5`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authorUserToken}` },
+      body: JSON.stringify({ title: '충돌 원고', content: '동시 편집 충돌 테스트', baseRevision: 999 })
+    });
+    if (conflictDraftRes.status !== 409) throw new Error('초안 revision 충돌 차단 검증 실패');
+
+    const updatedDraftRes = await fetch(`${baseUrl}/creator/drafts/${workId}/5`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authorUserToken}` },
+      body: JSON.stringify({ title: '제 5화 초안 수정', content: '수정된 원고입니다.', authorComment: '수정본입니다.', baseRevision: 1 })
+    });
+    const updatedDraftData: any = await updatedDraftRes.json();
+    if (updatedDraftRes.status !== 200 || updatedDraftData.draft.serverRevision !== 2) throw new Error('초안 revision 갱신 검증 실패');
+
+    const draftRevisionRes = await fetch(`${baseUrl}/creator/drafts/${workId}/5/revisions`, {
+      headers: { Authorization: `Bearer ${authorUserToken}` }
+    });
+    const draftRevisionData: any = await draftRevisionRes.json();
+    if (draftRevisionRes.status !== 200 || draftRevisionData.revisions.length !== 2) throw new Error('초안 버전 이력 검증 실패');
+    const restoreDraftRes = await fetch(`${baseUrl}/creator/drafts/${workId}/5/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authorUserToken}` },
+      body: JSON.stringify({ serverRevision: 1 })
+    });
+    const restoreDraftData: any = await restoreDraftRes.json();
+    if (restoreDraftRes.status !== 200 || restoreDraftData.draft.serverRevision !== 3 || restoreDraftData.draft.content !== '로컬과 서버에서 안전하게 보관할 첫 번째 원고입니다.') {
+      throw new Error('초안 버전 복구 검증 실패');
+    }
+    console.log('   ✅ 안전 초안 저장·충돌 차단·버전 이력·복구 검증 완료');
+
     // 1~3화 무료, 4화 광고 Unlock 회차 등록
     for (let i = 1; i <= 4; i++) {
       await fetch(`${baseUrl}/creator/works/${workId}/episodes`, {

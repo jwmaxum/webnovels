@@ -214,6 +214,14 @@
           </div>
         </section>
 
+        <section class="cdg-section" id="goldenBestSection">
+          <div class="cdg-section-head">
+            <h2 class="cdg-section-title">🌟 Golden Best · 신인 첫걸음</h2>
+            <span class="text-muted" style="font-size:.78rem;">최근 24시간 반응 기준 · 1~15화 작품</span>
+          </div>
+          <div class="cdg-scroll-row" id="goldenBestWorksGrid"></div>
+        </section>
+
         <!-- 3. ✨ 새로운 작품 (New Releases) -->
         <section class="cdg-section" id="newWorksSection">
           <div class="cdg-section-head">
@@ -314,6 +322,16 @@
             <button class="pill">19+ 성인</button>
           </div>
 
+          <div class="filter-pills mb-6" id="discoverTagFilters" aria-label="세부 태그 필터">
+            <button class="pill" data-discover-tag="regression" onclick="toggleDiscoverTag('regression')">#회귀</button>
+            <button class="pill" data-discover-tag="possession" onclick="toggleDiscoverTag('possession')">#빙의</button>
+            <button class="pill" data-discover-tag="reincarnation" onclick="toggleDiscoverTag('reincarnation')">#환생</button>
+            <button class="pill" data-discover-tag="misunderstanding" onclick="toggleDiscoverTag('misunderstanding')">#착각계</button>
+            <button class="pill" data-discover-tag="catharsis" onclick="toggleDiscoverTag('catharsis')">#사이다</button>
+            <button class="pill" data-discover-tag="academy" onclick="toggleDiscoverTag('academy')">#아카데미</button>
+            <button class="pill" data-discover-tag="professional" onclick="toggleDiscoverTag('professional')">#전문직</button>
+          </div>
+
           <div class="works-grid" id="discoverWorksGrid">
             <!-- Discover Works List -->
           </div>
@@ -354,6 +372,9 @@
                 </button>
                 <button class="btn btn-outline btn-lg" id="btnDetailSubscribe">
                   <i data-lucide="user-plus"></i> 작가 구독
+                </button>
+                <button class="btn btn-outline btn-lg" id="btnDetailSupport" onclick="supportActiveWork()">
+                  <i data-lucide="heart-handshake"></i> 작가 응원하기
                 </button>
               </div>
             </div>
@@ -557,9 +578,20 @@
                   </div>
                 </div>
 
-                <div class="form-group mb-3">
-                  <label class="small text-muted mb-1 block">원고 본문 (웹소설 텍스트 or 웹툰 이미지 URL 쉼표 구분)</label>
-                  <textarea id="newEpContent" rows="6" class="form-input" placeholder="웹소설 원고 본문 내용을 입력하거나, 웹툰의 경우 이미지 URL을 쉼표로 입력하세요." style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required></textarea>
+                <div class="form-group mb-3 creator-editor-group">
+                  <div class="creator-editor-label-row">
+                    <label class="small text-muted mb-1 block" for="newEpContent">원고 본문 (웹소설 텍스트 or 웹툰 이미지 URL 쉼표 구분)</label>
+                    <span id="creatorDraftStatus" class="creator-draft-status" role="status" aria-live="polite">초안 준비됨</span>
+                  </div>
+                  <div class="creator-editor-toolbar" aria-label="원고 작성 도구">
+                    <span id="creatorWordCount" class="creator-word-count">공백 포함 0자 · 제외 0자 · 0문단</span>
+                    <span class="creator-word-goal" aria-label="권장 분량">권장 4,500~5,500자</span>
+                    <button type="button" class="btn btn-ghost btn-sm" id="btnSaveDraftVersion"><i data-lucide="bookmark-plus"></i> 버전 저장</button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreDraftVersion"><i data-lucide="history"></i> 버전 복구</button>
+                  </div>
+                  <div class="creator-word-progress" aria-hidden="true"><span id="creatorWordProgress"></span></div>
+                  <textarea id="newEpContent" rows="16" class="form-input creator-editor-textarea" placeholder="웹소설 원고 본문 내용을 입력하거나, 웹툰의 경우 이미지 URL을 쉼표로 입력하세요." required></textarea>
+                  <p class="creator-editor-help">입력 후 1초 안에 이 기기에 저장됩니다. API 인증 세션에서는 1분마다 서버 초안에도 동기화됩니다.</p>
                 </div>
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">작가의 말</label>
@@ -610,24 +642,24 @@
             <div class="grid-3-col gap-4 mb-4" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
               <div class="card glass-panel p-4 text-center">
                 <div class="text-muted small">평균 완독률</div>
-                <h2 style="color:var(--cdg-pink); margin:6px 0; font-size:1.8rem; font-weight:800;">84.5%</h2>
+                <h2 id="creatorCompletionRate" style="color:var(--cdg-pink); margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
                 <small class="text-muted">전체 연재 회차 기준</small>
               </div>
               <div class="card glass-panel p-4 text-center">
                 <div class="text-muted small">평균 체류시간</div>
-                <h2 style="color:#38BDF8; margin:6px 0; font-size:1.8rem; font-weight:800;">4분 32초</h2>
+                <h2 id="creatorAverageProgress" style="color:#38BDF8; margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
                 <small class="text-muted">회차당 평균 독서시간</small>
               </div>
               <div class="card glass-panel p-4 text-center">
                 <div class="text-muted small">구독 팬 수</div>
-                <h2 style="color:#10B981; margin:6px 0; font-size:1.8rem; font-weight:800;">1,280명</h2>
+                <h2 id="creatorAnalyticsEvents" style="color:#10B981; margin:6px 0; font-size:1.8rem; font-weight:800;">0건</h2>
                 <small class="text-muted">작가 알림 구독자</small>
               </div>
             </div>
             <div class="card glass-panel p-6">
               <h3><i data-lucide="trending-up" class="icon-indigo"></i> 회차별 독자 반응 및 열람 추이</h3>
-              <div style="margin-top:16px; padding:20px; background:rgba(0,0,0,0.3); border-radius:12px; text-align:center;">
-                <p class="text-muted">📊 1화(34,200회) › 2화(29,800회) › 3화(27,100회) › 4화(광고 24,500회) › 5화(21,000회) › 6화(18,900회)</p>
+              <div id="creatorEpisodeAnalytics" style="margin-top:16px; padding:20px; background:rgba(0,0,0,0.3); border-radius:12px; text-align:center;">
+                <p class="text-muted">독자 이벤트가 쌓이면 회차별 완독·진행 추이가 표시됩니다.</p>
               </div>
             </div>
           </div>
@@ -2512,6 +2544,7 @@
   <script src="/js/core/router.js?v=100"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader.js?v=100"></script>
+  <script src="/js/creator/creator-editor.js?v=101"></script>
   <script src="/js/creator/creator.js?v=100"></script>
   <script src="/js/admin/admin.js?v=100"></script>
   <!-- Supabase Extension & Bootstrap Entry -->

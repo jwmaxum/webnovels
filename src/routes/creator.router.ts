@@ -22,8 +22,163 @@ import { Router, Response } from 'express';
 import { db } from '../config/db.js';
 import { authenticateToken, AuthRequest } from '../middlewares/auth.middleware.js';
 import { RevenueEngineService } from '../services/revenueEngine.service.js';
+import { normalizeTags } from '../config/tags.js';
 
 export const creatorRouter = Router();
+
+type DraftPayload = {
+  title?: unknown;
+  content?: unknown;
+  authorComment?: unknown;
+  baseRevision?: unknown;
+};
+
+function normalizeDraftPayload(payload: DraftPayload) {
+  const text = (value: unknown, max: number) => String(value ?? '').slice(0, max);
+  const baseRevision = Number(payload.baseRevision);
+  return {
+    title: text(payload.title, 300),
+    content: text(payload.content, 2_000_000),
+    authorComment: text(payload.authorComment, 2_000),
+    baseRevision: Number.isInteger(baseRevision) && baseRevision > 0 ? baseRevision : null
+  };
+}
+
+async function getOwnedDraftWork(userId: string, workId: string) {
+  const author = await db.author.findUnique({ where: { userId } });
+  if (!author) return { author: null, work: null };
+
+  const work = await db.work.findUnique({ where: { id: workId } });
+  if (!work || work.authorId !== author.id) return { author, work: null };
+  return { author, work };
+}
+
+async function keepLatestDraftRevisions(draftId: string) {
+  const stale = await db.episodeDraftRevision.findMany({
+    where: { draftId },
+    orderBy: { createdAt: 'desc' },
+    skip: 10,
+    select: { id: true }
+  });
+  if (stale.length > 0) {
+    await db.episodeDraftRevision.deleteMany({ where: { id: { in: stale.map((revision) => revision.id) } } });
+  }
+}
+
+// ============================================================
+// [Draft API] 작가 원고의 서버 동기화 및 버전 복구
+// - 모든 경로는 본인 소유 작품만 허용한다.
+// - baseRevision이 다르면 409를 반환하여 클라이언트가 무음 덮어쓰기를 하지 못하게 한다.
+// ============================================================
+creatorRouter.get('/drafts', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const workId = String(req.query.workId || '');
+    const episodeNumber = Number(req.query.episodeNumber);
+    if (!workId || !Number.isInteger(episodeNumber) || episodeNumber < 1) {
+      return res.status(400).json({ error: 'workId와 올바른 episodeNumber가 필요합니다.' });
+    }
+
+    const { author, work } = await getOwnedDraftWork(req.user!.userId, workId);
+    if (!author || !work) return res.status(403).json({ error: '본인 작품의 초안만 조회할 수 있습니다.' });
+
+    const draft = await db.episodeDraft.findUnique({
+      where: { authorId_workId_episodeNumber: { authorId: author.id, workId, episodeNumber } }
+    });
+    return res.json({ draft });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || '초안을 불러오지 못했습니다.' });
+  }
+});
+
+creatorRouter.put('/drafts/:workId/:episodeNumber', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const workId = req.params.workId;
+    const episodeNumber = Number(req.params.episodeNumber);
+    if (!Number.isInteger(episodeNumber) || episodeNumber < 1) {
+      return res.status(400).json({ error: '올바른 episodeNumber가 필요합니다.' });
+    }
+
+    const { author, work } = await getOwnedDraftWork(req.user!.userId, workId);
+    if (!author || !work) return res.status(403).json({ error: '본인 작품의 초안만 저장할 수 있습니다.' });
+
+    const payload = normalizeDraftPayload(req.body || {});
+    const where = { authorId_workId_episodeNumber: { authorId: author.id, workId, episodeNumber } };
+    const existing = await db.episodeDraft.findUnique({ where });
+    if (existing && payload.baseRevision !== null && payload.baseRevision !== existing.serverRevision) {
+      return res.status(409).json({ error: 'DRAFT_CONFLICT', draft: existing });
+    }
+
+    const nextRevision = (existing?.serverRevision || 0) + 1;
+    const draft = existing
+      ? await db.episodeDraft.update({
+          where,
+          data: { title: payload.title, content: payload.content, authorComment: payload.authorComment, serverRevision: nextRevision }
+        })
+      : await db.episodeDraft.create({
+          data: { authorId: author.id, workId, episodeNumber, title: payload.title, content: payload.content, authorComment: payload.authorComment, serverRevision: nextRevision }
+        });
+
+    await db.episodeDraftRevision.create({
+      data: { draftId: draft.id, serverRevision: nextRevision, title: draft.title, content: draft.content, authorComment: draft.authorComment }
+    });
+    await keepLatestDraftRevisions(draft.id);
+    return res.json({ draft });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || '초안을 저장하지 못했습니다.' });
+  }
+});
+
+creatorRouter.get('/drafts/:workId/:episodeNumber/revisions', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const workId = req.params.workId;
+    const episodeNumber = Number(req.params.episodeNumber);
+    const { author, work } = await getOwnedDraftWork(req.user!.userId, workId);
+    if (!author || !work || !Number.isInteger(episodeNumber)) return res.status(403).json({ error: '본인 작품의 초안만 조회할 수 있습니다.' });
+
+    const draft = await db.episodeDraft.findUnique({
+      where: { authorId_workId_episodeNumber: { authorId: author.id, workId, episodeNumber } },
+      include: { revisions: { orderBy: { createdAt: 'desc' }, take: 10 } }
+    });
+    return res.json({ revisions: draft?.revisions || [] });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || '버전 목록을 불러오지 못했습니다.' });
+  }
+});
+
+creatorRouter.post('/drafts/:workId/:episodeNumber/restore', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const workId = req.params.workId;
+    const episodeNumber = Number(req.params.episodeNumber);
+    const sourceRevision = Number(req.body?.serverRevision);
+    const { author, work } = await getOwnedDraftWork(req.user!.userId, workId);
+    if (!author || !work || !Number.isInteger(episodeNumber) || !Number.isInteger(sourceRevision)) {
+      return res.status(403).json({ error: '본인 작품의 올바른 초안 버전이 필요합니다.' });
+    }
+
+    const draft = await db.episodeDraft.findUnique({
+      where: { authorId_workId_episodeNumber: { authorId: author.id, workId, episodeNumber } }
+    });
+    if (!draft) return res.status(404).json({ error: '복구할 초안이 없습니다.' });
+
+    const source = await db.episodeDraftRevision.findUnique({
+      where: { draftId_serverRevision: { draftId: draft.id, serverRevision: sourceRevision } }
+    });
+    if (!source) return res.status(404).json({ error: '복구할 버전을 찾을 수 없습니다.' });
+
+    const nextRevision = draft.serverRevision + 1;
+    const restored = await db.episodeDraft.update({
+      where: { id: draft.id },
+      data: { title: source.title, content: source.content, authorComment: source.authorComment, serverRevision: nextRevision }
+    });
+    await db.episodeDraftRevision.create({
+      data: { draftId: draft.id, serverRevision: nextRevision, title: restored.title, content: restored.content, authorComment: restored.authorComment }
+    });
+    await keepLatestDraftRevisions(draft.id);
+    return res.json({ message: '초안을 선택한 버전으로 복구했습니다.', draft: restored });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || '초안을 복구하지 못했습니다.' });
+  }
+});
 
 // ============================================================
 // [Route] POST /api/creator/register
@@ -151,7 +306,7 @@ creatorRouter.post('/works', authenticateToken, async (req: AuthRequest, res: Re
         coverImageUrl,
         description,
         genre,
-        tags: tags || '',
+        tags: normalizeTags(tags).join(','),
         rating: rating || 'ALL',
         aiUsageType: aiUsageType || 'NONE',
         publishDays: publishDays || 'MON,WED,FRI',

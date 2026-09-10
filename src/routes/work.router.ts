@@ -15,8 +15,47 @@
 import { Router, Response } from 'express';
 import { db } from '../config/db.js';
 import { optionalAuthenticateToken, authenticateToken, AuthRequest } from '../middlewares/auth.middleware.js';
+import { STANDARD_TAGS, normalizeTags } from '../config/tags.js';
 
 export const workRouter = Router();
+
+workRouter.get('/tags/catalog', (_req, res) => res.json({ tags: STANDARD_TAGS }));
+
+// 최근 24시간 Golden Best: 누적 인기도 대신 신작(공개 30일, 1~15화)의 반응 품질을 반영한다.
+workRouter.get('/golden-best', async (_req, res) => {
+  try {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const works = await db.work.findMany({
+      where: { createdAt: { gte: since } },
+      include: {
+        author: { select: { penName: true } },
+        statistics: true,
+        episodes: { select: { id: true, _count: { select: { comments: { where: { isBlocked: false, isHiddenByAuthor: false } } } } } },
+        _count: { select: { favorites: true } }
+      }
+    });
+    const periodHour = new Date().toISOString().slice(0, 13);
+    const ranked = works
+      .filter((work) => work.episodes.length >= 1 && work.episodes.length <= 15)
+      .map((work) => {
+        const comments = work.episodes.reduce((sum, episode) => sum + episode._count.comments, 0);
+        const score = Number((Math.min(work.viewCount, 10_000) * 0.01 + work._count.favorites * 5 + comments * 2 + (work.statistics?.completionRate || 0) * 0.5).toFixed(2));
+        return { work, score, reason: `최근 신작 · 관심 ${work._count.favorites} · 유효 댓글 ${comments}` };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 20)
+      .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+    await Promise.all(ranked.map(({ work, score, rank, reason }) => db.goldenBestSnapshot.upsert({
+      where: { workId_periodHour: { workId: work.id, periodHour } },
+      create: { workId: work.id, periodHour, score, rank, reason },
+      update: { score, rank, reason }
+    })));
+    return res.json({ periodHour, works: ranked.map(({ work, score, rank, reason }) => ({ ...work, goldenBest: { score, rank, reason } })) });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 // ============================================================
 // [Route] GET /api/works/home
@@ -137,30 +176,42 @@ workRouter.patch('/:id/admin-settings', authenticateToken, async (req: AuthReque
 // ============================================================
 workRouter.get('/', optionalAuthenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const { genre, keyword, status, rating } = req.query;
+    const { genre, keyword, status, rating, tags, completed, minEpisodes, maxEpisodes, page = '1', pageSize = '20' } = req.query;
 
     const where: any = {};
     if (genre) where.genre = String(genre);
     if (status) where.status = String(status);
     if (rating) where.rating = String(rating);
+    if (completed !== undefined) where.isCompleted = String(completed) === 'true';
     if (keyword) {
       where.OR = [
         { title: { contains: String(keyword) } },
         { description: { contains: String(keyword) } },
-        { tags: { contains: String(keyword) } }
+        { tags: { contains: String(keyword) } },
+        { author: { penName: { contains: String(keyword) } } }
       ];
     }
 
-    const works = await db.work.findMany({
+    const selectedTags = normalizeTags(tags || '');
+    const allWorks = await db.work.findMany({
       where,
       include: {
         author: { select: { id: true, penName: true } },
-        statistics: true
+        statistics: true,
+        _count: { select: { episodes: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    return res.json({ works });
+    const min = Number(minEpisodes) || 0;
+    const max = Number(maxEpisodes) || Number.MAX_SAFE_INTEGER;
+    const filtered = allWorks.filter((work) => {
+      const workTags = normalizeTags(work.tags);
+      return selectedTags.every((tag) => workTags.includes(tag)) && work._count.episodes >= min && work._count.episodes <= max;
+    });
+    const safePageSize = Math.min(50, Math.max(1, Number(pageSize) || 20));
+    const safePage = Math.max(1, Number(page) || 1);
+    return res.json({ works: filtered.slice((safePage - 1) * safePageSize, safePage * safePageSize), total: filtered.length, page: safePage, pageSize: safePageSize });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
@@ -249,4 +300,3 @@ workRouter.post('/:id/favorite', authenticateToken, async (req: AuthRequest, res
     return res.status(500).json({ error: error.message });
   }
 });
-

@@ -1825,7 +1825,7 @@ async function fetchCommentsByEpisode(arg1, arg2) {
   try {
     let query = supabaseClient
       .from('comments')
-      .select('id, user_id, nickname, nickname_snapshot, work_id, episode_id, parent_id, content, likes_count, created_at')
+      .select('id, user_id, nickname, nickname_snapshot, work_id, episode_id, parent_id, content, likes_count, quote_text, anchor_paragraph, content_version, is_spoiler, created_at')
       .eq('is_deleted', false)
       .eq('is_blocked', false);
 
@@ -1852,7 +1852,7 @@ async function fetchCommentsByEpisode(arg1, arg2) {
   }
 }
 
-async function addCommentToEpisode(workId, episodeId, userId, nickname, content, parentId = null) {
+async function addCommentToEpisode(workId, episodeId, userId, nickname, content, parentId = null, meta = {}) {
   if (!supabaseClient || !episodeId || !content) return { success: false };
   try {
     const { data, error } = await supabaseClient
@@ -1864,6 +1864,10 @@ async function addCommentToEpisode(workId, episodeId, userId, nickname, content,
         episode_id: Number(episodeId),
         parent_id: parentId || null,
         content: content.trim(),
+        anchor_paragraph: Number.isInteger(meta.anchorParagraph) ? meta.anchorParagraph : null,
+        quote_text: meta.quoteText ? String(meta.quoteText).slice(0, 300) : null,
+        content_version: meta.contentVersion ? String(meta.contentVersion).slice(0, 100) : null,
+        is_spoiler: !!meta.isSpoiler,
         likes_count: 0
       })
       .select()
@@ -2228,6 +2232,101 @@ async function fetchEventsFromDB() {
 }
 
 // ============================================================
+// 09-B. AUTHOR-FIRST: Supabase discovery, moderation, analytics and support
+// ============================================================
+async function fetchGoldenBestFromDB() {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return [];
+  try {
+    const { data: latest } = await supabaseClient.from('golden_best_snapshots').select('period_hour').order('period_hour', { ascending: false }).limit(1).maybeSingle();
+    if (latest?.period_hour) {
+      const { data, error } = await supabaseClient.from('golden_best_snapshots').select('rank, score, reason, works(id, title, author, genre, tags, cover_image, view_count)').eq('period_hour', latest.period_hour).order('rank').limit(20);
+      if (error) throw error;
+      return (data || []).map(row => ({ ...(row.works || {}), goldenBest: { rank: row.rank, score: row.score, reason: row.reason } }));
+    }
+    const { data, error } = await supabaseClient.from('v_golden_best_current').select('*').order('rank').limit(20);
+    if (error) throw error;
+    return (data || []).map(row => ({ id: row.work_id, title: row.title, author: row.author, genre: row.genre, tags: row.tags, cover_image: row.cover_image, view_count: row.view_count, goldenBest: { rank: row.rank, score: row.score, reason: row.reason } }));
+  } catch (error) { console.warn('[fetchGoldenBestFromDB]', error); return []; }
+}
+
+async function updateWorkCommentPolicy(workId, policy) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+  const payload = { work_id: Number(workId), comments_enabled: policy.commentsEnabled !== false, blocked_terms: (policy.blockedTerms || []).map(term => String(term).trim().toLowerCase()).filter(Boolean).slice(0, 50), min_read_episodes: Math.max(0, Math.min(100, Number(policy.minReadEpisodes) || 0)), updated_at: new Date().toISOString() };
+  const { data, error } = await supabaseClient.from('work_comment_policies').upsert(payload, { onConflict: 'work_id' }).select().single();
+  return error ? { success: false, error: error.message } : { success: true, policy: data };
+}
+
+async function setCommentHiddenByAuthor(commentId, hidden = true) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+  const { data, error } = await supabaseClient.from('comments').update({ is_hidden_by_author: !!hidden }).eq('id', commentId).select().single();
+  return error ? { success: false, error: error.message } : { success: true, comment: data };
+}
+
+async function blockReaderComments(workId, creatorId, readerId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+  const { data, error } = await supabaseClient.from('creator_comment_blocks').upsert({ work_id: Number(workId), creator_id: Number(creatorId), reader_id: String(readerId) }, { onConflict: 'work_id,reader_id' }).select().single();
+  return error ? { success: false, error: error.message } : { success: true, block: data };
+}
+
+async function recordReaderEventInDB(workId, episodeId, eventType, progress = 0, contentVersion = null) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return null;
+  const { data, error } = await supabaseClient.rpc('record_reader_event', { p_work_id: Number(workId), p_episode_id: Number(episodeId), p_event_type: eventType, p_progress: Number(progress) || 0, p_content_version: contentVersion });
+  if (error) { console.warn('[recordReaderEventInDB]', error.message); return null; }
+  return data;
+}
+
+async function fetchCreatorReaderAnalytics(authorId) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return { completionRate: 0, avgProgress: 0, events: [], episodeRows: [] };
+  try {
+    const { data: works, error: worksError } = await supabaseClient.from('works').select('id, title, episodes(id, episode_number, title)').eq('author_id', Number(authorId));
+    if (worksError) throw worksError;
+    const episodeRows = (works || []).flatMap(work => (work.episodes || []).map(episode => ({ ...episode, workTitle: work.title })));
+    const ids = episodeRows.map(episode => episode.id);
+    if (!ids.length) return { completionRate: 0, avgProgress: 0, events: [], episodeRows: [] };
+    const { data: events, error } = await supabaseClient.from('reader_events').select('episode_id,event_type,progress,occurred_at').in('episode_id', ids).order('occurred_at', { ascending: false }).limit(5000);
+    if (error) throw error;
+    const rows = events || [];
+    const complete = rows.filter(event => event.event_type === 'COMPLETE').length;
+    const opens = rows.filter(event => event.event_type === 'OPEN').length;
+    return { completionRate: opens ? Math.round((complete / opens) * 1000) / 10 : 0, avgProgress: rows.length ? Math.round(rows.reduce((sum, event) => sum + Number(event.progress || 0), 0) / rows.length) : 0, events: rows, episodeRows };
+  } catch (error) { console.warn('[fetchCreatorReaderAnalytics]', error); return { completionRate: 0, avgProgress: 0, events: [], episodeRows: [] }; }
+}
+
+async function supportCreator(workId, amountPoints, isAnonymous = false) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+  const idempotencyKey = crypto.randomUUID();
+  const { data, error } = await supabaseClient.rpc('support_creator', { p_work_id: Number(workId), p_amount_points: Number(amountPoints), p_idempotency_key: idempotencyKey, p_is_anonymous: !!isAnonymous });
+  return error ? { success: false, error: error.message } : { success: true, result: data };
+}
+
+async function fetchEpisodeDraftFromDB(authorId, workId, episodeNumber) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return null;
+  const { data, error } = await supabaseClient.from('episode_drafts').select('*').eq('author_id', Number(authorId)).eq('work_id', Number(workId)).eq('episode_number', Number(episodeNumber)).maybeSingle();
+  if (error) { console.warn('[fetchEpisodeDraftFromDB]', error.message); return null; }
+  return data;
+}
+
+async function saveEpisodeDraftToDB(authorId, workId, episodeNumber, draft) {
+  if (!supabaseClient) initSupabaseAdmin();
+  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+  const existing = await fetchEpisodeDraftFromDB(authorId, workId, episodeNumber);
+  const nextRevision = Number(existing?.server_revision || 0) + 1;
+  const payload = { author_id: Number(authorId), work_id: Number(workId), episode_number: Number(episodeNumber), title: String(draft.title || '').slice(0, 300), content: String(draft.content || '').slice(0, 2000000), author_comment: String(draft.authorComment || '').slice(0, 2000), server_revision: nextRevision, updated_at: new Date().toISOString() };
+  const { data, error } = await supabaseClient.from('episode_drafts').upsert(payload, { onConflict: 'author_id,work_id,episode_number' }).select().single();
+  if (error) return { success: false, error: error.message };
+  await supabaseClient.from('episode_draft_revisions').insert({ draft_id: data.id, server_revision: nextRevision, title: data.title, content: data.content, author_comment: data.author_comment }).catch(() => {});
+  return { success: true, draft: data };
+}
+
+// ============================================================
 // 10. GLOBAL EXPORT
 // ============================================================
 
@@ -2281,6 +2380,15 @@ window.WebNovelsAdmin = {
   toggleSubscriptionInDB,
   fetchCommentsByEpisode,
   addCommentToEpisode,
+  fetchGoldenBestFromDB,
+  updateWorkCommentPolicy,
+  setCommentHiddenByAuthor,
+  blockReaderComments,
+  recordReaderEventInDB,
+  fetchCreatorReaderAnalytics,
+  supportCreator,
+  fetchEpisodeDraftFromDB,
+  saveEpisodeDraftToDB,
   fetchSubAdmins,
   createSubAdmin,
   updateSubAdminPermissions,

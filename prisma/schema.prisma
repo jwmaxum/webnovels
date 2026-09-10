@@ -84,6 +84,7 @@ model Author {
   revenues        AuthorRevenue[]
   settlements     AuthorSettlement[]
   subscribers     AuthorSubscription[]
+  episodeDrafts   EpisodeDraft[]
 }
 
 // ------------------------------------------------------------
@@ -130,6 +131,10 @@ model Work {
   statistics      WorkStatistics?
   favorites       WorkFavorite[]
   contentReviews  ContentReview[]
+  drafts          EpisodeDraft[]
+  commentPolicy   WorkCommentPolicy?
+  commentBlocks   CreatorCommentBlock[]
+  goldenRanks     GoldenBestSnapshot[]
 }
 
 // ------------------------------------------------------------
@@ -173,6 +178,7 @@ model Episode {
   statistics        EpisodeStatistics?
   unlocks           EpisodeUnlock[]
   comments          Comment[]
+  drafts            EpisodeDraft[]
 }
 
 // ------------------------------------------------------------
@@ -184,6 +190,48 @@ model EpisodeStatistics {
   readCount     Int      @default(0)     // 회차 열람수
   adUnlockCount Int      @default(0)     // 광고를 통해 언락된 횟수
   episode       Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------------
+// [Model] EpisodeDraft / EpisodeDraftRevision (안전한 원고 초안)
+// ------------------------------------------------------------
+// 작가별 작품·회차 초안을 서버에 보관한다. 실제 발행 회차와 연결되기 전에도
+// episodeNumber를 기준으로 복구할 수 있으며, serverRevision은 동시 편집 충돌 감지에 사용한다.
+model EpisodeDraft {
+  id             String                 @id @default(uuid())
+  authorId       String
+  workId         String
+  episodeId      String?
+  episodeNumber  Int
+  title          String                 @default("")
+  content        String                 @default("")
+  authorComment  String                 @default("")
+  serverRevision Int                    @default(1)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  author         Author                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  work           Work                   @relation(fields: [workId], references: [id], onDelete: Cascade)
+  episode        Episode?               @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+  revisions      EpisodeDraftRevision[]
+
+  @@unique([authorId, workId, episodeNumber])
+  @@index([authorId, updatedAt])
+}
+
+model EpisodeDraftRevision {
+  id             String       @id @default(uuid())
+  draftId        String
+  serverRevision Int
+  title          String
+  content        String
+  authorComment  String
+  createdAt      DateTime     @default(now())
+
+  draft          EpisodeDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, serverRevision])
+  @@index([draftId, createdAt])
 }
 
 // ------------------------------------------------------------
@@ -360,11 +408,54 @@ model Comment {
   episodeId String
   content   String
   isBlocked Boolean  @default(false) // 신고/관리자에 의한 블라인드 처리 여부
+  isHiddenByAuthor Boolean @default(false)
+  anchorParagraph Int?
+  quoteText String?
+  contentVersion String?
+  isSpoiler Boolean @default(false)
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
   likes     Like[]
+}
+
+// 작품별 댓글 운영 정책 및 작가가 지정한 독자 차단 목록
+model WorkCommentPolicy {
+  id              String   @id @default(uuid())
+  workId          String   @unique
+  commentsEnabled Boolean  @default(true)
+  blockedTerms    String   @default("") // 쉼표 구분, 서버에서 검사
+  minReadEpisodes Int      @default(0)
+  updatedAt       DateTime @updatedAt
+  work            Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+}
+
+model CreatorCommentBlock {
+  id        String   @id @default(uuid())
+  workId    String
+  creatorId String
+  readerId  String
+  createdAt DateTime @default(now())
+  work      Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@unique([workId, readerId])
+  @@index([creatorId, createdAt])
+}
+
+// Golden Best는 최근 24시간의 서버 집계 점수를 저장해 운영 감사가 가능하도록 한다.
+model GoldenBestSnapshot {
+  id          String   @id @default(uuid())
+  workId      String
+  periodHour  String
+  score       Float
+  rank        Int
+  reason      String
+  createdAt   DateTime @default(now())
+  work        Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@unique([workId, periodHour])
+  @@index([periodHour, rank])
 }
 
 // ------------------------------------------------------------
@@ -512,4 +603,3 @@ model ContentReview {
 
   work         Work      @relation(fields: [workId], references: [id], onDelete: Cascade)
 }
-

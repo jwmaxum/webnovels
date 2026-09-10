@@ -181,6 +181,9 @@ window.fetchCreatorDashboardData = async function() {
                 <button class="btn btn-outline btn-sm" onclick="switchCreatorTab('new-ep')">
                   <i data-lucide="calendar"></i> Zero-Touch 예약 연재
                 </button>
+                <button class="btn btn-ghost btn-sm" onclick="configureWorkCommentPolicy(${work.id})">
+                  <i data-lucide="message-square-warning"></i> 댓글 관리
+                </button>
               </div>
             </div>
 
@@ -240,6 +243,9 @@ window.fetchCreatorDashboardData = async function() {
     workSelect.innerHTML = displayWorks.map(w => `
       <option value="${w.id}">[${w.contentType === 'WEBTOON' ? '웹툰' : '웹소설'}] ${w.title}</option>
     `).join('');
+    if (window.CreatorDraftEditor && typeof window.CreatorDraftEditor.loadDraft === 'function') {
+      window.CreatorDraftEditor.loadDraft();
+    }
   }
 
   // 6. Tab 3: 연재 상태 관리 셀렉트 채우기 (creatorSerialStatusList)
@@ -296,6 +302,28 @@ window.fetchCreatorDashboardData = async function() {
   // 크리에이터 상단 지표 갱신
   const payElem = document.getElementById('creatorPayableRevenue');
   if (payElem) payElem.textContent = `₩${payableRevenue.toLocaleString()}`;
+
+  // Phase 3: Supabase reader event aggregates. Empty state is intentional until real reading events accumulate.
+  if (window.WebNovelsAdmin?.fetchCreatorReaderAnalytics) {
+    try {
+      const analytics = await window.WebNovelsAdmin.fetchCreatorReaderAnalytics(author.id);
+      const completion = document.getElementById('creatorCompletionRate');
+      const progress = document.getElementById('creatorAverageProgress');
+      const eventCount = document.getElementById('creatorAnalyticsEvents');
+      if (completion) completion.textContent = `${Number(analytics.completionRate || 0).toFixed(1)}%`;
+      if (progress) progress.textContent = `${Number(analytics.avgProgress || 0)}%`;
+      if (eventCount) eventCount.textContent = `${Number(analytics.events?.length || 0).toLocaleString()}건`;
+      const episodeAnalytics = document.getElementById('creatorEpisodeAnalytics');
+      if (episodeAnalytics) {
+        const perEpisode = (analytics.episodeRows || []).map((episode) => {
+          const events = (analytics.events || []).filter((event) => String(event.episode_id) === String(episode.id));
+          const complete = events.filter((event) => event.event_type === 'COMPLETE').length;
+          return `${episode.episode_number}화 · 열람 이벤트 ${events.length} · 완독 ${complete}`;
+        });
+        episodeAnalytics.innerHTML = perEpisode.length ? `<p class="text-muted">${perEpisode.join(' &nbsp;›&nbsp; ')}</p>` : '<p class="text-muted">아직 집계할 독자 이벤트가 없습니다.</p>';
+      }
+    } catch (analyticsError) { console.warn('[Creator analytics]', analyticsError); }
+  }
 
   // Tab 7: 정산 관리 탭 UI 실시간 동기화
   const settlementPayableElem = document.getElementById('creatorSettlementPayableAmount');
@@ -461,6 +489,18 @@ window.handleWorkStatusChange = async function(workId, newStatus) {
   showToast(`[${work?.title || '작품'}] 연재 상태가 '${newStatus}'(으)로 갱신되었습니다.`);
 };
 
+window.configureWorkCommentPolicy = async function(workId) {
+  if (!window.WebNovelsAdmin?.updateWorkCommentPolicy) {
+    showToast('댓글 관리 서비스에 연결할 수 없습니다.');
+    return;
+  }
+  const commentsEnabled = window.confirm('확인: 댓글을 열어 둡니다.\n취소: 이 작품의 새 댓글 작성을 닫습니다.');
+  const blockedTerms = window.prompt('차단할 단어를 쉼표로 구분해 입력하세요. (비워두면 없음)', '') || '';
+  const minReadEpisodes = Number(window.prompt('댓글 작성 전 최소 열람 회차 수를 입력하세요. (0~100)', '0')) || 0;
+  const result = await window.WebNovelsAdmin.updateWorkCommentPolicy(workId, { commentsEnabled, blockedTerms: blockedTerms.split(','), minReadEpisodes });
+  showToast(result.success ? '댓글 관리 규칙을 Supabase에 저장했습니다.' : `댓글 규칙 저장 실패: ${result.error || '권한을 확인해주세요.'}`);
+};
+
 // ============================================================
 // [Zero-Touch Episode Submission] 작가 회차 등록 & Zero-Touch 자동 검수 발행
 // ============================================================
@@ -525,6 +565,9 @@ window.handleCreateEpisodeSubmit = async function(e) {
   document.getElementById('newEpTitle').value = '';
   document.getElementById('newEpContent').value = '';
   document.getElementById('newEpAuthorComment').value = '';
+  if (window.CreatorDraftEditor && typeof window.CreatorDraftEditor.clearCurrentDraft === 'function') {
+    await window.CreatorDraftEditor.clearCurrentDraft();
+  }
 
   // 작품관리 탭으로 전환 및 화면 새로고침
   switchCreatorTab('works');
