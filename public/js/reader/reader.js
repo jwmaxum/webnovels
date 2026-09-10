@@ -2097,19 +2097,40 @@ window.handleMemberLogout = function() {
   localStorage.removeItem('webnovels_creator');
   localStorage.removeItem('webnovels_author');
   localStorage.removeItem('webnovels_admin_token');
+  localStorage.removeItem('token');
+  localStorage.removeItem('authToken');
   localStorage.removeItem('webnovels_reading_history');
   localStorage.removeItem('webnovels_favorites');
   localStorage.removeItem('webnovels_subscribed_creators');
   localStorage.removeItem('webnovels_subscribed_authors');
   isAdminLoggedIn = false;
   currentLoggedAuthor = null;
+  currentLoggedCreator = null;
+  window.currentLoggedAuthor = null;
+  window.currentLoggedCreator = null;
+  window.isAdminLoggedIn = false;
   window._isAdultVerified = false;
 
-  updateMemberHeader(null);
-  renderLibraryContent();
+  if (window.WebNovelsAdmin?.logout) {
+    try { window.WebNovelsAdmin.logout(); } catch (e) {}
+  }
+
+  document.body?.setAttribute('data-user-role', 'GUEST');
+  if (typeof updateMemberHeader === 'function') {
+    updateMemberHeader(null);
+  }
+  if (typeof renderLibraryContent === 'function') {
+    renderLibraryContent();
+  }
   showToast('로그아웃되었습니다.');
-  switchWebNovelsView('view-home');
+  if (typeof switchWebNovelsView === 'function') {
+    switchWebNovelsView('view-home');
+  }
+  if (window.lucide) window.lucide.createIcons();
 };
+
+window.handleAuthorLogoutProcess = window.handleMemberLogout;
+window.handleCreatorLogoutProcess = window.handleMemberLogout;
 
 
 
@@ -2402,11 +2423,15 @@ async function handleAuthorSignup() {
 
 function getCurrentAuthorSession() {
   try {
-    const raw = localStorage.getItem('webnovels_author');
+    const raw = localStorage.getItem('webnovels_author') || localStorage.getItem('webnovels_creator');
     return raw ? JSON.parse(raw) : null;
   } catch (e) {
     return null;
   }
+}
+
+function getCurrentCreatorSession() {
+  return getCurrentAuthorSession();
 }
 
 async function loadMyProfile() {

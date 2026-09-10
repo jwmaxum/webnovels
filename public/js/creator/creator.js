@@ -819,11 +819,26 @@ window.handleCreatorSettlementReq = async function(requestedAmount) {
 };
 
 window.handleAuthorLogoutProcess = function() {
-  localStorage.removeItem('webnovels_author');
-  currentLoggedAuthor = null;
-  showToast('작가 로그아웃 되었습니다.');
-  switchWebNovelsView('view-home');
+  if (typeof window.handleMemberLogout === 'function') {
+    window.handleMemberLogout();
+  } else {
+    localStorage.removeItem('webnovels_token');
+    localStorage.removeItem('webnovels_user');
+    localStorage.removeItem('webnovels_creator');
+    localStorage.removeItem('webnovels_author');
+    localStorage.removeItem('webnovels_admin_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
+    if (typeof currentLoggedAuthor !== 'undefined') currentLoggedAuthor = null;
+    if (typeof currentLoggedCreator !== 'undefined') currentLoggedCreator = null;
+    window.currentLoggedAuthor = null;
+    window.currentLoggedCreator = null;
+    if (typeof updateMemberHeader === 'function') updateMemberHeader(null);
+    if (typeof showToast === 'function') showToast('로그아웃되었습니다.');
+    if (typeof switchWebNovelsView === 'function') switchWebNovelsView('view-home');
+  }
 };
+window.handleCreatorLogoutProcess = window.handleAuthorLogoutProcess;
 
 
 
