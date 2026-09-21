@@ -2,6 +2,8 @@
 
 ## 판정
 
+운영 환경 정정: 실제 서비스는 **Cloudflare Pages — https://webnovels-db4.pages.dev/** 이다. 아래 과거 Vercel 확인 기록은 별도 배포에 대한 것이며 Cloudflare 운영 검증을 의미하지 않는다. 현재 P0 실행 상태는 `P0_IMPLEMENTATION_PLAN.md`, Cloudflare 전환 절차는 `CLOUDFLARE_DEPLOYMENT.md`를 기준으로 한다.
+
 **현재는 외부 고객을 받는 정식 서비스로 런칭할 수 없습니다.**
 화면·콘텐츠 관리 기능은 구현되어 있으나, Supabase 권한 및 로그인 신원 검증, 서버 DB 통합, 광고/결제/본인인증 검증이 완성되지 않았습니다. 이번 수정은 데이터 표시 오류와 일부 기능 단절을 개선한 것으로, 보안 및 수익 기능의 운영 완료를 의미하지 않습니다.
 

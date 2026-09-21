@@ -29,3 +29,6 @@ Thumbs.db
 .idea/
 scratch/
 .playwright-cli/
+.dev.vars
+.dev.vars.*
+.wrangler/

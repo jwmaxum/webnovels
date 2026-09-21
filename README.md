@@ -4,6 +4,8 @@
 
 ---
 
+> 운영 배포는 Cloudflare Pages입니다. 아래 기능 소개에는 이전 모의 구현 설명이 포함되어 있습니다. 현재 런칭 제한과 실제 개발 상태는 [P0 실행 계획](P0_IMPLEMENTATION_PLAN.md), [Cloudflare 배포 안내](CLOUDFLARE_DEPLOYMENT.md), [런칭 점검 보고서](LAUNCH_READINESS.md)를 먼저 확인하세요. 결제·성인인증은 키 입력만으로 운영 완료되는 상태가 아닙니다.
+
 ## 🌟 주요 특징 (Key Features)
 
 ### 📖 1. Reading-First 독자 웹 플랫폼 (`/`)

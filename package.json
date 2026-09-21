@@ -15,7 +15,9 @@
     "test:data": "node scripts/verify_data_contracts.cjs",
     "audit:live": "node scripts/audit_live_data.cjs",
     "test:config": "tsx scripts/verify_supabase_config.ts",
-    "check:supabase": "node scripts/check_supabase_access.cjs"
+    "check:supabase": "node scripts/check_supabase_access.cjs",
+    "test:p0": "node --test scripts/verify_secure_api.test.mjs scripts/verify_cloudflare_routes.test.mjs scripts/verify_providers.test.mjs",
+    "audit:p0-schema": "node scripts/p0_schema_audit.cjs"
   },
   "keywords": [],
   "author": "",

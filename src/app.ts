@@ -63,6 +63,10 @@ app.use(['/api/ads/request-rewarded', '/api/ads/verify-unlock', '/api/auth/verif
   }
   next();
 });
+// Legacy payment handlers have no authoritative order/owner/ledger verification.
+app.use('/api/payments', (_req, res) => {
+  res.status(503).json({ error: '결제 주문 검증 및 원장 통합 전에는 결제를 처리할 수 없습니다.' });
+});
 app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Web SPA Frontend Page Serving (Semantic Deep Linking 지원 - improve1.md)

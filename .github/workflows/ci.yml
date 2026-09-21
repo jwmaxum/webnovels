@@ -26,6 +26,11 @@ jobs:
     - name: Generate Prisma Client
       run: npx prisma generate
 
+    - name: Verify Supabase data and Cloudflare security contracts
+      run: |
+        npm run test:data
+        npm run test:p0
+
     - name: Push Prisma SQLite Schema
       run: npx prisma db push
 
