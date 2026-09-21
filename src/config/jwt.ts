@@ -11,8 +11,7 @@
 import './env.js';
 import { randomBytes } from 'crypto';
 
-if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) {
-  throw new Error('Production requires a JWT_SECRET of at least 32 characters.');
-}
-export const JWT_SECRET = process.env.JWT_SECRET || randomBytes(32).toString('hex');
+// Missing private API configuration must not take the public catalog offline.
+export const JWT_CONFIGURED = process.env.NODE_ENV !== 'production' || !!(process.env.JWT_SECRET && process.env.JWT_SECRET.length >= 32);
+export const JWT_SECRET = JWT_CONFIGURED ? (process.env.JWT_SECRET || randomBytes(32).toString('hex')) : '';
 export const JWT_EXPIRES_IN = '7d';

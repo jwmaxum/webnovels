@@ -30,6 +30,7 @@ import { revenueRouter } from './routes/revenue.router.js';
 
 import path from 'path';
 import { publicSupabaseConfig, checkSupabaseConnection } from './config/supabase.js';
+import { JWT_CONFIGURED } from './config/jwt.js';
 
 export const app = express();
 
@@ -42,7 +43,7 @@ app.get('/api/public-config.js', (_req, res) => {
     const config = JSON.stringify(publicSupabaseConfig()).replace(/</g, '\\u003c');
     res.send(`window.WEBNOVELS_CONFIG = Object.freeze(${config});`);
   } catch {
-    res.status(503).send('window.WEBNOVELS_CONFIG = null;');
+    res.status(503).send('/* Runtime override unavailable; retain the public deployment configuration. */');
   }
 });
 app.get('/api/ready', async (_req, res) => {
@@ -96,6 +97,12 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 // 도메인별 API 라우터 마운트
+app.use('/api', (_req, res, next) => {
+  if (!JWT_CONFIGURED) {
+    return res.status(503).json({ error: '서버 인증 설정이 완료되지 않았습니다.' });
+  }
+  next();
+});
 app.use('/api/auth', authRouter);
 app.use('/api/works', workRouter);
 app.use('/api/episodes', episodeRouter);

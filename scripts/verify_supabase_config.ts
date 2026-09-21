@@ -42,7 +42,11 @@ async function main() {
       ENV.SUPABASE_PUBLISHABLE_KEY = 'sb_secret_wrong_setting';
       const invalid = await fetch(base + '/api/public-config.js');
       assert.equal(invalid.status, 503);
-      assert.ok(!(await invalid.text()).includes('sb_secret_wrong_setting'));
+      const invalidBody = await invalid.text();
+      assert.ok(!invalidBody.includes('sb_secret_wrong_setting'));
+      const originalConfig = context.window.WEBNOVELS_CONFIG;
+      vm.runInNewContext(invalidBody, context);
+      assert.equal(context.window.WEBNOVELS_CONFIG, originalConfig);
     } finally { ENV.SUPABASE_PUBLISHABLE_KEY = key; }
     if (process.argv.includes('--live')) {
       const ready = await fetch(base + '/api/ready');
