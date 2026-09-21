@@ -19,6 +19,12 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
     return;
   }
 
+  if (viewId === 'view-creator' && !getCurrentCreatorSession()) {
+    showToast('작가 로그인이 필요합니다.');
+    openModal('modalAuth');
+    return;
+  }
+
   // 내 서재 접근 시 로그인 체크
   if (viewId === 'view-mypage') {
     const token = localStorage.getItem('webnovels_token');
@@ -169,6 +175,7 @@ function resolveRoute(pathname, isInitial = false) {
   if (parts[0] === 'author' || parts[0] === 'creator' || hash === '#author' || hash === '#creator') {
     const subTab = parts[1] || 'works';
     switchWebNovelsView('view-creator', null, false);
+    if (currentActiveView !== 'view-creator') return;
     if (typeof switchCreatorTab === 'function') {
       const tabMap = {
         'works': 'works',
@@ -189,6 +196,7 @@ function resolveRoute(pathname, isInitial = false) {
     let subTab = parts[1] || 'dashboard';
     if (subTab === 'creators') subTab = 'authors';
     switchWebNovelsView('view-admin-cms', null, false);
+    if (currentActiveView !== 'view-admin-cms') return;
     if (typeof switchAdminSubTab === 'function') {
       switchAdminSubTab(subTab, false);
     }
@@ -308,9 +316,7 @@ window.openTopContinueReading = function() {
 
   if (history && history.length > 0) {
     const latest = history[0];
-    openEpisodeDirect(latest.workId, latest.epNum || 1);
-  } else {
-    openEpisodeDirect(SAMPLE_WORKS[0].id, 1);
+    openEpisodeDirect(latest.workId, latest.episodeNumber);
   }
 };
 

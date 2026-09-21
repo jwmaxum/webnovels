@@ -8,5 +8,11 @@
 // - 프로덕션 환경 배포 시 반드시 `.env` 파일의 `JWT_SECRET` 환경 변수를 안전한 임의 키로 설정해야 함
 // ============================================================
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'webnovel-super-secret-jwt-key-2026';
+import './env.js';
+import { randomBytes } from 'crypto';
+
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) {
+  throw new Error('Production requires a JWT_SECRET of at least 32 characters.');
+}
+export const JWT_SECRET = process.env.JWT_SECRET || randomBytes(32).toString('hex');
 export const JWT_EXPIRES_IN = '7d';

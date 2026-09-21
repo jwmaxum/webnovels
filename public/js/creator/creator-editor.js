@@ -614,7 +614,7 @@
     // 미저장 변경사항이 있을 때만 브라우저 이탈 방지 경고
     window.addEventListener('beforeunload', (e) => {
       const statusEl = $('creatorDraftStatus');
-      if (statusEl && statusEl.classList.contains('is-saving')) {
+      if (currentKey && ($('newEpContent')?.value || $('newEpTitle')?.value) && statusEl && statusEl.classList.contains('is-saving')) {
         e.preventDefault();
         e.returnValue = '원고가 아직 기기 또는 서버에 저장 중입니다. 페이지를 벗어나시겠습니까?';
         return e.returnValue;
@@ -681,4 +681,3 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize);
   else initialize();
 }());
-

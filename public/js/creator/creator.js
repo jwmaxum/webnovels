@@ -95,12 +95,6 @@ window.fetchCreatorDashboardData = async function() {
     }
   }
 
-  // 기본 작가 세션이 없으면 첫 번째 작가(writer1: 판타지마스터)로 기본 연결
-  const sampleList = (typeof SAMPLE_CREATORS !== 'undefined' ? SAMPLE_CREATORS : SAMPLE_AUTHORS);
-  if (!author && sampleList && sampleList.length > 0) {
-    author = sampleList[0];
-  }
-
   currentLoggedCreator = author;
   currentLoggedAuthor = author;
   window.currentLoggedCreator = author;
@@ -116,7 +110,7 @@ window.fetchCreatorDashboardData = async function() {
   if (badgeElem) badgeElem.textContent = author.status || '공식 인증 작가';
 
   const bankInfoElem = document.getElementById('creatorBankInfo');
-  if (bankInfoElem) bankInfoElem.textContent = author.bank_info || author.bankInfo || '국민은행 999-888-777666';
+  if (bankInfoElem) bankInfoElem.textContent = author.bank_info || author.bankInfo || '정산 계좌 미등록';
 
   const logoutBtn = document.getElementById('btnAuthorLogout');
   if (logoutBtn) logoutBtn.style.display = 'inline-block';
@@ -130,7 +124,7 @@ window.fetchCreatorDashboardData = async function() {
   );
 
   // 만약 필터 결과가 비어있으면 해당 작가의 대표작 1개 자동 매핑
-  const displayWorks = authorWorks.length > 0 ? authorWorks : SAMPLE_WORKS.slice(0, 1);
+  const displayWorks = authorWorks;
 
   // 총 조회수 및 총 회차수 계산 (실데이터 기반)
   const totalViews = displayWorks.reduce((sum, w) => sum + (Number(w.viewCount) || 0), 0);
@@ -177,7 +171,7 @@ window.fetchCreatorDashboardData = async function() {
                 <div style="display: flex; gap: 16px; font-size: 0.82rem; color: var(--text-secondary);">
                   <span>👀 누적 조회수: <strong>${(work.viewCount || 0).toLocaleString()}회</strong></span>
                   <span>📖 총 연재: <strong>${epList.length}화</strong></span>
-                  <span>⭐ 추천수: <strong>${(work.likeCount || 480).toLocaleString()}개</strong></span>
+                  <span>⭐ 추천수: <strong>${(work.likeCount || 0).toLocaleString()}개</strong></span>
                 </div>
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -339,7 +333,7 @@ window.fetchCreatorDashboardData = async function() {
 
   const settlementBankElem = document.getElementById('creatorSettlementBankAccount');
   if (settlementBankElem) {
-    settlementBankElem.textContent = `등록 계좌: ${author.bank_info || author.bankInfo || '국민은행 999-888-777666'} (예금주: ${authorPenName})`;
+    settlementBankElem.textContent = `등록 계좌: ${author.bank_info || author.bankInfo || '정산 계좌 미등록'} (예금주: ${authorPenName})`;
   }
 
   // 출금 신청 액션 버튼 상태 (신청중 vs 출금신청 가능)
@@ -434,9 +428,6 @@ async function handleCreatorSettlementReq(amountParam) {
       try { author = JSON.parse(authorStr); } catch (e) {}
     }
   }
-  if (!author && Array.isArray(SAMPLE_AUTHORS) && SAMPLE_AUTHORS.length > 0) {
-    author = SAMPLE_AUTHORS[0];
-  }
 
   if (!author) {
     showToast('⚠️ 작가 로그인이 필요합니다.');
@@ -457,7 +448,7 @@ async function handleCreatorSettlementReq(amountParam) {
 
   if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.requestSettlementSecure === 'function') {
     showToast('⏳ 정산금 출금 신청을 처리 중입니다...');
-    const bank = author.bank_info || author.bankInfo || '국민은행 999-888-777666';
+    const bank = author.bank_info || author.bankInfo || '정산 계좌 미등록';
     const res = await window.WebNovelsAdmin.requestSettlementSecure(author.id, payableRevenue, bank);
     if (res.success) {
       showToast(`🎉 ₩${payableRevenue.toLocaleString()} 정산금 출금 신청이 완료되었습니다! (심사 대기)`);
@@ -681,7 +672,7 @@ window.handleSaveCommentPolicySubmit = async function() {
       showToast(`설정 저장 실패: ${res.error || '권한을 확인해주세요.'}`);
     }
   } else {
-    showToast('🎉 설정이 로컬에 저장되었습니다.');
+    showToast('DB 연결이 없어 설정을 저장하지 못했습니다.');
     if (typeof closeAllModals === 'function') closeAllModals();
   }
 };
@@ -730,14 +721,11 @@ window.handleCreateEpisodeSubmit = async function(e) {
     scheduledAt: scheduledAt
   };
 
-  // 실제 Supabase DB에 영구 저장
-  if (window.WebNovelsAdmin) {
-    await window.WebNovelsAdmin.createEpisodeInDB(workId, epData);
-  } else {
-    if (!targetWork.episodes) targetWork.episodes = [];
-    targetWork.episodes.push(epData);
-    targetWork.episodesCount = targetWork.episodes.length;
+  if (publishType === 'SCHEDULED' && (!scheduledAt || new Date(scheduledAt) <= new Date())) {
+    return showToast('미래의 예약 발행 일시를 입력해 주세요.');
   }
+  const result = await window.WebNovelsAdmin?.createEpisodeInDB(workId, epData);
+  if (!result?.success) return showToast(result?.error || '회차 등록에 실패했습니다.');
 
   const publishMsg = publishType === 'SCHEDULED' 
     ? `⏰ [${targetWork.title} 제 ${epNum}화]가 Zero-Touch 예약 연재 큐에 등록되었습니다! (${scheduledAt || '지정일시'})` 
@@ -766,15 +754,16 @@ window.handleCreateEpisodeSubmit = async function(e) {
 // ============================================================
 window.handleCreatorSettlementReq = async function(requestedAmount) {
   const sampleList = (typeof SAMPLE_CREATORS !== 'undefined' ? SAMPLE_CREATORS : SAMPLE_AUTHORS);
-  const author = currentLoggedCreator || currentLoggedAuthor || (sampleList ? sampleList[0] : null);
+  const author = currentLoggedCreator || currentLoggedAuthor;
+  if (!author) return showToast('작가 로그인이 필요합니다.');
   const penName = author.pen_name || author.penName || author.username || '작가';
-  const bankInfo = author.bank_info || author.bankInfo || '국민은행 999-888-777666';
+  const bankInfo = author.bank_info || author.bankInfo || '정산 계좌 미등록';
 
   let amount = Number(requestedAmount);
   if (!amount || isNaN(amount) || amount <= 0) {
     const payElem = document.getElementById('creatorPayableRevenue');
     const txt = payElem ? payElem.textContent.replace(/[^0-9]/g, '') : '0';
-    amount = Number(txt) || 980000;
+    amount = Number(txt) || 0;
   }
 
   if (amount <= 0) {
@@ -791,14 +780,14 @@ window.handleCreatorSettlementReq = async function(requestedAmount) {
 
   try {
     let result = null;
-    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.requestSettlement === 'function') {
-      result = await window.WebNovelsAdmin.requestSettlement(penName, amount, bankInfo);
+    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.requestSettlementSecure === 'function') {
+      result = await window.WebNovelsAdmin.requestSettlementSecure(author.id, amount, bankInfo);
     }
 
     if (result && result.success) {
       showToast(`💸 [${penName}] ₩${amount.toLocaleString()} 정산금 출금 신청이 성공적으로 접수되었습니다! (상태: 🟡 신청중)`);
     } else {
-      showToast(`💸 [${penName}] ₩${amount.toLocaleString()} 정산금 출금 신청이 접수되었습니다. (상태: 🟡 신청중)`);
+      showToast(result?.error || '출금 신청에 실패했습니다. 신청 내역이 저장되지 않았습니다.');
     }
 
     // 작가 대시보드 화면 및 정산 탭 즉시 갱신 (출금 가능액 차감 및 '신청중' 버튼 표시)
@@ -1257,21 +1246,11 @@ function renderReaderActivityTimeline(events) {
     }
   });
 
-  // 데이터가 0인 경우 현실적인 데모 분포 보정
-  const totalActivity = days.reduce((acc, d) => acc + d.opens + d.completes, 0);
-  if (totalActivity === 0) {
-    const mockPattern = [12, 18, 15, 24, 28, 35, 42];
-    days.forEach((d, idx) => {
-      d.opens = mockPattern[idx];
-      d.completes = Math.round(mockPattern[idx] * 0.7);
-    });
-  }
-
   const maxVal = Math.max(...days.map(d => Math.max(d.opens, d.completes)), 10);
 
   container.innerHTML = days.map(d => {
-    const openH = Math.max(10, Math.round((d.opens / maxVal) * 110));
-    const compH = Math.max(10, Math.round((d.completes / maxVal) * 110));
+    const openH = Math.max(0, Math.round((d.opens / maxVal) * 110));
+    const compH = Math.max(0, Math.round((d.completes / maxVal) * 110));
 
     return `
       <div class="timeline-bar-column" style="display:flex; flex-direction:column; align-items:center; gap:6px; flex:1;" title="${d.label} - 열람: ${d.opens}건, 완독: ${d.completes}건">
@@ -1539,7 +1518,13 @@ if (typeof window !== 'undefined') {
   window.fetchCreatorDashboardData = fetchCreatorDashboardData;
   window.fetchAuthorDashboardData = fetchCreatorDashboardData;
   window.handleCreateEpisodeSubmit = handleCreateEpisodeSubmit;
-  window.updateWorkSerialStatus = updateWorkSerialStatus;
+  window.updateWorkSerialStatus = async function(workId, status) {
+    const result = await window.WebNovelsAdmin?.updateWorkAdminSetting(workId, {
+      status, is_completed: status === 'COMPLETED'
+    });
+    showToast(result?.success ? '연재 상태가 저장되었습니다.' : '연재 상태 저장에 실패했습니다.');
+    if (result?.success) await fetchCreatorDashboardData();
+  };
   window.handleCreatorSettlementReq = handleCreatorSettlementReq;
   window.handleAuthorSettlementReq = handleCreatorSettlementReq;
   window.handleAuthorLogoutProcess = handleAuthorLogoutProcess;
@@ -1549,4 +1534,3 @@ if (typeof window !== 'undefined') {
   window.TagChipsManager = TagChipsManager;
   window.CREATOR_STANDARD_TAGS = CREATOR_STANDARD_TAGS;
 }
-

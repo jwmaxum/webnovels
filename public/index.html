@@ -149,7 +149,7 @@
           <!-- Header Actions: 포인트 🪙 1,000P + 👤 프로필/로그인 -->
           <div class="header-actions">
             <div class="user-points-badge" id="headerPointsBadge">
-              🪙 <span id="headerPointsValue">1,000P</span>
+              🪙 <span id="headerPointsValue">0P</span>
             </div>
             <div class="user-profile-menu" id="userProfileMenu">
               <button class="btn btn-primary btn-sm" id="btnHeaderLogin">로그인</button>
@@ -176,18 +176,18 @@
         <section id="view-home" class="main-view active">
 
           <!-- 📖 계속 읽기 섹션 (UI_pc.md & UI_mobile.md 최상단 표준 배치) -->
-          <div class="continue-reading-home-wrap" id="sectionContinueReading">
+          <div class="continue-reading-home-wrap" id="sectionContinueReading" style="display:none">
             <div class="continue-reading-card glass-panel" id="continueReadingCardHome" onclick="openTopContinueReading()">
               <img src="/images/stormqueen_oath.jpg" alt="표지" class="continue-thumb" id="continueCardCover">
               <div class="continue-info">
                 <div class="continue-badge-row">
                   <span class="badge badge-accent continue-badge"><i data-lucide="book-open" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> 계속 읽기</span>
-                  <span class="continue-pct" id="continueCardPct">75% 읽음</span>
+                  <span class="continue-pct" id="continueCardPct"></span>
                 </div>
-                <h3 class="continue-title" id="continueCardTitle">폭풍의 여왕 서약</h3>
+                <h3 class="continue-title" id="continueCardTitle">작품 정보를 불러오는 중</h3>
                 <p class="continue-meta text-muted" id="continueCardMeta">제 1화 읽는 중 · 판타지</p>
                 <div class="progress-bar-bg continue-progress-bg">
-                  <div class="progress-bar-fill continue-progress-fill" id="continueCardFill" style="width: 75%;"></div>
+                  <div class="progress-bar-fill continue-progress-fill" id="continueCardFill" style="width: 0%;"></div>
                 </div>
               </div>
               <button class="btn btn-primary continue-action-btn" id="continueCardBtn">
@@ -435,8 +435,8 @@
                 <span class="badge badge-outline" id="detailRatingBadge">전체이용가</span>
                 <span class="badge badge-outline" id="detailAiBadge">AI 미사용</span>
               </div>
-              <h1 id="detailTitle" class="detail-title">폭풍의 여왕 서약</h1>
-              <p class="detail-author" id="detailAuthor">작가: 판타지마스터</p>
+              <h1 id="detailTitle" class="detail-title">작품 정보를 불러오는 중</h1>
+              <p class="detail-author" id="detailAuthor">작가 정보 확인 중</p>
               <p class="detail-desc" id="detailDescription">광고를 보면 다음 회차가 무료로 공개되는 대표 판타지 웹소설입니다.</p>
 
               <div class="detail-actions">
@@ -494,7 +494,7 @@
             <i data-lucide="arrow-left"></i>
           </button>
           <div class="reader-title-info">
-            <h4 id="readerWorkTitle">폭풍의 여왕 서약</h4>
+            <h4 id="readerWorkTitle">작품 정보를 불러오는 중</h4>
             <span id="readerEpTitle">제 1 화</span>
           </div>
           <button class="btn btn-icon btn-ghost" id="btnReaderSettings">
@@ -536,7 +536,7 @@
             <div class="reader-comments-box mt-6" id="readerCommentsSection" style="border-top: 1px solid var(--border-color); padding-top: 24px;">
               <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 style="font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:6px;">
-                  <i data-lucide="message-square" style="width:18px;height:18px;color:var(--cdg-pink);"></i> 독자 댓글 <span id="readerCommentCount" style="color:var(--cdg-pink); font-size:0.9rem;">(3)</span>
+                  <i data-lucide="message-square" style="width:18px;height:18px;color:var(--cdg-pink);"></i> 독자 댓글 <span id="readerCommentCount" style="color:var(--cdg-pink); font-size:0.9rem;">(0)</span>
                 </h3>
               </div>
 
@@ -596,8 +596,8 @@
             </div>
             <!-- Quick Info Bar -->
             <div id="creatorAuthorDetails" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 20px; font-size: 0.88rem;">
-              <div>🏦 <span class="text-muted">등록 정산 계좌:</span> <strong id="creatorBankInfo" class="text-white">국민은행 999-888-777666</strong></div>
-              <div>📈 <span class="text-muted">총 독자 조회수:</span> <strong id="creatorTotalViews" style="color:var(--cdg-pink);">154,000회</strong></div>
+              <div>🏦 <span class="text-muted">등록 정산 계좌:</span> <strong id="creatorBankInfo" class="text-white">미등록</strong></div>
+              <div>📈 <span class="text-muted">총 독자 조회수:</span> <strong id="creatorTotalViews" style="color:var(--cdg-pink);">—</strong></div>
               <div>📖 <span class="text-muted">총 연재 회차수:</span> <strong id="creatorTotalEpisodes" style="color:#10B981;">6화</strong></div>
             </div>
           </div>
@@ -721,19 +721,7 @@
             <div class="card glass-panel p-6">
               <h3 class="mb-4"><i data-lucide="sliders" style="color:var(--cdg-pink);"></i> 연재 상태 관리</h3>
               <p class="text-muted small mb-4">작품의 연재 상태(연재중 / 휴재 / 완결)를 설정하여 독자들에게 연재 일정을 안내합니다.</p>
-              <div id="creatorSerialStatusList">
-                <div class="glass-panel p-4 mb-3" style="display:flex; justify-content:space-between; align-items:center;">
-                  <div>
-                    <strong>[판타지] 폭풍의 여왕 서약</strong>
-                    <div class="text-muted small">총 6화 연재중 | 주 3회(월,수,금)</div>
-                  </div>
-                  <select class="form-input" style="padding:6px 12px; font-size:0.88rem; background:#1C1C22; color:#fff; border-radius:8px; border:1px solid var(--border-color);" onchange="showToast('연재 상태가 변경되었습니다.')">
-                    <option value="ONGOING" selected>🟢 연재중 (ONGOING)</option>
-                    <option value="PAUSED">🟡 휴재 (PAUSED)</option>
-                    <option value="COMPLETED">🔵 완결 (COMPLETED)</option>
-                  </select>
-                </div>
-              </div>
+              <div id="creatorSerialStatusList"></div>
             </div>
           </div>
 
@@ -873,7 +861,7 @@
                 <div>
                   <div class="text-muted small">출금 가능 정산금 (Payable)</div>
                   <h2 id="creatorSettlementPayableAmount" style="font-size:2.2rem; font-weight:800; color:var(--cdg-pink); margin:4px 0;">₩0</h2>
-                  <small id="creatorSettlementBankAccount" class="text-muted">등록 계좌: 국민은행 999-888-777666 (예금주: 작가)</small>
+                  <small id="creatorSettlementBankAccount" class="text-muted">등록 계좌: 미등록 (예금주: 작가)</small>
                 </div>
                 <div id="creatorSettlementActionContainer">
                   <button class="btn btn-primary btn-lg" id="btnRequestSettlement" onclick="handleCreatorSettlementReq()">
@@ -1945,7 +1933,7 @@
             </button>
             <!-- Option 2: 🪙 포인트 사용 (UX.md) -->
             <button class="btn btn-outline btn-lg w-full" id="btnUsePointUnlock" onclick="handlePointUnlockEpisode()" style="height:48px; font-size:0.92rem; font-weight:700;">
-              🪙 100P 포인트 즉시해금 (보유: <span id="modalCurrentPoints">1,000P</span>)
+              🪙 100P 포인트 즉시해금 (보유: <span id="modalCurrentPoints">0P</span>)
             </button>
             <button class="btn btn-ghost modal-close w-full mt-1" style="font-size:0.85rem;">나중에 보기</button>
           </div>
@@ -2982,16 +2970,18 @@
   </div>
 
   <!-- Core Architecture Modules -->
-  <script src="/js/core/state.js?v=100"></script>
-  <script src="/js/core/ui-utils.js?v=100"></script>
-  <script src="/js/core/router.js?v=100"></script>
+  <script src="/js/core/state.js?v=102"></script>
+  <script src="/js/core/ui-utils.js?v=102"></script>
+  <script src="/js/core/router.js?v=102"></script>
   <!-- Domain Functional Modules -->
-  <script src="/js/reader/reader.js?v=100"></script>
+  <script src="/js/reader/reader.js?v=102"></script>
+  <script src="/js/reader/continue-reading.js?v=102"></script>
   <script src="/js/creator/creator-editor.js?v=101"></script>
-  <script src="/js/creator/creator.js?v=100"></script>
-  <script src="/js/admin/admin.js?v=100"></script>
+  <script src="/js/creator/creator.js?v=102"></script>
+  <script src="/js/admin/admin.js?v=102"></script>
   <!-- Supabase Extension & Bootstrap Entry -->
-  <script src="/supabase-admin.js?v=100"></script>
-  <script src="/app.js?v=100"></script>
+  <script src="/api/public-config.js"></script>
+  <script src="/supabase-admin.js?v=103"></script>
+  <script src="/app.js?v=102"></script>
 </body>
 </html>

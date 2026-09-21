@@ -1,0 +1,277 @@
+{
+  "checkedAt": "2026-09-21T05:27:29.853Z",
+  "tables": {
+    "works": {
+      "count": 30,
+      "columns": [
+        "id",
+        "title",
+        "author",
+        "genre",
+        "tags",
+        "description",
+        "cover_image",
+        "view_count",
+        "created_at",
+        "status",
+        "is_top_recommended",
+        "is_popular_work",
+        "is_new_work",
+        "content_type",
+        "is_completed",
+        "rating",
+        "ai_usage_type",
+        "like_count",
+        "author_id",
+        "published_at"
+      ]
+    },
+    "episodes": {
+      "count": 180,
+      "columns": [
+        "id",
+        "work_id",
+        "episode_number",
+        "title",
+        "is_free",
+        "is_ad_free",
+        "content",
+        "created_at",
+        "image_urls",
+        "author_comment",
+        "status",
+        "scheduled_at",
+        "access_policy",
+        "view_count"
+      ]
+    },
+    "readers": {
+      "count": 11,
+      "columns": [
+        "id",
+        "username",
+        "password_hash",
+        "email",
+        "phone",
+        "is_adult_verified",
+        "subscription_status",
+        "created_at",
+        "reading_history",
+        "favorites",
+        "subscribed_authors",
+        "nickname",
+        "adult_verified_at",
+        "status",
+        "points"
+      ]
+    },
+    "authors": {
+      "count": 30,
+      "columns": [
+        "id",
+        "username",
+        "password_hash",
+        "email",
+        "pen_name",
+        "work_title",
+        "birthdate",
+        "address",
+        "bank_info",
+        "status",
+        "created_at",
+        "auth_user_id",
+        "profile_image",
+        "bio",
+        "verified_at"
+      ]
+    },
+    "admin_users": {
+      "count": 4,
+      "columns": [
+        "id",
+        "email",
+        "username",
+        "password_hash",
+        "nickname",
+        "role",
+        "permissions",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "system_config": {
+      "count": 1,
+      "columns": [
+        "id",
+        "toss_client_key",
+        "toss_secret_key",
+        "toss_mid",
+        "toss_mode",
+        "kcp_site_code",
+        "kcp_site_key",
+        "kcp_mode",
+        "updated_at",
+        "service_name",
+        "maintenance_mode",
+        "default_writer_pool_ratio",
+        "minimum_settlement_amount",
+        "reward_ad_enabled"
+      ]
+    },
+    "comments": {
+      "count": 22,
+      "columns": [
+        "id",
+        "user_id",
+        "nickname",
+        "work_id",
+        "episode_id",
+        "content",
+        "likes_count",
+        "is_blocked",
+        "created_at",
+        "nickname_snapshot",
+        "parent_id",
+        "is_deleted",
+        "is_hidden_by_author",
+        "anchor_paragraph",
+        "quote_text",
+        "content_version",
+        "is_spoiler"
+      ]
+    },
+    "reading_history": {
+      "count": 13,
+      "columns": [
+        "id",
+        "user_id",
+        "work_id",
+        "episode_id",
+        "progress",
+        "last_read_at",
+        "completed_at",
+        "created_at"
+      ]
+    },
+    "favorites": {
+      "count": 17,
+      "columns": [
+        "id",
+        "user_id",
+        "work_id",
+        "created_at"
+      ]
+    },
+    "author_subscriptions": {
+      "count": 14,
+      "columns": [
+        "id",
+        "user_id",
+        "author_id",
+        "notification_enabled",
+        "created_at",
+        "author_name"
+      ]
+    },
+    "author_earnings": {
+      "count": 90,
+      "columns": [
+        "id",
+        "author_id",
+        "work_id",
+        "period_date",
+        "ad_impressions",
+        "rewarded_views",
+        "gross_revenue",
+        "platform_fee",
+        "author_revenue",
+        "status",
+        "created_at"
+      ]
+    },
+    "fan_meetings": {
+      "count": 1,
+      "columns": [
+        "id",
+        "author_id",
+        "title",
+        "description",
+        "event_at",
+        "location",
+        "ticket_price",
+        "capacity",
+        "status",
+        "created_at"
+      ]
+    },
+    "goods": {
+      "count": 2,
+      "columns": [
+        "id",
+        "author_id",
+        "name",
+        "description",
+        "price",
+        "stock",
+        "image_url",
+        "status",
+        "created_at"
+      ]
+    },
+    "events": {
+      "count": 2,
+      "columns": [
+        "id",
+        "title",
+        "description",
+        "target_audience",
+        "event_type",
+        "reward_points",
+        "status",
+        "started_at",
+        "ended_at",
+        "created_at"
+      ]
+    },
+    "ad_units": {
+      "count": 2,
+      "columns": [
+        "id",
+        "name",
+        "ad_network",
+        "placement",
+        "ad_unit_code",
+        "is_rewarded",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "audit_logs": {
+      "count": 3,
+      "columns": [
+        "id",
+        "admin_id",
+        "action",
+        "target_type",
+        "target_id",
+        "old_data",
+        "new_data",
+        "ip_address",
+        "user_agent",
+        "created_at"
+      ]
+    }
+  },
+  "episodes": {
+    "missingContent": [],
+    "anonymousPaidContentReadable": 51,
+    "states": [
+      "PUBLISHED"
+    ]
+  },
+  "workStates": [
+    "PUBLISHED"
+  ]
+}

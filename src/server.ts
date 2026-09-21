@@ -19,9 +19,10 @@ app.listen(PORT, async () => {
   console.log(`🚀 [WebNovel Backend] Server is running at http://localhost:${PORT}`);
   try {
     await SuperAdminInitService.initSuperAdmin();
-    await DemoDataSeedService.seed();
+    if (process.env.SEED_DEMO_DATA === 'true' && process.env.NODE_ENV !== 'production') {
+      await DemoDataSeedService.seed();
+    }
   } catch (err) {
     console.error('⚠️ [SuperAdminInit Error]', err);
   }
 });
-

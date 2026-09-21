@@ -11,7 +11,11 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "test": "tsx scripts/verify_backend.ts",
-    "test:author": "tsx scripts/verify_author_suite.ts"
+    "test:author": "tsx scripts/verify_author_suite.ts",
+    "test:data": "node scripts/verify_data_contracts.cjs",
+    "audit:live": "node scripts/audit_live_data.cjs",
+    "test:config": "tsx scripts/verify_supabase_config.ts",
+    "check:supabase": "node scripts/check_supabase_access.cjs"
   },
   "keywords": [],
   "author": "",

@@ -35,35 +35,14 @@ window.handleAdminLoginProcess = async function() {
       result = await window.WebNovelsAdmin.login(idInput, pwInput);
     }
   } catch(e) {
-    console.warn('[Admin Login] WebNovelsAdmin 호출 에러, 자체 복구 진행:', e);
-  }
-
-  // 2. 만약 WebNovelsAdmin 결과가 없거나 실패 시, Supabase 직접 RPC 검증
-  if (!result || !result.success) {
-    if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
-      try {
-        const directClient = window.supabase.createClient(
-          'https://ghwabesnydktumeyejnm.supabase.co',
-          'sb_publishable_XYQ7ydRrTZQ94V6r1WKEtQ_pnL9Po5c'
-        );
-        const { data, error } = await directClient.rpc('verify_admin_login', {
-          p_email: idInput,
-          p_password: pwInput
-        });
-        if (!error && data && data.success) {
-          result = data;
-        }
-      } catch(rpcErr) {
-        console.warn('[Admin Login] Direct RPC error:', rpcErr);
-      }
-    }
+    console.warn('[Admin Login] WebNovelsAdmin 호출 에러:', e);
   }
 
   // 3. 최종 결과 처리
-  if (result && result.success) {
+  if (result?.success && result.admin && ['SUPER_ADMIN', 'SUB_ADMIN', 'ADMIN'].includes(result.admin.role)) {
     isAdminLoggedIn = true;
     closeAllModals();
-    const admin = result.admin || { id: idInput, username: idInput, nickname: idInput, role: 'SUPER_ADMIN' };
+    const admin = result.admin;
     
     // [중요] 기존 일반회원(독자/작가) 세션을 관리자 세션으로 완전히 덮어쓰기
     localStorage.removeItem('webnovels_creator');
@@ -76,7 +55,7 @@ window.handleAdminLoginProcess = async function() {
       username: admin.username || idInput,
       nickname: adminNickname,
       email: adminEmail,
-      role: admin.role || 'SUPER_ADMIN',
+      role: admin.role,
       isAdultVerified: true
     };
     localStorage.setItem('webnovels_user', JSON.stringify(adminUserObj));
@@ -177,7 +156,7 @@ window.loadAdminUsers = async function(forceRefresh = false) {
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchReadersFromSupabase === 'function') {
       try {
         const dbReaders = await window.WebNovelsAdmin.fetchReadersFromSupabase();
-        if (dbReaders && dbReaders.length > 0) {
+        if (Array.isArray(dbReaders)) {
           SAMPLE_READERS.length = 0;
           SAMPLE_READERS.push(...dbReaders);
         }
@@ -432,7 +411,7 @@ window.loadAdminAuthors = async function(forceRefresh = false) {
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchAuthorsFromSupabase === 'function') {
       try {
         const dbAuthors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
-        if (dbAuthors && dbAuthors.length > 0) {
+        if (Array.isArray(dbAuthors)) {
           SAMPLE_AUTHORS.length = 0;
           SAMPLE_AUTHORS.push(...dbAuthors);
         }
@@ -575,7 +554,7 @@ window.handleApproveSettlement = async function(settlementId) {
 
 // 수익배분 집계 실행 핸들러
 window.handleRevenueCalculation = async function() {
-  const periodMonth = document.getElementById('revPeriodMonth')?.value || '2026-08';
+  const periodMonth = document.getElementById('revPeriodMonth')?.value || new Date().toISOString().slice(0, 7);
   const grossRev = Number(document.getElementById('revGrossRevenue')?.value || 0);
   const adFee = Number(document.getElementById('revAdNetworkFee')?.value || 0);
   const poolRatio = Number((document.getElementById('revAuthorPoolRatio') || document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
@@ -604,7 +583,7 @@ window.handleRevenueCalculation = async function() {
 
 // 정산 최종 마감 핸들러
 window.handleRevenueConfirm = async function() {
-  const periodMonth = document.getElementById('revConfirmMonth')?.value || '2026-08';
+  const periodMonth = document.getElementById('revConfirmMonth')?.value || new Date().toISOString().slice(0, 7);
   if (!confirm(`${periodMonth}월 정산 마감 처리를 진행하시겠습니까? (Confirmed 승인)`)) return;
 
   try {
@@ -838,25 +817,16 @@ async function renderAdminWorks() {
   try {
     if (window.WebNovelsAdmin) {
       const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-      if (dbWorks && dbWorks.length > 0) {
+      if (Array.isArray(dbWorks)) {
         worksList = dbWorks;
         SAMPLE_WORKS.length = 0;
         SAMPLE_WORKS.push(...dbWorks);
       }
     }
-    if (worksList.length === 0) {
-      const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
-      const res = await fetch('/api/works', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) {
-        const { works } = await res.json();
-        worksList = works || [];
-      }
-    }
   } catch(error) {
-    console.warn('CMS DB fetch fallback to SAMPLE_WORKS');
+    tableBody.innerHTML = '<tr><td colspan="8">작품 조회에 실패했습니다. 다시 시도해 주세요.</td></tr>';
+    return;
   }
-
-  if (worksList.length === 0) worksList = SAMPLE_WORKS;
 
   // 1. 상태별 카운트 계산 및 상단 탭 업데이트
   updateWorkStatusPillCounts(worksList);
@@ -867,7 +837,7 @@ async function renderAdminWorks() {
     if (adminWorkFilterState.status !== 'ALL') {
       const currentStatus = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
       if (adminWorkFilterState.status === 'NEED_ACTION') {
-        if (currentStatus !== 'DELAYED' && currentStatus !== 'PENDING_REVIEW' && w.id !== 2 && w.id !== 3) return false;
+        if (!['DELAYED', 'REVIEW', 'PENDING_REVIEW'].includes(currentStatus)) return false;
       } else if (currentStatus !== adminWorkFilterState.status) {
         return false;
       }
@@ -915,9 +885,9 @@ async function renderAdminWorks() {
 
     // Issue / Action (work_management_2.md 1.2)
     let issueHtml = '<span class="text-muted">-</span>';
-    if (curStatus === 'DELAYED' || w.id === 2) {
+    if (curStatus === 'DELAYED') {
       issueHtml = `<span class="badge badge-warning" style="cursor:pointer;" onclick="showToast('작가에게 연재 독촉 알림이 발송되었습니다.')">⚠ 작가 알림</span>`;
-    } else if (curStatus === 'PENDING_REVIEW' || w.id === 3) {
+    } else if (curStatus === 'PENDING_REVIEW') {
       issueHtml = `<span class="badge badge-primary" style="cursor:pointer;" onclick="switchAdminToEpisodeTab(${w.id})">⚠ 검수 확인</span>`;
     } else if (curStatus === 'PAUSED') {
       issueHtml = `<span class="badge badge-accent">휴재 공지</span>`;
@@ -1044,7 +1014,7 @@ function updateWorkStatusPillCounts(worksList) {
 
   const actionCount = worksList.filter(w => {
     const s = w.status || (w.isCompleted ? 'COMPLETED' : 'ONGOING');
-    return s === 'DELAYED' || s === 'PENDING_REVIEW' || w.id === 2 || w.id === 3;
+    return s === 'DELAYED' || s === 'PENDING_REVIEW';
   }).length;
   const elWorkAction = document.getElementById('workSummaryActionCount');
   if (elWorkAction) elWorkAction.textContent = actionCount;
@@ -1107,36 +1077,28 @@ window.handleBulkWorkStatus = async function(newStatus) {
     return;
   }
 
+  let completed = 0;
   for (const id of selected) {
-    if (window.WebNovelsAdmin) {
-      await window.WebNovelsAdmin.updateWorkAdminSetting(id, 'status', newStatus);
-    }
-    const target = SAMPLE_WORKS.find(w => w.id == id);
-    if (target) target.status = newStatus;
+    const result = await window.WebNovelsAdmin?.updateWorkAdminSetting(id, 'status', newStatus);
+    if (result?.success) completed++;
   }
-
-  showToast(`선택한 ${selected.length}개 작품의 상태가 [${newStatus}]로 일괄 변경되었습니다.`);
-  renderAdminWorks();
-  renderHomeWorks();
+  showToast(completed === selected.length ? completed + '개 작품 변경 완료' : completed + '개 변경 완료. 나머지는 저장에 실패했습니다.');
+  await renderAdminWorks();
+  window.dispatchEvent(new CustomEvent('webnovels:works-changed'));
 };
 
 window.handleBulkWorkDelete = async function() {
   const selected = Array.from(document.querySelectorAll('.work-item-cb:checked')).map(cb => cb.value);
-  if (selected.length === 0) {
-    showToast('선택된 작품이 없습니다.');
-    return;
-  }
-  if (!confirm(`선택한 ${selected.length}개 작품을 일괄 삭제하시겠습니까?`)) return;
-
+  if (!selected.length) return showToast('선택된 작품이 없습니다.');
+  if (!confirm('선택한 ' + selected.length + '개 작품을 삭제하시겠습니까?')) return;
+  let completed = 0;
   for (const id of selected) {
-    if (window.WebNovelsAdmin) {
-      await window.WebNovelsAdmin.deleteWorkFromDB(id);
-    }
+    const result = await window.WebNovelsAdmin?.deleteWorkFromDB(id);
+    if (result?.success) completed++;
   }
-  SAMPLE_WORKS = SAMPLE_WORKS.filter(w => !selected.includes(String(w.id)));
-  showToast(`선택한 ${selected.length}개 작품이 삭제되었습니다.`);
-  renderAdminWorks();
-  renderHomeWorks();
+  showToast(completed === selected.length ? completed + '개 삭제 완료' : completed + '개 삭제 완료. 나머지는 삭제에 실패했습니다.');
+  await renderAdminWorks();
+  window.dispatchEvent(new CustomEvent('webnovels:works-changed'));
 };
 
 // ----------------------------------------------------
@@ -1150,7 +1112,7 @@ window.toggleWorkCalendarView = function() {
   if (isHidden) renderAdminCalendar();
 };
 
-async function renderAdminCalendar(targetYear = 2026, targetMonth = 8) {
+async function renderAdminCalendar(targetYear = new Date().getFullYear(), targetMonth = new Date().getMonth() + 1) {
   const grid = document.getElementById('adminCalendarGrid');
   if (!grid) return;
 
@@ -1176,7 +1138,7 @@ async function renderAdminCalendar(targetYear = 2026, targetMonth = 8) {
 
   // 해당 월의 총 일수 계산 (예: 8월 = 31일)
   const totalDays = new Date(targetYear, targetMonth, 0).getDate();
-  const currentDay = 22; // 시스템 기준 오늘 (2026-08-22)
+  const currentDay = new Date().getDate(); // 시스템 기준 오늘 (2026-08-22)
 
   for (let day = 1; day <= totalDays; day++) {
     const isToday = day === currentDay;
@@ -1469,9 +1431,7 @@ window.renderAdminEpisodes = async function(workId) {
     console.warn('DB fetchEpisodes error:', e);
   }
 
-  if (!episodes || episodes.length === 0) {
-    episodes = targetWork?.episodes || [];
-  }
+  if (targetWork && Array.isArray(episodes)) targetWork.episodes = episodes;
 
   // 회차 검색 및 무료/유료 필터
   const filtered = episodes.filter(ep => {
@@ -1592,44 +1552,49 @@ window.handleBulkEpisodeFree = async function(isFree) {
     return;
   }
 
+  let completed = 0;
   for (const epId of selected) {
-    if (window.WebNovelsAdmin) {
-      await window.WebNovelsAdmin.updateEpisodeSetting(epId, 'is_free', isFree);
-    }
+    const result = await window.WebNovelsAdmin?.updateEpisodeSetting(epId, 'is_free', isFree);
+    if (result?.success) completed++;
   }
-  showToast(`선택한 ${selected.length}개 회차가 [${isFree ? '무료' : '유료'}]로 일괄 변경되었습니다.`);
-  renderAdminEpisodes(currentWorkId);
+  showToast(completed + '/' + selected.length + '개 회차 변경 완료');
+  await renderAdminEpisodes(currentWorkId);
 };
 
 window.handleBulkEpisodeDelete = async function() {
-  const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value;
+  const workId = document.getElementById('adminEpisodeWorkSelect')?.value;
   const selected = Array.from(document.querySelectorAll('.ep-item-cb:checked')).map(cb => cb.value);
-  if (selected.length === 0) {
-    showToast('선택된 회차가 없습니다.');
-    return;
+  if (!selected.length) return showToast('선택된 회차가 없습니다.');
+  if (!confirm(selected.length + '개 회차를 삭제하시겠습니까?')) return;
+  let completed = 0;
+  for (const id of selected) {
+    const result = await window.WebNovelsAdmin?.deleteEpisodeFromDB(id);
+    if (result?.success) completed++;
   }
-  if (!confirm(`선택한 ${selected.length}개 회차를 삭제하시겠습니까?`)) return;
+  showToast(completed + '/' + selected.length + '개 회차 삭제 완료');
+  await renderAdminEpisodes(workId);
+};
 
-  for (const epId of selected) {
-    if (window.WebNovelsAdmin) {
-      await window.WebNovelsAdmin.deleteEpisodeFromDB(epId, currentWorkId);
-    }
-  }
-  showToast(`선택한 ${selected.length}개 회차가 삭제되었습니다.`);
-  renderAdminEpisodes(currentWorkId);
+window.handleAdminToggleEpisodeFree = async function(id, workId, isFree) {
+  const result = await window.WebNovelsAdmin?.updateEpisodeSetting(id, 'is_free', isFree);
+  showToast(result?.success ? '공개 정책 변경 완료' : '저장에 실패했습니다.');
+  await renderAdminEpisodes(workId);
+};
+window.handleAdminDeleteEpisode = async function(id, workId) {
+  if (!confirm('회차를 삭제하시겠습니까?')) return;
+  const result = await window.WebNovelsAdmin?.deleteEpisodeFromDB(id);
+  showToast(result?.success ? '삭제 완료' : '삭제에 실패했습니다.');
+  await renderAdminEpisodes(workId);
 };
 
 // ----------------------------------------------------
 // 회차 상세 편집 & 5대 콘텐츠 심사/검수 Workflow 모달
 // ----------------------------------------------------
-window.openAdminEpisodeDetailModal = function(episodeId, workId) {
+window.openAdminEpisodeDetailModal = async function(episodeId, workId) {
   const work = SAMPLE_WORKS.find(w => w.id == workId);
-  const ep = work?.episodes?.find(e => (e.id || e.episodeNumber) == episodeId) || {
-    episodeNumber: episodeId,
-    title: `제 ${episodeId} 화: 스토리 전개`,
-    content: '회차 본문 내용...',
-    isFree: episodeId <= 3
-  };
+  const episodes = await window.WebNovelsAdmin.fetchEpisodesByWorkId(workId);
+  const ep = episodes.find(e => Number(e.id) === Number(episodeId));
+  if (!ep) return showToast('회차 정보를 불러오지 못했습니다.');
 
   const isWebtoon = work?.contentType === 'WEBTOON';
   const bodyEl = document.getElementById('epDetailModalBody');
@@ -1639,7 +1604,7 @@ window.openAdminEpisodeDetailModal = function(episodeId, workId) {
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
         <div class="form-group">
           <label>회차 번호</label>
-          <input type="number" class="form-control" value="${ep.episodeNumber || episodeId}" required style="width:100%; padding:8px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color);">
+          <input id="detailEpNumber" type="number" min="1" class="form-control" value="${ep.episodeNumber}" required style="width:100%; padding:8px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color);">
         </div>
         <div class="form-group">
           <label>공개 설정</label>
@@ -1652,12 +1617,12 @@ window.openAdminEpisodeDetailModal = function(episodeId, workId) {
 
       <div class="form-group mb-3">
         <label>회차 소제목</label>
-        <input type="text" id="detailEpTitle" class="form-control" value="${ep.title}" required style="width:100%; padding:10px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color);">
+        <input type="text" id="detailEpTitle" class="form-control" value="${escapeReaderHtml(ep.title)}" required style="width:100%; padding:10px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color);">
       </div>
 
       <div class="form-group mb-3">
         <label>${isWebtoon ? '웹툰 이미지 URL 목록 (쉼표 구분)' : '웹소설 본문 텍스트'}</label>
-        <textarea id="detailEpContent" class="form-control" rows="6" style="width:100%; padding:10px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color); font-size: 0.9rem;">${ep.content || (ep.imageUrls ? ep.imageUrls.join(', ') : '')}</textarea>
+        <textarea id="detailEpContent" class="form-control" rows="6" style="width:100%; padding:10px; border-radius:6px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border-color); font-size: 0.9rem;">${escapeReaderHtml(isWebtoon ? (ep.imageUrls || []).join(', ') : (ep.content || ''))}</textarea>
       </div>
 
       <!-- 5대 콘텐츠 심사 체크리스트 -->
@@ -1675,7 +1640,7 @@ window.openAdminEpisodeDetailModal = function(episodeId, workId) {
       </div>
 
       <div style="display: flex; gap: 8px; justify-content: flex-end;">
-        <button type="button" class="btn btn-outline btn-sm style-danger" onclick="closeAllModals(); showToast('수정 요청(반려) 처리되었습니다.')">
+        <button type="button" class="btn btn-outline btn-sm style-danger" onclick="closeAllModals()">
           <i data-lucide="x-circle"></i> 수정 요청 (반려)
         </button>
         <button type="submit" class="btn btn-primary btn-sm">
@@ -1694,14 +1659,18 @@ window.handleAdminEpisodeDetailSave = async function(e, episodeId, workId) {
   const isFree = document.getElementById('detailEpIsFree').value === 'true';
   const title = document.getElementById('detailEpTitle').value.trim();
 
-  if (window.WebNovelsAdmin) {
-    await window.WebNovelsAdmin.updateEpisodeSetting(episodeId, 'is_free', isFree);
-    await window.WebNovelsAdmin.updateEpisodeSetting(episodeId, 'title', title);
-  }
-
+  const episodeNumber = Number(document.getElementById('detailEpNumber').value);
+  const content = document.getElementById('detailEpContent').value;
+  if (!title || !Number.isInteger(episodeNumber) || episodeNumber < 1) return showToast('회차 번호와 제목을 확인해 주세요.');
+  const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(workId));
+  const payload = { title, is_free: isFree, episode_number: episodeNumber };
+  if (work?.contentType === 'WEBTOON') payload.image_urls = content.split(',').map(s => s.trim()).filter(Boolean);
+  else payload.content = content;
+  const result = await window.WebNovelsAdmin?.updateEpisodeSetting(episodeId, payload);
+  if (!result?.success) return showToast(result?.error || '회차 저장에 실패했습니다.');
   closeAllModals();
-  showToast('🎉 회차 상세 내용 및 5대 심사가 완료/저장되었습니다.');
-  renderAdminEpisodes(workId);
+  showToast('회차 내용이 DB에 저장되었습니다.');
+  await renderAdminEpisodes(workId);
 };
 
 // 신규 작품 등록 모달 열기/제출
@@ -1738,9 +1707,8 @@ window.handleAdminCreateWorkSubmit = async function(e) {
 
   const workData = { title, author, contentType, genre, description, coverUrl, tags };
 
-  if (window.WebNovelsAdmin) {
-    await window.WebNovelsAdmin.createWorkInDB(workData);
-  }
+  const result = await window.WebNovelsAdmin?.createWorkInDB(workData);
+  if (!result?.success) return showToast(result?.error || '작품 등록에 실패했습니다.');
 
   closeAllModals();
   showToast(`🎉 [${title}] 작품이 실시간 DB에 등록되었습니다!`);
@@ -1784,9 +1752,8 @@ window.handleAdminCreateEpisodeSubmit = async function(e) {
     authorComment: '관리자 직권 등록'
   };
 
-  if (window.WebNovelsAdmin) {
-    await window.WebNovelsAdmin.createEpisodeInDB(workId, epData);
-  }
+  const result = await window.WebNovelsAdmin?.createEpisodeInDB(workId, epData);
+  if (!result?.success) return showToast(result?.error || '회차 등록에 실패했습니다.');
 
   closeAllModals();
   showToast(`🎉 [제 ${epNum}화]가 성공적으로 등록되었습니다!`);
@@ -1808,18 +1775,6 @@ async function toggleAdminSetting(workId, field, value) {
     }
   } catch(e) {
     console.warn('DB update failed, trying REST API fallback:', e);
-  }
-
-  if (!success) {
-    try {
-      const token = localStorage.getItem('webnovels_token') || localStorage.getItem('webnovels_admin_token');
-      const res = await fetch(`/api/works/${workId}/admin-settings`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [field]: value })
-      });
-      if (res.ok) success = true;
-    } catch(e) {}
   }
 
   if (success) {
@@ -2130,13 +2085,13 @@ window.handleRevenueCalculation = async function() {
   const writerPoolRatio = Number((document.getElementById('revAuthorPoolRatio') || document.getElementById('revCreatorPoolRatio') || document.getElementById('revWriterPoolRatio'))?.value || 0.625);
 
   const result = window.WebNovelsAdmin
-    ? await window.WebNovelsAdmin.calculateRevenue(periodMonth, grossRevenue, adNetworkFee, writerPoolRatio)
+    ? await window.WebNovelsAdmin.calculateRevenue?.(periodMonth, grossRevenue, adNetworkFee, writerPoolRatio)
     : null;
 
   if (result?.success) {
     showToast(`📊 ${periodMonth} 수익배분 집계 완료! (Supabase 저장됨)`);
   } else {
-    showToast(`📊 ${periodMonth} 수익배분 집계 시뮬레이션 완료 [오프라인]`);
+    showToast('집계에 실패했습니다. DB에 반영되지 않았습니다.');
   }
 
   // 수익 이벤트 목록 갱신
@@ -2151,7 +2106,7 @@ window.handleRevenueConfirm = async function() {
 
   showToast(result?.success
     ? `✅ ${month} 정산이 Confirmed 마감 처리되었습니다!`
-    : `✅ ${month} 정산 마감 처리됨 [오프라인]`
+    : '정산 마감에 실패했습니다. 상태가 변경되지 않았습니다.'
   );
 
   const events = window.WebNovelsAdmin ? await window.WebNovelsAdmin.fetchRevenueEvents() : [];
@@ -2164,8 +2119,8 @@ window.handleRevenueConfirm = async function() {
 // ============================================================
 window.handleApproveSettlement = async function(id, authorName, amount) {
   let result = null;
-  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.approveSettlement === 'function') {
-    result = await window.WebNovelsAdmin.approveSettlement(id);
+  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.approveSettlementSecure === 'function') {
+    result = await window.WebNovelsAdmin.approveSettlementSecure(id);
   }
 
   const nameStr = authorName ? `[${authorName}] ` : '';
@@ -2174,7 +2129,7 @@ window.handleApproveSettlement = async function(id, authorName, amount) {
   if (result && result.success) {
     showToast(`✅ ${nameStr}${amtStr} 정산금 송금 승인이 완료되었습니다. (상태: 🟢 출금완료)`);
   } else {
-    showToast(`✅ ${nameStr}${amtStr} 정산금 송금 완료 처리되었습니다. (상태: 🟢 출금완료)`);
+    showToast('정산 승인에 실패했습니다. 송금 완료 처리되지 않았습니다.');
   }
 
   // 관리자 정산 탭 목록 즉시 갱신
@@ -2204,13 +2159,13 @@ window.handleSaveSystemConfig = async function() {
     kcp_site_code: document.getElementById('cfgKcpSiteCode')?.value,
     toss_mode: document.getElementById('cfgTossMode')?.value
   };
-  const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.updateSystemConfig(config) : null;
-  showToast(result?.success ? '⚙️ PG/PASS 설정이 Supabase에 저장되었습니다!' : '설정 저장됨 [오프라인]');
+  const result = window.WebNovelsAdmin ? await window.WebNovelsAdmin.updateSystemConfig?.(config) : null;
+  showToast(result?.success ? '⚙️ PG/PASS 설정이 Supabase에 저장되었습니다!' : '설정 저장에 실패했습니다.');
 };
 
 // PG 핑 테스트
 window.handlePgPingTest = function() {
-  showToast('🔌 토스페이먼츠 및 KCP PASS API 연동 핑 테스트 성공!');
+  showToast('외부 결제·본인인증 연결 검증이 구현되지 않았습니다.');
 };
 
 // ============================================================
@@ -2406,7 +2361,7 @@ window.loadDashboardKPIs = async function() {
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchWorksFromSupabase === 'function') {
       try {
         const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-        if (dbWorks && dbWorks.length > 0) {
+        if (Array.isArray(dbWorks)) {
           works = dbWorks;
           SAMPLE_WORKS.length = 0;
           SAMPLE_WORKS.push(...dbWorks);
@@ -2424,7 +2379,7 @@ window.loadDashboardKPIs = async function() {
     const ongoingList = works.filter(w => !completedList.includes(w));
     const ongoingCount = ongoingList.length;
 
-    let readersCount = (typeof SAMPLE_READERS !== 'undefined' && SAMPLE_READERS.length > 0) ? SAMPLE_READERS.length : 10;
+    let readersCount = (typeof SAMPLE_READERS !== 'undefined' && SAMPLE_READERS.length > 0) ? SAMPLE_READERS.length : 0;
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchReadersFromSupabase === 'function') {
       try {
         const readers = await window.WebNovelsAdmin.fetchReadersFromSupabase();
@@ -2438,7 +2393,7 @@ window.loadDashboardKPIs = async function() {
       } catch(err) {}
     }
 
-    let authorsCount = (typeof SAMPLE_AUTHORS !== 'undefined' && SAMPLE_AUTHORS.length > 0) ? SAMPLE_AUTHORS.length : 30;
+    let authorsCount = (typeof SAMPLE_AUTHORS !== 'undefined' && SAMPLE_AUTHORS.length > 0) ? SAMPLE_AUTHORS.length : 0;
     if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchAuthorsFromSupabase === 'function') {
       try {
         const authors = await window.WebNovelsAdmin.fetchAuthorsFromSupabase();
@@ -2709,7 +2664,7 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
     revenueEvents = Array.isArray(revenueEvents) ? revenueEvents : [];
 
     // 1. 최신 당월 데이터 추출 및 상단 4대 KPI 갱신
-    const currentMonthData = revenueEvents.length > 0 ? (revenueEvents.find(e => e.period_month === '2026-08') || revenueEvents[0]) : null;
+    const currentMonthData = revenueEvents.length > 0 ? (revenueEvents.find(e => String(e.period_month).slice(0, 7) === new Date().toISOString().slice(0, 7)) || revenueEvents[0]) : null;
     const grossEl = document.getElementById('analyticsGrossRev');
     const writerEl = (document.getElementById('analyticsAuthorPool') || document.getElementById('analyticsCreatorPool') || document.getElementById('analyticsWriterPool'));
     const platformEl = document.getElementById('analyticsPlatformRev');
@@ -2769,7 +2724,7 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
       if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchWorksFromSupabase === 'function') {
         try {
           const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-          if (dbWorks && dbWorks.length > 0) works = dbWorks;
+          if (Array.isArray(dbWorks)) works = dbWorks;
         } catch(e) {}
       }
       if (works.length === 0 && typeof SAMPLE_WORKS !== 'undefined') {
@@ -2826,7 +2781,7 @@ window.loadAdminAnalytics = async function(isManualRefresh) {
       if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.fetchWorksFromSupabase === 'function') {
         try {
           const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-          if (dbWorks && dbWorks.length > 0) works = dbWorks;
+          if (Array.isArray(dbWorks)) works = dbWorks;
         } catch(e) {}
       }
       if (works.length === 0 && typeof SAMPLE_WORKS !== 'undefined') {

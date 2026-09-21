@@ -29,12 +29,39 @@ import { paymentRouter } from './routes/payment.router.js';
 import { revenueRouter } from './routes/revenue.router.js';
 
 import path from 'path';
+import { publicSupabaseConfig, checkSupabaseConnection } from './config/supabase.js';
 
 export const app = express();
 
 // 전역 미들웨어
 app.use(cors());
 app.use(express.json());
+app.get('/api/public-config.js', (_req, res) => {
+  res.set('Cache-Control', 'no-store').set('X-Content-Type-Options', 'nosniff').type('application/javascript');
+  try {
+    const config = JSON.stringify(publicSupabaseConfig()).replace(/</g, '\\u003c');
+    res.send(`window.WEBNOVELS_CONFIG = Object.freeze(${config});`);
+  } catch {
+    res.status(503).send('window.WEBNOVELS_CONFIG = null;');
+  }
+});
+app.get('/api/ready', async (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    publicSupabaseConfig();
+    await checkSupabaseConnection();
+    res.json({ status: 'ok', supabase: 'connected' });
+  } catch {
+    res.status(503).json({ status: 'unavailable', supabase: 'unavailable' });
+  }
+});
+// These legacy handlers simulate provider verification. Never expose them in production.
+app.use(['/api/ads/request-rewarded', '/api/ads/verify-unlock', '/api/auth/verify-adult'], (_req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({ error: '광고 및 본인인증 제공업체 검증 연동이 완료되지 않았습니다.' });
+  }
+  next();
+});
 app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Web SPA Frontend Page Serving (Semantic Deep Linking 지원 - improve1.md)
@@ -86,4 +113,3 @@ app.use((req: Request, res: Response) => {
   }
   res.status(404).json({ error: '요청하신 API 경로를 찾을 수 없습니다.' });
 });
-

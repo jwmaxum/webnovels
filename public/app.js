@@ -347,14 +347,14 @@ window.openMobileMoreModal = function(event) {
     if (emailEl) emailEl.textContent = savedUser.nickname || savedUser.email.split('@')[0];
     const isAdult = !!(savedUser.isAdultVerified || savedUser.is_adult_verified || window._isAdultVerified);
     if (adultEl) adultEl.textContent = isAdult ? '🔞 19+ 성인 인증 완료' : '🔞 성인 미인증';
-    const pts = savedUser.points ?? userPoints ?? 1000;
+    const pts = savedUser.points ?? userPoints ?? 0;
     if (pointEl) pointEl.textContent = `🪙 ${pts.toLocaleString()} P`;
     if (authLabel) authLabel.textContent = '로그아웃';
     if (authIcon) authIcon.setAttribute('data-lucide', 'log-out');
   } else {
     if (emailEl) emailEl.textContent = '로그인이 필요합니다';
     if (adultEl) adultEl.textContent = '🔞 성인 미인증';
-    if (pointEl) pointEl.textContent = `🪙 ${(userPoints || 1000).toLocaleString()} P`;
+    if (pointEl) pointEl.textContent = `🪙 ${(userPoints || 0).toLocaleString()} P`;
     if (authLabel) authLabel.textContent = '로그인 / 회원가입';
     if (authIcon) authIcon.setAttribute('data-lucide', 'log-in');
   }
@@ -429,63 +429,16 @@ async function initWebNovelsApp() {
     if (typeof renderDiscoverWorks === 'function') renderDiscoverWorks();
     if (typeof renderSearchResults === 'function') renderSearchResults();
     if (typeof renderContinueReadingHome === 'function') renderContinueReadingHome();
-    if (typeof initRouteHandler === 'function') initRouteHandler();
   } catch (e) {
     console.error('[Initial Render Error]', e);
   }
-
-  // 2. [비동기 로컬 데이터셋 보강]
-  try {
-    const localRes = await fetch('/dataset_30_works.json');
-    if (localRes.ok) {
-      const localData = await localRes.json();
-      if (localData.works && localData.works.length >= 30) {
-        SAMPLE_WORKS.length = 0;
-        SAMPLE_WORKS.push(...localData.works.map(w => ({
-          id: Number(w.id),
-          title: w.title,
-          author: w.author,
-          genre: Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'),
-          rating: (Array.isArray(w.genre) && w.genre.includes('19세 이상')) || w.rating === 'AGE_19' ? 'AGE_19' : 'ALL',
-          aiUsageType: 'NONE',
-          contentType: w.contentType || 'NOVEL',
-          coverUrl: w.coverImage ? (w.coverImage.startsWith('/') ? w.coverImage : `/images/${w.coverImage}`) : '/images/stormqueen_oath.jpg',
-          description: w.description || '',
-          viewCount: Number(w.viewCount ?? w.view_count ?? 0),
-          episodesCount: 6,
-          isCompleted: !!(w.isCompleted || w.is_completed),
-          isTopRecommended: !!(w.isTopRecommended || w.is_top_recommended),
-          isPopularWork: !!(w.isPopularWork || w.is_popular_work),
-          isNewWork: !!(w.isNewWork || w.is_new_work),
-          episodes: createDefault6Episodes(w.title)
-        })));
-        if (localData.readers) {
-          SAMPLE_READERS.length = 0;
-          SAMPLE_READERS.push(...localData.readers);
-        }
-        if (localData.creators || localData.authors) {
-          const cList = localData.creators || localData.authors;
-          if (typeof SAMPLE_CREATORS !== 'undefined') {
-            SAMPLE_CREATORS.length = 0;
-            SAMPLE_CREATORS.push(...cList);
-          }
-          if (typeof SAMPLE_AUTHORS !== 'undefined') {
-            SAMPLE_AUTHORS.length = 0;
-            SAMPLE_AUTHORS.push(...cList);
-          }
-        }
-        if (typeof renderHomeWorks === 'function') renderHomeWorks();
-        if (typeof renderDiscoverWorks === 'function') renderDiscoverWorks();
-      }
-    }
-  } catch(e) {}
 
   // 3. [Supabase 실시간 DB 연동]
   if (window.WebNovelsAdmin) {
     try {
       window.WebNovelsAdmin.init();
       const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-      if (remoteWorks && remoteWorks.length > 0) {
+      if (Array.isArray(remoteWorks)) {
         console.log('⚡ [App Init] Supabase DB 실시간 30개 작품 로드 성공:', remoteWorks.length);
         SAMPLE_WORKS.length = 0;
         SAMPLE_WORKS.push(...remoteWorks);
@@ -495,17 +448,18 @@ async function initWebNovelsApp() {
       }
     } catch(err) {
       console.warn('[App Init] Supabase 작품 로드 예외:', err);
+      showToast('작품을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.');
     }
 
     try {
-      const remoteReaders = await window.WebNovelsAdmin.fetchReadersFromSupabase();
-      if (remoteReaders && remoteReaders.length > 0) {
+      const remoteReaders = window.WebNovelsAdmin.getCurrentAdmin() ? await window.WebNovelsAdmin.fetchReadersFromSupabase() : [];
+      if (Array.isArray(remoteReaders)) {
         SAMPLE_READERS.length = 0;
         SAMPLE_READERS.push(...remoteReaders);
       }
       const fetchCreators = window.WebNovelsAdmin.fetchCreatorsFromSupabase || window.WebNovelsAdmin.fetchAuthorsFromSupabase;
       const remoteCreators = await fetchCreators();
-      if (remoteCreators && remoteCreators.length > 0) {
+      if (Array.isArray(remoteCreators)) {
         if (typeof SAMPLE_CREATORS !== 'undefined') {
           SAMPLE_CREATORS.length = 0;
           SAMPLE_CREATORS.push(...remoteCreators);
@@ -522,8 +476,10 @@ async function initWebNovelsApp() {
   window.addEventListener('webnovels:works-changed', async (e) => {
     console.log('[Event-Driven Realtime] works-changed 이벤트 수신 -> 전체 UI 동기화');
     if (window.WebNovelsAdmin) {
-      const updated = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-      if (updated && updated.length > 0) {
+      let updated;
+      try { updated = await window.WebNovelsAdmin.fetchWorksFromSupabase(); }
+      catch (error) { showToast('작품 변경 내용을 불러오지 못했습니다. 새로고침해 주세요.'); return; }
+      if (Array.isArray(updated)) {
         SAMPLE_WORKS.length = 0;
         SAMPLE_WORKS.push(...updated);
       }
@@ -531,6 +487,7 @@ async function initWebNovelsApp() {
     if (typeof renderHomeWorks === 'function') renderHomeWorks();
     if (typeof renderDiscoverWorks === 'function') renderDiscoverWorks();
     if (typeof renderSearchResults === 'function') renderSearchResults();
+    if (currentActiveView === 'view-work-detail' && activeWork) openWorkDetailDirect(activeWork.id, false);
     if (currentActiveView === 'view-admin-cms') {
       if (typeof renderAdminWorks === 'function') renderAdminWorks();
       if (typeof loadDashboardKPIs === 'function') loadDashboardKPIs();
@@ -540,8 +497,10 @@ async function initWebNovelsApp() {
   window.addEventListener('webnovels:episodes-changed', async (e) => {
     console.log('[Event-Driven Realtime] episodes-changed 이벤트 수신 -> 회차 UI 동기화', e.detail);
     if (window.WebNovelsAdmin) {
-      const updated = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-      if (updated && updated.length > 0) {
+      let updated;
+      try { updated = await window.WebNovelsAdmin.fetchWorksFromSupabase(); }
+      catch (error) { showToast('회차 변경 내용을 불러오지 못했습니다. 새로고침해 주세요.'); return; }
+      if (Array.isArray(updated)) {
         SAMPLE_WORKS.length = 0;
         SAMPLE_WORKS.push(...updated);
       }
@@ -551,6 +510,7 @@ async function initWebNovelsApp() {
       renderAdminEpisodes(currentWorkId);
     }
     if (typeof renderHomeWorks === 'function') renderHomeWorks();
+    if (currentActiveView === 'view-work-detail' && activeWork) openWorkDetailDirect(activeWork.id, false);
     if (currentActiveView === 'view-admin-cms' && typeof loadDashboardKPIs === 'function') {
       loadDashboardKPIs();
     }
@@ -574,6 +534,8 @@ async function initWebNovelsApp() {
   window.addEventListener('webnovels:authors-changed', onAuthorsChanged);
   window.addEventListener('webnovels:creators-changed', onAuthorsChanged);
 
+  if (typeof initRouteHandler === 'function') initRouteHandler();
+
   // 로그인 프로필 세션 복원 및 헤더 동기화
   if (typeof loadMyProfile === 'function') await loadMyProfile();
   if (typeof renderLibraryContent === 'function') renderLibraryContent();
@@ -595,23 +557,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener('load', () => {
     if (window.WebNovelsAdmin?.setupRealtimeSubscriptions) {
       window.WebNovelsAdmin.setupRealtimeSubscriptions({
-        onWorksChange: async (payload) => {
-          console.log('⚡ [Realtime UI] Works 갱신 수신:', payload.eventType);
-          if (window.WebNovelsAdmin?.fetchWorksFromSupabase) {
-            const dbWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
-            if (dbWorks && dbWorks.length > 0) {
-              SAMPLE_WORKS.length = 0;
-              SAMPLE_WORKS.push(...dbWorks);
-              if (typeof renderHomeRankingList === 'function') renderHomeRankingList();
-              if (typeof renderDiscoverGrid === 'function') renderDiscoverGrid();
-            }
-          }
-          if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
-        },
-        onEpisodesChange: async (payload) => {
-          console.log('⚡ [Realtime UI] Episodes 갱신 수신:', payload.eventType);
-          if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
-        },
+        onWorksChange: () => window.dispatchEvent(new CustomEvent('webnovels:works-changed')),
+        onEpisodesChange: () => window.dispatchEvent(new CustomEvent('webnovels:episodes-changed')),
+        onAuthorsChange: () => window.dispatchEvent(new CustomEvent('webnovels:works-changed')),
         onSettlementsChange: (payload) => {
           console.log('⚡ [Realtime UI] Settlements 갱신 수신:', payload.eventType);
           if (typeof window.loadSettlementsList === 'function') window.loadSettlementsList();
