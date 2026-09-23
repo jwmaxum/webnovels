@@ -10,6 +10,6 @@ export function onRequestGet({ env }) {
   if (!validKey || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url || '')) {
     return new Response('/* Runtime override unavailable; keep public deployment settings. */', { status: 503, headers });
   }
-  const config = { supabaseUrl: url, supabaseAnonKey: key };
+  const config = { supabaseUrl: url, supabaseAnonKey: key, authorPublishEnabled: env.AUTHOR_PUBLISH_ENABLED === 'true' };
   return new Response('window.WEBNOVELS_CONFIG = Object.freeze(' + JSON.stringify(config).replace(/</g, '\\u003c') + ');', { headers });
 }

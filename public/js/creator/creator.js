@@ -4,8 +4,8 @@
 // [Purpose]
 // - 작가 스튜디오(Creator Studio) 전담 모듈
 // - 7대 작가 서브탭 전환기 (switchCreatorTab)
-// - 작품 관리 & 회차 발행 (handleCreateEpisodeSubmit)
-// - AI 자동검수(Auto Inspection) 및 연재 상태(연재중/휴재/완결) 관리
+// - 작품 관리 & 비공개 원고 저장 (handleCreateEpisodeSubmit)
+// - 게시·예약은 CreatorPublications와 서버의 원자적 경로에서 처리
 // - 4대 실시간 수익 지표 (Estimated/Confirmed/Payable) 연동
 // - 정산금 출금 신청(handleCreatorSettlementReq) 및 작가 인증
 // ============================================================
@@ -327,7 +327,7 @@ window.handleSaveCommentPolicySubmit = async function() {
 };
 
 // ============================================================
-// [Zero-Touch Episode Submission] 작가 회차 등록 & Zero-Touch 자동 검수 발행
+// 비공개 원고 저장. 게시·예약 버튼은 별도 확인 흐름을 연다.
 // ============================================================
 window.handleCreateEpisodeSubmit = async function(e) {
   e.preventDefault();

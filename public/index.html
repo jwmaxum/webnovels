@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=105">
+  <link rel="stylesheet" href="/styles.css?v=106">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -628,7 +628,7 @@
             </div>
           </div>
 
-          <!-- Tab 2: New Episode Registration (Zero-Touch 회차등록 & 예약발행) -->
+          <!-- Tab 2: Draft editor and explicit publication -->
           <div class="creator-tab-panel" id="creatorTab-new-ep" style="display: none;">
             <div class="card glass-panel p-6">
               <div class="flex-between mb-3">
@@ -650,6 +650,7 @@
                   <button type="button" id="btnDraftNew" class="btn btn-outline">새 원고</button>
                   <button type="button" id="btnDraftRefresh" class="btn btn-outline">원고 목록 새로고침</button>
                   <button type="button" id="btnDraftDownload" class="btn btn-outline">원고 다운로드</button>
+                  <button type="button" id="btnCreatorFiles" class="btn btn-outline">파일 가져오기·표지·내보내기</button>
                   <button type="button" id="btnLegacyDraftExport" class="btn btn-outline">이전 편집기 원고 백업</button>
                   <button type="button" id="btnDraftUndo" class="btn btn-outline">서식·복구 실행 취소</button>
                 </div>
@@ -690,8 +691,9 @@
                   <input type="text" id="newEpAuthorComment" maxlength="5000" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">원고 저장</button>
-                <p class="text-muted small">미리보기·게시 기능은 준비 중입니다. 저장만으로 독자에게 공개되지 않습니다.</p>
+                <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">초안 저장</button>
+                <button type="button" class="btn btn-outline" id="btnOpenPublication">미리보기·게시</button>
+                <p class="text-muted small">초안 저장은 비공개입니다. 게시 전 저장 버전·작품 정보·권리를 다시 확인합니다.</p>
               </form>
             </div>
           </div>
@@ -2943,14 +2945,92 @@
   <script src="/js/core/ui-utils.js?v=102"></script>
   <script src="/js/core/router.js?v=105"></script>
   <!-- Domain Functional Modules -->
+  <script src="/js/reader/reader-content.js?v=107"></script>
   <script src="/js/reader/reader.js?v=102"></script>
   <script src="/js/reader/continue-reading.js?v=102"></script>
+  <div class="modal" id="modalCreatorFiles" role="dialog" aria-modal="true" aria-labelledby="creatorFilesWorkTitle">
+    <div class="modal-content creator-files-modal">
+      <div class="modal-header"><h3 id="creatorFilesWorkTitle">작품 파일 관리</h3><button type="button" class="modal-close" aria-label="파일 관리 닫기">×</button></div>
+      <div class="modal-body">
+        <p id="creatorFilesMessage" role="status" aria-live="polite"></p>
+        <h4>원고 가져오기</h4>
+        <p>TXT·DOCX 파일을 선택해 제목·순서·변환 결과를 확인하세요. 파일당 2MB, 본문 200,000자, 한 번에 20개까지 가능합니다. HWP/HWPX와 자동 회차 분리는 지원하지 않습니다.</p>
+        <div id="creatorFileDrop" class="creator-file-drop"><label for="creatorFileInput">파일을 놓거나 선택하세요</label><input type="file" id="creatorFileInput" accept=".txt,.docx" multiple></div>
+        <p>새 비공개 초안으로 저장합니다. 저장 중 실패한 파일은 같은 요청으로 재시도합니다. 동일 파일을 다시 선택하면 별도의 새 초안으로 가져옵니다.</p>
+        <button type="button" id="creatorImportRun" class="btn btn-primary">확인한 파일 저장·재시도</button>
+        <button type="button" id="creatorImportStop" class="btn btn-outline">나머지 파일 중단</button>
+        <div id="creatorImportList"></div>
+        <h4>표지 선택·자르기</h4>
+        <p>JPEG·PNG, 최대 4MB·1,200만 픽셀. 2:3 비율로 자른 표지를 서버에서 다시 인코딩합니다. 원본은 비공개이며 작품이 공개되어야 공개 표지가 표시됩니다.</p>
+        <input type="file" id="creatorCoverInput" accept="image/jpeg,image/png" aria-label="표지 파일 선택">
+        <canvas id="creatorCoverCanvas" width="600" height="900" aria-label="표지 자르기 미리보기"></canvas>
+        <label>확대 <input id="creatorCoverZoom" type="range" min="1" max="4" step="0.05" value="1"></label>
+        <label>가로 위치 <input id="creatorCoverX" type="range" min="0" max="100" value="50"></label>
+        <label>세로 위치 <input id="creatorCoverY" type="range" min="0" max="100" value="50"></label>
+        <button type="button" id="creatorCoverSave" class="btn btn-primary">표지 저장</button>
+        <h4>원고 백업</h4>
+        <button type="button" id="creatorExportCurrent" class="btn btn-outline">편집 중 원고 TXT</button>
+        <button type="button" id="creatorExportList" class="btn btn-outline">저장된 회차·초안 TXT 선택</button>
+        <div id="creatorExportItems"></div>
+        <button type="button" id="creatorExportAll" class="btn btn-outline">작품 전체 ZIP (회차·초안·목록)</button>
+        <p>ZIP에는 서버에 저장된 본문과 제목·회차 순서·공개/초안 상태·작가의 말이 포함됩니다. 편집 중 미동기 내용은 TXT로 별도 보관해주세요.</p>
+        <div id="creatorOriginalFiles"></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="modalCreatorPublication" role="dialog" aria-modal="true" aria-labelledby="publicationHeading">
+    <div class="modal-content creator-publication-modal">
+      <div class="modal-header"><h3 id="publicationHeading">원고 미리보기·게시</h3><button type="button" class="modal-close" aria-label="게시 화면 닫기">×</button></div>
+      <div class="modal-body">
+        <p id="publicationMessage" role="status" aria-live="polite"></p>
+        <section id="publicationDraftPanel">
+          <p id="publicationSummary"></p>
+          <div class="creator-editor-actions">
+            <button type="button" id="publicationDesktop" class="btn btn-outline">PC 폭</button>
+            <button type="button" id="publicationMobile" class="btn btn-outline">모바일 폭</button>
+          </div>
+          <article id="publicationPreview" class="publication-preview" aria-label="독자 화면 미리보기">
+            <h4 id="publicationPreviewTitle"></h4>
+            <div id="publicationPreviewBody"></div>
+            <div id="publicationPreviewComment"></div>
+          </article>
+          <fieldset>
+            <legend>공개 방식</legend>
+            <label><input type="radio" name="publicationMode" value="NOW" checked> <span id="publicationNowLabel">즉시 무료 게시</span></label>
+            <label><input type="radio" name="publicationMode" value="SCHEDULED"> <span id="publicationScheduledLabel">예약 무료 게시</span></label>
+          </fieldset>
+          <div id="publicationScheduleFields" hidden>
+            <label>예약 시각 <input id="publicationDueAt" type="datetime-local"></label>
+            <label>표시 시간대 <select id="publicationTimezone"><option value="Asia/Seoul">한국 시간 (UTC+9)</option><option value="UTC">UTC</option></select></label>
+          </div>
+          <label class="publication-rights"><input type="checkbox" id="publicationRights"> 이 원고의 게시 권리가 있으며 작품 정보·등급·AI 표기를 확인했습니다.</label>
+          <button type="button" id="publicationCommit" class="btn btn-primary">선택한 버전 게시</button>
+        </section>
+        <section id="publicationResult" hidden>
+          <p id="publicationResultText"></p>
+          <button type="button" id="publicationRead" class="btn btn-outline">독자 화면 보기</button>
+          <button type="button" id="publicationCopy" class="btn btn-outline">링크 복사</button>
+          <button type="button" id="publicationNext" class="btn btn-primary">다음 회차 쓰기</button>
+        </section>
+        <section>
+          <h4>공개·예약 회차</h4>
+          <div id="publicationList"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <script src="/vendor/fflate/fflate-0.8.2.js"></script>
+  <script src="/js/creator/file-codec.js?v=106"></script>
+  <script src="/js/creator/file-image.js?v=106"></script>
+  <script src="/js/creator/file-import-queue.js?v=106"></script>
   <script src="/js/creator/draft-engine.js?v=105"></script>
-  <script src="/js/creator/draft-store.js?v=105"></script>
+  <script src="/js/creator/draft-store.js?v=106"></script>
   <script src="/js/creator/draft-diff.js?v=105"></script>
-  <script src="/js/creator/creator-editor.js?v=105"></script>
+  <script src="/js/creator/creator-editor.js?v=106"></script>
+  <script src="/js/creator/creator-publications.js?v=107"></script>
+  <script src="/js/creator/creator-files.js?v=106"></script>
   <script src="/js/creator/creator.js?v=105"></script>
-  <script src="/js/creator/creator-works.js?v=105"></script>
+  <script src="/js/creator/creator-works.js?v=106"></script>
   <script src="/js/admin/admin.js?v=102"></script>
   <!-- Supabase Extension & Bootstrap Entry -->
   <script src="/supabase-public-config.js?v=1"></script>

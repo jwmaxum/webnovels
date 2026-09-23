@@ -20,3 +20,7 @@
 4단계 추가: [005_creator_works.sql](005_creator_works.sql). 실제 소유자 기준 작품 관리, 제목만으로 비공개 생성, 요청 멱등키·수정 version, 휴지통/비공개 복구·예약 취소 기록. [적용/복구 조건](../../docs/launch/creator-works-contract.md)을 확인한다. 로컬 검증은 `npm run test:creator-works`.
 
 5단계 추가: [006_creator_drafts.sql](006_creator_drafts.sql). 소유 원고의 고정 ID·조건부 revision·멱등 요청 receipt·불변 이력 조회. [적용/복구 조건](../../docs/launch/creator-drafts-contract.md)을 확인한 뒤 005 이후 적용한다. 기능 플래그는 기본 비활성으로 유지하며 로컬 검증은 `npm run test:drafts`.
+
+6단계 추가: [007_creator_files.sql](007_creator_files.sql). 업로드 prepare/commit·취소 tombstone·revision 원본 연결·표지 version 조건부 교체·소유자 내보내기·참조 없는 정리 후보 조회. [적용/복구 조건](../../docs/launch/creator-files-contract.md)을 확인하고 private Storage 002와 006 이후 적용한다. 실제 객체 자동 삭제는 하지 않는다. 로컬 검증은 `npm run test:files`이며 실제 Supabase/Storage에는 미적용이다.
+
+7단계 추가: [008_creator_publications.sql](008_creator_publications.sql). 저장 revision 기반 무료 게시·예약·공개본 수정, 예약 상태 전이·실행 결과와 운영 이벤트를 추가한다. [게시 계약](../../docs/launch/creator-publication-contract.md)을 확인하고 007 이후 검토 적용한다. 별도 Cloudflare Cron Worker가 필요하며 기본 플래그는 비활성이다. 로컬 검증은 `npm run test:publication`이다.

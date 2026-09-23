@@ -42,7 +42,7 @@
 
 명시적인 로그아웃/로그인/가입 전 원고 checkpoint를 기다린다. 기기 저장 실패 시 계정 전환을 중단하여 다운로드 기회를 남긴다. 서버 미동기 원고가 있으면 기기 보존 사실을 알린다. 세션 만료/다른 계정 이벤트에서는 폼·비교 내용·목록·타이머·context 캐시를 즉시 비우고 이전 계정 키로 저장한다. 이 저장까지 실패하면 백업 다운로드를 요청하고 다운로드 확인을 안내한다. 새 계정 화면에는 이전 계정 사본을 표시하지 않는다.
 
-발행 직후 물리적으로 로컬 원고를 삭제하던 코드는 제거했다. 기존 `authoring.drafts.lifecycle=PUBLISHED` 및 `episode_id`, 불변 publication_versions의 source draft/revision을 7단계 발행 트랜잭션에서 연결해야 한다. 5단계에서는 이미 연결된 보관 원고를 읽기 전용으로 처리하고 새 원고에 새 UUID를 부여한다. **실제 발행→보관→다음 회차 연결은 7단계 통합 검증 대기**이며, 임의의 로컬 발행 성공 표시를 만들지 않았다.
+발행 직후 물리적으로 로컬 원고를 삭제하던 코드는 제거했다. 7단계의 008 트랜잭션이 `authoring.drafts.lifecycle=PUBLISHED` 및 `episode_id`, 불변 publication_versions의 source draft/revision을 연결한다. 5단계 편집기는 보관 원고를 읽기 전용으로 처리하고 새 원고에 새 UUID를 부여한다. **실제 발행→보관→다음 회차 브라우저·DB 통합 검증은 대기**다. [7단계 게시 계약](creator-publication-contract.md)을 따른다.
 
 ## 검증과 적용 조건
 

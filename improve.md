@@ -1,5 +1,7 @@
 # 서비스 오픈을 위한 순차 개발 계획
 
+후속 단계 공통 선행 규칙: [AGENTS.md](AGENTS.md), [Author / Creator 명칭·호환 계약](docs/launch/author-creator-contract.md). 6단계부터 착수 전 `npm run test:naming`으로 기존 별칭 연결을 확인한다.
+
 작성일: 2026-09-23
 기준: [작가 중심 서비스 분석](AUTHOR_SERVICE_IMPROVEMENT.md)
 이번 산출물: 개발 실행 명세. **서비스 코드 수정·DB 적용·배포를 완료했다는 보고가 아니다.**
@@ -16,13 +18,13 @@
 
 | 단계 | 실행 문서 | 목표 | 선행 조건 | 상태 |
 |---|---|---|---|---|
-| 1 | [improve1.md](improve1.md) | 기능·권한·삭제 대상·데이터 기준선 확정 | 분석 문서 | 완료 (2026-09-23) |
+| 6e1 | [improve1.md](improve1.md) | 기능·권한·삭제 대상·데이터 기준선 확정 | 분석 문서 | 완료 (2026-09-23) |
 | 2 | [improve2.md](improve2.md) | DB·계정 이관·백업·초안/공개본 모델 | 1 | 진행 중: 로컬 구현·검증 완료, 실환경 확인 대기 |
 | 3 | [improve3.md](improve3.md) | Auth·작가가입·서버 권한·API 기반 | 2 | 진행 중: 로컬 구현·검증 완료, 메일·실환경 통합 대기 |
 | 4 | [improve4.md](improve4.md) | 작가 전용 작품 등록·수정·목록 | 3 | 진행 중: 로컬 구현·검증 완료, 실환경 통합 대기 |
 | 5 | [improve5.md](improve5.md) | 원고 자동저장·복구·동시 편집 안정화 | 4 | 로컬 구현·검증 완료 / 실환경 대기 |
-| 6 | [improve6.md](improve6.md) | 파일 가져오기·표지 업로드·내보내기 | 5 | 미착수 |
-| 7 | [improve7.md](improve7.md) | 미리보기·게시·예약·공개본 수정 | 6 | 미착수 |
+| 6 | [improve6.md](improve6.md) | 파일 가져오기·표지 업로드·내보내기 | 5 | 로컬 구현·검증 완료 / 실환경 대기 |
+| 7 | [improve7.md](improve7.md) | 미리보기·게시·예약·공개본 수정 | 6 | 진행 중: 로컬 구현·검증 완료, DB·Cron·브라우저 인수 대기 |
 | 8 | [improve8.md](improve8.md) | 작가 직접 연재·댓글 관리 및 독자 연결 | 7 | 미착수 |
 | 9 | [improve9.md](improve9.md) | 관리자 중복 기능 삭제·운영 화면 통합 | 8 | 미착수 |
 | 10 | [improve10.md](improve10.md) | 전체 클라이언트 API 전환·RLS·구 경로 폐쇄 | 9 | 미착수 |
@@ -106,4 +108,4 @@
 
 4단계의 작가 전용 작품 관리·서버 API·005 SQL을 구현했다. [작품 관리 계약](docs/launch/creator-works-contract.md)에 휴지통/예약 취소/복구와 미검증 실환경 조건을 기록했다. 5단계에서 원고 편집·자동저장을 이어 구현했다.
 
-5단계 고정 원고 ID·탭별 기기 사본·revision 조건부 저장·충돌/버전 복구 및 006 SQL의 로컬 구현과 검증을 마쳤다. [원고 계약](docs/launch/creator-drafts-contract.md)에 실제 DB/브라우저 인수와 7단계 발행 보관 연결을 남겼다. 다음 로컬 개발은 6단계 파일 가져오기·표지·내보내기다.
+5단계 고정 원고 ID·탭별 기기 사본·revision 조건부 저장·충돌/버전 복구 및 006 SQL의 로컬 구현과 검증을 마쳤다. [원고 계약](docs/launch/creator-drafts-contract.md)에 실제 DB/브라우저 인수를 남겼다. 6단계 파일 가져오기·표지·내보내기 및 007 SQL도 로컬 구현·검증했다. [파일 계약](docs/launch/creator-files-contract.md)에 실제 Storage·Images·브라우저 인수 조건을 남겼다. 7단계 미리보기·무료 게시·예약 실행·공개본 수정 및 008 SQL의 로컬 구현·검증을 마쳤다. [게시 계약](docs/launch/creator-publication-contract.md)에 실제 DB·Cron·브라우저·운영 알림 인수를 남겼다.

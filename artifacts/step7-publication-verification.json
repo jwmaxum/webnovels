@@ -1,0 +1,43 @@
+{
+  "recorded_at": "2026-09-23T13:55:00Z",
+  "stage": 7,
+  "status": "local_verified_external_integration_pending",
+  "new_tests": {
+    "command": "npm run test:publication",
+    "passed": 15,
+    "failed": 0,
+    "scope": "shared reader/preview renderer, publish UI retry, API gates, cron adapter, synthetic PostgreSQL 001-008 including migration reapply, idempotency, legacy paid edit preservation, cancel/rebook, rating/author readiness, restriction and interrupted scheduler retry"
+  },
+  "regression": [
+    {"command": "npm run test:naming", "passed": 3, "failed": 0},
+    {"command": "npm run test:auth", "passed": 13, "failed": 0},
+    {"command": "npm run test:creator-works", "passed": 17, "failed": 0},
+    {"command": "npm run test:drafts", "passed": 23, "failed": 0},
+    {"command": "npm run test:files", "passed": 24, "failed": 0},
+    {"command": "node scripts/verify_secure_api.test.mjs", "passed": 26, "failed": 0},
+    {"command": "node scripts/verify_cloudflare_routes.test.mjs", "passed": 4, "failed": 0},
+    {"command": "node scripts/verify_providers.test.mjs", "passed": 7, "failed": 0},
+    {"command": "npm run test:data", "status": "passed"},
+    {"command": "npx tsc --noEmit", "status": "passed"},
+    {"command": "node --check (changed runtime JavaScript)", "status": "passed"},
+    {"command": "git diff --check", "status": "passed"}
+  ],
+  "runner_note": "npm run test:p0 uses node --test on three files; the local Windows sandbox denied child-process spawn with EPERM. Each of those three files was executed directly and passed. CI's Linux test:p0 command remains in place.",
+  "synthetic_database": "PGlite fixture only; no real Supabase data, schema or RLS acceptance",
+  "production": {
+    "database_008_applied": false,
+    "cron_worker_deployed": false,
+    "operations_alert_configured": false,
+    "browser_acceptance": false,
+    "feature_enabled": false,
+    "commit_created": false,
+    "pushed": false
+  },
+  "pending": [
+    "Finish earlier stage backup, schema, Auth mapping and Storage acceptance before 008 deployment",
+    "Staging Supabase/PostgREST and real cross-account and reader permission checks",
+    "Deployed Cloudflare Cron concurrency, delay, failure, cancellation and browser-closed acceptance",
+    "Operations notification integration for failed schedules",
+    "PC/mobile reader preview and post-publication next-draft reconnect acceptance"
+  ]
+}

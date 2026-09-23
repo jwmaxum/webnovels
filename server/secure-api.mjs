@@ -1,6 +1,8 @@
 // Cloudflare-compatible Web API. No Express, SQLite, Node runtime, or client role trust.
 import { creatorWorkApi } from './creator-work-api.mjs';
 import { creatorDraftApi } from './creator-draft-api.mjs';
+import { creatorFileApi } from './creator-file-api.mjs';
+import { creatorPublicationApi } from './creator-publication-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
@@ -162,6 +164,14 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         return episode;
       }
       const path = url.pathname;
+      if (path === '/api/v2/creator/publications' || path.startsWith('/api/v2/creator/publications/')) {
+        return reply(await creatorPublicationApi({ request, env, actor, db, readBody, fail }));
+      }
+      if (path === '/api/v2/creator/files' || path.startsWith('/api/v2/creator/files/')) {
+        const result = await creatorFileApi({ request, env, actor, db, fetchImpl, base, serviceHeaders, fail });
+        if (result instanceof Response) { result.headers.set('X-Request-ID',requestId); return result; }
+        return reply(result);
+      }
       if (path === '/api/v2/creator/drafts' || path.startsWith('/api/v2/creator/drafts/')) {
         return reply(await creatorDraftApi({ request, env, actor, db, readBody, fail }));
       }

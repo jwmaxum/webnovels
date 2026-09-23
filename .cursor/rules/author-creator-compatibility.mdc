@@ -1,0 +1,14 @@
+---
+description: Author 도메인과 Creator 스튜디오 명칭의 호환성을 모든 후속 개발에서 유지한다
+alwaysApply: true
+---
+
+# Author / Creator
+
+- 루트 `AGENTS.md`와 `docs/launch/author-creator-contract.md`를 따른다.
+- Author는 작가 도메인/프로필, Creator는 기존 스튜디오 UI/경로 명칭이다. 별도 권한을 만들지 않는다.
+- `/creator`, `/api/v2/creator/*`, `CreatorWorks`, `CreatorDraftEditor`, 기존 DOM ID/전역 별칭을 일괄 치환하지 않는다.
+- 새 도메인 신원은 서버의 `actor.author`에서 얻고, Auth UUID와 작가/작품 ID 및 원고 UUID를 구분한다.
+- localStorage의 author/creator 캐시, 필명, 기본 ID를 인증·소유권 근거로 사용하지 않는다.
+- 별칭 변경 시 호출자·스크립트 로드 순서·라우터·HTML 이벤트와 `npm run test:naming`을 확인한다.
+- 6단계는 `improve6.md`의 명칭·호환 선행 조건부터 확인한다.

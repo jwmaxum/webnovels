@@ -1,0 +1,138 @@
+{
+  "recorded_at": "2026-09-23T13:05:04.986Z",
+  "stage": 6,
+  "status": "local_verified_external_integration_pending",
+  "checks": [
+    {
+      "command": "node scripts/verify_file_codec.test.mjs",
+      "passed": 6,
+      "status": "passed",
+      "scope": "TXT, actual DOCX XML/ZIP/CRC/limits, export roundtrip, image headers"
+    },
+    {
+      "command": "node scripts/verify_file_import_queue.test.mjs",
+      "passed": 4,
+      "status": "passed",
+      "scope": "partial failure/retry/stop/cancel/account/quota substitutes"
+    },
+    {
+      "command": "node scripts/verify_creator_files_ui.test.mjs",
+      "passed": 5,
+      "status": "passed",
+      "scope": "VM DOM substitutes, explicit backup, owner-scoped downloads and late cover decoding"
+    },
+    {
+      "command": "node scripts/verify_creator_file_api.test.mjs",
+      "passed": 5,
+      "status": "passed",
+      "scope": "HTTP/Auth/Storage/Images substitutes"
+    },
+    {
+      "command": "node scripts/verify_creator_files_db.test.mjs",
+      "passed": 4,
+      "status": "passed",
+      "scope": "PGlite synthetic schema 002/006/007, ownership/receipts/cover/export/cancellation/reapplication"
+    },
+    {
+      "command": "npm run test:naming",
+      "passed": 3,
+      "status": "passed",
+      "scope": "existing compatibility contracts"
+    },
+    {
+      "command": "npm run test:auth",
+      "passed": 13,
+      "status": "passed",
+      "scope": "Auth session/onboarding substitutes and synthetic DB"
+    },
+    {
+      "command": "npm run test:creator-works",
+      "passed": 17,
+      "status": "passed",
+      "scope": "existing API/UI/DB regression"
+    },
+    {
+      "command": "npm run test:drafts",
+      "passed": 23,
+      "status": "passed",
+      "scope": "existing engine/store/UI/API/DB regression"
+    },
+    {
+      "command": "node --test scripts/verify_secure_api.test.mjs scripts/verify_cloudflare_routes.test.mjs",
+      "passed": 30,
+      "status": "passed",
+      "scope": "existing secure API and route regression"
+    },
+    {
+      "command": "npm run test:data",
+      "passed": null,
+      "status": "passed",
+      "scope": "static data contracts"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "passed": null,
+      "status": "passed",
+      "scope": "TypeScript compilation check"
+    },
+    {
+      "command": "node --check (changed runtime JS/MJS files)",
+      "passed": null,
+      "status": "passed",
+      "scope": "syntax only"
+    }
+  ],
+  "total_test_cases": 110,
+  "new_stage_test_cases": 24,
+  "execution_note": "Full test:files passed with 22 tests; subsequent individual UI (5) and API (5) runs passed after UI export/cover-race improvements. Unchanged codec/queue/SQL results retained.",
+  "source_sha256": {
+    "public/js/creator/file-codec.js": "b09a4bd13790a2cd4ebedf2ac85a9dcbe1d3840fb2420a5faa25d24c42bc12b2",
+    "public/js/creator/file-image.js": "9904fc6035835332a6e192c3905f36b6789020df80fb058d2bd54ab548e36024",
+    "public/js/creator/file-import-queue.js": "5340acdf67dfd626f545c15620067d6530dc0613969d565b5ed81274916696e8",
+    "public/js/creator/creator-files.js": "6a1a060724744469540ac9bdb6e812b8d98dd2dac09279199786faa1a8a2f8f8",
+    "public/js/creator/draft-store.js": "8a8eaf0614a19290ef706e294af2e619611a8b38076f8c813abab30399201dc0",
+    "public/js/creator/creator-editor.js": "17718dd9da6863eb8eac41b4447c13378bce9505c8292b6a1e4b85ee8d038da6",
+    "public/js/creator/creator-works.js": "0ab54b99c53974a57fec9c96a9324c4c550020e54b226176bcabfa9366e07862",
+    "public/index.html": "3caaa12dbd714b18bd054ba38a1bd1e3ad6bd3c567e1561c7473c1c12ba35da3",
+    "public/styles.css": "0a49c503c0b2c137e9333ad75a1abff3a04bef1233eb5afc56e45db33c76b096",
+    "server/creator-file-api.mjs": "f94d1cc900b084b147a14177227342c4c843d86455e75abe8fe60e7c23c26406",
+    "server/secure-api.mjs": "a509ce43ef84d03df9ef5b31369ff7c46e8e2922c08b5e4220ae01c9fb81a5ab",
+    "database/authoring/007_creator_files.sql": "c35018cec918f466d5b98760df2e44aab44d76669416ee0ba30e02aa52e19520",
+    "public/vendor/fflate/fflate-0.8.2.js": "c3b34f2e9f5e74d4d7d64e01cac7a0c01954c6c406414d42185c7b53d6875ddf",
+    "public/vendor/fflate/LICENSE": "805f6cb28bb8b6d3a0badd83c93bccd9671fa01a3b4b92b7042b0743325ac243",
+    "package.json": "6e18635432913ea3bf1a3e5c7d0a94db06ec11050c440d7b76bad3d892858756",
+    "package-lock.json": "4008d74dac84a1266b4402abc3ceac75d27aa4c4e2cc1a8c3c6d37a1695a1ec3",
+    ".github/workflows/ci.yml": "37607a305b1be1e209f175ce3838993e3007dbd3c63849bc1c72110005b83b3e",
+    ".env.example": "6abed5938fe48c96ccbe82a54bfd8faef41164fedeb3f4b4e194904f8333850c",
+    "scripts/verify_file_codec.test.mjs": "16208acc80bd9c19c7aa43c7d65bf75097a8ea1b672c4e955f7155f31d4982be",
+    "scripts/verify_file_import_queue.test.mjs": "05a8fc96e7b8c63c8efa3ae8a30460578baf00001fd41031416082ef3f0d6c0e",
+    "scripts/verify_creator_files_ui.test.mjs": "220caa0966d99c648a73feb6ac2daf11340a0fa78304e459271c6e4cff242147",
+    "scripts/verify_creator_file_api.test.mjs": "6b374c9fc30f9f9463dc156465ecb2237a3c525e9bb7a144216c70486bc5b752",
+    "scripts/verify_creator_files_db.test.mjs": "35628fd83081f3d74ee97c6fda9e245d62553871e83ad48374cd274d50c7ea78"
+  },
+  "dependencies": {
+    "fflate": "0.8.2 MIT, checked-in browser UMD",
+    "xmldom": "0.9.12 MIT, dev test only"
+  },
+  "production": {
+    "db_applied": false,
+    "storage_applied": false,
+    "images_binding_configured": false,
+    "browser_run": false,
+    "feature_enabled": false,
+    "commit_created": false,
+    "pushed": false
+  },
+  "pending": [
+    "actual Supabase schema/backup/Auth mapping acceptance from stages 2-5",
+    "private Storage upload, cross-account denial and expiry after 60 seconds",
+    "Cloudflare Images actual encoding and metadata removal",
+    "browser file/drop/crop/download and mobile/IndexedDB v2-to-v3 acceptance",
+    "retention policy and backup verification before physical orphan cleanup"
+  ],
+  "limitations": [
+    "Server stores private opaque originals; no antivirus or semantic comparison with converted snapshots.",
+    "Whole-work export and stored TXT chooser limited to 2000 records and 5 million body characters.",
+    "Private work cover card uses placeholder; owner preview uses short-lived signed link."
+  ]
+}

@@ -3,12 +3,12 @@
   let opening;
   function open() {
     if(!opening)opening=new Promise((resolve,reject)=>{
-      const r=indexedDB.open('webnovels-creator-drafts',2);
+      const r=indexedDB.open('webnovels-creator-drafts',3);
       r.onupgradeneeded=()=>{
         const db=r.result;
         if(!db.objectStoreNames.contains('drafts'))db.createObjectStore('drafts',{keyPath:'key'});
         if(!db.objectStoreNames.contains('revisions')){const s=db.createObjectStore('revisions',{keyPath:'id',autoIncrement:true});s.createIndex('draftKey','draftKey');s.createIndex('createdAt','createdAt');}
-        for(const name of ['draftHeads','draftBackups','draftImports'])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath:'key'});
+        for(const name of ['draftHeads','draftBackups','draftImports','fileImports'])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath:'key'});
       };
       r.onerror=()=>{opening=null;reject(r.error);};r.onblocked=()=>{opening=null;reject(Error('다른 탭을 닫고 저장소를 다시 열어주세요. 기존 원고는 보존됩니다.'));};
       r.onsuccess=()=>{r.result.onversionchange=()=>{r.result.close();opening=null;};resolve(r.result);};
@@ -25,6 +25,8 @@
   const put=(name,value)=>transaction(name,'readwrite',s=>s.put(value));
   const store={
     transaction,
+    saveFileJob:job=>put('fileImports',job),
+    fileJobs:async(userId,workId)=>(await all('fileImports')).filter(x=>x.userId===userId&&x.workId===workId),
     // Read the existing database without requesting an upgrade. Useful when the
     // v2 upgrade is blocked; never recreate/delete the legacy stores.
     exportLegacy:async(authorId,workId)=>new Promise((resolve,reject)=>{

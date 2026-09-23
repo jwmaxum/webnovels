@@ -2179,6 +2179,12 @@ body {
   line-height: var(--reader-line-height, 1.85);
   color: inherit;
 }
+.creator-publication-modal { width: min(920px, 96vw); max-height: 92vh; overflow-y: auto; }
+.publication-preview { max-width: 720px; margin: 1rem auto; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 10px; line-height: 1.8; }
+.publication-preview.is-mobile { max-width: 390px; }
+.publication-preview .reader-paragraph { white-space: pre-wrap; }
+.publication-rights { display: block; margin: 1rem 0; }
+#publicationList > div { border-top: 1px solid var(--border-color); padding: .7rem 0; }
 
 /* 2. Webtoon Zero-Gutter Vertical Image Viewer */
 .webtoon-viewer-box {
@@ -5540,3 +5546,10 @@ body.portal-fullscreen-mode .main-content-wrapper {
 #creatorTab-new-ep .form-input { max-width: 100%; }
 #creatorTab-new-ep button:focus-visible { outline: 3px solid #b4c6ff; outline-offset: 2px; }
 @media(max-width: 640px) { #creatorTab-new-ep .creator-editor-actions { flex-wrap: wrap; } .draft-focus .creator-editor-textarea { min-height: 45dvh; } }
+.creator-files-modal { width: min(960px, 96vw); max-height: 94dvh; overflow-y: auto; }
+.creator-file-drop { border: 2px dashed var(--border-color, #777); padding: 16px; border-radius: 8px; }
+.creator-file-row { padding: 12px; margin: 12px 0; border: 1px solid var(--border-color, #777); border-radius: 8px; }
+.creator-file-row textarea { display: block; width: 100%; margin: 8px 0; white-space: pre-wrap; }
+.creator-file-row button { margin: 4px; }
+#creatorCoverCanvas { display: block; width: min(240px, 70vw); height: auto; background: #eee; margin: 12px 0; }
+#creatorFilesMessage { white-space: pre-wrap; overflow-wrap: anywhere; }

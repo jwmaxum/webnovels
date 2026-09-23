@@ -239,9 +239,10 @@ async function fetchWorksFromSupabase() {
 
   try {
     // 1. works 테이블 전체 조회 (author 및 author_id 컬럼 모두 지원)
+    const publicationSafeFields = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
     const { data: works, error: wErr } = await supabaseClient
       .from('works')
-      .select('*')
+      .select(window.WEBNOVELS_CONFIG?.authorPublishEnabled ? publicationSafeFields : '*')
       .order('id', { ascending: true });
 
     if (wErr) throw wErr;

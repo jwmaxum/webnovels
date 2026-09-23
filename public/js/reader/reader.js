@@ -1280,7 +1280,42 @@ window.selectParagraphComment = function(paragraphIndex, quoteText, contentVersi
   }
 };
 
+let readerCatalogFlight = null;
+async function refreshReaderCatalog(force = false) {
+  if (!window.WEBNOVELS_CONFIG?.authorPublishEnabled || !window.WebNovelsAdmin?.fetchWorksFromSupabase) return;
+  if (readerCatalogFlight) return readerCatalogFlight;
+  if (!force && Date.now() - (refreshReaderCatalog.lastAt || 0) < 30000) return;
+  readerCatalogFlight = (async () => {
+    const works = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+    if (!Array.isArray(works)) throw Error('PUBLIC_CATALOG_UNAVAILABLE');
+    SAMPLE_WORKS.splice(0, SAMPLE_WORKS.length, ...works);
+    refreshReaderCatalog.lastAt = Date.now();
+    if (activeWork && !works.some(w => String(w.id)===String(activeWork.id) &&
+        ['PUBLISHED','ONGOING','PAUSED','COMPLETED'].includes(w.status))) {
+      activeWork=null;
+      document.getElementById('readerBody')?.replaceChildren();
+      if (currentActiveView==='view-reader') switchWebNovelsView('view-home');
+    }
+    if (currentActiveView==='view-home' && typeof renderHomeWorks==='function') renderHomeWorks();
+    if (currentActiveView==='view-discover' && typeof renderDiscoverWorks==='function') renderDiscoverWorks();
+    if (typeof renderSearchResults==='function')
+      renderSearchResults(document.getElementById('globalSearchInput')?.value || '');
+    if (currentActiveView==='view-work-detail' && activeWork && typeof openWorkDetailDirect==='function')
+      openWorkDetailDirect(activeWork.id,false);
+    return works;
+  })();
+  try { return await readerCatalogFlight; } finally { readerCatalogFlight = null; }
+}
+window.refreshReaderCatalog = refreshReaderCatalog;
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshReaderCatalog().catch(() => {});
+});
+
 window.openReaderDirect = async function(workId, epNumber, shouldPushState = true) {
+  if (window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
+    try { await refreshReaderCatalog(true); }
+    catch { return showToast('공개 회차 목록을 갱신하지 못했습니다. 다시 시도해주세요.'); }
+  }
   const targetWorkId = Number(workId);
   const work = getPublishedWorks().find(w => Number(w.id) === targetWorkId);
   if (!work) return showToast('작품을 찾을 수 없습니다.');
@@ -1344,17 +1379,28 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   document.getElementById('readerEpTitle').textContent = ep.title;
   document.getElementById('readerHeading').textContent = `${ep.title} (${ep.episodeNumber}화)`;
 
-  // 작가의 말 업데이트
   const authorCommentEl = document.getElementById('readerAuthorComment');
-  if (authorCommentEl) {
-    authorCommentEl.innerHTML = `<strong>작가의 말:</strong> ${ep.authorComment || '재미있게 읽으셨다면 구독과 댓글 부탁드립니다!'}`;
-  }
 
   // 3. 온디맨드 보안 회차 본문 로드 (episode_contents / episode_panels)
   let loadedText = null;
   let loadedPanels = [];
 
-  if (window.WebNovelsAdmin?.fetchEpisodeContentSecure) {
+  if (window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
+    try {
+      let response;
+      if (window.WebNovelsAuth?.getActor()) response = await window.WebNovelsAuth.api('/api/v2/episodes/' + encodeURIComponent(ep.id) + '/content');
+      else {
+        const raw = await fetch('/api/v2/episodes/' + encodeURIComponent(ep.id) + '/content', {credentials:'omit'});
+        if (!raw.ok) throw Error('READER_CONTENT_UNAVAILABLE');
+        response = await raw.json();
+      }
+      loadedText = response.episode?.content;
+      loadedPanels = response.episode?.image_urls || [];
+      ep.authorComment = response.episode?.author_comment ?? ep.authorComment;
+    } catch (error) {
+      console.warn('[Secure Content Load]', error);
+    }
+  } else if (window.WebNovelsAdmin?.fetchEpisodeContentSecure) {
     try {
       const contentRes = await window.WebNovelsAdmin.fetchEpisodeContentSecure(ep.id, work.id, epNum);
       if (contentRes) {
@@ -1396,10 +1442,10 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     if (webtoonViewerEl) webtoonViewerEl.style.display = 'none';
     if (textBodyEl) {
       textBodyEl.style.display = 'block';
-      const rawContent = loadedText || '';
-      const paragraphs = rawContent.split('\n\n').filter(p => p.trim().length > 0);
       const contentVersion = `${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`;
-      textBodyEl.innerHTML = paragraphs.map((p, index) => `<p class="reader-paragraph" data-paragraph-index="${index}" onclick="selectParagraphComment(${index}, this.textContent, '${contentVersion}')">${escapeReaderHtml(p).replace(/\n/g, '<br>')}</p>`).join('');
+      window.ReaderContent.render(textBodyEl, authorCommentEl, {
+        content: loadedText || '', authorComment: ep.authorComment || '', version: contentVersion
+      }, (index, paragraph, version) => selectParagraphComment(index, paragraph, version));
     }
   }
 

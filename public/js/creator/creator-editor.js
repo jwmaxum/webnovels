@@ -80,6 +80,25 @@
     });
   }
   async function save(){const c=engine.current;if(!c)throw Error('작품을 선택해주세요.');await engine.flush(c);await engine.sync(c);if(c.seq>c.serverSeq)schedule(c);}
+  async function preparePublication(){
+    const c=engine.current,user=actor()?.userId;
+    if(!c||!user||c.userId!==user||c.lifecycle!=='ACTIVE'||c.conflict)throw Error('PUBLISH_DRAFT_UNAVAILABLE');
+    stop();await engine.flush(c);
+    for(let attempt=0;attempt<3&&c.serverSeq<c.seq;attempt++)await engine.sync(c);
+    if(c!==engine.current||actor()?.userId!==user||c.serverSeq!==c.seq||c.pending||c.conflict||c.revision==='0')
+      throw Error('PUBLISH_SAVE_REQUIRED');
+    const remote=(await api('get',{workId:c.workId,id:c.id,userId:user})).draft;
+    if(remote.revision!==c.revision||remote.lifecycle!=='ACTIVE'||
+       ['title','content','authorComment'].some(k=>remote[k]!==c.snapshot[k]))
+      throw Error('PUBLISH_REVISION_CONFLICT');
+    return JSON.parse(JSON.stringify({userId:user,workId:c.workId,id:c.id,revision:c.revision,
+      episodeId:remote.episodeId,seq:c.seq,snapshot:c.snapshot}));
+  }
+  async function markPublished(expected){
+    const c=engine.current;
+    if(!c||c.id!==expected.id||c.workId!==expected.workId||c.userId!==expected.userId)return;
+    c.lifecycle='PUBLISHED';stop();await engine.flush(c);form(c.snapshot,true);status(c);
+  }
   function download(c=engine.current){if(!c)return;const blob=new Blob([JSON.stringify({workId:c.workId,draftId:c.id,revision:c.revision,...c.snapshot},null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='원고-'+c.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   async function exportLegacy(){
     const user=actor(),workId=$('newEpWorkSelect').value;if(!user?.author||!workId)throw Error('AUTHOR_REQUIRED');
@@ -112,6 +131,8 @@
   }
   async function beforeAccountChange(){stop();await engine.checkpoint();if(engine.current&&engine.current.seq>engine.current.serverSeq)toast('서버 미동기 원고는 이 기기에 보존됩니다. 같은 계정으로 로그인해 기기 사본을 복구해주세요.');}
   function onAuthLost(){stop();epoch++;const c=engine.detach();works=[];selected=null;form({},true);
+    window.CreatorFiles?.reset();
+    window.CreatorPublications?.reset();
     for(const id of ['newEpWorkSelect','draftCopies','diffVersionList','diffSectionsContainer','diffPreviewHeader','draftIdentity','creatorDraftError'])if($(id))$(id).replaceChildren();
     if($('draftConflict'))$('draftConflict').hidden=true;if($('creatorDraftStatus'))$('creatorDraftStatus').textContent='로그인 후 원고를 복구할 수 있습니다.';
     window.closeModal?.('modalDraftDiff');
@@ -143,6 +164,12 @@
     window.visualViewport?.addEventListener('resize',()=>{document.documentElement.style.setProperty('--draft-viewport',window.visualViewport.height+'px');if(document.activeElement===$('newEpContent'))$('newEpContent').scrollIntoView({block:'nearest'});});
   }
   window.CreatorDraftEditor={openWork:safe(openWork),enter:safe(enter),save:safe(save),syncServer:safe(save),download,openDiffModal:safe(openDiffModal),beforeAccountChange,onAuthLost,
+    preparePublication,markPublished,startNext:workId=>openWork(workId,null,{fresh:true}),
+    getFileContext:()=>engine.current?JSON.parse(JSON.stringify({userId:engine.current.userId,workId:engine.current.workId,id:engine.current.id,seq:engine.current.seq,snapshot:engine.current.snapshot})):null,
+    replaceFromFile:async(snapshot,expected)=>{
+      const c=engine.current;if(!c||c.id!==expected.id||c.seq!==expected.seq||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('EDIT_CHANGED_DURING_IMPORT');
+      stop();await engine.replace(snapshot,'before-file-import');if(engine.current!==c)throw Error('SESSION_CHANGED');form(c.snapshot);schedule(c);
+    },
     checkpoint:()=>{epoch++;engine.cancelLoads();selected=null;window.closeModal?.('modalDraftDiff');return safe(()=>engine.checkpoint())();},clearCurrentDraft:async()=>{throw Error('발행된 원고도 보존합니다. 새 원고를 시작해주세요.');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })();

@@ -1,5 +1,7 @@
 # 서비스 오픈 개발 산출물
 
+후속 개발 공통 규칙: [Author / Creator 명칭·호환 계약](author-creator-contract.md), [프로젝트 지침](../../AGENTS.md). 6단계 착수 전에 확인한다.
+
 작성일: 2026-09-23. [전체 로드맵](../../improve.md) · [1단계 실행 기록](../../improve1.md)
 
 | 문서 | 내용 |
@@ -36,3 +38,13 @@
 
 - [원고 저장·복구 계약](creator-drafts-contract.md), [5단계 기록](../../improve5.md), [검증 증거](../../artifacts/step5-draft-verification.json).
 - 실제 DB·브라우저/기기 인수 및 7단계 발행 보관 연결은 대기다.
+
+## 6단계 — 파일 가져오기·표지·내보내기 로컬 구현·검증
+
+- [파일 기능 계약](creator-files-contract.md), [6단계 기록](../../improve6.md), [검증 증거](../../artifacts/step6-file-verification.json).
+- 실제 DB·private Storage·서명 URL 만료·Cloudflare Images·브라우저 인수는 대기다. 파일 기능 플래그는 비활성으로 유지한다.
+
+## 7단계 — 미리보기·게시·예약 로컬 구현·검증
+
+- [게시·예약 계약](creator-publication-contract.md), [7단계 기록](../../improve7.md), [검증 증거](../../artifacts/step7-publication-verification.json).
+- 실제 Supabase 008 적용·Cloudflare Cron 배포·브라우저/기기·운영 알림 인수는 대기다. 게시 플래그는 비활성으로 유지한다.

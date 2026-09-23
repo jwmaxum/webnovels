@@ -11,7 +11,8 @@ test('Pages .js config URL returns only public fields, not SPA HTML or bindings'
   assert.match(response.headers.get('content-type'), /javascript/);
   const source = await response.text(); assert.ok(!source.includes(env.SUPABASE_SECRET_KEY));
   const context = { window: {} }; vm.runInNewContext(source, context);
-  assert.deepEqual(Object.keys(context.window.WEBNOVELS_CONFIG).sort(), ['supabaseAnonKey', 'supabaseUrl']);
+  assert.deepEqual(Object.keys(context.window.WEBNOVELS_CONFIG).sort(), ['authorPublishEnabled','supabaseAnonKey', 'supabaseUrl']);
+  assert.equal(context.window.WEBNOVELS_CONFIG.authorPublishEnabled,false);
 });
 test('wrongly configured secret key cannot be served as public key', async () => {
   const response = onRequest({ request: new Request('https://webnovels-db4.pages.dev/api/public-config.js'), env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'sb_secret_bad' } });

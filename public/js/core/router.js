@@ -43,6 +43,8 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   }
   currentActiveView = viewId;
   window.currentActiveView = currentActiveView;
+  if ((viewId === 'view-home' || viewId === 'view-discover') && window.WEBNOVELS_CONFIG?.authorPublishEnabled)
+    window.refreshReaderCatalog?.().catch(() => {});
 
   document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(l => l.classList.remove('active'));

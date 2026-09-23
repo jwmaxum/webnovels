@@ -5,7 +5,7 @@
 ## 현재 판정
 
 - 로컬 SQL·격리 PostgreSQL 실행 검증은 구현했다.
-- 관리 API 재확인: HTTP 401. 실DDL/정책·기존 Auth 매핑·백업을 확인할 수 없어 실제 Supabase 변경은 수행하지 않았다.
+- 관리 API 재확인(2026-09-23): 읽기 전용 `node scripts/p0_schema_audit.cjs`가 HTTP 401로 중단됐다. 실DDL/정책·기존 Auth 매핑·백업을 확인할 수 없어 실제 Supabase 변경은 수행하지 않았다.
 - 이 문서의 순서는 실행 매뉴얼이며 운영 실행 완료 기록이 아니다.
 
 ## A. 읽기 조사와 적용 전 조건

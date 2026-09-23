@@ -21,7 +21,7 @@
   function navigate(path) { window.navigateTo(path); }
   function validRequest(seq,user) { return epoch===seq && actor()?.userId===user && /^\/(creator|author)(\/|$)/.test(location.pathname); }
   function cover(work) {
-    const url=work.cover_image;
+    const url=work.cover_image?.startsWith('/api/v2/creator/files/public-cover/')&&work.visibility!=='PUBLIC'?null:work.cover_image;
     return typeof url==='string' && /^(https:\/\/|\/(?!\/))/.test(url)
       ? `<img class="cw-cover" src="${e(url)}" alt="${e(work.title)} 표지" loading="lazy">`
       : `<div class="cw-cover cw-default-cover" role="img" aria-label="${e(work.title)} 기본 표지">${e(work.title)}</div>`;
@@ -111,16 +111,16 @@
       <label for="cwRating">이용등급</label><select id="cwRating" class="form-control" name="rating">${options([['ALL','전체 이용가'],['AGE_15','15세 이상'],['AGE_19','19세 이상']],work.rating_confirmed?work.rating:'',!work.rating_confirmed)}</select>
       <label for="cwAI">AI 사용 표기</label><select id="cwAI" class="form-control" name="ai_usage_type">${options([['NONE','사용 안 함'],['ASSISTED','보조 사용'],['GENERATED','AI 생성 포함']],work.ai_confirmed?work.ai_usage_type:'',!work.ai_confirmed)}</select>
       <label for="cwSerial">연재 상태 (공개 여부와 별개)</label><select id="cwSerial" class="form-control" name="serial_state">${options([['ONGOING','연재 중'],['HIATUS','휴재'],['COMPLETED','완결']],work.serial_state)}</select>
-      <p>표지 업로드는 준비 중입니다. 표지가 없으면 제목으로 기본 표지를 표시합니다.</p>
+      <p>표지는 파일 관리에서 올릴 수 있습니다. 표지가 없으면 제목으로 기본 표지를 표시합니다.</p>
       <button type="submit" class="btn btn-primary">설정 저장</button></fieldset></form>
       ${work.visibility==='PUBLIC'&&!disabled?'<button type="button" class="btn btn-outline" id="cwPrivate">비공개로 전환</button>':''}
-      <p>설정 저장은 공개 여부를 바꾸지 않습니다. 새 작품의 미리보기·게시 기능은 준비 중입니다.</p>`;
+      <p>설정 저장은 공개 여부를 바꾸지 않습니다. 저장된 초안은 미리보기·게시에서 확인할 수 있습니다.</p>`;
     else if(tab==='reactions')body='<p>댓글·독자 반응 관리 기능은 준비 중입니다.</p>';
     else body=`<h4>회차 ${episodes.length}개</h4>${episodes.length?`<ol class="cw-episodes">${episodes.map(ep=>`<li>${e(ep.episode_number)}화 · ${e(ep.title)} <span>${e(ep.status)}</span>${ep.scheduled_at?' · 예약 '+e(ep.scheduled_at):''}</li>`).join('')}</ol>`:'<p>아직 작성한 회차가 없습니다.</p>'}<button type="button" id="cwDrafts" class="btn btn-primary">원고 작성·복구</button>`;
     return `<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><header class="cw-card">${cover(work)}<div><h3>${e(work.title)}</h3><p>${status(work)}</p>
       ${work.moderation_state==='RESTRICTED'?`<p role="alert">운영 제한: ${e(work.moderation_reason)}</p>`:''}
       <p>최초 공개 전 확인: ${work.publication_missing?.length?e(work.publication_missing.join(', ')):'기본 정보 입력 완료 (게시 검증은 별도)'}</p></div></header>
-      <nav class="cw-toolbar" aria-label="작품 관리">${nav}</nav>${body}<p id="cwMessage" role="status"></p>
+      <nav class="cw-toolbar" aria-label="작품 관리">${nav}<button type="button" class="btn btn-outline" id="cwFiles">파일·표지·내보내기</button><button type="button" class="btn btn-outline" id="cwPublications">공개·예약 회차</button></nav>${body}<p id="cwMessage" role="status"></p>
       <div class="cw-danger"><p>휴지통 이동·비공개 전환 시 공개가 중단되고 대기 중인 예약은 취소됩니다. 회차·원고·파일은 보존됩니다. 복구해도 비공개이며 예약은 자동 재개되지 않습니다.</p>
       <button type="button" class="btn btn-outline" id="cwTrash">${work.trashed_at?'비공개로 복구':'휴지통으로 이동'}</button></div>
       <button type="button" class="btn btn-ghost" id="cwReload">최신 내용 불러오기 (입력 초기화)</button>`;
@@ -133,6 +133,8 @@
       const result=await api('/'+id);if(!validRequest(seq,user))return;
       current=result.work;root().innerHTML=detailHTML(current,result.episodes,tab);
       const drafts=root().querySelector('#cwDrafts');if(drafts)drafts.onclick=()=>window.CreatorDraftEditor.openWork(id);
+      const files=root().querySelector('#cwFiles');if(files)files.onclick=()=>window.CreatorFiles.open(id);
+      const publications=root().querySelector('#cwPublications');if(publications)publications.onclick=()=>window.CreatorPublications.open(id);
       root().querySelector('#cwBack').onclick=()=>navigate('/creator/works');
       root().querySelectorAll('[data-detail-tab]').forEach(button=>button.onclick=()=>navigate('/creator/works/'+id+'/'+button.dataset.detailTab));
       root().querySelector('#cwReload').onclick=()=>loadDetail(id,tab);
@@ -154,6 +156,7 @@
     root().querySelectorAll('button[type="submit"],#cwTrash,#cwPrivate').forEach(b=>b.disabled=true);
     try {
       await api('/'+id+(action==='update'?'':'/'+action),{method:action==='update'?'PATCH':'POST',body:JSON.stringify({...data,version})});
+      if(action==='trash'||(action==='update'&&data.visibility==='PRIVATE'))await window.refreshReaderCatalog?.(true);
       if(validRequest(seq,user)){await loadDetail(id,tab);const msg=document.getElementById('cwMessage');if(msg)msg.textContent='저장되었습니다.';}
     }catch(error){if(validRequest(seq,user))document.getElementById('cwMessage').textContent=message(error);}
     finally{busy=false;if(root())root().querySelectorAll('button[type="submit"],#cwTrash,#cwPrivate').forEach(b=>b.disabled=false);}
