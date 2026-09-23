@@ -1,0 +1,26 @@
+-- Synthetic legacy shape only: not a production schema dump and never a remote seed.
+create role anon;
+create role authenticated;
+create role service_role bypassrls;
+create schema auth;
+create table auth.users(id uuid primary key);
+insert into auth.users values('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');
+create table public.readers(id integer primary key,status text default 'ACTIVE');
+create table public.authors(id integer primary key,auth_user_id uuid,status text default 'APPROVED');
+create table public.admin_users(id uuid primary key,role text,is_active boolean default true);
+create table public.works(id integer primary key,author_id integer references public.authors(id),status text,rating text);
+create table public.episodes(id integer primary key,work_id integer references public.works(id),episode_number integer,title text,content text,image_urls jsonb,status text);
+insert into public.readers(id) values(1);
+insert into public.authors(id) values(1),(2);
+insert into public.admin_users(id,role) values('11111111-1111-4111-8111-111111111111','SUPER_ADMIN');
+insert into public.works values(10,1,'PUBLISHED','ALL'),(20,2,'DRAFT','ALL');
+insert into public.episodes values(100,10,1,'Original','Original body','[]','PUBLISHED'),(101,10,3,'Gap','Gap body','[]','DRAFT'),(200,20,1,'Other','Other body','[]','DRAFT');
+create schema storage;
+create table storage.buckets(id text primary key,name text not null,public boolean not null default false);
+create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text references storage.buckets(id),name text);
+alter table storage.objects enable row level security;
+grant usage on schema storage to anon,authenticated,service_role;
+grant all on storage.objects to anon,authenticated,service_role;
+create policy legacy_permissive on storage.objects for all to anon,authenticated using(true) with check(true);
+insert into storage.buckets values('existing','existing',false);
+insert into storage.objects(bucket_id,name) values('existing','untouched');

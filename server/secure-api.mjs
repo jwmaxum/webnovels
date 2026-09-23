@@ -1,4 +1,6 @@
 // Cloudflare-compatible Web API. No Express, SQLite, Node runtime, or client role trust.
+import { creatorWorkApi } from './creator-work-api.mjs';
+import { creatorDraftApi } from './creator-draft-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
@@ -75,9 +77,16 @@ function validatePatch(body, fields) {
 
 export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   return async function handle(request, env) {
+    const requestId = crypto.randomUUID();
+    const reply = (data, status = 200) => {
+      const response = json(data, status);
+      response.headers.set('X-Request-ID', requestId);
+      if (status === 429) response.headers.set('Retry-After', '60');
+      return response;
+    };
     try {
       const url = new URL(request.url);
-      if (!url.pathname.startsWith('/api/v2/')) return json({ error: 'NOT_FOUND' }, 404);
+      if (!url.pathname.startsWith('/api/v2/')) return reply({ error: 'NOT_FOUND' }, 404);
       if (env.P0_API_ENABLED !== 'true') fail(503, 'SECURE_API_NOT_ACTIVATED');
       const base = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
       const secret = env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
@@ -98,24 +107,38 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
           method, headers: { ...serviceHeaders, 'Content-Type': 'application/json', Prefer: 'return=representation' },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(8000)
         });
-        if (!response.ok) fail(response.status === 409 ? 409 : 503, response.status === 409 ? 'CONFLICT' : 'DATABASE_UNAVAILABLE');
+        if (!response.ok) fail(response.status === 409 ? 409 : response.status === 403 ? 403 : 503, response.status === 409 ? 'CONFLICT' : response.status === 403 ? 'ACCOUNT_INACTIVE' : 'DATABASE_UNAVAILABLE');
         if (response.status === 204) return [];
         return response.json();
       }
       const version = one(await db('p0_migration_status', { select: 'version,phase', version: 'eq.' + SCHEMA_VERSION, limit: '1' }));
       if (version?.phase !== 'locked') fail(503, 'DATABASE_SECURITY_MIGRATION_REQUIRED');
-      if (url.pathname === '/api/v2/health' && request.method === 'GET') return json({ status: 'ok', securityVersion: SCHEMA_VERSION });
+      if (url.pathname === '/api/v2/health' && request.method === 'GET') return reply({ status: 'ok', securityVersion: SCHEMA_VERSION });
 
+      let userPromise;
+      async function authenticatedUser() {
+        const auth = request.headers.get('authorization');
+        if (!auth) fail(401, 'AUTH_REQUIRED');
+        if (!/^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(auth)) fail(401, 'INVALID_SESSION');
+        if (!userPromise) userPromise = (async () => {
+          let response;
+          try { response = await fetchImpl(new URL('/auth/v1/user', base), { headers: { apikey: secret, Authorization: auth }, signal: AbortSignal.timeout(8000) }); }
+          catch { fail(503, 'AUTH_UNAVAILABLE'); }
+          if (!response.ok) fail([401,403].includes(response.status) ? 401 : 503, [401,403].includes(response.status) ? 'INVALID_SESSION' : 'AUTH_UNAVAILABLE');
+          const user = await response.json();
+          if (!/^[0-9a-f-]{36}$/i.test(user.id || '') || user.is_anonymous || (user.banned_until && Date.parse(user.banned_until) > now())) fail(401, 'INVALID_SESSION');
+          return user;
+        })();
+        return userPromise;
+      }
       let actorPromise;
       async function actor(required = true) {
         const auth = request.headers.get('authorization');
         if (!auth) { if (required) fail(401, 'AUTH_REQUIRED'); return null; }
         if (!/^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(auth)) fail(401, 'INVALID_SESSION');
         if (!actorPromise) actorPromise = (async () => {
-          const response = await fetchImpl(new URL('/auth/v1/user', base), { headers: { apikey: secret, Authorization: auth }, signal: AbortSignal.timeout(8000) });
-          if (!response.ok) fail(response.status === 401 || response.status === 403 ? 401 : 503, response.status === 401 || response.status === 403 ? 'INVALID_SESSION' : 'AUTH_UNAVAILABLE');
-          const user = await response.json();
-          if (!/^[0-9a-f-]{36}$/i.test(user.id || '') || user.is_anonymous || (user.banned_until && Date.parse(user.banned_until) > now())) fail(401, 'INVALID_SESSION');
+          const user = await authenticatedUser();
+          if (!user.email_confirmed_at) fail(403, 'EMAIL_CONFIRMATION_REQUIRED');
           const filter = { auth_user_id: 'eq.' + user.id, limit: '2' };
           const [readers, authors, admins] = await Promise.all([
             db('readers', { ...filter, select: READER_FIELDS }), db('authors', { ...filter, select: AUTHOR_FIELDS }), db('admin_users', { ...filter, select: ADMIN_FIELDS })
@@ -139,30 +162,58 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         return episode;
       }
       const path = url.pathname;
-      if (path === '/api/v2/me' && request.method === 'GET') return json(await actor());
+      if (path === '/api/v2/creator/drafts' || path.startsWith('/api/v2/creator/drafts/')) {
+        return reply(await creatorDraftApi({ request, env, actor, db, readBody, fail }));
+      }
+      if (path === '/api/v2/creator/works' || path.startsWith('/api/v2/creator/works/')) {
+        return reply(await creatorWorkApi({ request, env, actor, db, readBody, fail }));
+      }
+      if (path === '/api/v2/auth/readiness' && request.method === 'GET') {
+        if (env.AUTH_ONBOARDING_ENABLED !== 'true') fail(503, 'ONBOARDING_NOT_ACTIVATED');
+        if (await db('rpc/authoring_signup_ready', {}) !== true) fail(503, 'ONBOARDING_NOT_ACTIVATED');
+        return reply({ ready: true });
+      }
+      if (path === '/api/v2/onboarding' && request.method === 'POST') {
+        if (env.AUTH_ONBOARDING_ENABLED !== 'true') fail(503, 'ONBOARDING_NOT_ACTIVATED');
+        if (request.headers.get('origin') !== url.origin) fail(403, 'ORIGIN_REQUIRED');
+        const user = await authenticatedUser();
+        if (!user.email_confirmed_at || !user.email) fail(403, 'EMAIL_CONFIRMATION_REQUIRED');
+        // Atomic DB counter persists across Pages isolates and commits even if profile creation fails.
+        if (await db('rpc/consume_authoring_signup_attempt', {}, { method: 'POST', body: { p_user_id: user.id } }) !== true) fail(429, 'RATE_LIMITED');
+        const body = await readBody(request);
+        if (Object.keys(body).some(k => !['kind','displayName'].includes(k))) fail(400, 'FIELD_NOT_ALLOWED');
+        if (!['reader','author'].includes(body.kind) || typeof body.displayName !== 'string' ||
+          body.displayName.trim().length < 2 || body.displayName.trim().length > 40 || /[<>\x00-\x1f\x7f]/.test(body.displayName)) fail(400, 'INVALID_SIGNUP');
+        const result = await db('rpc/complete_authoring_signup', {}, { method: 'POST', body: {
+          p_user_id: user.id, p_kind: body.kind, p_display_name: body.displayName.trim()
+        }});
+        return reply({ ...result, actor: await actor() });
+      }
+      if (path === '/api/v2/me' && request.method === 'GET') return reply(await actor());
       if (path === '/api/v2/admin/readers' && request.method === 'GET') {
         if (!allowedAdmin(await actor(), 'USERS_READ')) fail(403, 'ADMIN_FORBIDDEN');
-        return json({ readers: await db('readers', { select: 'id,username,nickname,status,is_adult_verified,points,created_at', order: 'id.asc', limit: '100' }) });
+        return reply({ readers: await db('readers', { select: 'id,username,nickname,status,is_adult_verified,points,created_at', order: 'id.asc', limit: '100' }) });
       }
       if (path === '/api/v2/admin/config' && request.method === 'GET') {
         if (!allowedAdmin(await actor(), 'CONFIG_READ')) fail(403, 'ADMIN_FORBIDDEN');
         // No provider secret values, even for administrators.
-        return json({ config: one(await db('system_config', { select: 'id,service_name,maintenance_mode,minimum_settlement_amount,reward_ad_enabled', limit: '1' })) });
+        return reply({ config: one(await db('system_config', { select: 'id,service_name,maintenance_mode,minimum_settlement_amount,reward_ad_enabled', limit: '1' })) });
       }
       if (path === '/api/v2/works' && request.method === 'GET') {
-        return json({ works: await db('works', { select: WORK_FIELDS, status: 'in.(PUBLISHED,ONGOING,PAUSED,COMPLETED)', order: 'id.asc', limit: '100' }) });
+        return reply({ works: await db('works', { select: WORK_FIELDS, status: 'in.(PUBLISHED,ONGOING,PAUSED,COMPLETED)', order: 'id.asc', limit: '100' }) });
       }
       let match = path.match(/^\/api\/v2\/works\/(\d+)$/);
       if (match && request.method === 'PATCH') {
         const who = await actor(); const work = await getWork(match[1]); authorizeContent(who, work);
         const admin = allowedAdmin(who, 'CONTENT_WRITE');
+        if (!admin && env.AUTHOR_WORKS_ENABLED === 'true') fail(409, 'USE_CREATOR_WORKS_API');
         const fields = ['title', 'description', 'cover_image', 'genre'];
         if (admin) fields.push('status', 'is_top_recommended', 'is_popular_work', 'is_new_work', 'is_completed');
         const body = validatePatch(await readBody(request), fields);
         if ('status' in body && !['DRAFT', 'REVIEW_REQUESTED', ...PUBLIC_STATES, 'HIDDEN'].includes(body.status)) fail(400, 'INVALID_STATUS');
         const saved = one(await db('works', { id: 'eq.' + work.id, ...(!admin ? { author_id: 'eq.' + who.author.id } : {}), select: WORK_FIELDS }, { method: 'PATCH', body }));
         if (!saved) fail(409, 'WRITE_NOT_APPLIED');
-        return json({ work: saved });
+        return reply({ work: saved });
       }
       match = path.match(/^\/api\/v2\/episodes\/(\d+)\/content$/);
       if (match && request.method === 'GET') {
@@ -189,13 +240,14 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         }
         const content = one(await db('secure_episode_contents', { select: 'episode_id,content,image_urls', episode_id: 'eq.' + episode.id, limit: '1' }));
         if (!content) fail(404, 'CONTENT_NOT_FOUND');
-        return json({ success: true, episode: { ...episode, ...content } });
+        return reply({ success: true, episode: { ...episode, ...content } });
       }
       match = path.match(/^\/api\/v2\/episodes\/(\d+)$/);
       if (match && request.method === 'PATCH') {
         const who = await actor(); const episode = await getEpisode(match[1]); const work = await getWork(episode.work_id); authorizeContent(who, work);
         const admin = allowedAdmin(who, 'CONTENT_WRITE');
         // Published body changes require admin review; an owner may edit only unpublished drafts.
+        if (!admin && env.AUTHOR_WORKS_ENABLED === 'true') fail(503, 'AUTHOR_EDITOR_NOT_ACTIVATED');
         if (!admin && episode.status !== 'DRAFT') fail(403, 'DRAFT_ONLY');
         const body = validatePatch(await readBody(request), ['title', 'content', 'image_urls', 'author_comment', ...(admin ? ['status', 'is_free', 'is_ad_free', 'access_policy'] : [])]);
         if ('status' in body && !['DRAFT', 'PUBLISHED', 'HIDDEN', 'REVIEW_REQUESTED'].includes(body.status)) fail(400, 'INVALID_STATUS');
@@ -206,14 +258,14 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         // Migration trigger mirrors content into its protected table in the same DB transaction.
         const saved = one(await db('episodes', { id: 'eq.' + episode.id, work_id: 'eq.' + work.id, ...(!admin ? { status: 'eq.DRAFT' } : {}), select: EPISODE_FIELDS }, { method: 'PATCH', body }));
         if (!saved) fail(409, 'WRITE_NOT_APPLIED');
-        return json({ episode: saved });
+        return reply({ episode: saved });
       }
       if (/^\/api\/v2\/(payments|ads|adult-verification|points|support|settlements)(\/|$)/.test(path)) {
         await actor(); fail(503, 'PROVIDER_AND_LEDGER_NOT_READY');
       }
-      return json({ error: 'NOT_FOUND' }, 404);
+      return reply({ error: 'NOT_FOUND' }, 404);
     } catch (error) {
-      return json({ error: error instanceof ApiError ? error.code : 'SERVICE_UNAVAILABLE' }, error instanceof ApiError ? error.status : 503);
+      return reply({ error: error instanceof ApiError ? error.code : 'SERVICE_UNAVAILABLE', requestId }, error instanceof ApiError ? error.status : 503);
     }
   };
 }

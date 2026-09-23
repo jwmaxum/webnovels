@@ -1,0 +1,11 @@
+{
+  "templateOnly": true,
+  "environment": null,
+  "backupId": null,
+  "consistentSnapshotAt": null,
+  "database": {"locationInSecureStore": null, "sha256": null, "schemaVersion": null, "tableCounts": null},
+  "storage": {"archiveLocationInSecureStore": null, "objectManifestSha256": null, "objectCount": null, "totalBytes": null},
+  "restore": {"isolatedTarget": null, "startedAt": null, "finishedAt": null, "rowHashesMatched": false, "objectBytesMatched": false, "permissionsVerified": false},
+  "verifiedBy": null,
+  "readyForMigration": false
+}

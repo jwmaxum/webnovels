@@ -1,0 +1,76 @@
+{
+  "recorded_at": "2026-09-23T03:08:08.714020+00:00",
+  "stage": 4,
+  "status": "local_verified_external_integration_pending",
+  "checks": [
+    {
+      "command": "node scripts/verify_creator_work_api.test.mjs",
+      "passed": 4,
+      "scope": "mock HTTP/Auth/DB"
+    },
+    {
+      "command": "node scripts/verify_creator_work_ui.test.mjs",
+      "passed": 6,
+      "scope": "VM/DOM substitutes and renderer; not a browser"
+    },
+    {
+      "command": "node scripts/verify_creator_works.test.mjs",
+      "passed": 7,
+      "scope": "embedded PostgreSQL synthetic schema, P0 + authoring 001/003/004/005"
+    },
+    {
+      "command": "node scripts/verify_secure_api.test.mjs",
+      "passed": 26
+    },
+    {
+      "command": "node scripts/verify_auth_session.test.mjs",
+      "passed": 8
+    },
+    {
+      "command": "node scripts/verify_cloudflare_routes.test.mjs",
+      "passed": 4
+    },
+    {
+      "command": "node scripts/verify_data_contracts.cjs",
+      "result": "pass"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "result": "pass"
+    },
+    {
+      "command": "node --check changed JavaScript files",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "not_verified": [
+    "actual Supabase schema migration and backup",
+    "actual SMTP/email and existing Auth mapping prerequisites",
+    "real browser or cross-device workflows",
+    "Storage object byte restoration",
+    "multi-process contention and legacy scheduler cutover",
+    "production deployment"
+  ],
+  "source_sha256": {
+    "server/secure-api.mjs": "aafdc70971eacc7cfb1de04a04dc289ad3818719d1514f2889ef3d2cd27c3414",
+    "server/creator-work-api.mjs": "d449011410ac3866eb8877e77928a1b46e0703a13d237f9b23b347739607d8f0",
+    "database/authoring/005_creator_works.sql": "8d40ab5332d4fd66a9cef4fc4bedf23a84aad559a88c07ec4829f89389e22d98",
+    "public/js/creator/creator-works.js": "1f86e22bf0c38fa7c55fdfb15b2baf688351eb95e699f024272246532478cda3",
+    "public/js/creator/creator.js": "ff652fe4de5d4977ecd3674f4c30f266cdce17217d423dee9b1f3e75a0a76423",
+    "public/js/core/auth-session.js": "2a66551f67e69b4e6905197927f43e8529a52e5b15b7d3cff2619969f7c965b3",
+    "public/js/core/router.js": "1d35edd8b768e72b81f011bd59e04ca7c7feb8c12be3353cdd8e5b79a8a93a33",
+    "public/js/reader/reader.js": "24d842d8c0bc39d6d70af7c7f3ef73b482f5504c382dd1fbb6bf5719291cf8c3",
+    "public/js/admin/admin.js": "aff1b3976b971f7c9c6061c609ad0d48a4e17bde03071c377310087190ab45d6",
+    "public/index.html": "541080cbe296e181130d4c43444b7ad645e36eaca4e87f1fbea19a612cf80666",
+    "public/styles.css": "65edf95866876b2028b407cda1ded5aef73b3ee10da662e3fc9d49ee10761a08",
+    "scripts/verify_creator_work_api.test.mjs": "a1eccf8c66ea28ed9b584b65380ec72ac332fcd31f3caec16824e2bdf05b9a79",
+    "scripts/verify_creator_work_ui.test.mjs": "780248644f642a40f9647281479bbdae69fe5f489da71c4da4e705232f439009",
+    "scripts/verify_creator_works.test.mjs": "fd56007bf3c63cf3d894d5e3c886f2a2c214c146582f18b6935315e534c87622",
+    "scripts/verify_auth_session.test.mjs": "e978bc179009073e6f622a3998994ef65cc799cbeb0fd736bcfe8f75ddf722e0",
+    "scripts/verify_secure_api.test.mjs": "cb52607f5b59277b44e2f188943e2f85baa4716bde0d80635c2343c06748327f"
+  }
+}

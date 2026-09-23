@@ -19,9 +19,14 @@ function setup(options = {}) {
   const api = createSecureApi({ now: () => Date.parse('2026-09-21T00:00:00Z'), fetchImpl: async (input, init) => {
     const url = new URL(input); const table = url.pathname.split('/').pop();
     calls.push({ url, method: init.method || 'GET', body: init.body && JSON.parse(init.body), headers: init.headers });
-    if (url.pathname === '/auth/v1/user') return new Response(JSON.stringify(options.user || { id: uid }), { status: options.authStatus || 200 });
+    if (url.pathname === '/auth/v1/user') return new Response(JSON.stringify(options.user || { id: uid, email_confirmed_at: '2026-09-20' }), { status: options.authStatus || 200 });
     assert.equal(init.headers.apikey, env.SUPABASE_SECRET_KEY);
     if (options.dbError && table === options.dbError) return new Response('upstream secret information', { status: 500 });
+    if (table === 'consume_authoring_signup_attempt') return Response.json(!options.rateLimited);
+    if (table === 'authoring_signup_ready') return Response.json(true);
+    if (table === 'complete_authoring_signup') {
+      const input = JSON.parse(init.body); tables.authors = [author()]; return Response.json({ created: true });
+    }
     let rows = tables[table]; assert.ok(rows, 'Unexpected table access: ' + table);
     if (init.method === 'PATCH') {
       if (options.writeConflict) rows = [];
@@ -148,4 +153,46 @@ test('cross-origin mutation blocked and upstream errors redacted', async () => {
 });
 test('unintegrated money and identity endpoints never fake success', async () => {
   const s = setup(); for (const path of ['/payments/confirm','/ads/verify','/adult-verification/confirm','/settlements','/support']) assert.equal((await s.request(path, { method: 'POST', body: {} })).status, 503);
+});
+
+const onboardingEnv = { ...env, AUTH_ONBOARDING_ENABLED: 'true' };
+const onboarding = { method:'POST', origin:'https://webnovels-db4.pages.dev', bindings:onboardingEnv, body:{kind:'author',displayName:'작가이름'} };
+test('onboarding requires activation, exact Origin, confirmed Auth and distributed limiter', async () => {
+  const s = setup({user:{id:uid,email:'new@example.test',email_confirmed_at:'2026-09-20'}});
+  for (const [change,code] of [
+    [{bindings:env},503], [{origin:undefined},403], [{origin:'https://evil.test'},403],
+
+  ]) assert.equal((await s.request('/onboarding',{...onboarding,...change})).status,code);
+  assert.equal(s.calls.filter(c=>c.url.pathname.includes('/rpc/')).length,0);
+  const unconfirmed=setup({user:{id:uid,email:'new@example.test'}});
+  assert.equal((await unconfirmed.request('/onboarding',onboarding)).status,403);
+});
+test('onboarding ignores no authority fields, retries with server identity and returns actor',async()=>{
+  const s=setup({user:{id:uid,email:'new@example.test',email_confirmed_at:'2026-09-20'},tables:{readers:[]}});
+  for(const extra of [{role:'SUPER_ADMIN'},{userId:'other'},{status:'APPROVED'},{email:'other@example.test'}]) {
+    assert.equal((await s.request('/onboarding',{...onboarding,body:{...onboarding.body,...extra}})).status,400);
+  }
+  for(let i=0;i<2;i++) {
+    const response=await s.request('/onboarding',onboarding);assert.equal(response.status,200);
+    assert.ok(response.headers.get('X-Request-ID'));assert.equal((await response.json()).actor.author.id,20);
+  }
+  const writes=s.calls.filter(c=>c.url.pathname.endsWith('/complete_authoring_signup'));
+  assert.equal(writes.length,2);assert.deepEqual(writes[0].body,{p_user_id:uid,p_kind:'author',p_display_name:'작가이름'});
+});
+test('upstream auth failure differs from expired session and includes safe request identifier',async()=>{
+  const s=setup({authStatus:500});const response=await s.request('/me');assert.equal(response.status,503);
+  const body=await response.json();assert.equal(body.error,'AUTH_UNAVAILABLE');assert.equal(body.requestId,response.headers.get('X-Request-ID'));
+});
+
+test('distributed onboarding counter rejects repeated attempts with retry hint',async()=>{
+  const s=setup({rateLimited:true,user:{id:uid,email:'new@example.test',email_confirmed_at:'2026-09-20'}});
+  const response=await s.request('/onboarding',onboarding);assert.equal(response.status,429);assert.equal(response.headers.get('Retry-After'),'60');
+  assert.ok(!s.calls.some(c=>c.url.pathname.endsWith('/complete_authoring_signup')));
+});
+test('creator cutover closes legacy owner write paths instead of bypassing work state/version',async()=>{
+  const s=setup({tables:{authors:[author()]}});const bindings={...env,AUTHOR_WORKS_ENABLED:'true'};
+  assert.equal((await s.request('/works/1',{method:'PATCH',body:{title:'legacy'},bindings})).status,409);
+  s.episode.status='DRAFT';
+  assert.equal((await s.request('/episodes/3',{method:'PATCH',body:{content:'legacy'},bindings})).status,503);
+  assert.ok(!s.calls.some(c=>c.method==='PATCH'));
 });

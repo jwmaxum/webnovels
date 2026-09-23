@@ -1,74 +1,63 @@
-# [Improvement Step 2] 리더 개인화 환경설정 및 동기화 (improve2.md)
+# 2단계 — 데이터 모델·계정 이관·백업 기반
 
-## 1. 개요 및 목적
-현재 뷰어는 3가지 기본 테마(화이트/세피아/다크)와 단순 글자 크기(A-/A+)만 지원합니다. 장시간 모바일/PC로 소설을 읽는 독자의 시각 피로를 최소화하고 몰입도를 극대화하기 위해 **OLED True Black 테마, 전문 글꼴(명조/고딕) 전환, 줄간격/여백 조절, 그리고 기기 간 설정 동기화 체계**를 완성합니다.
+[전체 계획](improve.md) · 이전: [1단계](improve1.md) · 다음: [3단계](improve3.md)
 
----
+## 목표와 선행 조건
 
-## 2. 변경 대상 파일 목록
-1. `public/index.html` : 뷰어 환경설정 모달(`modalReaderSettings`) 내 글꼴, 줄간격, 여백, OLED 블랙 UI 추가
-2. `public/js/reader/reader.js` : 리더 환경설정 스토어(`ReaderPreferencesManager`), CSS 변수 주입 로직, 동기화 연동
-3. `public/styles.css` : `--reader-font-family`, `--reader-line-height`, `--reader-padding-x`, `.theme-oled` 등 스타일 정의
-4. `database/19_reader_preferences.sql` (선택적) 또는 Supabase/Express 설정 저장 API 연동
+1단계 목록을 기준으로 Supabase 단일 저장소, Auth 연결, 안정적인 초안·공개본·예약 모델을 설계하고 격리된 환경에 적용한다. 운영 마이그레이션은 12단계의 검증된 절차로 수행한다.
 
----
+## 대상 파일과 산출물
 
-## 3. 세부 기능 개발 명세
+- 기존: `database/p0/000_preflight.sql`, `001_expand_identity_content.sql`, `002_lockdown_after_cutover.sql`.
+- 참고: `database/18_author_growth_phase2_3.sql`, `prisma/schema.prisma`, `P0_IMPLEMENTATION_PLAN.md`.
+- 신규 제안: 순서가 명확한 증분 SQL, `docs/launch/data-contract.md`, `migration-runbook.md`.
+- 서로 다른 세대의 `database/*.sql` 전체를 순서대로 실행하지 않는다.
 
-### 3.1 테마 확장: OLED True Black (`theme-oled`)
-- 완벽한 `#000000` 배경 및 부드러운 회색조 텍스트(`#E2E8F0`)를 적용하여 스마트폰 배터리 절약 및 암실 독서 시 눈부심 완벽 차단.
-- 테마 선택 버튼에 `다크 블랙`, `OLED 블랙`, `세피아`, `화이트` 4종 그리드 배치.
+## 순차 작업
 
-### 3.2 독서 타이포그래피 개인화 옵션
-1. **글꼴 계열 (Font Family)**:
-   - **가독 명조 (Serif)**: `KoPub 바탕`, `Noto Serif KR` — 정통 문학/소설 몰입감
-   - **깔끔 고딕 (Sans-serif)**: `Pretendard`, `Noto Sans KR` — 모바일 빠른 가독성
-2. **줄간격 (Line Height)**:
-   - 1.5배 (좁게), 1.8배 (보통 - 기본값), 2.2배 (넓게)
-3. **좌우 여백 (Horizontal Padding)**:
-   - 12px (화면 가득), 20px (기본), 36px (여유 있게)
-4. **문단 간격 (Paragraph Gap)**:
-   - 문단 사이 여백을 0.8em ~ 1.5em 사이에서 유연하게 조절.
+- [ ] 실제 스키마·제약·뷰·트리거·RPC와 코드 가정을 비교한다. 중복 계정·잘못된 회차 참조·결번을 보고한다.
+- [ ] DB와 Storage 백업을 만들고 격리 환경에서 복원하여 기준선과 대조한다. 백업 위치·식별자·복원 시간을 기록한다.
+- [x] 기존 독자/작가/관리자 ID를 유지하며 Auth UUID 연결 방식을 정한다. 이메일 일치만으로 자동 병합하지 않는다.
+- [x] 기존 계정은 검증된 재설정/본인 확인 절차로 연결하고 미연결·충돌 계정은 보존한다. **절차·연결 함수 구현 및 합성 데이터 검사 완료; 실제 계정 이관 미실행.**
+- [x] 안정적인 `draft_id`, 소유 작가·작품, revision, 저장 시각을 설계한다. 회차 번호를 초안의 영구 키로 쓰지 않는다.
+- [x] 공개본과 편집 초안을 분리한다. 예약은 초안의 특정 revision/불변 본문 스냅샷을 참조하도록 한다.
+- [x] 작품 공개 상태, 연재 상태, 운영자 제재 상태를 분리한다. 작가 공개 요청이 운영자 제한을 덮어쓰지 못하게 한다.
+- [x] 작품별 회차 번호 고유 제약, 게시 멱등키, 예약 작업 상태·재시도, 휴지통·복구 관계를 정의한다.
+- [x] 원고 버전 보관·휴지통 기간·영구 삭제 절차와 파일 참조 정리를 정한다. 승인된 보관 일수가 없으므로 기간 NULL(자동 삭제 금지)로 구현했다. 실제 일수·영구 삭제 정책 확정은 운영 담당 확인 후 진행한다.
+- [x] 개인 원고/원본 파일 버킷과 공개 표지 파생 이미지 정책을 분리한다. 초안 본문·revision·원본에 제한 정책을 마련한다.
+- [x] 새 스키마를 격리 환경에 반복 적용하고 부분 실패 후 재실행을 시험한다. **로컬 PGlite에서 검증; 별도 Supabase 프로젝트 검증은 대기.**
+- [x] 현재 v2의 `locked` 마이그레이션 확인과 호환되도록 전환 절차를 문서화한다. 테스트를 위해 운영 보호 조건을 완화하지 않는다.
 
-### 3.3 로컬 & 서버 원격 동기화 파이프라인
-- **비로그인 사용자**: `localStorage('webnovels_reader_pref')`에 영구 보관.
-- **로그인 사용자**:
-  - 로그인 성공 또는 설정 변경 시 서버 API/Supabase `readers.reader_preferences` 필드로 백그라운드 동기화.
-  - 다른 브라우저나 스마트폰에서 로그인 시 기존 설정이 즉시 복원되어 동일한 독서 경험 제공.
+## 검증과 완료 조건
 
----
+- [ ] 기존 작품·회차·계정 ID와 본문 내용이 유지된다. 예시 수익은 실제 거래로 합산하지 않는다.
+- [ ] 두 작업이 같은 회차 번호/게시 키를 만들면 하나만 성공한다.
+- [ ] 원고 수정은 공개본을 바꾸지 않고, 예약 대상 원고가 무엇인지 식별된다.
+- [ ] 삭제/복구 시 작품·회차·파일·독서기록 관계가 정의되어 있다.
+- [ ] 격리 DB 복원과 버전별 증분 적용 기록이 있다. 원격 미적용은 완료 기록과 구분한다.
 
-## 4. UI 및 CSS 변수 바인딩 구조
+## 복구·주의 사항
 
-```css
-/* #readerPaper에 적용되는 CSS Custom Properties */
-.reader-paper {
-  font-family: var(--reader-font, 'Pretendard', sans-serif);
-  font-size: var(--reader-font-size, 18px);
-  line-height: var(--reader-line-height, 1.8);
-  padding-left: var(--reader-padding-x, 20px);
-  padding-right: var(--reader-padding-x, 20px);
-}
+기존 열·테이블·원고를 먼저 지우지 않는다. 확장 마이그레이션 실패 시 신규 기능을 닫고 기존 데이터를 보존한다. 개인정보 공개 정책으로 되돌리는 롤백은 사용하지 않는다.
 
-.reader-paragraph {
-  margin-bottom: var(--reader-paragraph-gap, 1.2em);
-}
+## 이번 구현과 검증
 
-/* OLED Black */
-.main-view.full-screen-reader.theme-oled {
-  background-color: #000000 !important;
-  color: #E2E8F0 !important;
-}
-.main-view.full-screen-reader.theme-oled .reader-paper {
-  background-color: #000000 !important;
-  color: #E2E8F0 !important;
-}
-```
+- [데이터 계약](docs/launch/data-contract.md): 기존 스키마 차이, 고정 초안 ID, 불변 revision·공개본·예약, 파일 참조와 계정 연결 규칙.
+- [마이그레이션·백업 실행 절차](docs/launch/migration-runbook.md): 실DDL 확인, 실제 DB+파일 백업/복원, 적용 순서와 실패 복구.
+- [증분 SQL](database/authoring/README.md): 읽기 조사 000, 저장 모델 001, private Storage 002, 검증된 계정 연결 003.
+- [격리 PostgreSQL 검증](scripts/verify_authoring_schema.test.mjs), [합성 레거시 fixture](scripts/fixtures/authoring_legacy.sql).
+- `npm run test:authoring-schema`: 22개 테스트 통과(부모 테스트 포함). 기존 ID·본문 보존, 반복 적용, 충돌·중복·교차 작품 거절, 계정 연결 원자성, DB 덤프 복원 등을 확인했다.
+- [검증 결과](artifacts/step2-schema-verification.json)는 주 보존 계약 18개 결과를 기록한다. 추가 스키마 변형·충돌·적용 게이트 검사는 테스트 실행 결과에 포함된다.
+- 새 검증을 CI 필수 명령에 추가했다. 테스트 런타임은 devDependency이며 운영 API 의존성이 아니다.
+- 실제 Supabase 백업/Storage 파일 바이트 복원·실제 다중 연결 동시성·원격 정책 적용은 미검증이다. 로컬 성공을 해당 항목의 완료로 체크하지 않았다.
 
----
+## 실행 기록
 
-## 5. 검증 체크리스트
-- [ ] 뷰어 설정 모달에서 글꼴을 명조로 변경 시 본문 글꼴이 즉시 변경되는가?
-- [ ] 줄간격 및 여백 슬라이더 조절 시 리더 본문에 실시간 반영되는가?
-- [ ] OLED 블랙 테마 선택 시 배경이 순수 블랙(`#000000`)으로 렌더링되는가?
-- [ ] 브라우저를 새로고침하거나 다음 회차로 넘어가도 개인화 설정이 온전히 유지되는가?
+- 상태: 진행 중 — 로컬 구현·검증 완료, 실제 스키마·백업 확인 대기.
+- 시작일 / 완료일: 2026-09-23 / 전체 단계 미완료.
+- 변경 파일 / 커밋: database/authoring/*, scripts/fixtures/authoring_legacy.sql, scripts/verify_authoring_schema.test.mjs, package.json/lock, CI, 관련 실행 문서·검증 결과. 커밋 미생성.
+- 검증: `npm run test:authoring-schema` 22/22 통과. 합성 데이터와 격리 PostgreSQL만 사용.
+- 원격 관리 재확인: `node scripts/p0_schema_audit.cjs` → HTTP 401. 실제 DDL/RLS·백업·계정 연결 확인 불가.
+- DB·Storage 적용 환경 / 버전: 로컬 authoring-001/002/003. 실제 Supabase 적용 없음, 기존 데이터·배포 설정 변경 없음.
+- 외부 의존성·미해결 사항: 유효한 관리 접속, 실제 스키마/계정 연결 조사, DB+Storage 백업과 격리 복원. SEC-R01은 여전히 미해결.
+- 다음 단계 진입 판정: 3단계 로컬 API 설계는 준비 가능하나, 2단계 전체 완료/운영 적용·오픈 판정은 실제 환경 검증 후에만 가능.

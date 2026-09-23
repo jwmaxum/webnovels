@@ -22,7 +22,9 @@ function initSupabaseAdmin() {
   }
   if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
     try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
       console.log('⚡ [WebNovels Admin] Production Supabase v1 클라이언트 초기화 완료');
       return true;
     } catch(e) {
@@ -41,154 +43,20 @@ if (typeof window !== 'undefined') {
 // 01. AUTH (Supabase Auth & DB 계정 인증 지원)
 // ============================================================
 
-// [Admin Login]
-async function adminLogin(email, password) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: '데이터베이스에 연결할 수 없습니다.' };
-
-  const cleanEmail = String(email).trim().toLowerCase();
-  const cleanPw = String(password).trim();
-
+// Compatibility adapters; all roles come from the current server actor.
+async function loginForRole(email, password, role) {
   try {
-    // 1. Supabase RPC verify_admin_login 호출
-    try {
-      const { data: rpcRes, error: rpcErr } = await supabaseClient.rpc('verify_admin_login', {
-        p_email: cleanEmail,
-        p_password: cleanPw
-      });
-      if (!rpcErr && rpcRes && rpcRes.success && rpcRes.admin) {
-        currentAdmin = rpcRes.admin;
-        return { success: true, admin: rpcRes.admin };
-      }
-    } catch (e) {}
-
-    // 2. Supabase Auth 로그인 시도
-    try {
-      const { data: authData, error: authErr } = await supabaseClient.auth.signInWithPassword({
-        email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@webnovels.com`,
-        password: cleanPw
-      });
-      if (!authErr && authData?.user) {
-        const { data: admin, error } = await supabaseClient.from('admin_users')
-          .select('id, email, username, nickname, role, permissions, is_active')
-          .eq('id', authData.user.id).eq('is_active', true).maybeSingle();
-        if (error || !admin || !['SUPER_ADMIN', 'SUB_ADMIN', 'ADMIN'].includes(admin.role)) {
-          await supabaseClient.auth.signOut();
-          return { success: false, error: '관리자 권한이 없습니다.' };
-        }
-        currentAdmin = admin;
-        return { success: true, admin: currentAdmin };
-      }
-    } catch (e) {}
-
-    return { success: false, error: '관리자 계정 정보 또는 비밀번호가 일치하지 않습니다.' };
-  } catch (err) {
-    console.error('[adminLogin Error]', err);
-    return { success: false, error: err.message };
-  }
+    if (!window.WebNovelsAuth) return { success: false, error: '인증 모듈을 사용할 수 없습니다.' };
+    const actor = await window.WebNovelsAuth.login(email, password);
+    if (!actor[role]) { await window.WebNovelsAuth.logout(); return { success: false, error: '해당 계정 권한이 없습니다.' }; }
+    return { success: true, [role]: actor[role] };
+  } catch (error) { return { success: false, error: error.message }; }
 }
-
-function adminLogout() {
-  currentAdmin = null;
-  currentAuthUser = null;
-  if (supabaseClient) {
-    supabaseClient.auth.signOut().catch(() => {});
-  }
-}
-
-function getCurrentAdmin() {
-  return currentAdmin;
-}
-
-// [Reader Login]
-async function readerLogin(identifier, password) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: '데이터베이스에 연결할 수 없습니다.' };
-
-  const cleanId = String(identifier).trim().toLowerCase();
-  const cleanPw = String(password).trim();
-
-  try {
-    // 1. Supabase Auth 로그인 시도
-    try {
-      const emailToAuth = cleanId.includes('@') ? cleanId : `${cleanId}@webnovels.com`;
-      const { data: authData, error: authErr } = await supabaseClient.auth.signInWithPassword({
-        email: emailToAuth,
-        password: cleanPw
-      });
-      if (!authErr && authData?.user) {
-        const { data: profile } = await supabaseClient.from('readers').select('*').eq('id', authData.user.id).single();
-        return { success: true, reader: profile || { id: authData.user.id, username: cleanId, email: authData.user.email, nickname: cleanId } };
-      }
-    } catch (e) {}
-
-    // 2. readers 테이블 직접 조회 (기존 시드 계정 reader1~10 호환)
-    const { data: readerRows, error: rErr } = await supabaseClient
-      .from('readers')
-      .select('*')
-      .or(`email.ilike.${cleanId},username.ilike.${cleanId}`);
-
-    if (!rErr && readerRows && readerRows.length > 0) {
-      const reader = readerRows[0];
-      const isMatch = reader.password_hash === cleanPw || 
-                      reader.password_hash === `!${cleanPw}` ||
-                      (reader.password_hash && reader.password_hash.replace(/^!/, '') === cleanPw.replace(/^!/, ''));
-      if (isMatch) {
-        return { success: true, reader };
-      }
-    }
-
-    return { success: false, error: '독자 계정 정보 또는 비밀번호가 일치하지 않습니다.' };
-  } catch (err) {
-    console.error('[readerLogin Error]', err);
-    return { success: false, error: err.message };
-  }
-}
-
-// [Author Login]
-async function authorLogin(identifier, password) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: '데이터베이스에 연결할 수 없습니다.' };
-
-  const cleanId = String(identifier).trim().toLowerCase();
-  const cleanPw = String(password).trim();
-
-  try {
-    // 1. Supabase Auth 로그인 시도
-    try {
-      const emailToAuth = cleanId.includes('@') ? cleanId : `${cleanId}@webnovels.com`;
-      const { data: authData, error: authErr } = await supabaseClient.auth.signInWithPassword({
-        email: emailToAuth,
-        password: cleanPw
-      });
-      if (!authErr && authData?.user) {
-        const { data: profile } = await supabaseClient.from('authors').select('*').eq('auth_user_id', authData.user.id).single();
-        return { success: true, author: profile || { id: authData.user.id, username: cleanId, email: authData.user.email, pen_name: cleanId } };
-      }
-    } catch (e) {}
-
-    // 2. authors 테이블 직접 조회 (실제 저장된 암호 검증)
-    const { data: authorRows, error: aErr } = await supabaseClient
-      .from('authors')
-      .select('*')
-      .or(`username.ilike.${cleanId},pen_name.ilike.${cleanId},email.ilike.${cleanId}`);
-
-    if (!aErr && authorRows && authorRows.length > 0) {
-      const author = authorRows[0];
-      const isMatch = author.password_hash === cleanPw || 
-                      author.password_hash === `!${cleanPw}` ||
-                      (author.password_hash && author.password_hash.replace(/^!/, '') === cleanPw.replace(/^!/, ''));
-      if (isMatch) {
-        return { success: true, author };
-      }
-    }
-
-    return { success: false, error: '작가 계정 정보 또는 비밀번호가 일치하지 않습니다.' };
-  } catch (err) {
-    console.error('[authorLogin Error]', err);
-    return { success: false, error: err.message };
-  }
-}
+async function adminLogin(email, password) { return loginForRole(email,password,'admin'); }
+async function readerLogin(email, password) { return loginForRole(email,password,'reader'); }
+async function authorLogin(email, password) { return loginForRole(email,password,'author'); }
+function adminLogout() { currentAdmin = null; currentAuthUser = null; return window.WebNovelsAuth?.logout(); }
+function getCurrentAdmin() { return window.WebNovelsAuth?.getActor()?.admin || null; }
 
 // [Fetch Readers & Authors for Admin CMS]
 async function fetchReadersFromSupabase() {
@@ -197,7 +65,7 @@ async function fetchReadersFromSupabase() {
   try {
     const { data, error } = await supabaseClient
       .from('readers')
-      .select('*')
+      .select('id,username,nickname,email,status,created_at')
       .order('id', { ascending: true });
     if (!error && data) return data;
     return [];
@@ -1541,26 +1409,7 @@ async function updateReaderByAdmin(readerId, payload) {
 
 // ---- 관리자 전용 독자 회원 비밀번호 변경 ----
 async function changeReaderPasswordByAdmin(readerId, newPassword) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !readerId || !newPassword) return { success: false, error: '유효하지 않은 요청' };
-
-  try {
-    const cleanPw = String(newPassword).trim();
-    // 현재 시스템의 비밀번호 형식 '!비밀번호' 호환
-    const pwHash = cleanPw.startsWith('!') ? cleanPw : `!${cleanPw}`;
-
-    const { data, error } = await supabaseClient
-      .from('readers')
-      .update({ password_hash: pwHash })
-      .eq('id', readerId)
-      .select();
-
-    if (error) throw error;
-    return { success: true, data };
-  } catch (err) {
-    console.error('[changeReaderPasswordByAdmin Error]', err);
-    return { success: false, error: err.message };
-  }
+  return { success: false, error: '기존 계정 생성·비밀번호 변경 경로는 종료되었습니다. 본인 이메일 가입·재설정 또는 검증된 관리자 계정 연결 절차를 이용해주세요.' };
 }
 
 // ---- 관리자 전용 독자 회원 삭제 ----
@@ -1607,43 +1456,7 @@ async function checkReaderExists(username, email) {
 }
 
 async function createReaderInDB(userData) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !userData) return { success: false, error: 'DB 미연결' };
-  try {
-    let nextId = 12;
-    const { data: topRows } = await supabaseClient.from('readers').select('id').order('id', { ascending: false }).limit(1);
-    if (topRows && topRows.length > 0 && typeof topRows[0].id === 'number') {
-      nextId = topRows[0].id + 1;
-    }
-
-    const cleanUsername = String(userData.username || userData.nickname || `reader_${Date.now()}`).trim();
-    const cleanEmail = String(userData.email || `${cleanUsername}@webnovels.com`).trim();
-
-    const payload = {
-      id: nextId,
-      username: cleanUsername,
-      email: cleanEmail,
-      nickname: userData.nickname || cleanUsername,
-      password_hash: userData.password || userData.password_hash || '',
-      phone: userData.phone || '미입력',
-      is_adult_verified: !!userData.isAdultVerified,
-      subscription_status: userData.subscription_status || '일반 회원',
-      reading_history: userData.readingHistory || [],
-      favorites: userData.favorites || [],
-      subscribed_authors: userData.subscribedAuthors || [],
-      status: 'ACTIVE'
-    };
-
-    const { data, error } = await supabaseClient.from('readers').insert([payload]).select().single();
-    if (error) {
-      console.warn('[createReaderInDB Error]', error);
-      return { success: false, error: error.message };
-    }
-    return { success: true, reader: data };
-  } catch (err) {
-    console.error('[createReaderInDB Error]', err);
-    return { success: false, error: err.message };
-  }
+  return { success: false, error: '기존 계정 생성·비밀번호 변경 경로는 종료되었습니다. 본인 이메일 가입·재설정 또는 검증된 관리자 계정 연결 절차를 이용해주세요.' };
 }
 
 // ============================================================
@@ -1750,56 +1563,7 @@ async function fetchSubAdmins() {
 }
 
 async function createSubAdmin(arg1, arg2, arg3, arg4, arg5) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
-
-  let username, password, nickname, email, permissions;
-  if (typeof arg1 === 'object' && arg1 !== null) {
-    username = arg1.username;
-    password = arg1.password || '!password123';
-    nickname = arg1.nickname || arg1.username;
-    email = arg1.email || `${username}@webnovel-admin.com`;
-    permissions = arg1.permissions || ['DASHBOARD'];
-  } else {
-    username = arg1;
-    password = arg2 || '!password123';
-    nickname = arg3 || username;
-    email = arg4 || `${username}@webnovel-admin.com`;
-    permissions = Array.isArray(arg5) ? arg5 : ['DASHBOARD'];
-  }
-
-  try {
-    // 1. Try RPC create_admin_user first
-    try {
-      const { data: rpcRes, error: rpcErr } = await supabaseClient.rpc('create_admin_user', {
-        p_username: username,
-        p_password: password,
-        p_email: email,
-        p_nickname: nickname,
-        p_permissions: JSON.stringify(permissions)
-      });
-      if (!rpcErr && rpcRes && rpcRes.success) {
-        return { success: true, id: rpcRes.id };
-      }
-    } catch (e) {}
-
-    // 2. Direct insert fallback
-    const payload = {
-      username,
-      email,
-      nickname,
-      role: 'SUB_ADMIN',
-      permissions: permissions,
-      is_active: true
-    };
-
-    const { data, error } = await supabaseClient.from('admin_users').insert([payload]).select().single();
-    if (error) throw error;
-    return { success: true, admin: data };
-  } catch (err) {
-    console.error('[createSubAdmin Error]', err);
-    return { success: false, error: err.message };
-  }
+  return { success: false, error: '기존 계정 생성·비밀번호 변경 경로는 종료되었습니다. 본인 이메일 가입·재설정 또는 검증된 관리자 계정 연결 절차를 이용해주세요.' };
 }
 
 async function updateSubAdminPermissions(subAdminId, permissions) {
@@ -1968,7 +1732,8 @@ async function updateContentReviewInDB(reviewId, status = 'APPROVED', rejectReas
   if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient || !reviewId) return { success: false, error: 'DB 미연결' };
   try {
-    const admin = currentAdmin || { nickname: '최고관리자' };
+    const admin = getCurrentAdmin();
+    if (!admin) return { success: false, error: '관리자 인증이 필요합니다.' };
     const { data, error } = await supabaseClient
       .from('content_reviews')
       .update({
@@ -2290,25 +2055,8 @@ async function fetchAuthorEarningLedger(authorId) {
   return ledgerEntries;
 }
 
-async function fetchEpisodeDraftFromDB(authorId, workId, episodeNumber) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return null;
-  const { data, error } = await supabaseClient.from('episode_drafts').select('*').eq('author_id', Number(authorId)).eq('work_id', Number(workId)).eq('episode_number', Number(episodeNumber)).maybeSingle();
-  if (error) { console.warn('[fetchEpisodeDraftFromDB]', error.message); return null; }
-  return data;
-}
-
-async function saveEpisodeDraftToDB(authorId, workId, episodeNumber, draft) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
-  const existing = await fetchEpisodeDraftFromDB(authorId, workId, episodeNumber);
-  const nextRevision = Number(existing?.server_revision || 0) + 1;
-  const payload = { author_id: Number(authorId), work_id: Number(workId), episode_number: Number(episodeNumber), title: String(draft.title || '').slice(0, 300), content: String(draft.content || '').slice(0, 2000000), author_comment: String(draft.authorComment || '').slice(0, 2000), server_revision: nextRevision, updated_at: new Date().toISOString() };
-  const { data, error } = await supabaseClient.from('episode_drafts').upsert(payload, { onConflict: 'author_id,work_id,episode_number' }).select().single();
-  if (error) return { success: false, error: error.message };
-  await supabaseClient.from('episode_draft_revisions').insert({ draft_id: data.id, server_revision: nextRevision, title: data.title, content: data.content, author_comment: data.author_comment }).catch(() => {});
-  return { success: true, draft: data };
-}
+async function fetchEpisodeDraftFromDB() { throw new Error('USE_CREATOR_DRAFTS_API'); }
+async function saveEpisodeDraftToDB() { return { success: false, error: 'USE_CREATOR_DRAFTS_API' }; }
 
 async function fetchReaderPreferencesFromDB(identifier) {
   if (!supabaseClient) initSupabaseAdmin();

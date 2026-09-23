@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-09-23T02:30:05.348Z",
+  "engine": "PGlite isolated PostgreSQL",
+  "syntheticDataOnly": true,
+  "scope": "main preservation contracts; separate variant/gate tests reported by test runner",
+  "status": "passed",
+  "tests": [
+    "additive migration and repeat application preserve IDs and bodies",
+    "read-only audit reports an episode gap without renumbering",
+    "owner mismatch and cross-work episode attachment are rejected",
+    "draft cannot commit without its current revision",
+    "service-only save increments revision and rejects a stale writer",
+    "revision updates and deletes are forbidden even for table owner",
+    "snapshot must match source revision and remains stable after editing",
+    "one episode number and one idempotent result; cross-work result rejected",
+    "schedule pins immutable snapshot; duplicate active job and cross-episode snapshot denied",
+    "trash and moderation are independent from creator visibility",
+    "private schema cannot be read or written by anon/authenticated",
+    "restrictive storage rule overrides legacy permissive policies, other bucket preserved",
+    "account mapping conflicts fail without overwriting original identities",
+    "verified linking is atomic, idempotent and rejects impersonation/remapping",
+    "file references cannot cross works and referenced files cannot disappear",
+    "partial transaction failure rolls back and migration can be retried",
+    "locked P0 marker never becomes expanded during replay",
+    "local PostgreSQL backup restores legacy rows, versions and storage metadata"
+  ],
+  "failed": [],
+  "realConcurrentConnectionsTested": false,
+  "productionApplied": false,
+  "realSupabaseBackupRestored": false,
+  "storageObjectBytesRestored": false,
+  "migrations": {
+    "foundation": "27d1874eeee387da3c7596aa2f30ed0c19d83b132cf872d543c9e3ed8f62b66a",
+    "storage": "e36219e8d703f4ea96a8386436138ee11f3076a580f981c25e59849410d4ffff",
+    "linking": "c2d979f50a3792f062d51300af9cc5fafcbe039775f09cfd480cd134f91e42e3"
+  }
+}

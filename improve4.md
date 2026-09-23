@@ -1,87 +1,52 @@
-# [Improvement Step 4] 문단 댓글 UX 고도화 & 작가 안심 모더레이션 콘솔 (improve4.md)
+# 4단계 — 작가 전용 작품 등록·수정·목록
 
-## 1. 개요 및 목적
-문단 댓글의 백엔드 필드와 기본적인 클릭 선택 기능은 구축되었습니다. 본 단계에서는 **독자가 본문을 읽으며 각 문단별 반응(댓글 수)을 직관적으로 확인하고, 작가는 작품 관리 화면에서 악성 댓글러나 비방 댓글을 손쉽게 필터링/차단할 수 있는 전용 모더레이션 콘솔 UI**를 완성합니다.
+[전체 계획](improve.md) · 이전: [3단계](improve3.md) · 다음: [5단계](improve5.md)
 
----
+## 목표와 선행 조건
 
-## 2. 변경 대상 파일 목록
-1. `public/js/reader/reader.js` : 문단 우측 댓글 카운트 뱃지 표시, 문단 클릭 시 해당 문단 댓글만 필터링하는 퀵 뷰어
-2. `public/index.html` : 문단 댓글 사이드 시트, 작가 스튜디오 내 '작품 댓글 관리 모달(`modalWorkCommentPolicy`)' UI
-3. `public/js/creator/creator.js` : 작가 댓글 정책 모달 연동 (금칙어 사전 관리, 최소 열람 회차 슬라이더, 차단 독자 목록 조회 및 차단 해제)
-4. `public/styles.css` : 문단 댓글 뱃지(`.paragraph-badge`), 스포일러 블러/펼침 효과 스타일
+3단계의 서버 신원·권한을 사용해 작가가 관리자 모달 없이 자기 작품을 관리한다. 관리자 기능 제거는 대체 기능 검증 후 9단계에서 한다.
 
----
+## 대상 파일
 
-## 3. 세부 기능 개발 명세
+- `public/js/creator/creator.js`, `public/index.html`, `public/styles.css`.
+- `public/js/core/router.js`, `public/app.js`, `server/secure-api.mjs`.
+- 기존 의존: `openAdminCreateWorkModal`, `handleAdminCreateWorkSubmit`, `createWorkInDB`.
+- 신규 제안: 작가 작품 API/폼·목록 모듈. 태그 입력기는 공용 UI로 재사용하되 관리자 필드 ID에서 분리한다.
 
-### 3.1 리더 문단별 댓글 카운트 뱃지 & 필터링 뷰
-- **문단 댓글 인디케이터**:
-  - 댓글이 등록된 문단 우측에 말풍선 아이콘과 개수 뱃지(`💬 3`) 표시.
-  - 마우스 호버 또는 탭 시 뱃지가 활성화되며, 클릭 시 하단 전체 댓글 대신 '해당 문단의 댓글'만 팝업 또는 강조 필터링.
-- **스포일러 블라인드 개선**:
-  - 스포일러 체크된 댓글은 기본 블러(Blur) 처리.
-  - `⚠️ 스포일러가 포함된 감상입니다 [보기]` 버튼 클릭 시 부드럽게 내용 노출.
+## 순차 작업
 
-### 3.2 작가 안심 모더레이션 콘솔 (`modalWorkCommentPolicy`)
-- **기존 방식**: 단순 `window.prompt`로 금칙어를 입력받아 사용성이 열악했음.
-- **개선 내용**: 전용 그래픽 모달 제공
-  1. **작품별 댓글 ON/OFF 스위치**: 악플 폭격 발생 시 긴급하게 새 댓글 작성 차단.
-  2. **금칙어 사전 관리 칩 UI**: 등록된 금칙어를 칩 형태로 조회하고, 새 금칙어 추가/삭제. (욕설, 스포일러성 키워드 등)
-  3. **댓글 작성 자격 제한 (안티 분탕 방지)**:
-     - "최소 N회차 이상 읽은 독자만 댓글 작성 허용" (0~30화 슬라이더 설정).
-     - 1화만 대충 보고 악플을 달고 도망가는 체리피커 악플러 원천 차단.
-  4. **차단 독자 목록 및 해제 관리**:
-     - 작가가 차단한 독자 ID 목록 및 차단 일시 테이블 조회.
-     - 오해로 차단된 독자의 차단 해제 버튼 제공.
+- [x] `내 작품`을 서버 로그인 작가 기준으로 조회한다. 필명/대표작 제목과 전체 `SAMPLE_WORKS` 배열로 소유권을 추정하지 않는다.
+- [x] 제목만으로 비공개 작품을 만들고 작성자는 서버에서 지정한다. 중복 제출을 방지한다.
+- [x] 작품명·소개·장르·태그·이용등급·AI 사용 표기를 작가 설정으로 제공한다. 초안 저장과 최초 공개 필수 정보를 분리한다.
+- [x] 표지가 없으면 작품 제목 기반 기본 표지를 표시한다. 업로드는 6단계에서 연결한다.
+- [x] 첫 작품 등록 버튼과 상단 새 작품 버튼을 작가 폼으로 연결한다. 관리자 필명 입력란을 재사용하지 않는다.
+- [x] 작품 상세에 회차 목록·작품 설정·독자 반응 진입점을 만들고 기존 3개 관리 탭 통합의 기반을 만든다.
+- [x] 초안/공개/휴지통을 필터링하고 정상 0건·로딩·오류를 구분한다.
+- [x] 휴재·완결과 공개 여부를 분리한다. 삭제는 휴지통으로 옮기며 예약·공개 회차의 영향과 복구를 명시한다.
+- [x] 작가가 서버 제재 상태·추천 플래그·다른 작가 ID를 변경할 수 없도록 필드를 제한한다.
+- [x] 작품 삭제/복구 시 파일과 회차를 곧바로 물리 삭제하지 않는다.
 
----
+## 검증과 완료 조건
 
-## 4. UI 설계 및 모달 명세
+- [ ] 새 작가가 첫 작품을 생성하고 새로고침·다른 기기에서 동일 작품을 조회·수정한다.
+- [x] (API/합성 DB) 작가 A는 URL·본문의 ID를 B로 바꿔도 B의 작품을 조회·수정하지 못한다.
+- [x] (독립 모듈/정적 연결 검사) 작가 등록 경로가 관리자 모달/핸들러를 호출하지 않는다.
+- [x] (DB/VM) 동일 제목 작품이 있어도 다른 작품으로 합쳐지지 않는다. 서버 ID를 기준으로 수정한다.
+- [x] (DB/DOM 대역) 휴지통·복구·빈 목록·통신 오류 시 사용자 상태가 정확하다.
 
-```html
-<!-- Modal: 작가 작품 댓글 관리 콘솔 -->
-<div class="modal-backdrop" id="modalWorkCommentPolicy">
-  <div class="modal-dialog glass-panel dialog-md">
-    <div class="modal-header">
-      <h3><i data-lucide="shield-alert"></i> 작품 댓글 및 클린존 관리</h3>
-      <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group mb-4">
-        <label class="toggle-label">
-          <input type="checkbox" id="policyCommentsEnabled" checked>
-          <span>이 작품의 독자 댓글 작성 허용</span>
-        </label>
-      </div>
-      <div class="form-group mb-4">
-        <label class="small text-muted block mb-1">댓글 작성 최소 열람 조건 (분탕 방지)</label>
-        <div class="flex-between">
-          <input type="range" id="policyMinReadRange" min="0" max="20" value="0" class="form-range">
-          <span id="policyMinReadDisplay" class="font-bold text-pink">전체 독자 가능</span>
-        </div>
-      </div>
-      <div class="form-group mb-4">
-        <label class="small text-muted block mb-1">작가 지정 금칙어 사전 (쉼표 또는 엔터로 등록)</label>
-        <div class="tag-chips-box" id="policyBlockedTermsChips"></div>
-        <input type="text" id="policyNewTermInput" class="form-input" placeholder="금지할 단어 입력 후 Enter">
-      </div>
-      <div class="form-group">
-        <label class="small text-muted block mb-1">현재 차단된 악성 독자 목록</label>
-        <div class="blocked-readers-table-box" id="policyBlockedReadersList"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary" id="btnSaveCommentPolicy">설정 저장 및 즉시 적용</button>
-    </div>
-  </div>
-</div>
-```
+## 복구·주의 사항
 
----
+기존 작품과 작성자 매핑을 보존한다. 신규 작가 폼에 문제가 생기면 초안을 유지하고 쓰기를 제한한다. 관리자 권한을 작가에게 부여하는 대체 경로를 만들지 않는다.
 
-## 5. 검증 체크리스트
-- [ ] 특정 문단에 문단 댓글을 등록했을 때 해당 문단 옆에 댓글 카운트 뱃지가 정상 생성되는가?
-- [ ] 스포일러 댓글이 블러 처리되어 있고, '보기' 클릭 시에만 본문이 노출되는가?
-- [ ] 작가가 최소 열람 회차를 '3화'로 설정했을 때, 1화만 읽은 독자가 댓글을 쓰려고 하면 차단 경고가 뜨는가?
-- [ ] 작가가 금칙어로 등록한 단어가 포함된 댓글 작성 시 서버 및 클라이언트에서 차단되는가?
+## 실행 기록
+
+- 상태: **로컬 구현·검증 완료 / 실환경 통합 검증 대기**
+- 시작일 / 로컬 검증일: 2026-09-23 / 2026-09-23. 단계 전체 완료일은 미정.
+- 변경: 작가 전용 목록·등록·설정·회차 메타데이터/반응 진입점, 서버 작품 API, 005 증분 SQL, 멱등 생성·수정 충돌·휴지통·예약 취소, 테스트/CI.
+- 상세: [작가 작품 관리 계약](docs/launch/creator-works-contract.md).
+- 검증: `test:creator-works`의 API mock 4개 + VM/DOM 대역 6개 + 합성 PostgreSQL 7개. 기존 API 26개·Auth 세션 8개·Cloudflare 4개·데이터 계약·타입/구문 검사.
+- 증거: [step4-creator-works-verification.json](artifacts/step4-creator-works-verification.json). 실제 브라우저·기기 간 사용성 검증과 원격 DB 적용은 수행하지 않음.
+- DB 적용: 합성 PostgreSQL의 001/003/004/005 연쇄만. 실제 Supabase, 운영 환경 변수, Storage 파일, 원격 계정은 변경하지 않음. 커밋/배포하지 않음.
+- 제한: 표지 업로드 6단계, 원고 편집·자동저장 5단계, 공개 7단계, 독자 반응 8단계. 관리자 대체/구형 직접 DB 쓰기 폐쇄는 9·10단계에서 진행.
+- 외부 의존성: 2단계 실제 스키마/백업/매핑, 3단계 이메일·세션 인수 검증, 예약 실행기/전환 리허설, 실제 브라우저 검증.
+- 다음 단계: 5단계 로컬 개발 준비 가능. 선행 외부 조건이 해결되기 전 4단계 통합 완료·서비스 오픈은 대기.

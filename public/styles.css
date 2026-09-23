@@ -5516,4 +5516,27 @@ body.portal-fullscreen-mode .main-content-wrapper {
   filter: brightness(1.2);
 }
 
-
+/* Author-owned work management, independent of administrator forms. */
+.cw-toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:16px 0; }
+.cw-toolbar label { min-width:160px; }
+.cw-card { display:flex; align-items:start; gap:20px; padding:20px 0; border-bottom:1px solid var(--border-color, #444); }
+.cw-card > div:last-child { min-width:0; flex:1; }
+.cw-card h3,.cw-card h4 { overflow-wrap:anywhere; margin:0 0 12px; }
+.cw-cover { width:90px; height:126px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+.cw-default-cover { display:flex; align-items:center; justify-content:center; padding:10px; box-sizing:border-box; text-align:center; overflow-wrap:anywhere; background:linear-gradient(145deg,#34334f,#645180); color:#fff; font-weight:700; overflow:hidden; }
+#cwSettings fieldset { border:0; padding:0; margin:0; min-width:0; }
+#cwSettings label,#cwCreateForm label { display:block; margin:16px 0 6px; }
+#cwSettings .form-control { width:100%; box-sizing:border-box; }
+.cw-danger { margin-top:24px; padding:16px; border:1px solid var(--border-color,#555); border-radius:8px; }
+.cw-notice,#cwMessage { overflow-wrap:anywhere; }
+.cw-episodes { padding-left:24px; }
+.cw-episodes li { padding:12px 0; overflow-wrap:anywhere; }
+@media(max-width:540px) { .cw-card { gap:12px; } .cw-cover { width:70px; height:100px; } .cw-toolbar .btn { flex:1; } }
+/* Draft focus mode stays above studio chrome and inside the mobile visual viewport. */
+.draft-focus { position: fixed; inset: 0; z-index: 900; height: var(--draft-viewport, 100dvh); overflow: auto; background: var(--bg-color, #17171c); padding: 12px; }
+.draft-copy-list { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 0; }
+#draftConflict { padding: 16px; border: 1px solid #d9a441; border-radius: 8px; }
+#creatorDraftError { color: #ffb4ab; overflow-wrap: anywhere; }
+#creatorTab-new-ep .form-input { max-width: 100%; }
+#creatorTab-new-ep button:focus-visible { outline: 3px solid #b4c6ff; outline-offset: 2px; }
+@media(max-width: 640px) { #creatorTab-new-ep .creator-editor-actions { flex-wrap: wrap; } .draft-focus .creator-editor-textarea { min-height: 45dvh; } }

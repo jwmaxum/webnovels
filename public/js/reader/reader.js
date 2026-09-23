@@ -53,15 +53,15 @@ function renderCdgWorkCardHtml(w, options = {}) {
   }
 
   return `
-    <article class="cdg-work-card ${options.badge === 'GOLDEN' ? 'cdg-card-golden' : ''}" onclick="openWorkDetailDirect('${w.id}')" title="${w.title}">
+    <article class="cdg-work-card ${options.badge === 'GOLDEN' ? 'cdg-card-golden' : ''}" onclick="openWorkDetailDirect('${w.id}')" title="${escapeHtml(w.title)}">
       <div class="cdg-card-cover">
-        <img class="cdg-card-cover-img" src="${cover}" alt="${w.title}" loading="lazy">
+        <img class="cdg-card-cover-img" src="${cover}" alt="${escapeHtml(w.title)}" loading="lazy">
         ${rankBadgeHtml}
         ${cornerBadgeHtml}
       </div>
       <div class="cdg-card-info">
-        <span class="cdg-card-tag">${w.genre || '웹소설'}</span>
-        <h3 class="cdg-card-title">${w.title}</h3>
+        <span class="cdg-card-tag">${escapeHtml(w.genre || '웹소설')}</span>
+        <h3 class="cdg-card-title">${escapeHtml(w.title)}</h3>
         <div class="cdg-card-meta">
           <span>${authorName}</span>
           <span><i data-lucide="eye" style="width:11px;height:11px;display:inline;vertical-align:middle;"></i> ${viewFormatted}</span>
@@ -97,11 +97,11 @@ function renderCdgHeroSlider(heroWorks) {
         <div class="cdg-hero-body">
           <div class="cdg-hero-badges">
             <span class="cdg-badge-pink">🔥 실시간 추천 TOP ${index + 1}</span>
-            <span class="cdg-badge-dark">${w.genre}</span>
+            <span class="cdg-badge-dark">${escapeHtml(w.genre)}</span>
             ${isAdult ? '<span class="cdg-badge-dark" style="color:var(--cdg-pink);">19+ 성인</span>' : '<span class="cdg-badge-dark">100% 무료해금</span>'}
           </div>
-          <h2 class="cdg-hero-title">${w.title}</h2>
-          <p class="cdg-hero-desc">${w.description || '광고를 시청하면 다음 회차가 100% 무료로 해금됩니다!'}</p>
+          <h2 class="cdg-hero-title">${escapeHtml(w.title)}</h2>
+          <p class="cdg-hero-desc">${escapeHtml(w.description || '광고를 시청하면 다음 회차가 100% 무료로 해금됩니다!')}</p>
           <div class="cdg-hero-actions">
             <button class="btn btn-primary" onclick="openWorkDetailDirect('${w.id}')">
               <i data-lucide="play"></i> 지금 감상하기
@@ -536,9 +536,9 @@ function renderDiscoverWorks(explicitGenre = null) {
           </div>
           <div class="copy p-2">
             <div style="display:flex; gap:4px; margin-bottom:4px;">
-              <span class="tag ${tagClass}">${tagText}</span>
+              <span class="tag ${tagClass}">${escapeHtml(tagText)}</span>
             </div>
-            <h3 style="font-size: 0.95rem; margin: 4px 0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${w.title}</h3>
+            <h3 style="font-size: 0.95rem; margin: 4px 0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(w.title)}</h3>
             <p class="text-muted small" style="margin:0;">${getAuthorName(w)} · 조회 ${viewFormatted}</p>
           </div>
         </article>
@@ -595,10 +595,10 @@ function renderSearchResultItem(work) {
   return `
     <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect(${work.id});" style="width: 100%; border-radius: 8px; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); color: #fff;">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <img src="${cover}" alt="${work.title}" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px;">
+        <img src="${cover}" alt="${escapeHtml(work.title)}" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px;">
         <div>
-          <strong>${work.title}</strong>
-          <div class="text-muted small">${getAuthorName(work)} · ${isAdult ? '19+ 성인' : work.genre} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</div>
+          <strong>${escapeHtml(work.title)}</strong>
+          <div class="text-muted small">${getAuthorName(work)} · ${escapeHtml(isAdult ? '19+ 성인' : work.genre)} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</div>
         </div>
       </div>
       <i data-lucide="chevron-right"></i>
@@ -715,15 +715,15 @@ window.openAuthorWorksDirect = function(authorName) {
       return `
         <div class="author-work-item glass-panel" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s;">
           <div style="display: flex; align-items: center; gap: 14px; flex: 1;">
-            <img src="${cover}" alt="${work.title} 표지" style="width: 56px; height: 76px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+            <img src="${cover}" alt="${escapeHtml(work.title)} 표지" style="width: 56px; height: 76px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
             <div>
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <span class="badge badge-accent" style="font-size: 0.75rem;">${work.genre || '판타지'}</span>
+                <span class="badge badge-accent" style="font-size: 0.75rem;">${escapeHtml(work.genre || '판타지')}</span>
                 <span class="badge" style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: #fff;">총 ${epCount}화 연재</span>
               </div>
-              <h4 style="margin: 0 0 4px; font-size: 1.05rem; color: #fff; font-weight: 700;">${work.title}</h4>
+              <h4 style="margin: 0 0 4px; font-size: 1.05rem; color: #fff; font-weight: 700;">${escapeHtml(work.title)}</h4>
               <p class="text-muted small" style="margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 320px;">
-                ${work.description || '작품 소개글이 준비 중입니다.'}
+                ${escapeHtml(work.description || '작품 소개글이 준비 중입니다.')}
               </p>
             </div>
           </div>
@@ -823,12 +823,12 @@ async function renderLibraryContent(skipRemote = false) {
         let html = `
           <!-- 최신 읽은 대표 작품 (상단 하이라이트 카드) -->
           <div class="library-reading-card glass-panel mb-4" style="border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 16px;">
-            <img src="${topItem.cover}" alt="${topItem.work.title} 표지">
+            <img src="${topItem.cover}" alt="${escapeHtml(topItem.work.title)} 표지">
             <div>
               <span class="badge badge-accent" style="font-weight: 600;">${topItem.pct}% 읽음</span>
-              <h3 style="margin: 6px 0 4px; font-size: 1.15rem; color: #fff;">${topItem.work.title}</h3>
+              <h3 style="margin: 6px 0 4px; font-size: 1.15rem; color: #fff;">${escapeHtml(topItem.work.title)}</h3>
               <p class="text-muted small" style="margin-bottom: 10px;">
-                제 ${topItem.readEpNum}화 읽는 중 (총 ${topItem.totalEps}화) · ${topItem.work.genre}
+                제 ${topItem.readEpNum}화 읽는 중 (총 ${topItem.totalEps}화) · ${escapeHtml(topItem.work.genre)}
               </p>
               <div class="progress-bar-bg" style="height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); overflow: hidden; width: 100%;">
                 <div class="progress-bar-fill" style="width: ${topItem.pct}%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #6D5EF5 0%, #8B5CF6 50%, #25D1FF 100%); box-shadow: 0 0 12px rgba(109, 94, 245, 0.7);"></div>
@@ -847,14 +847,14 @@ async function renderLibraryContent(skipRemote = false) {
               ${restItems.map(item => `
                 <button class="library-row" onclick="openReaderDirect(${item.work.id}, ${item.readEpNum})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
                   <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                    <img src="${item.cover}" alt="${item.work.title} 표지" style="width: 48px; height: 64px; object-fit: cover; border-radius: 6px;">
+                    <img src="${item.cover}" alt="${escapeHtml(item.work.title)} 표지" style="width: 48px; height: 64px; object-fit: cover; border-radius: 6px;">
                     <div style="flex: 1; max-width: 400px;">
                       <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                        <strong style="font-size: 0.95rem; color: #fff;">${item.work.title}</strong>
+                        <strong style="font-size: 0.95rem; color: #fff;">${escapeHtml(item.work.title)}</strong>
                         <span class="badge" style="font-size: 0.75rem; padding: 2px 6px; background: rgba(109, 94, 245, 0.2); color: #a5b4fc;">${item.pct}%</span>
                       </div>
                       <small class="text-muted" style="display: block; font-size: 0.82rem; margin-bottom: 6px;">
-                        제 ${item.readEpNum}화 읽는 중 · ${item.work.genre}
+                        제 ${item.readEpNum}화 읽는 중 · ${escapeHtml(item.work.genre)}
                       </small>
                       <div class="progress-bar-bg" style="height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); width: 100%; overflow: hidden;">
                         <div class="progress-bar-fill" style="width: ${item.pct}%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6D5EF5, #818cf8, #25D1FF);"></div>
@@ -901,10 +901,10 @@ async function renderLibraryContent(skipRemote = false) {
         return `
           <button class="library-row" onclick="openWorkDetailDirect(${work.id})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <img src="${cover}" alt="${work.title} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
+              <img src="${cover}" alt="${escapeHtml(work.title)} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
               <div>
-                <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${work.title}</strong>
-                <small class="text-muted">${work.author} · ${work.genre}</small>
+                <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${escapeHtml(work.title)}</strong>
+                <small class="text-muted">${work.author} · ${escapeHtml(work.genre)}</small>
               </div>
             </div>
             <i data-lucide="chevron-right"></i>
@@ -1388,7 +1388,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       const images = loadedPanels;
       webtoonViewerEl.innerHTML = images.map(imgSrc => `
         <div class="webtoon-cut" style="margin: 0 auto; max-width: 720px; text-align: center;">
-          <img src="${imgSrc}" alt="${work.title} ${ep.title}" style="width: 100%; height: auto; display: block; margin-bottom: 2px; border-radius: 4px;" loading="lazy">
+          <img src="${imgSrc}" alt="${escapeHtml(work.title)} ${ep.title}" style="width: 100%; height: auto; display: block; margin-bottom: 2px; border-radius: 4px;" loading="lazy">
         </div>
       `).join('');
     }
@@ -1686,237 +1686,20 @@ if (document.readyState === 'loading') {
 
 
 async function handleMemberLogin() {
-  const loginIdentifier = document.getElementById('loginEmail')?.value.trim();
-  const password = document.getElementById('loginPassword')?.value.trim();
-  
-  if (!loginIdentifier || !password) {
-    showToast('아이디 또는 이메일과 비밀번호를 입력해주세요.');
-    return;
-  }
-
-  isAdminLoggedIn = false;
-  localStorage.removeItem('webnovels_admin_token');
-
   try {
-    // 1. 관리자 계정 로그인 시도
-    if (window.WebNovelsAdmin?.login) {
-      try {
-        const adminRes = await window.WebNovelsAdmin.login(loginIdentifier, password);
-        if (adminRes && adminRes.success && adminRes.admin) {
-          isAdminLoggedIn = true;
-          closeAllModals();
-          const admin = adminRes.admin;
-          localStorage.removeItem('webnovels_creator');
-  localStorage.removeItem('webnovels_author');
-          const adminEmail = admin.email || (loginIdentifier.includes('@') ? loginIdentifier : `${loginIdentifier}@webnovels.com`);
-          const adminNickname = admin.nickname || (admin.role === 'SUPER_ADMIN' ? '최고관리자' : (admin.username || loginIdentifier));
-          
-          const adminUserObj = {
-            id: admin.id || 'admin-root',
-            username: admin.username || loginIdentifier,
-            nickname: adminNickname,
-            email: adminEmail,
-            role: admin.role || 'SUPER_ADMIN',
-            isAdultVerified: true
-          };
-          localStorage.setItem('webnovels_user', JSON.stringify(adminUserObj));
-          localStorage.setItem('webnovels_token', `admin-token-${admin.id}`);
-          localStorage.setItem('webnovels_admin_token', `admin-token-${admin.id}`);
-          
-          updateMemberHeader(adminUserObj);
-          showToast(`🔑 관리자 로그인 성공! (${adminUserObj.nickname})`);
-          switchWebNovelsView('view-admin-cms');
-          return;
-        }
-      } catch (adminErr) {
-        console.warn('[Admin Login Check]', adminErr);
-      }
-    }
-
-    // 2. 작가 계정 로그인 시도
-    if (window.WebNovelsAdmin?.authorLogin) {
-      try {
-        const authorRes = await window.WebNovelsAdmin.authorLogin(loginIdentifier, password);
-        if (authorRes && authorRes.success && authorRes.author) {
-          const author = authorRes.author;
-          const authorObj = {
-            id: author.id,
-            username: author.username,
-            email: author.email || (loginIdentifier.includes('@') ? loginIdentifier : `${author.username}@webnovels.com`),
-            pen_name: author.pen_name || author.username,
-            bio: author.bio || '',
-            status: author.status || 'APPROVED',
-            role: 'AUTHOR'
-          };
-          localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
-          localStorage.setItem('webnovels_creator', JSON.stringify(authorObj));
-          localStorage.setItem('webnovels_token', `author-${authorObj.id}`);
-          localStorage.removeItem('webnovels_user');
-          
-          updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
-          closeAllModals();
-          showToast(`✍️ 작가 로그인 성공! (${authorObj.pen_name} 작가님)`);
-          switchWebNovelsView('view-creator');
-          return;
-        }
-      } catch (authErr) {
-        console.warn('[Author Login Check]', authErr);
-      }
-    }
-
-    // 3. 일반 독자 계정 로그인 시도
-    if (window.WebNovelsAdmin?.readerLogin) {
-      try {
-        const rRes = await window.WebNovelsAdmin.readerLogin(loginIdentifier, password);
-        if (rRes?.success && rRes.reader) {
-          const reader = rRes.reader;
-          const userObj = {
-            id: reader.id,
-            username: reader.username,
-            nickname: reader.nickname || reader.username,
-            email: reader.email || loginIdentifier,
-            phone: reader.phone || '',
-            subscription_status: reader.subscription_status || '일반 회원',
-            isAdultVerified: !!reader.is_adult_verified,
-            role: 'READER'
-          };
-
-          localStorage.setItem('webnovels_user', JSON.stringify(userObj));
-          localStorage.setItem('webnovels_token', `reader-${reader.id}`);
-          localStorage.removeItem('webnovels_creator');
-  localStorage.removeItem('webnovels_author');
-
-          // Supabase DB에서 최신 활동 내역(독서이력, 관심작품, 구독작가) 즉시 조회 및 동기화
-          if (window.WebNovelsAdmin?.fetchReaderActivity) {
-            try {
-              const remoteAct = await window.WebNovelsAdmin.fetchReaderActivity(reader.username || reader.email || reader.id);
-              if (remoteAct) {
-                syncUserActivityToStorage(remoteAct);
-                if (remoteAct.nickname) userObj.nickname = remoteAct.nickname;
-                if (remoteAct.isAdultVerified !== undefined) userObj.isAdultVerified = remoteAct.isAdultVerified;
-              }
-            } catch (actErr) {
-              console.warn('[fetchReaderActivity on Login]', actErr);
-            }
-          }
-          if (window.ReaderPreferencesManager) {
-            window.ReaderPreferencesManager.syncRemote(reader.username || reader.email || reader.id);
-          }
-          syncUserActivityToStorage({
-            readingHistory: reader.reading_history || [],
-            favorites: reader.favorites || [],
-            subscribedAuthors: reader.subscribed_authors || [],
-            isAdultVerified: reader.is_adult_verified
-          });
-
-          updateMemberHeader(userObj);
-          renderLibraryContent();
-          closeAllModals();
-          showToast(`🎉 ${userObj.nickname}님 환영합니다! 로그인되었습니다.`);
-          switchWebNovelsView('view-mypage');
-          return;
-        }
-      } catch (rErr) {
-        console.warn('[Reader Login Check]', rErr);
-      }
-    }
-
-    // 4. 백엔드 REST API 로그인 시도 (/api/auth/login)
-    try {
-      const apiRes = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginIdentifier, username: loginIdentifier, password })
-      });
-      if (apiRes.ok) {
-        const apiData = await apiRes.json();
-        if (apiData?.user) {
-          const user = apiData.user;
-          localStorage.setItem('webnovels_token', apiData.token || `token-${user.id}`);
-          if (user.role === 'AUTHOR' || user.role === 'CREATOR') {
-            const authorObj = {
-              id: user.author?.id || user.id,
-              username: user.username,
-              email: user.email,
-              pen_name: user.author?.penName || user.nickname || user.username,
-              role: 'AUTHOR'
-            };
-            localStorage.setItem('webnovels_author', JSON.stringify(authorObj));
-            localStorage.setItem('webnovels_creator', JSON.stringify(authorObj));
-            localStorage.removeItem('webnovels_user');
-            updateMemberHeader({ ...authorObj, role: 'AUTHOR' });
-            closeAllModals();
-            showToast(`✍️ 작가 로그인 성공! (${authorObj.pen_name} 작가님)`);
-            switchWebNovelsView('view-creator');
-            return;
-          } else {
-            const userObj = {
-              id: user.id,
-              username: user.username,
-              nickname: user.nickname || user.username,
-              email: user.email,
-              role: 'READER'
-            };
-            localStorage.setItem('webnovels_user', JSON.stringify(userObj));
-            localStorage.removeItem('webnovels_creator');
-            localStorage.removeItem('webnovels_author');
-            updateMemberHeader(userObj);
-            renderLibraryContent();
-            closeAllModals();
-            showToast(`🎉 ${userObj.nickname}님 환영합니다! 로그인되었습니다.`);
-            switchWebNovelsView('view-mypage');
-            return;
-          }
-        }
-      }
-    } catch (apiErr) {
-      console.warn('[Backend Auth Login Check]', apiErr);
-    }
-
-    showToast('❌ 아이디 또는 비밀번호가 일치하지 않거나 등록되지 않은 계정입니다.');
-  } catch (err) {
-    console.error('[handleMemberLogin Error]', err);
-    showToast(`❌ 로그인 처리 오류: ${err.message}`);
+    const actor = await window.WebNovelsAuth.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+    closeAllModals();
+    switchWebNovelsView(actor.admin ? 'view-admin-cms' : actor.author ? 'view-creator' : 'view-mypage');
+    showToast('로그인되었습니다.');
+  } catch (error) {
+    showToast(window.WebNovelsAuth.message(error));
+    if (error.code === 'ACCOUNT_NOT_LINKED') window.showAuthOnboarding();
   }
 }
-
-
-window.handleMemberLogout = function() {
-  localStorage.removeItem('webnovels_token');
-  localStorage.removeItem('webnovels_user');
-  localStorage.removeItem('webnovels_creator');
-  localStorage.removeItem('webnovels_author');
-  localStorage.removeItem('webnovels_admin_token');
-  localStorage.removeItem('token');
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('webnovels_reading_history');
-  localStorage.removeItem('webnovels_favorites');
-  localStorage.removeItem('webnovels_subscribed_creators');
-  localStorage.removeItem('webnovels_subscribed_authors');
-  isAdminLoggedIn = false;
-  currentLoggedAuthor = null;
-  currentLoggedCreator = null;
-  window.currentLoggedAuthor = null;
-  window.currentLoggedCreator = null;
-  window.isAdminLoggedIn = false;
-  window._isAdultVerified = false;
-
-  if (window.WebNovelsAdmin?.logout) {
-    try { window.WebNovelsAdmin.logout(); } catch (e) {}
-  }
-
-  document.body?.setAttribute('data-user-role', 'GUEST');
-  if (typeof updateMemberHeader === 'function') {
-    updateMemberHeader(null);
-  }
-  if (typeof renderLibraryContent === 'function') {
-    renderLibraryContent();
-  }
-  showToast('로그아웃되었습니다.');
-  if (typeof switchWebNovelsView === 'function') {
-    switchWebNovelsView('view-home');
-  }
-  if (window.lucide) window.lucide.createIcons();
+window.handleMemberLogout = async function() {
+  try { await window.WebNovelsAuth.logout(); showToast('로그아웃되었습니다.'); }
+  catch(error) { showToast(window.WebNovelsAuth.message(error)); }
+  switchWebNovelsView('view-home');
 };
 
 window.handleAuthorLogoutProcess = window.handleMemberLogout;
@@ -2026,243 +1809,25 @@ function setupPasswordMatchCheckers() {
   aPw2?.addEventListener('input', aCheck);
 }
 
-async function handleMemberSignup() {
-  const nickname = document.getElementById('signupNickname')?.value.trim();
-  const email = document.getElementById('signupEmail')?.value.trim();
-  const password = document.getElementById('signupPassword')?.value.trim();
-  const passwordConfirm = document.getElementById('signupPasswordConfirm')?.value.trim();
-  const phone = document.getElementById('signupPhone')?.value.trim();
-
-  if (!nickname || !email || !password) {
-    showToast('Nickname(별명), email ID, 비밀번호는 필수 입력 항목입니다.');
-    return;
-  }
-
-  if (password.length < 6) {
-    showToast('비밀번호는 최소 6자 이상이어야 합니다.');
-    return;
-  }
-
-  if (password !== passwordConfirm) {
-    showToast('❌ 입력하신 두 비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
-    document.getElementById('signupPasswordConfirm')?.focus();
-    return;
-  }
-
-  const effectiveUsername = nickname;
-
-  // 0. 가입 전 Supabase 중복 체크 (기존 활동 내역 초기화 방지)
-  if (window.WebNovelsAdmin?.checkReaderExists) {
-    const isExists = await window.WebNovelsAdmin.checkReaderExists(effectiveUsername, email);
-    if (isExists) {
-      showToast('❌ 이미 가입된 이메일 또는 별명(아이디)입니다. [로그인] 메뉴를 이용해주세요.');
-      return;
-    }
-  }
-
-  // 1. 백엔드 API 회원가입 시도
+async function submitAuthSignup(kind) {
+  const author = kind === 'author';
+  const value = id => document.getElementById(id)?.value || '';
+  const password = value(author ? 'authorPassword' : 'signupPassword');
+  if (password !== value(author ? 'authorPasswordConfirm' : 'signupPasswordConfirm')) { showToast('비밀번호가 일치하지 않습니다.'); return; }
   try {
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        nickname, 
-        username: effectiveUsername, 
-        email, 
-        password, 
-        phone, 
-        role: 'READER' 
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const userObj = {
-        id: data.user?.id || 'user-' + Date.now(),
-        username: data.user?.username || effectiveUsername,
-        nickname: data.user?.nickname || nickname,
-        email: data.user?.email || email,
-        phone: phone || '',
-        isAdultVerified: false,
-        role: 'READER'
-      };
-      localStorage.setItem('webnovels_token', data.token || `token-${userObj.id}`);
-      localStorage.setItem('webnovels_user', JSON.stringify(userObj));
-      localStorage.removeItem('webnovels_creator');
-  localStorage.removeItem('webnovels_author');
-
-      // Supabase readers 테이블 실시간 등록 동기화
-      if (window.WebNovelsAdmin?.createReaderInDB) {
-        const createdRes = await window.WebNovelsAdmin.createReaderInDB({
-          username: userObj.username,
-          email: userObj.email,
-          nickname: userObj.nickname,
-          password: password,
-          phone: userObj.phone,
-          isAdultVerified: false,
-          readingHistory: [],
-          favorites: [],
-          subscribedAuthors: []
-        });
-        if (!createdRes?.success || !createdRes.reader) return showToast('계정 프로필 저장에 실패했습니다. 다시 로그인하거나 관리자에게 문의해 주세요.');
-      if (createdRes?.success && createdRes.reader) {
-          userObj.id = createdRes.reader.id;
-          localStorage.setItem('webnovels_user', JSON.stringify(userObj));
-        }
-      }
-
-      updateMemberHeader(userObj);
-      renderLibraryContent();
-      closeAllModals();
-      showToast(`🎉 ${userObj.nickname}님 회원가입이 완료되었습니다!`);
-      switchWebNovelsView('view-mypage');
-      return;
-    }
-  } catch (err) {
-    // Cloudflare Pages 등 정적 호스팅 환경에서는 로컬 세션으로 자동 처리
-  }
-
-  // 2. 로컬/정적 환경 회원가입 처리 (Supabase DB 직접 생성)
-  const userObj = {
-    id: 'user-' + Date.now(),
-    username: effectiveUsername,
-    nickname: nickname,
-    email: email,
-    phone: phone || '',
-    isAdultVerified: false,
-    role: 'READER'
-  };
-
-  // Supabase readers 테이블 실시간 등록
-  if (window.WebNovelsAdmin?.createReaderInDB) {
-    try {
-      const createdRes = await window.WebNovelsAdmin.createReaderInDB({
-        username: userObj.username,
-        email: userObj.email,
-        nickname: userObj.nickname,
-        password: password,
-        phone: userObj.phone,
-        isAdultVerified: false,
-        readingHistory: [],
-        favorites: [],
-        subscribedAuthors: []
-      });
-      if (!createdRes?.success || !createdRes.reader) return showToast('계정 프로필 저장에 실패했습니다. 다시 로그인하거나 관리자에게 문의해 주세요.');
-      if (createdRes?.success && createdRes.reader) {
-        userObj.id = createdRes.reader.id;
-      }
-    } catch (e) {
-      console.warn('[Signup createReaderInDB Error]', e);
-      return showToast('가입 정보를 저장하지 못했습니다.');
-    }
-  }
-
-  localStorage.setItem('webnovels_token', `token-${userObj.id}`);
-  localStorage.setItem('webnovels_user', JSON.stringify(userObj));
-  localStorage.removeItem('webnovels_creator');
-  localStorage.removeItem('webnovels_author');
-
-  updateMemberHeader(userObj);
-  renderLibraryContent();
-  closeAllModals();
-  showToast(`🎉 ${userObj.nickname}님 회원가입이 완료되었습니다!`);
-  switchWebNovelsView('view-mypage');
+    const message = await window.WebNovelsAuth.signup(kind, value(author ? 'authorEmail' : 'signupEmail'), password, value(author ? 'authorPenName' : 'signupNickname'));
+    showToast(message);
+  } catch(error) { showToast(window.WebNovelsAuth.message(error)); }
 }
-
-
-async function handleAuthorSignup() {
-  const penName = document.getElementById('authorPenName')?.value.trim();
-  const email = document.getElementById('authorEmail')?.value.trim();
-  const password = document.getElementById('authorPassword')?.value.trim();
-  const passwordConfirm = document.getElementById('authorPasswordConfirm')?.value.trim();
-  const workTitle = document.getElementById('authorWorkTitle')?.value.trim();
-  const bankInfo = document.getElementById('authorBankInfo')?.value.trim();
-
-  if (!penName || !email || !password) {
-    showToast('Nickname/필명, email ID, 비밀번호는 필수 입력 항목입니다.');
-    return;
-  }
-
-  if (password.length < 6) {
-    showToast('비밀번호는 최소 6자 이상이어야 합니다.');
-    return;
-  }
-
-  if (password !== passwordConfirm) {
-    showToast('❌ 입력하신 두 비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
-    document.getElementById('authorPasswordConfirm')?.focus();
-    return;
-  }
-
-  showToast('작가 가입은 계정 인증 연동 준비 중입니다. 가입이 처리되지 않았습니다.');
-}
-
-function getCurrentAuthorSession() {
-  try {
-    const raw = localStorage.getItem('webnovels_author') || localStorage.getItem('webnovels_creator');
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
-}
+async function handleMemberSignup() { return submitAuthSignup('reader'); }
+async function handleAuthorSignup() { return submitAuthSignup('author'); }
+function getCurrentAuthorSession() { return window.WebNovelsAuth?.getActor()?.author || null; }
 
 function getCurrentCreatorSession() {
   return getCurrentAuthorSession();
 }
 
-async function loadMyProfile() {
-  try {
-    const authorSession = typeof getCurrentCreatorSession === 'function' ? getCurrentCreatorSession() : getCurrentAuthorSession();
-    if (authorSession) {
-      isAdminLoggedIn = false;
-      updateMemberHeader({ ...authorSession, role: 'CREATOR' });
-      return;
-    }
-
-    const savedUser = localStorage.getItem('webnovels_user');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'SUB_ADMIN') {
-          isAdminLoggedIn = true;
-          user.email = user.email || (user.username && user.username.includes('@') ? user.username : `${user.username || 'admin'}@webnovels.com`);
-          user.nickname = user.nickname || (user.role === 'SUPER_ADMIN' ? '최고관리자' : (user.username || '운영관리자'));
-          localStorage.setItem('webnovels_user', JSON.stringify(user));
-          
-          const badge = document.getElementById('adminRoleBadge');
-          if (badge) {
-            badge.textContent = `${user.role} 로그인됨`;
-            badge.className = 'badge badge-primary';
-          }
-          if (document.getElementById('btnAdminLogout')) {
-            document.getElementById('btnAdminLogout').style.display = 'inline-block';
-          }
-        } else {
-          isAdminLoggedIn = false;
-        }
-        updateMemberHeader(user);
-
-        if (window.WebNovelsAdmin?.fetchReaderActivity) {
-          const remoteAct = await window.WebNovelsAdmin.fetchReaderActivity(user.username || user.email || user.id);
-          if (remoteAct) {
-            syncUserActivityToStorage(remoteAct);
-            if (remoteAct.isAdultVerified !== undefined) user.isAdultVerified = remoteAct.isAdultVerified;
-            if (remoteAct.nickname) user.nickname = remoteAct.nickname;
-            localStorage.setItem('webnovels_user', JSON.stringify(user));
-            updateMemberHeader(user);
-          }
-        }
-        return;
-      } catch (e) {
-        console.warn('저장된 사용자 파싱 실패', e);
-      }
-    } else {
-      isAdminLoggedIn = false;
-      updateMemberHeader(null);
-    }
-  } catch(err) {
-    console.warn('[loadMyProfile] 에러 방지:', err);
-  }
-}
+async function loadMyProfile() { await window.WebNovelsAuth.init(); }
 
 function updateMemberHeader(user) {
   const profileMenu = document.getElementById('userProfileMenu');
@@ -2292,7 +1857,7 @@ function updateMemberHeader(user) {
     // 헤더 우측 상단 프로필 영역 렌더링
     if (profileMenu) {
       if (isAdmin) {
-        const adminName = user.nickname || user.username || user.role || 'SUPER_ADMIN';
+        const adminName = escapeHtml(user.nickname || user.username || user.role || '관리자');
         profileMenu.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
             <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-admin-cms')" style="display: flex; align-items: center; gap: 6px; border-color: var(--primary-color); color: #fff;">
@@ -2305,7 +1870,7 @@ function updateMemberHeader(user) {
           </div>
         `;
       } else if (isAuthor) {
-        const displayName = `${user.pen_name || user.nickname} 작가님`;
+        const displayName = `${escapeHtml(user.pen_name || user.nickname || "")} 작가님`;
         profileMenu.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
             <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-creator')" style="display: flex; align-items: center; gap: 6px;">
@@ -2318,7 +1883,7 @@ function updateMemberHeader(user) {
           </div>
         `;
       } else {
-        const displayName = `${user.nickname || user.username}님`;
+        const displayName = `${escapeHtml(user.nickname || user.username || "")}님`;
         profileMenu.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
             <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-mypage')" style="display: flex; align-items: center; gap: 6px;">

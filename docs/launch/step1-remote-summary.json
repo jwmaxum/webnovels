@@ -1,0 +1,90 @@
+{
+  "checkedAt": "2026-09-23T01:38:12.499Z",
+  "method": "HEAD only: no row values or content fetched",
+  "schemaManagement": {
+    "http": 401
+  },
+  "counts": {
+    "author_settlements": {
+      "http": 401,
+      "count": null
+    },
+    "readers": {
+      "http": 200,
+      "count": 11
+    },
+    "reports": {
+      "http": 200,
+      "count": 8
+    },
+    "episode_drafts": {
+      "http": 200,
+      "count": 2
+    },
+    "admin_users": {
+      "http": 200,
+      "count": 4
+    },
+    "episode_draft_revisions": {
+      "http": 200,
+      "count": 0
+    },
+    "authors": {
+      "http": 200,
+      "count": 30
+    },
+    "content_reviews": {
+      "http": 200,
+      "count": 12
+    },
+    "author_earnings": {
+      "http": 200,
+      "count": 90
+    },
+    "works": {
+      "http": 200,
+      "count": 30
+    },
+    "episodes": {
+      "http": 200,
+      "count": 180
+    }
+  },
+  "authMapping": {
+    "authors": {
+      "http": 200,
+      "count": 0
+    },
+    "admin_users": {
+      "http": 400,
+      "count": null
+    },
+    "readers": {
+      "http": 400,
+      "count": null
+    }
+  },
+  "anonymousColumnAccess": {
+    "admin_users": {
+      "http": 200,
+      "count": 4
+    },
+    "authors": {
+      "http": 200,
+      "count": 30
+    },
+    "readers": {
+      "http": 200,
+      "count": 11
+    },
+    "nonFreeEpisodeContent": {
+      "http": 200,
+      "count": 90
+    }
+  },
+  "configPresence": {
+    "managementToken": true,
+    "serverKey": true,
+    "publicKey": true
+  }
+}

@@ -1,0 +1,200 @@
+-- Step 4. Reviewed, additive deployment; does not activate any route.
+begin;
+do $$ begin
+  if current_setting('webnovels.authoring_apply_verified',true) is distinct from 'true'
+    or not exists(select 1 from authoring.migrations where version='authoring-004') then
+    raise exception 'Reviewed authoring-004 prerequisite required';
+  end if;
+end $$;
+alter table public.works add column if not exists author text;
+do $$ begin
+  if exists(select 1 from authoring.work_state s join public.works w on w.id=s.work_id
+    where (s.visibility='PUBLIC') is distinct from (coalesce(w.status::text,'') in ('PUBLISHED','ONGOING','PAUSED','COMPLETED'))) then
+    raise exception 'Reconcile legacy visibility and work_state before applying authoring-005';
+  end if;
+end $$;
+alter table authoring.work_state add column if not exists version bigint not null default 1;
+alter table authoring.work_state add column if not exists rating_confirmed boolean not null default false;
+alter table authoring.work_state add column if not exists ai_confirmed boolean not null default false;
+create table if not exists authoring.work_create_requests (
+  user_id uuid not null references auth.users(id), request_key uuid not null,
+  title text not null, work_id bigint not null references public.works(id) on delete restrict,
+  created_at timestamptz not null default now(), primary key(user_id,request_key)
+);
+alter table authoring.work_create_requests enable row level security;
+revoke all on authoring.work_create_requests from public,anon,authenticated,service_role;
+create table if not exists authoring.cancelled_episode_schedules (
+  id uuid primary key default gen_random_uuid(), work_id bigint not null,
+  episode_id bigint not null, previous_status text, scheduled_at timestamptz,
+  cancelled_at timestamptz not null default now(),
+  foreign key(episode_id,work_id) references public.episodes(id,work_id) on delete restrict
+);
+alter table authoring.cancelled_episode_schedules enable row level security;
+revoke all on authoring.cancelled_episode_schedules from public,anon,authenticated,service_role;
+
+-- Preserve original works/IDs/owner links. Unknown legacy states are never treated as clear.
+insert into authoring.work_state(work_id,author_id,visibility,serial_state,moderation_state,moderation_reason,rating_confirmed,ai_confirmed)
+select id,author_id,
+  case when status::text in ('PUBLISHED','ONGOING','PAUSED','COMPLETED') then 'PUBLIC' else 'PRIVATE' end,
+  case status::text when 'PAUSED' then 'HIATUS' when 'COMPLETED' then 'COMPLETED' else 'ONGOING' end,
+  case when status::text in ('DRAFT','PUBLISHED','ONGOING','PAUSED','COMPLETED') then 'CLEAR' else 'RESTRICTED' end,
+  case when status::text in ('DRAFT','PUBLISHED','ONGOING','PAUSED','COMPLETED') then null else '기존 운영 상태 확인 필요' end,
+  coalesce(rating in ('ALL','AGE_15','AGE_19'),false),coalesce(ai_usage_type in ('NONE','ASSISTED','GENERATED'),false)
+from public.works on conflict(work_id) do nothing;
+
+create or replace function authoring.creator_work_json(p_work_id bigint) returns jsonb
+language sql stable set search_path='' as $$
+select jsonb_build_object(
+  'id',w.id::text,'title',w.title,'description',coalesce(w.description,''),'genre',w.genre,'tags',w.tags,
+  'rating',w.rating,'ai_usage_type',w.ai_usage_type,'cover_image',w.cover_image,
+  'visibility',s.visibility,'serial_state',s.serial_state,'moderation_state',s.moderation_state,
+  'moderation_reason',s.moderation_reason,'trashed_at',s.trashed_at,'version',s.version::text,
+  'rating_confirmed',s.rating_confirmed,'ai_confirmed',s.ai_confirmed,
+  'episode_count',(select count(*) from public.episodes e where e.work_id=w.id),
+  'pending_schedule_count',(select count(*) from authoring.schedules q join public.episodes e on e.id=q.episode_id where e.work_id=w.id and q.status in ('PENDING','RUNNING')),
+  'publication_missing',to_jsonb(array_remove(array[
+    case when length(btrim(coalesce(w.description,'')))=0 then '소개' end,
+    case when coalesce(cardinality(w.genre),0)=0 then '장르' end,
+    case when not s.rating_confirmed then '이용등급' end,
+    case when not s.ai_confirmed then 'AI 사용 표기' end
+  ],null))
+) from public.works w join authoring.work_state s on s.work_id=w.id where w.id=p_work_id;
+$$;
+revoke all on function authoring.creator_work_json(bigint) from public,anon,authenticated,service_role;
+
+create or replace function public.creator_works(
+  p_user_id uuid, p_action text, p_work_id bigint default null, p_data jsonb default '{}',
+  p_key uuid default null, p_filter text default 'all', p_after bigint default 0
+) returns jsonb language plpgsql security definer set search_path='' as $$
+declare a public.authors; w public.works; s authoring.work_state; prior authoring.work_create_requests;
+  result jsonb; ids bigint[]; new_title text;
+begin
+  select * into a from public.authors where auth_user_id=p_user_id for update;
+  if not found or a.status::text <> 'APPROVED' then return jsonb_build_object('error','AUTHOR_REQUIRED','status',403); end if;
+  if not exists(select 1 from auth.users where id=p_user_id and email_confirmed_at is not null and is_anonymous is not true and (banned_until is null or banned_until<=now()))
+    or exists(select 1 from public.readers where auth_user_id=p_user_id and status::text is distinct from 'ACTIVE')
+    or exists(select 1 from public.admin_users where auth_user_id=p_user_id and is_active is distinct from true) then
+    return jsonb_build_object('error','ACCOUNT_INACTIVE','status',403);
+  end if;
+  if p_action not in ('list','get','create','update','trash','restore') or p_action is null or jsonb_typeof(p_data) is distinct from 'object' then
+    return jsonb_build_object('error','INVALID_REQUEST','status',400);
+  end if;
+  if p_action='list' then
+    if exists(select 1 from public.works lw left join authoring.work_state ls on ls.work_id=lw.id where lw.author_id=a.id and ls.work_id is null) then
+      return jsonb_build_object('error','WORK_STATE_MIGRATION_REQUIRED','status',503);
+    end if;
+    if exists(select 1 from public.works lw join authoring.work_state ls on ls.work_id=lw.id where lw.author_id=a.id and
+      (ls.visibility='PUBLIC') is distinct from (coalesce(lw.status::text,'') in ('PUBLISHED','ONGOING','PAUSED','COMPLETED'))) then
+      return jsonb_build_object('error','WORK_STATE_MIGRATION_REQUIRED','status',503);
+    end if;
+    if p_filter not in ('all','draft','public','trash') or p_filter is null or p_after<0 then return jsonb_build_object('error','INVALID_FILTER','status',400); end if;
+    select array_agg(id order by id) into ids from (
+      select lw.id from public.works lw join authoring.work_state ls on ls.work_id=lw.id
+      where lw.author_id=a.id and lw.id>p_after and
+        case p_filter when 'trash' then ls.trashed_at is not null
+          when 'draft' then ls.trashed_at is null and ls.visibility='PRIVATE'
+          when 'public' then ls.trashed_at is null and ls.visibility='PUBLIC'
+          else ls.trashed_at is null end
+      order by lw.id limit 51
+    ) page;
+    select coalesce(jsonb_agg(authoring.creator_work_json(id) order by id),'[]') into result from unnest(ids[1:50]) id;
+    return jsonb_build_object('works',result,'nextCursor',case when cardinality(ids)>50 then ids[50]::text else null end);
+  end if;
+  if p_action in ('create','update') then
+    if exists(select 1 from jsonb_object_keys(p_data) k where k not in ('title','description','genre','tags','rating','ai_usage_type','serial_state','visibility','version'))
+      or (p_action='create' and (p_key is null or (p_data-'title')<>'{}')) then
+      return jsonb_build_object('error','FIELD_NOT_ALLOWED','status',400);
+    end if;
+    if (p_action='create' and not p_data?'title') or (p_data?'title' and (jsonb_typeof(p_data->'title')<>'string' or length(btrim(p_data->>'title')) not between 1 and 200))
+      or (p_data?'description' and (jsonb_typeof(p_data->'description')<>'string' or length(p_data->>'description')>5000)) then
+      return jsonb_build_object('error','INVALID_FIELD','status',400);
+    end if;
+    foreach new_title in array array['genre','tags'] loop
+      if p_data?new_title then
+        if jsonb_typeof(p_data->new_title)<>'array' then return jsonb_build_object('error','INVALID_FIELD','status',400); end if;
+        if jsonb_array_length(p_data->new_title)>10 or exists(select 1 from jsonb_array_elements(p_data->new_title) v where jsonb_typeof(v)<>'string' or length(btrim(v#>>'{}')) not between 1 and 30) then
+          return jsonb_build_object('error','INVALID_FIELD','status',400);
+        end if;
+      end if;
+    end loop;
+    if (p_data?'rating' and coalesce(p_data->>'rating','') not in ('ALL','AGE_15','AGE_19'))
+      or (p_data?'ai_usage_type' and coalesce(p_data->>'ai_usage_type','') not in ('NONE','ASSISTED','GENERATED'))
+      or (p_data?'serial_state' and coalesce(p_data->>'serial_state','') not in ('ONGOING','HIATUS','COMPLETED'))
+      or (p_data?'visibility' and coalesce(p_data->>'visibility','')<>'PRIVATE') then
+      return jsonb_build_object('error','INVALID_FIELD','status',400);
+    end if;
+  end if;
+  if p_action='create' then
+    new_title:=btrim(p_data->>'title');
+    select * into prior from authoring.work_create_requests where user_id=p_user_id and request_key=p_key;
+    if found then
+      if prior.title<>new_title then return jsonb_build_object('error','IDEMPOTENCY_CONFLICT','status',409); end if;
+      return jsonb_build_object('work',authoring.creator_work_json(prior.work_id),'created',false);
+    end if;
+    -- Literal DRAFT works with both legacy text checks and the normalized enum.
+    insert into public.works(author_id,title,author,genre,tags,description,rating,ai_usage_type,status,content_type,is_completed,is_top_recommended,is_popular_work,is_new_work)
+      values(a.id,new_title,a.pen_name,'{}','{}','','ALL','NONE','DRAFT','NOVEL',false,false,false,false) returning * into w;
+    insert into authoring.work_state(work_id,author_id) values(w.id,a.id);
+    insert into authoring.work_create_requests(user_id,request_key,title,work_id) values(p_user_id,p_key,new_title,w.id);
+    return jsonb_build_object('work',authoring.creator_work_json(w.id),'created',true);
+  end if;
+  select * into w from public.works where id=p_work_id and author_id=a.id for update;
+  if not found then return jsonb_build_object('error','WORK_NOT_FOUND','status',404); end if;
+  select * into s from authoring.work_state where work_id=w.id for update;
+  if not found then return jsonb_build_object('error','WORK_STATE_MIGRATION_REQUIRED','status',503); end if;
+  if (s.visibility='PUBLIC') is distinct from (coalesce(w.status::text,'') in ('PUBLISHED','ONGOING','PAUSED','COMPLETED')) then
+    return jsonb_build_object('error','WORK_STATE_MIGRATION_REQUIRED','status',503);
+  end if;
+  if p_action='get' then
+    select coalesce(jsonb_agg(jsonb_build_object('id',e.id::text,'episode_number',e.episode_number,'title',e.title,'status',e.status,'scheduled_at',e.scheduled_at) order by e.episode_number),'[]') into result
+      from public.episodes e where work_id=w.id;
+    return jsonb_build_object('work',authoring.creator_work_json(w.id),'episodes',result);
+  end if;
+  if coalesce(p_data->>'version','') !~ '^[1-9][0-9]{0,17}$' then return jsonb_build_object('error','VERSION_REQUIRED','status',400); end if;
+  if (p_data->>'version')::bigint<>s.version then return jsonb_build_object('error','WORK_CONFLICT','status',409); end if;
+  if p_action in ('trash','restore') and (p_data-'version')<>'{}' then return jsonb_build_object('error','FIELD_NOT_ALLOWED','status',400); end if;
+  if p_action='update' and s.trashed_at is not null then return jsonb_build_object('error','WORK_TRASHED','status',409); end if;
+  if p_action='restore' and s.trashed_at is null then return jsonb_build_object('work',authoring.creator_work_json(w.id)); end if;
+  if p_action='trash' and s.trashed_at is not null then return jsonb_build_object('work',authoring.creator_work_json(w.id)); end if;
+  if p_action='update' and s.moderation_state<>'CLEAR' then return jsonb_build_object('error','WORK_RESTRICTED','status',403); end if;
+  if p_action='update' and s.visibility='PUBLIC' and p_data?'rating' and p_data->>'rating'<>w.rating then
+    return jsonb_build_object('error','RATING_REVIEW_REQUIRED','status',409);
+  end if;
+  if p_action in ('trash','restore') or p_data?'visibility' then
+    perform 1 from authoring.schedules q join public.episodes e on e.id=q.episode_id where e.work_id=w.id for update of q;
+    if exists(select 1 from authoring.schedules q join public.episodes e on e.id=q.episode_id where e.work_id=w.id and q.status='RUNNING') then
+      return jsonb_build_object('error','SCHEDULE_RUNNING','status',409);
+    end if;
+    update authoring.schedules q set status='CANCELLED',updated_at=now() from public.episodes e where e.id=q.episode_id and e.work_id=w.id and q.status='PENDING';
+    -- Preserve legacy schedule metadata as evidence; never silently reactivate it on restore.
+    perform 1 from public.episodes where work_id=w.id for update;
+    insert into authoring.cancelled_episode_schedules(work_id,episode_id,previous_status,scheduled_at)
+      select work_id,id,status::text,scheduled_at from public.episodes where work_id=w.id and (status::text='SCHEDULED' or (status::text in ('DRAFT','PUBLISHED') and scheduled_at>now()));
+    update public.episodes set status='DRAFT',scheduled_at=null where work_id=w.id and (status::text='SCHEDULED' or (status::text in ('DRAFT','PUBLISHED') and scheduled_at>now()));
+    update public.works set status='DRAFT' where id=w.id;
+    update authoring.work_state set visibility='PRIVATE',trashed_at=case when p_action='trash' then now() else null end where work_id=w.id;
+  end if;
+  if p_action='update' then
+    update public.works set
+      title=case when p_data?'title' then btrim(p_data->>'title') else title end,
+      description=case when p_data?'description' then p_data->>'description' else description end,
+      genre=case when p_data?'genre' then array(select jsonb_array_elements_text(p_data->'genre')) else genre end,
+      tags=case when p_data?'tags' then array(select jsonb_array_elements_text(p_data->'tags')) else tags end,
+      rating=coalesce(p_data->>'rating',rating),ai_usage_type=coalesce(p_data->>'ai_usage_type',ai_usage_type),
+      is_completed=case when p_data?'serial_state' then p_data->>'serial_state'='COMPLETED' else is_completed end
+      where id=w.id;
+    update authoring.work_state set serial_state=coalesce(p_data->>'serial_state',serial_state),
+      rating_confirmed=rating_confirmed or p_data?'rating',ai_confirmed=ai_confirmed or p_data?'ai_usage_type' where work_id=w.id;
+    if s.visibility='PUBLIC' and not p_data?'visibility' and p_data?'serial_state' then
+      if p_data->>'serial_state'='HIATUS' then update public.works set status='PAUSED' where id=w.id;
+      elsif p_data->>'serial_state'='COMPLETED' then update public.works set status='COMPLETED' where id=w.id;
+      else update public.works set status='PUBLISHED' where id=w.id; end if;
+    end if;
+  end if;
+  update authoring.work_state set version=version+1,updated_at=now() where work_id=w.id;
+  return jsonb_build_object('work',authoring.creator_work_json(w.id));
+end $$;
+revoke all on function public.creator_works(uuid,text,bigint,jsonb,uuid,text,bigint) from public,anon,authenticated;
+grant execute on function public.creator_works(uuid,text,bigint,jsonb,uuid,text,bigint) to service_role;
+insert into authoring.migrations(version) values('authoring-005') on conflict do nothing;
+commit;

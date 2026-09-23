@@ -1,0 +1,119 @@
+{
+  "recorded_at": "2026-09-23T03:42:29.352046+00:00",
+  "stage": 5,
+  "status": "local_verified_external_integration_pending",
+  "checks": [
+    {
+      "command": "node scripts/verify_draft_engine.test.mjs",
+      "passed": 9,
+      "scope": "VM state engine with controlled delayed requests"
+    },
+    {
+      "command": "node scripts/verify_draft_store.test.mjs",
+      "passed": 4,
+      "scope": "IndexedDB transaction substitutes, legacy migration, line diff"
+    },
+    {
+      "command": "node scripts/verify_draft_ui.test.mjs",
+      "passed": 3,
+      "scope": "VM/DOM substitutes, no browser"
+    },
+    {
+      "command": "node scripts/verify_creator_draft_api.test.mjs",
+      "passed": 4,
+      "scope": "mock HTTP/Auth/database"
+    },
+    {
+      "command": "node scripts/verify_creator_drafts_db.test.mjs",
+      "passed": 3,
+      "scope": "PGlite synthetic PostgreSQL with authoring-006"
+    },
+    {
+      "command": "node scripts/verify_auth_session.test.mjs",
+      "passed": 9,
+      "scope": "Auth SDK and HTTP substitutes"
+    },
+    {
+      "command": "node scripts/verify_secure_api.test.mjs",
+      "passed": 26,
+      "scope": "mock API security regression"
+    },
+    {
+      "command": "node scripts/verify_cloudflare_routes.test.mjs",
+      "passed": 4,
+      "scope": "Cloudflare route mock regression"
+    },
+    {
+      "command": "node scripts/verify_creator_work_api.test.mjs",
+      "passed": 4,
+      "scope": "work API regression"
+    },
+    {
+      "command": "node scripts/verify_creator_work_ui.test.mjs",
+      "passed": 6,
+      "scope": "work UI VM regression"
+    },
+    {
+      "command": "node scripts/verify_creator_works.test.mjs",
+      "passed": 7,
+      "scope": "PGlite work regression"
+    },
+    {
+      "command": "node scripts/verify_data_contracts.cjs",
+      "result": "passed"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "result": "passed"
+    },
+    {
+      "command": "node --check (11 changed runtime JS/MJS files)",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "new_draft_suite_passed": 23,
+  "node_test_total_passed": 79,
+  "production_applied": false,
+  "browser_tested": false,
+  "feature_default": {
+    "AUTHOR_DRAFTS_ENABLED": false
+  },
+  "pending": [
+    "Real Supabase schema/auth mapping/backup restore prerequisites",
+    "Deploy authoring-006 and validate service RPC/RLS in staging",
+    "Actual browser IDB migration/quota, offline/reload, mobile IME/keyboard and multiple devices",
+    "Stage 7 publish transaction links source draft/revision and preserves local copies",
+    "Legacy Express routes retirement remains stage 10; no editor fallback"
+  ],
+  "sha256": {
+    "server/secure-api.mjs": "f44835b611dd8205d478610144500cdae287520052f1fe0f4e8b4f2dea5ab755",
+    "server/creator-draft-api.mjs": "35ae8ba9073b4b2aed4bf5e28172e2ffc843f301dcb6250c0bfca900546d60e1",
+    "database/authoring/006_creator_drafts.sql": "83d0cba4b533da33fd9b8b9ae88114b2f672ce6b0f48847c3fff3599368eb587",
+    "public/js/creator/draft-engine.js": "a044732640d9bd7c3e54d509f9c331f5e2a0f8e86897dc7e6be2c6716dcdef69",
+    "public/js/creator/draft-store.js": "73dc310412c76ed6ae6efd23a3a951e219011302c6f989260eb27a6746f7538a",
+    "public/js/creator/draft-diff.js": "127a07e0967f5de89c1f3a11a287a435aca56624f1d2b3115aab55411bdcb0d4",
+    "public/js/creator/creator-editor.js": "3c25ff5c641157140e744ead970e14ed9f27f1f66d05f88fdfa80392feeb6e0b",
+    "public/js/creator/creator.js": "1b9837b5f6c344c1ed6c60e509545cce7d6d2e51c3b0afe9ca17fe3faff8b0fd",
+    "public/js/creator/creator-works.js": "25b00455bc863d3246fb1269b12baa379c156d63882077c433a640307ce7d02c",
+    "public/js/core/auth-session.js": "83dd1d7f6e69278736570c2595a324e3b9acac33e85799d7df3da9ccf74745de",
+    "public/js/core/router.js": "591c954d684b61e0dab518a8013dc4eb7c06eab7227197a620308d77798e3efc",
+    "public/supabase-admin.js": "16d02e4321f934f3d0725067803df09cdc09ec9d2a18aac2fffb98f232c5ff4f",
+    "public/index.html": "bb9c4e19c801c95e42ba3b96d31403c9798e1ed3c0b8cc6e83cdbfa7853f40e2",
+    "public/styles.css": "1adaceaed5b47068301650f4f24d7a12edb861ac8d83232adf08edfc7808609e",
+    "package.json": "02baf05de939454bed308cf757be9cc4f346e0183c4b3550efb12f641838efb8",
+    ".github/workflows/ci.yml": "cc38323d8a3be1671f651afa8f4e71de5aa013620c33d281266b567d8ff99df6",
+    ".env.example": "f0ff51f092ae5d912d0c43b50beb41d1fe8ccc3ce2b2af63a090cdf984f87f82",
+    "scripts/verify_draft_engine.test.mjs": "4703cb77ea225a309c08b6bdba6295f4073f0c46db683914705329b0fe821458",
+    "scripts/verify_draft_store.test.mjs": "f6a8db8de0c017332c9f567f7087d98d0886cc5950c28d18df3cd16007ffc2f1",
+    "scripts/verify_draft_ui.test.mjs": "cb9af1091ecd35236c89f622fd4035b03a2f7547ec75a84d6e25251031267279",
+    "scripts/verify_creator_draft_api.test.mjs": "2c4cc1bd61b59fa72a10e45fa6367af2bfe38e65b06b705803c52dec7d182376",
+    "scripts/verify_creator_drafts_db.test.mjs": "c38ae4b81fcd965b0890effbb73751e154ee5155da7ccd8f422740fc8db55fa5",
+    "scripts/verify_auth_session.test.mjs": "5f574c87a7c69c9d0b9ba21c97aece06325d6ba3e070e9eeefa4bee881714dde",
+    "improve5.md": "5c3ae974da4efbc28878ab9c019e829ab2c2c179aaa4c3e21061ce3e5797d1be",
+    "docs/launch/creator-drafts-contract.md": "92a88bc1c65ae003c544f944363f2b7da9f5ed606f80b71dd7fb2cfd2055a0dc"
+  }
+}

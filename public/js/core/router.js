@@ -12,8 +12,9 @@
  * 1. SPA 메인 뷰 전환기 (switchWebNovelsView)
  */
 function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
+  window.CreatorDraftEditor?.checkpoint();
   // 관리자 메뉴 접근 시 로그인 검증
-  const adminLoggedIn = typeof isAdminLoggedIn !== 'undefined' ? isAdminLoggedIn : !!localStorage.getItem('webnovels_admin_token');
+  const adminLoggedIn = !!window.WebNovelsAuth?.getActor()?.admin;
   if (viewId === 'view-admin-cms' && !adminLoggedIn) {
     if (typeof openModal === 'function') openModal('modalAdminLogin');
     return;
@@ -27,7 +28,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
 
   // 내 서재 접근 시 로그인 체크
   if (viewId === 'view-mypage') {
-    const token = localStorage.getItem('webnovels_token');
+    const token = window.WebNovelsAuth?.getActor();
     if (!token) {
       if (typeof showToast === 'function') showToast('로그인이 필요한 서비스입니다.');
       if (typeof openModal === 'function') openModal('modalAuth');
@@ -176,6 +177,7 @@ function resolveRoute(pathname, isInitial = false) {
     const subTab = parts[1] || 'works';
     switchWebNovelsView('view-creator', null, false);
     if (currentActiveView !== 'view-creator') return;
+    if (subTab === 'works' && parts[2]) { switchCreatorTab('works', false); return; }
     if (typeof switchCreatorTab === 'function') {
       const tabMap = {
         'works': 'works',
@@ -186,6 +188,7 @@ function resolveRoute(pathname, isInitial = false) {
         'settlements': 'settlements'
       };
       const actualTab = tabMap[subTab] || subTab;
+      if (actualTab === 'new-ep') window.CreatorDraftEditor?.enter();
       switchCreatorTab(actualTab, false);
     }
     return;

@@ -18,107 +18,18 @@
 // [Admin Auth] 관리자 로그인 로직 처리 (Supabase 및 세션 동기화)
 // ============================================================
 window.handleAdminLoginProcess = async function() {
-  const idInput = document.getElementById('adminLoginId').value.trim();
-  const pwInput = document.getElementById('adminLoginPw').value.trim();
-
-  if (!idInput || !pwInput) {
-    showToast('관리자 ID와 비밀번호를 모두 입력해주세요.');
-    return;
-  }
-
-  let result = null;
-
-  // 1. WebNovelsAdmin 모듈을 통한 로그인 시도 (Supabase verify_admin_login RPC)
   try {
-    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.login === 'function') {
-      window.WebNovelsAdmin.init();
-      result = await window.WebNovelsAdmin.login(idInput, pwInput);
-    }
-  } catch(e) {
-    console.warn('[Admin Login] WebNovelsAdmin 호출 에러:', e);
-  }
-
-  // 3. 최종 결과 처리
-  if (result?.success && result.admin && ['SUPER_ADMIN', 'SUB_ADMIN', 'ADMIN'].includes(result.admin.role)) {
-    isAdminLoggedIn = true;
+    const actor = await window.WebNovelsAuth.login(document.getElementById('adminLoginId').value, document.getElementById('adminLoginPw').value);
+    if (!actor.admin) { await window.WebNovelsAuth.logout(); showToast('관리자 권한이 없습니다.'); return; }
     closeAllModals();
-    const admin = result.admin;
-    
-    // [중요] 기존 일반회원(독자/작가) 세션을 관리자 세션으로 완전히 덮어쓰기
-    localStorage.removeItem('webnovels_creator');
-    localStorage.removeItem('webnovels_author');
-    const adminEmail = admin.email || (idInput.includes('@') ? idInput : `${idInput}@webnovels.com`) || 'admin@webnovels.com';
-    const adminNickname = admin.nickname || (admin.role === 'SUPER_ADMIN' ? '최고관리자' : (admin.username || idInput));
-    
-    const adminUserObj = {
-      id: admin.id || 'admin-root',
-      username: admin.username || idInput,
-      nickname: adminNickname,
-      email: adminEmail,
-      role: admin.role,
-      isAdultVerified: true
-    };
-    localStorage.setItem('webnovels_user', JSON.stringify(adminUserObj));
-    localStorage.setItem('webnovels_token', result.token || `admin-token-${admin.id}`);
-    localStorage.setItem('webnovels_admin_token', result.token || `admin-token-${admin.id}`);
-
-    // 헤더 프로필 영역 및 네비게이션 메뉴 즉시 관리자 모드로 동기화
-    updateMemberHeader(adminUserObj);
-
-    showToast(`🔑 관리자 로그인 성공! (${adminUserObj.nickname || idInput})`);
-    const roleBadge = document.getElementById('adminRoleBadge');
-    if (roleBadge) {
-      roleBadge.textContent = `${adminUserObj.role} 로그인됨`;
-      roleBadge.className = 'badge badge-primary';
-    }
-    const logoutBtn = document.getElementById('btnAdminLogout');
-    if (logoutBtn) logoutBtn.style.display = 'inline-block';
-  } else {
-    // 로그인 실패
-    const errMsg = result ? (result.error || '이메일 또는 비밀번호가 일치하지 않습니다.') : '이메일 또는 비밀번호가 일치하지 않습니다.';
-    showToast(`❌ 로그인 실패: ${errMsg}`);
-    console.error('[Admin Login Failed]', result);
-    return;
-  }
-  
-  // 관리자 관제탑 활성화
-  document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
-  const adminView = document.getElementById('view-admin-cms');
-  if (adminView) adminView.classList.add('active');
-
-  // 대시보드 KPI 로드
-  loadAdminDashboard();
+    switchWebNovelsView('view-admin-cms');
+  } catch(error) { showToast(window.WebNovelsAuth.message(error)); }
 };
 
 // ============================================================
 // [Admin Auth] 관리자 로그아웃
 // ============================================================
-window.handleAdminLogoutProcess = function() {
-  isAdminLoggedIn = false;
-  if (window.WebNovelsAdmin) window.WebNovelsAdmin.logout();
-  localStorage.removeItem('webnovels_admin_token');
-  localStorage.removeItem('webnovels_user');
-  localStorage.removeItem('webnovels_creator');
-    localStorage.removeItem('webnovels_author');
-  localStorage.removeItem('webnovels_token');
-  currentLoggedAuthor = null;
-  window._isAdultVerified = false;
-
-  document.getElementById('adminRoleBadge').textContent = '미로그인';
-  document.getElementById('adminRoleBadge').className = 'badge badge-accent';
-  if (document.getElementById('btnAdminLogout')) {
-    document.getElementById('btnAdminLogout').style.display = 'none';
-  }
-
-  // 헤더를 완전한 비로그인 상태로 복구 (메뉴도 기본 표시로 복원)
-  updateMemberHeader(null);
-
-  showToast('관리자 로그아웃 되었습니다.');
-  // 홈으로 이동
-  document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-home')?.classList.add('active');
-};
-
+window.handleAdminLogoutProcess = async function() { return window.handleMemberLogout(); };
 
 // ---- 관리자 대시보드 KPI 로더는 하단(Line 2100대) 마스터 구현체(window.loadDashboardKPIs)로 일원화됨 ----
 
@@ -904,9 +815,9 @@ async function renderAdminWorks() {
             <div>
               <div style="display: flex; align-items: center; gap: 5px;">
                 ${typeBadge}
-                <strong style="color: #fff; cursor: pointer;" onclick="openWorkSeriesDashboard(${w.id})">${w.title}</strong>
+                <strong style="color: #fff; cursor: pointer;" onclick="openWorkSeriesDashboard(${w.id})">${escapeHtml(w.title)}</strong>
               </div>
-              <div class="text-muted small">ID: ${w.id} · ${w.genre}</div>
+              <div class="text-muted small">ID: ${w.id} · ${escapeHtml(w.genre)}</div>
             </div>
           </div>
         </td>
@@ -1240,7 +1151,7 @@ window.openWorkSeriesDashboard = async function(workId) {
           ${statusBadgeHtml}
         </div>
         <div class="text-muted small mt-1">
-          작가: <strong>${authorName}</strong> | 장르: ${genreLabel} | 플랫폼: ${platformLabel} | 상태: ${work.status || 'ONGOING'}
+          작가: <strong>${authorName}</strong> | 장르: ${escapeHtml(genreLabel)} | 플랫폼: ${platformLabel} | 상태: ${work.status || 'ONGOING'}
         </div>
         <div style="margin-top: 8px; display: flex; gap: 8px;">
           <button class="btn btn-primary btn-sm" onclick="closeAllModals(); switchAdminToEpisodeTab(${work.id})">
@@ -1327,7 +1238,7 @@ function populateAdminWorkSelects(worksList) {
 
   const optionsHtml = list.map(w => {
     const typeLabel = w.contentType === 'WEBTOON' ? '[웹툰]' : '[소설]';
-    return `<option value="${w.id}">${typeLabel} ${w.title} (ID: ${w.id})</option>`;
+    return `<option value="${w.id}">${typeLabel} ${escapeHtml(w.title)} (ID: ${w.id})</option>`;
   }).join('');
 
   if (select1 && (!select1.innerHTML || select1.children.length !== list.length)) {
@@ -1831,8 +1742,8 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
       <article class="feature-card" onclick="openWorkDetailDirect(${w.id})">
         <div class="art" style="background-image: url('${w.coverUrl}');"></div>
         <div class="copy">
-          <span class="tag ${tagClass}">${tagText}</span>
-          <h3>${w.title}</h3>
+          <span class="tag ${tagClass}">${escapeHtml(tagText)}</span>
+          <h3>${escapeHtml(w.title)}</h3>
           <p>${w.author} · 조회 ${(w.viewCount / 1000).toFixed(1)}K</p>
         </div>
       </article>
@@ -1881,10 +1792,10 @@ function renderSearchResultItem(work) {
   const isAdult = work.rating === 'AGE_19' || work.genre === '성인';
   return `
     <button class="search-result-item" onclick="closeAllModals(); openWorkDetailDirect(${work.id});">
-      <img src="${work.coverUrl}" alt="${work.title} 표지">
+      <img src="${work.coverUrl}" alt="${escapeHtml(work.title)} 표지">
       <span>
-        <strong>${work.title}</strong>
-        <small>${work.author} · ${isAdult ? '19+ 성인' : work.genre} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</small>
+        <strong>${escapeHtml(work.title)}</strong>
+        <small>${work.author} · ${escapeHtml(isAdult ? '19+ 성인' : work.genre)} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</small>
       </span>
       <i data-lucide="chevron-right"></i>
     </button>

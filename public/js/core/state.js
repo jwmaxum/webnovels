@@ -33,6 +33,7 @@ let currentFontSize = 18;
 let currentActiveView = 'view-home';
 let lastMainView = 'view-home';
 let currentLoggedAuthor = null;
+let isAdminLoggedIn = false; // presentation only; populated by server-validated Auth session
 let currentLoggedCreator = currentLoggedAuthor;
 
 // 잔액은 DB 프로필 조회 후 반영

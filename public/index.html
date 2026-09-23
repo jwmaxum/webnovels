@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=93">
+  <link rel="stylesheet" href="/styles.css?v=105">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -589,7 +589,7 @@
                 <button class="btn btn-outline btn-sm" id="btnAuthorLogout" style="display: none;" onclick="handleAuthorLogoutProcess()">
                   <i data-lucide="log-out"></i> 작가 로그아웃
                 </button>
-                <button class="btn btn-primary btn-sm" id="btnOpenCreateWork">
+                <button class="btn btn-primary btn-sm" id="btnOpenCreateWork" onclick="CreatorWorks.navigate('/creator/works/new')">
                   <i data-lucide="plus-circle"></i> 새 작품 등록
                 </button>
               </div>
@@ -598,7 +598,7 @@
             <div id="creatorAuthorDetails" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 20px; font-size: 0.88rem;">
               <div>🏦 <span class="text-muted">등록 정산 계좌:</span> <strong id="creatorBankInfo" class="text-white">미등록</strong></div>
               <div>📈 <span class="text-muted">총 독자 조회수:</span> <strong id="creatorTotalViews" style="color:var(--cdg-pink);">—</strong></div>
-              <div>📖 <span class="text-muted">총 연재 회차수:</span> <strong id="creatorTotalEpisodes" style="color:#10B981;">6화</strong></div>
+              <div>📖 <span class="text-muted">총 연재 회차수:</span> <strong id="creatorTotalEpisodes" style="color:#10B981;">—</strong></div>
             </div>
           </div>
 
@@ -618,7 +618,7 @@
             <div class="card glass-panel">
               <div class="card-header flex-between p-4" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 style="margin: 0; font-size:1.1rem;"><i data-lucide="book-open"></i> 내 연재 작품 목록</h3>
-                <small class="text-muted" id="creatorWorksCount">연재 작품: 1개</small>
+                <small class="text-muted" id="creatorWorksCount">불러오는 중</small>
               </div>
               <div class="card-body p-4">
                 <div id="creatorWorksContainer">
@@ -632,11 +632,11 @@
           <div class="creator-tab-panel" id="creatorTab-new-ep" style="display: none;">
             <div class="card glass-panel p-6">
               <div class="flex-between mb-3">
-                <h3 style="margin:0;"><i data-lucide="file-plus" style="color:var(--cdg-pink);"></i> 신규 회차 등록 &amp; Zero-Touch 자동/예약 발행</h3>
-                <span class="badge badge-accent">AI 자동 검수 지원 🟢</span>
+                <h3 style="margin:0;"><i data-lucide="file-plus" style="color:var(--cdg-pink);"></i> 원고 작성</h3>
+                <button type="button" id="btnDraftFocus" class="btn btn-outline">집중 편집</button>
               </div>
-              <p class="text-muted small mb-4">원고를 제출하면 AI/시스템 자동 검수 후 즉시 공개되거나, 지정한 예약 일시에 자동 공개됩니다.</p>
-              
+              <p class="text-muted small mb-4">원고는 비공개로 저장됩니다. 작품과 원고를 선택해 이어 쓰거나 기기 사본을 복구할 수 있습니다.</p>
+
               <form id="formCreateEpisode" onsubmit="handleCreateEpisodeSubmit(event)">
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">내 연재 작품 선택 (실제 DB 연동)</label>
@@ -644,34 +644,26 @@
                     <!-- Injected dynamically by author's real works -->
                   </select>
                 </div>
-                <div class="grid-2-col gap-4 mb-3" style="display:grid; grid-template-columns:1fr 2fr; gap:12px;">
-                  <div>
-                    <label class="small text-muted mb-1 block">회차 번호</label>
-                    <input type="number" id="newEpNumber" class="form-input" value="5" min="1" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
-                  </div>
-                  <div>
-                    <label class="small text-muted mb-1 block">회차 제목</label>
-                    <input type="text" id="newEpTitle" class="form-input" placeholder="예: 제 5 화 - 운명의 갈림길" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
-                  </div>
+                <div class="form-group mb-3"><label for="newEpTitle">원고 제목</label><input id="newEpTitle" class="form-input" maxlength="200" autocomplete="off"></div>
+                <p id="draftIdentity" class="small text-muted"></p>
+                <div class="creator-editor-actions">
+                  <button type="button" id="btnDraftNew" class="btn btn-outline">새 원고</button>
+                  <button type="button" id="btnDraftRefresh" class="btn btn-outline">원고 목록 새로고침</button>
+                  <button type="button" id="btnDraftDownload" class="btn btn-outline">원고 다운로드</button>
+                  <button type="button" id="btnLegacyDraftExport" class="btn btn-outline">이전 편집기 원고 백업</button>
+                  <button type="button" id="btnDraftUndo" class="btn btn-outline">서식·복구 실행 취소</button>
                 </div>
-
-                <div class="grid-2-col gap-4 mb-3" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                  <div>
-                    <label class="small text-muted mb-1 block">발행 방식</label>
-                    <select id="newEpPublishType" class="form-input" onchange="toggleScheduledTimeInput(this.value)" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
-                      <option value="IMMEDIATE">🚀 즉시 자동 발행 (AI 자동검수 후 공개)</option>
-                      <option value="SCHEDULED">⏰ 지정 일시 예약 발행 (예약연재)</option>
-                    </select>
-                  </div>
-                  <div id="scheduledTimeWrapper" style="display: none;">
-                    <label class="small text-muted mb-1 block">예약 발행 일시</label>
-                    <input type="datetime-local" id="newEpScheduledAt" class="form-input" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:9px; border-radius:8px; border:1px solid var(--border-color);">
-                  </div>
+                <details id="draftCopyDetails"><summary>서버 원고·기기 사본·이전 편집기 원고</summary><div id="draftCopies" class="draft-copy-list"></div></details>
+                <p id="creatorDraftError" role="alert"></p>
+                <div id="draftConflict" hidden role="alert">
+                  <p>다른 곳에서 수정한 원고가 있습니다. 양쪽 사본은 보존됩니다.</p>
+                  <button type="button" id="btnConflictCompare">양쪽 비교</button>
+                  <button type="button" id="btnConflictLocal">현재 원고로 저장</button>
+                  <button type="button" id="btnConflictRemote">서버 원고로 복구</button>
                 </div>
-
                 <div class="form-group mb-3 creator-editor-group">
                   <div class="creator-editor-label-row">
-                    <label class="small text-muted mb-1 block" for="newEpContent">원고 본문 (웹소설 텍스트 or 웹툰 이미지 URL 쉼표 구분)</label>
+                    <label class="small text-muted mb-1 block" for="newEpContent">원고 본문</label>
                     <span id="creatorDraftStatus" class="creator-draft-status" role="status" aria-live="polite">초안 준비됨</span>
                   </div>
                   <div class="creator-editor-toolbar" aria-label="원고 작성 도구">
@@ -690,42 +682,26 @@
                     </div>
                   </div>
                   <div class="creator-word-progress" aria-hidden="true"><span id="creatorWordProgress"></span></div>
-                  <textarea id="newEpContent" rows="16" class="form-input creator-editor-textarea" placeholder="웹소설 원고 본문 내용을 입력하거나, 웹툰의 경우 이미지 URL을 쉼표로 입력하세요." required></textarea>
-                  <p class="creator-editor-help">입력 후 1초 안에 이 기기에 저장됩니다. API 인증 세션에서는 1분마다 서버 초안에도 동기화됩니다.</p>
+                  <textarea id="newEpContent" rows="16" class="form-input creator-editor-textarea" placeholder="원고를 입력해주세요." maxlength="200000"></textarea>
+                  <p class="creator-editor-help">입력을 잠시 멈추면 이 기기에 저장하고 서버에 동기화를 요청합니다. 저장 상태를 확인해주세요. Ctrl/Cmd+S로 바로 저장할 수 있습니다.</p>
                 </div>
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">작가의 말</label>
-                  <input type="text" id="newEpAuthorComment" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                  <input type="text" id="newEpAuthorComment" maxlength="5000" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
                 </div>
 
-                <!-- Zero-Touch AI/규격 자동검사 인디케이터 -->
-                <div class="p-3 glass-panel mb-4" style="border-radius:6px; font-size:0.8rem; background:rgba(0,0,0,0.3); border:1px solid var(--border-color);">
-                  <span style="font-weight:700; color:var(--color-brand-secondary);">⚡ Zero-Touch 자동 검사 항목:</span>
-                  <span class="text-muted ml-2">✓ 본문/이미지 규격 검사 | ✓ 금칙어/욕설 자동 필터링 | ✓ 연령등급 일치 확인</span>
-                </div>
-
-                <div class="flex-between mt-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                  <label style="display:flex; align-items:center; gap:6px; font-size:0.88rem; cursor:pointer;">
-                    <input type="checkbox" id="newEpIsFree"> 🎁 100% 무료 공개 (체크 해제 시 100P / 광고 시청 무료 모델 적용)
-                  </label>
-                  <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">
-                    <i data-lucide="upload"></i> 회차 제출 및 자동 발행
-                  </button>
-                </div>
+                <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">원고 저장</button>
+                <p class="text-muted small">미리보기·게시 기능은 준비 중입니다. 저장만으로 독자에게 공개되지 않습니다.</p>
               </form>
             </div>
           </div>
 
           <!-- Tab 3: Serial Management (연재관리) -->
           <div class="creator-tab-panel" id="creatorTab-status" style="display: none;">
-            <div class="card glass-panel p-6">
-              <h3 class="mb-4"><i data-lucide="sliders" style="color:var(--cdg-pink);"></i> 연재 상태 관리</h3>
-              <p class="text-muted small mb-4">작품의 연재 상태(연재중 / 휴재 / 완결)를 설정하여 독자들에게 연재 일정을 안내합니다.</p>
-              <div id="creatorSerialStatusList"></div>
-            </div>
+            <p>휴재·완결과 공개 여부는 각 작품의 설정에서 관리합니다.</p>
+            <button type="button" class="btn btn-primary" onclick="CreatorWorks.navigate('/creator/works')">내 작품으로 이동</button>
           </div>
 
-          <!-- Tab 4: Reader Statistics & Deep Analytics (improve6.md) -->
           <div class="creator-tab-panel" id="creatorTab-stats" style="display: none;">
             <!-- Analytics Controls & Reliability Notice -->
             <div class="card glass-panel p-4 mb-4" style="border-radius:10px;">
@@ -992,7 +968,7 @@
       <!-- View 7: Admin CMS Integration (Sidebar + 16 Panel Content Area) -->
       <section id="view-admin-cms" class="main-view">
         <div class="container section-padding">
-          
+
           <div class="admin-cms-layout">
             <!-- Left Sidebar Navigation -->
             <aside class="admin-sidebar glass-panel">
@@ -1917,7 +1893,7 @@
           <div class="ad-unlock-icon" style="font-size:2.2rem; margin-bottom:6px;">🔓</div>
           <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:6px;">다음 회차를 무료로 읽으시겠습니까?</h2>
           <p class="text-muted small mb-4" style="line-height:1.45;">광고를 시청하면 작가에게 직접 정산금이 후원되고 회차가 무료 해금되며, 보유 포인트를 사용하여 즉시 열람할 수도 있습니다.</p>
-          
+
           <!-- Ad Video Player Simulation Box -->
           <div class="ad-player-box mb-4" id="adPlayerBox" style="display: none; background:#000; border-radius:12px; padding:20px; border:1px solid var(--cdg-pink-border);">
             <div class="ad-video-sim">
@@ -2064,18 +2040,20 @@
             <button data-auth-tab="signup-author">작가가입</button>
           </div>
           <form class="auth-form active" id="authForm-login">
-            <label>이메일/아이디</label>
-            <input type="text" id="loginEmail" class="form-control" value="reader1@webnovels.com" autocomplete="username" required>
+            <label>이메일</label>
+            <input type="email" id="loginEmail" class="form-control"  autocomplete="username" required>
             <label>비밀번호</label>
-            <input type="password" id="loginPassword" class="form-control" value="!12345" autocomplete="current-password" required>
+            <input type="password" id="loginPassword" class="form-control"  autocomplete="current-password" required>
             <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="log-in"></i> 로그인하고 내 서재로</button>
+          <button type="button" class="btn btn-ghost" onclick="requestAuthReset()">비밀번호 재설정 메일 보내기</button>
+            <button type="button" class="btn btn-ghost" onclick="showAuthOnboarding()">이메일 확인 후 가입 마무리</button>
           </form>
-          
+
           <form class="auth-form" id="authForm-signup" style="max-height: 440px; overflow-y: auto; padding-right: 5px;">
             <label>Nickname(별명)</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
               <input type="text" id="signupNickname" class="form-control" style="margin-bottom: 0;" placeholder="예: 새벽독자" required>
-              <button type="button" class="btn btn-outline btn-sm" id="btnCheckNickname" style="white-space: nowrap; padding: 0 14px;">중복확인</button>
+
             </div>
             <div id="nicknameCheckMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
@@ -2089,8 +2067,7 @@
             <input type="password" id="signupPasswordConfirm" class="form-control" placeholder="비밀번호 재입력" required>
             <div id="pwMatchMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
-            <label>전화번호</label>
-            <input type="text" id="signupPhone" class="form-control" placeholder="+82-010-1111-2222" required>
+
             <button type="submit" class="btn btn-primary btn-lg w-full mt-3"><i data-lucide="user-plus"></i> 일반 독자 회원가입</button>
           </form>
 
@@ -2098,7 +2075,7 @@
             <label>Nickname / 필명 (별명)</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
               <input type="text" id="authorPenName" class="form-control" style="margin-bottom: 0;" placeholder="예: 판타지마스터" required>
-              <button type="button" class="btn btn-outline btn-sm" id="btnCheckAuthorPenName" style="white-space: nowrap; padding: 0 14px;">중복확인</button>
+
             </div>
             <div id="authorPenNameCheckMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
@@ -2112,14 +2089,6 @@
             <input type="password" id="authorPasswordConfirm" class="form-control" placeholder="비밀번호 재입력" required>
             <div id="authorPwMatchMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
-            <label>대표 작품명</label>
-            <input type="text" id="authorWorkTitle" class="form-control" placeholder="예: 신을 삼킨 기사" required>
-            <label>생년월일</label>
-            <input type="date" id="authorBirthDate" class="form-control" required>
-            <label>주소</label>
-            <input type="text" id="authorAddress" class="form-control" placeholder="주소 입력" required>
-            <label>정산 등록 계좌</label>
-            <input type="text" id="authorBankInfo" class="form-control" placeholder="예: 국민은행 123-456-789" required>
             <button type="submit" class="btn btn-secondary btn-lg w-full mt-3"><i data-lucide="feather"></i> 작가 회원가입</button>
           </form>
         </div>
@@ -2256,7 +2225,7 @@
         <div class="modal-body">
           <form id="formEditSubAdminPerms" onsubmit="handleSaveSubAdminPerms(event)">
             <p class="text-muted small mb-3">체크한 메뉴만 서브 관리자 로그인 시 메뉴 바에 표출되며 API 접근이 허용됩니다.</p>
-            
+
             <div class="permission-matrix-grid p-3 glass-panel" style="max-height: 240px; overflow-y: auto; background: rgba(0,0,0,0.3); display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
               <label class="perm-switch-card"><input type="checkbox" name="subAdminPerm" value="DASHBOARD"> <span>1. DASHBOARD (대시보드)</span></label>
               <label class="perm-switch-card"><input type="checkbox" name="subAdminPerm" value="USER_MGMT"> <span>2. USER_MGMT (회원 관리)</span></label>
@@ -2316,12 +2285,12 @@
           <!-- 1. 기본 인적 정보 수정 폼 -->
           <form id="formEditReaderDetail" onsubmit="handleSaveReaderInfo(event)">
             <input type="hidden" id="readerDetailId" value="">
-            
+
             <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
               <h4 style="margin: 0 0 14px 0; font-size: 1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
                 <i data-lucide="user"></i> 기본 인적 정보 및 계정 상태
               </h4>
-              
+
               <div class="grid-2-col gap-3 mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                   <label class="small text-muted">회원 고유 ID (System)</label>
@@ -2648,7 +2617,7 @@
         </div>
         <div class="modal-body">
           <input type="hidden" id="policyCurrentWorkId" value="">
-          
+
           <!-- 1. 댓글 허용 토글 -->
           <div class="form-group mb-4" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
             <div>
@@ -2972,17 +2941,23 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=102"></script>
   <script src="/js/core/ui-utils.js?v=102"></script>
-  <script src="/js/core/router.js?v=102"></script>
+  <script src="/js/core/router.js?v=105"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader.js?v=102"></script>
   <script src="/js/reader/continue-reading.js?v=102"></script>
-  <script src="/js/creator/creator-editor.js?v=101"></script>
-  <script src="/js/creator/creator.js?v=102"></script>
+  <script src="/js/creator/draft-engine.js?v=105"></script>
+  <script src="/js/creator/draft-store.js?v=105"></script>
+  <script src="/js/creator/draft-diff.js?v=105"></script>
+  <script src="/js/creator/creator-editor.js?v=105"></script>
+  <script src="/js/creator/creator.js?v=105"></script>
+  <script src="/js/creator/creator-works.js?v=105"></script>
   <script src="/js/admin/admin.js?v=102"></script>
   <!-- Supabase Extension & Bootstrap Entry -->
   <script src="/supabase-public-config.js?v=1"></script>
   <script src="/api/public-config.js"></script>
-  <script src="/supabase-admin.js?v=103"></script>
+  <script src="/supabase-admin.js?v=105"></script>
+  <script src="/js/core/auth-session.js?v=105"></script>
+  <script src="/js/core/auth-ui.js"></script>
   <script src="/app.js?v=102"></script>
 </body>
 </html>

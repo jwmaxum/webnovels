@@ -1,0 +1,75 @@
+{
+  "recorded_at": "2026-09-23T02:39:43.255322+00:00",
+  "stage": 3,
+  "status": "local_verified_external_integration_pending",
+  "checks": [
+    {
+      "command": "node scripts/verify_secure_api.test.mjs",
+      "passed": 25,
+      "scope": "mock HTTP/Auth/DB"
+    },
+    {
+      "command": "node scripts/verify_auth_session.test.mjs",
+      "passed": 7,
+      "scope": "VM with mocked SDK/fetch; no browser"
+    },
+    {
+      "command": "node scripts/verify_auth_onboarding.test.mjs",
+      "passed": 4,
+      "scope": "synthetic embedded PostgreSQL"
+    },
+    {
+      "command": "node scripts/verify_authoring_schema.test.mjs",
+      "passed": 22
+    },
+    {
+      "command": "node scripts/verify_cloudflare_routes.test.mjs",
+      "passed": 4
+    },
+    {
+      "command": "node scripts/verify_providers.test.mjs",
+      "passed": 7
+    },
+    {
+      "command": "node scripts/verify_data_contracts.cjs",
+      "result": "pass"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "result": "pass"
+    },
+    {
+      "command": "node --check on changed JavaScript files",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "not_verified": [
+    "actual Supabase migration and backup",
+    "actual email confirmation and password recovery",
+    "actual existing identity mapping",
+    "browser acceptance",
+    "multi-process database contention",
+    "production deployment"
+  ],
+  "source_sha256": {
+    "server/secure-api.mjs": "c6dd5369ca6738164ac70f9fd9bb09d4e6b92021c3aff4abca49b4b79d4198c5",
+    "public/js/core/auth-session.js": "5e214959a0befe476b99c8e1cdf9f2b313b28f5221df770937c14a87d210d9f6",
+    "public/js/core/auth-ui.js": "46ab64fb1b0816465305db2be0b479423fd344bceee97031038d8510fa34005f",
+    "public/js/core/router.js": "f76c42d5a685f66f334ebc52a147d97147e9a3abaf06dfbbf0214f0ba787950e",
+    "public/js/core/state.js": "8b22728522ed4e94d3fcdb17b8bdb29e6c4c457dcbe870312eb410173b763013",
+    "public/js/reader/reader.js": "73f4b2ac771a0b1ff54b8f5f0a44e87c41f008c65d30b0305d48b5e78c49f323",
+    "public/js/admin/admin.js": "7183124d31e548a86faa8fe6ab13af4860d3adb868efd978fec849199957a7fe",
+    "public/js/creator/creator.js": "1e867ebecea6d9324f4ed6a233db88d88addfffab4a054bfbec11708e0fb9376",
+    "public/supabase-admin.js": "14943da364f98f82059834c251ff36b0ae376f7d2ad6c9fa155ee4918b516556",
+    "public/app.js": "7b42afde5e9106b1da2a75de482b22ca664461665275222e6fdd76a584101ff7",
+    "public/index.html": "72e5b1e9485eac9455af1a5cd341bcdaab5524f1f936ce736f4842e85697ce80",
+    "database/authoring/004_auth_onboarding.sql": "45b2ac125b8541e8e38b33a8411a2b1ca6c94e83c0ba171c5f6fcb33c8fc3803",
+    "scripts/verify_secure_api.test.mjs": "b3b4db1a744df3f4b294e94942327e47deda70173b9708bcffd01a507ae05857",
+    "scripts/verify_auth_session.test.mjs": "3673c4afa1775373384b5a8e9410f54e25ce08421b4c7cfcf4a135d82e0b0e79",
+    "scripts/verify_auth_onboarding.test.mjs": "1e240674fc9d5c480c96f2df20c95bdba519c7f87ee7dc40ce33c3ab536b1e46"
+  }
+}

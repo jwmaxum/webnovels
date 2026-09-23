@@ -17,7 +17,11 @@
     "test:config": "tsx scripts/verify_supabase_config.ts",
     "check:supabase": "node scripts/check_supabase_access.cjs",
     "test:p0": "node --test scripts/verify_secure_api.test.mjs scripts/verify_cloudflare_routes.test.mjs scripts/verify_providers.test.mjs",
-    "audit:p0-schema": "node scripts/p0_schema_audit.cjs"
+    "audit:p0-schema": "node scripts/p0_schema_audit.cjs",
+    "test:authoring-schema": "node scripts/verify_authoring_schema.test.mjs",
+    "test:auth": "node scripts/verify_auth_session.test.mjs && node scripts/verify_auth_onboarding.test.mjs",
+    "test:creator-works": "node scripts/verify_creator_work_api.test.mjs && node scripts/verify_creator_work_ui.test.mjs && node scripts/verify_creator_works.test.mjs",
+    "test:drafts": "node scripts/verify_draft_engine.test.mjs && node scripts/verify_draft_store.test.mjs && node scripts/verify_draft_ui.test.mjs && node scripts/verify_creator_draft_api.test.mjs && node scripts/verify_creator_drafts_db.test.mjs"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +36,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@supabase/supabase-js": "^2.112.3",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",

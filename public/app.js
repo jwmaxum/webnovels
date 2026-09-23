@@ -380,16 +380,9 @@ window.handleDirectPortalClick = function(event, portal) {
 
 window.handleMoreAuthClick = function() {
   if (typeof closeModal === 'function') closeModal('modalMobileMore');
-  const token = localStorage.getItem('webnovels_token');
+  const token = window.WebNovelsAuth?.getActor();
   if (token) {
-    if (typeof handleUserLogoutProcess === 'function') {
-      handleUserLogoutProcess();
-    } else {
-      localStorage.removeItem('webnovels_token');
-      localStorage.removeItem('webnovels_user');
-      if (typeof showToast === 'function') showToast('로그아웃 되었습니다.');
-      location.reload();
-    }
+    window.handleMemberLogout();
   } else {
     if (typeof openModal === 'function') openModal('modalAuth');
   }
@@ -411,6 +404,7 @@ window.toggleAdultContentMode = function() {
  * 3. 전체 애플리케이션 초기화 엔진 (initWebNovelsApp)
  */
 async function initWebNovelsApp() {
+  await window.WebNovelsAuth.init();
   try {
     if (window.lucide && typeof window.lucide.createIcons === 'function') {
       window.lucide.createIcons();

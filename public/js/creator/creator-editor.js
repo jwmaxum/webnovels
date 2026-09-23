@@ -1,683 +1,148 @@
-// ============================================================
-// [Creator Safe Writing Editor]
-// - IndexedDB first: network failures never block local draft recovery.
-// - Optional server sync: only uses a real JWT from the Express API session.
-// - Keeps the last 10 local manual/automatic revisions per draft.
-// ============================================================
-(function () {
+/* UI adapter. Identity and snapshots live in DraftEngine, never in the work selector. */
+(function() {
   'use strict';
-
-  const DB_NAME = 'webnovels-creator-drafts';
-  const STORE_NAME = 'drafts';
-  const REVISION_STORE = 'revisions';
-  const SAVE_DELAY = 1000;
-  const SYNC_INTERVAL = 60_000;
-  const MAX_LOCAL_REVISIONS = 10;
-
-  let dbPromise = null;
-  let saveTimer = null;
-  let syncTimer = null;
-  let currentKey = null;
-  let serverRevision = null;
-  let initialized = false;
-
-  const $ = (id) => document.getElementById(id);
-
-  function openDatabase() {
-    if (dbPromise) return dbPromise;
-    dbPromise = new Promise((resolve, reject) => {
-      if (!window.indexedDB) {
-        reject(new Error('이 브라우저는 안전한 로컬 초안 저장을 지원하지 않습니다.'));
-        return;
+  const $=id=>document.getElementById(id), fields={title:'newEpTitle',content:'newEpContent',authorComment:'newEpAuthorComment'};
+  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let timer,remoteTimer,composing=false,epoch=0,selected=null,works=[];
+  const actor=()=>window.WebNovelsAuth?.getActor(), toast=m=>window.showToast?.(m);
+  function error(e) {
+    const message=e.code==='AUTHOR_DRAFTS_NOT_ACTIVATED'?'서버 원고 저장 기능이 아직 활성화되지 않았습니다.':e.code==='DRAFT_CONFLICT'?'다른 곳에서 수정한 원고가 있습니다. 양쪽 내용을 비교해주세요.':'저장 또는 불러오기에 실패했습니다. 원고를 다운로드하고 다시 시도해주세요.';
+    toast(message);if($('creatorDraftError'))$('creatorDraftError').textContent=message;
+  }
+  const safe=fn=>(...args)=>Promise.resolve().then(()=>fn(...args)).catch(error);
+  function data(){return Object.fromEntries(Object.entries(fields).map(([k,id])=>[k,$(id)?.value||'']));}
+  function form(value={},readOnly=engine.current?.lifecycle!=='ACTIVE'){for(const [k,id]of Object.entries(fields))if($(id)){$(id).value=value[k]||'';$(id).disabled=readOnly;}counts();}
+  function counts(){const s=$('newEpContent')?.value||'';if($('creatorWordCount'))$('creatorWordCount').textContent=`공백 포함 ${s.length}자 · 제외 ${s.replace(/\s/g,'').length}자`;if($('creatorWordProgress'))$('creatorWordProgress').style.width=Math.min(100,s.length/45)+'%';}
+  async function api(action,args) {
+    if(args.userId && actor()?.userId!==args.userId)throw Object.assign(Error('SESSION_CHANGED'),{code:'SESSION_CHANGED'});
+    const path='/api/v2/creator/drafts'+(args.id?'/'+args.id:'')+(action==='history'?'/history':'')+'?workId='+encodeURIComponent(args.workId)+(args.before?'&before='+args.before:'');
+    return window.WebNovelsAuth.api(path,action==='save'?{method:'PUT',headers:{'Idempotency-Key':args.key},body:JSON.stringify(args.data)}:{});
+  }
+  function status(c) {
+    if(actor()?.userId!==c.userId)return;
+    $('creatorDraftStatus').textContent=c.conflict?'충돌 · 양쪽 사본 보존':c.error?'저장 실패 · 다운로드 가능':c.localSeq<c.seq?'기기에 저장 중…':c.serverSeq<c.seq?'기기 저장 완료 · 서버 미동기화':'기기·서버 저장 완료';
+    $('draftConflict').hidden=!c.conflict;
+    $('draftIdentity').textContent=`원고 ${c.id} · 서버 버전 ${c.revision}${c.lifecycle!=='ACTIVE'?' · 보관 원고 (읽기 전용)':''}`;
+  }
+  const engine=new DraftEngine({store:DraftStore,api,uuid:()=>crypto.randomUUID(),onChange:status});
+  function stop(){clearTimeout(timer);clearTimeout(remoteTimer);}
+  function schedule(c=engine.current){if(!c||composing)return;stop();timer=setTimeout(safe(()=>engine.flush(c)),700);remoteTimer=setTimeout(safe(async()=>{await engine.sync(c);if(engine.current===c&&c.seq>c.serverSeq&&!c.conflict)schedule(c);}),2500);}
+  function input(){if(engine.current){engine.edit(data());counts();schedule();}}
+  async function loadWorks(){
+    const user=actor()?.userId;if(!user||!actor()?.author)throw Error('AUTHOR_REQUIRED');
+    let all=[],after='0';do{const r=await window.WebNovelsAuth.api('/api/v2/creator/works?after='+after);all.push(...r.works);after=r.nextCursor;}while(after);
+    if(actor()?.userId!==user)throw Error('SESSION_CHANGED');works=all;
+    $('newEpWorkSelect').innerHTML='<option value="">작품을 선택해주세요</option>'+all.filter(w=>!w.trashed_at).map(w=>`<option value="${esc(w.id)}">${esc(w.title)}</option>`).join('');
+  }
+  async function openWork(workId,id=null,{fresh=false,record=null,localOnly=false}={}) {
+    const turn=++epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
+    stop();await engine.checkpoint();selected=null;window.closeModal?.('modalDraftDiff');
+    if(!works.some(w=>w.id===String(workId)))await loadWorks();
+    const work=works.find(w=>w.id===String(workId));if(!work)throw Error('WORK_NOT_FOUND');
+    if(turn!==epoch||user!==actor()?.userId)return;
+    if(!id&&!fresh)id=[...engine.contexts.values()].find(c=>c.userId===user&&c.workId===String(workId)&&c.lifecycle==='ACTIVE')?.id||null;
+    const c=await engine.open(user,String(workId),id,{localOnly});
+    if(!c||turn!==epoch||user!==actor()?.userId)return;
+    if(record)await engine.recover(record);
+    if(turn!==epoch||user!==actor()?.userId)return;
+    window.switchCreatorTab?.('new-ep',false);$('newEpWorkSelect').value=String(workId);
+    form(c.snapshot,c.lifecycle!=='ACTIVE'||work.moderation_state!=='CLEAR'||!!work.trashed_at);
+    history.replaceState(null,'','/creator/episodes?work='+workId+'&draft='+c.id);status(c);
+    $('creatorDraftError').textContent='';if(record)schedule(c);await listCopies(c);$('newEpTitle')?.focus();
+  }
+  async function listCopies(c=engine.current) {
+    if(!c)return;const turn=epoch;
+    const local=await DraftStore.heads(c.userId,c.workId);
+    if(turn!==epoch||actor()?.userId!==c.userId)return;
+    const box=$('draftCopies');box.replaceChildren();
+    if($('draftCopyDetails'))$('draftCopyDetails').open=local.some(r=>r.branch!==c.branch&&r.seq>r.serverSeq);
+    function button(label,fn){const b=document.createElement('button');b.type='button';b.className='btn btn-outline btn-sm';b.textContent=label;b.onclick=safe(fn);box.append(b);}
+    for(const row of local.filter(r=>r.branch!==c.branch))button('기기 사본 복구: '+(row.snapshot.title||'무제')+' · '+row.id.slice(0,8),async()=>{
+      if(!window.confirm('현재 원고를 먼저 백업한 뒤 이 사본을 복구합니다. 계속할까요?'))return;
+      if(row.id===engine.current?.id){await engine.recover(row);form(engine.current.snapshot);status(engine.current);schedule();}
+      else {
+        await openWork(row.workId,row.id,{record:row,localOnly:true});
       }
-      const request = window.indexedDB.open(DB_NAME, 1);
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'key' });
-        if (!db.objectStoreNames.contains(REVISION_STORE)) {
-          const revisions = db.createObjectStore(REVISION_STORE, { keyPath: 'id', autoIncrement: true });
-          revisions.createIndex('draftKey', 'draftKey', { unique: false });
-          revisions.createIndex('createdAt', 'createdAt', { unique: false });
-        }
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
     });
-    return dbPromise;
-  }
-
-  async function dbRequest(storeName, mode, action) {
-    const db = await openDatabase();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(storeName, mode);
-      const request = action(transaction.objectStore(storeName));
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  function getAuthorId() {
-    for (const key of ['webnovels_creator', 'webnovels_author', 'webnovels_user']) {
-      try {
-        const value = JSON.parse(localStorage.getItem(key) || 'null');
-        if (value) return String(value.creatorId || value.authorId || value.id || value.username || 'local-author');
-      } catch (_) {}
-    }
-    return 'local-author';
-  }
-
-  function getIdentity() {
-    const workId = String($('newEpWorkSelect')?.value || 'new-work');
-    const episodeNumber = Number($('newEpNumber')?.value || 1) || 1;
-    return { authorId: getAuthorId(), workId, episodeNumber };
-  }
-
-  function makeKey(identity = getIdentity()) {
-    return `${identity.authorId}:${identity.workId}:${identity.episodeNumber}`;
-  }
-
-  function formData() {
-    const identity = getIdentity();
-    return {
-      key: makeKey(identity),
-      ...identity,
-      title: $('newEpTitle')?.value || '',
-      content: $('newEpContent')?.value || '',
-      authorComment: $('newEpAuthorComment')?.value || '',
-      serverRevision,
-      updatedAt: new Date().toISOString()
-    };
-  }
-
-  function setStatus(message, kind = '') {
-    const status = $('creatorDraftStatus');
-    if (!status) return;
-    status.textContent = message;
-    status.className = `creator-draft-status ${kind}`.trim();
-  }
-
-  function updateCounts() {
-    const content = $('newEpContent')?.value || '';
-    const total = content.length;
-    const noWhitespace = content.replace(/\s/g, '').length;
-    const paragraphs = content.split(/\n\s*\n/).filter((paragraph) => paragraph.trim()).length;
-    const count = $('creatorWordCount');
-    const progress = $('creatorWordProgress');
-    if (count) count.textContent = `공백 포함 ${total.toLocaleString()}자 · 제외 ${noWhitespace.toLocaleString()}자 · ${paragraphs.toLocaleString()}문단`;
-    if (progress) progress.style.width = `${Math.min(100, Math.round((total / 4500) * 100))}%`;
-  }
-
-  async function saveLocal({ revision = false } = {}) {
-    if (!currentKey) return;
-    const draft = formData();
-    currentKey = draft.key;
-    await dbRequest(STORE_NAME, 'readwrite', (store) => store.put(draft));
-    if (revision) await addLocalRevision(draft);
-    setStatus('이 기기에 안전하게 저장됨', 'is-saved');
-  }
-
-  async function addLocalRevision(draft = formData()) {
-    const revision = { draftKey: draft.key, title: draft.title, content: draft.content, authorComment: draft.authorComment, createdAt: new Date().toISOString() };
-    await dbRequest(REVISION_STORE, 'readwrite', (store) => store.add(revision));
-    const all = await dbRequest(REVISION_STORE, 'readonly', (store) => store.index('draftKey').getAll(draft.key));
-    const stale = all.sort((a, b) => b.id - a.id).slice(MAX_LOCAL_REVISIONS);
-    for (const item of stale) await dbRequest(REVISION_STORE, 'readwrite', (store) => store.delete(item.id));
-  }
-
-  function hasApiSession() {
-    const token = localStorage.getItem('webnovels_token') || '';
-    return token.split('.').length === 3;
-  }
-
-  async function syncServer() {
-    if (!currentKey || !navigator.onLine) return;
-    const draft = formData();
-    setStatus('서버 초안 동기화 중…', 'is-saving');
     try {
-      if (window.WebNovelsAdmin?.saveEpisodeDraftToDB && /^\d+$/.test(draft.authorId) && /^\d+$/.test(draft.workId)) {
-        const saved = await window.WebNovelsAdmin.saveEpisodeDraftToDB(draft.authorId, draft.workId, draft.episodeNumber, draft);
-        if (!saved.success) throw new Error(saved.error || 'Supabase 초안 저장에 실패했습니다.');
-        serverRevision = saved.draft.server_revision;
-        await saveLocal();
-        setStatus(`Supabase 동기화 완료 · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 'is-saved');
-        return;
-      }
-      if (!hasApiSession()) return;
-      const token = localStorage.getItem('webnovels_token');
-      const response = await fetch(`/api/creator/drafts/${encodeURIComponent(draft.workId)}/${draft.episodeNumber}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: draft.title, content: draft.content, authorComment: draft.authorComment, baseRevision: serverRevision })
-      });
-      const result = await response.json();
-      if (response.status === 409) {
-        setStatus('다른 기기에서 수정됨 — 로컬 초안은 보존됨', 'is-error');
-        return;
-      }
-      if (!response.ok) throw new Error(result.error || '서버 저장에 실패했습니다.');
-      serverRevision = result.draft.serverRevision;
-      await saveLocal();
-      setStatus(`서버 동기화 완료 · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 'is-saved');
-    } catch (error) {
-      console.warn('[Creator draft sync]', error);
-      setStatus('오프라인 또는 서버 오류 — 기기에만 저장됨', 'is-error');
-    }
-  }
-
-  async function fetchServerDraft(identity) {
-    if (!navigator.onLine) return null;
-    if (window.WebNovelsAdmin?.fetchEpisodeDraftFromDB && /^\d+$/.test(identity.authorId) && /^\d+$/.test(identity.workId)) {
-      const draft = await window.WebNovelsAdmin.fetchEpisodeDraftFromDB(identity.authorId, identity.workId, identity.episodeNumber);
-      return draft ? { title: draft.title, content: draft.content, authorComment: draft.author_comment, serverRevision: draft.server_revision, updatedAt: draft.updated_at } : null;
-    }
-    if (!hasApiSession()) return null;
-    const token = localStorage.getItem('webnovels_token');
-    try {
-      const params = new URLSearchParams({ workId: identity.workId, episodeNumber: String(identity.episodeNumber) });
-      const response = await fetch(`/api/creator/drafts?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) return null;
-      const result = await response.json();
-      return result.draft || null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  async function saveSoon() {
-    updateCounts();
-    setStatus('이 기기에 저장 중…', 'is-saving');
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(async () => {
-      try {
-        await saveLocal();
-      } catch (error) {
-        console.error('[Creator local draft]', error);
-        setStatus('초안 저장 실패 — 브라우저 저장공간을 확인해주세요', 'is-error');
-      }
-    }, SAVE_DELAY);
-  }
-
-  function applyDraft(draft) {
-    if (!draft) return;
-    if ($('newEpTitle')) $('newEpTitle').value = draft.title || '';
-    if ($('newEpContent')) $('newEpContent').value = draft.content || '';
-    if ($('newEpAuthorComment')) $('newEpAuthorComment').value = draft.authorComment || '';
-    serverRevision = draft.serverRevision || null;
-    updateCounts();
-  }
-
-  async function loadDraft() {
-    const nextKey = makeKey();
-    if (currentKey === nextKey) return;
-    try {
-      if (currentKey) await saveLocal();
-      currentKey = nextKey;
-      serverRevision = null;
-      const identity = getIdentity();
-      const localDraft = await dbRequest(STORE_NAME, 'readonly', (store) => store.get(currentKey));
-      const remoteDraft = await fetchServerDraft(identity);
-      const localUpdatedAt = localDraft ? new Date(localDraft.updatedAt).getTime() : 0;
-      const remoteUpdatedAt = remoteDraft ? new Date(remoteDraft.updatedAt).getTime() : 0;
-      const preferredDraft = remoteUpdatedAt > localUpdatedAt ? remoteDraft : localDraft;
-      if (preferredDraft) {
-        applyDraft(preferredDraft);
-        if (remoteUpdatedAt > localUpdatedAt) {
-          await saveLocal();
-          setStatus('서버 초안을 복구했습니다', 'is-saved');
-        } else {
-          setStatus('저장된 로컬 초안을 복구했습니다', 'is-saved');
-        }
-      } else {
-        updateCounts();
-        setStatus('새 초안 준비됨');
-      }
-    } catch (error) {
-      console.error('[Creator draft load]', error);
-      setStatus('로컬 초안을 불러오지 못했습니다', 'is-error');
-    }
-  }
-
-  // ============================================================
-  // [Diff Engine] 순수 JS 기반 라인 단위 및 문단 단위 Diff 알고리즘
-  // ============================================================
-  function escapeHtml(text) {
-    return String(text || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function computeLineDiff(oldText, newText) {
-    const oldLines = oldText ? oldText.split('\n') : [];
-    const newLines = newText ? newText.split('\n') : [];
-    const m = oldLines.length;
-    const n = newLines.length;
-
-    // Safety fallback for very large texts to avoid O(M*N) memory spikes
-    if (m * n > 250000) {
-      return oldLines.map((line, i) => ({
-        type: line === newLines[i] ? 'same' : 'del',
-        text: line,
-        oldNum: i + 1,
-        newNum: i + 1
-      }));
-    }
-
-    // Dynamic programming matrix for Longest Common Subsequence (LCS)
-    const dp = Array.from({ length: m + 1 }, () => new Uint16Array(n + 1));
-    for (let i = 0; i < m; i++) {
-      for (let j = 0; j < n; j++) {
-        if (oldLines[i] === newLines[j]) {
-          dp[i + 1][j + 1] = dp[i][j] + 1;
-        } else {
-          dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
-        }
-      }
-    }
-
-    // Backtrack to build diff ops
-    const diff = [];
-    let i = m;
-    let j = n;
-
-    while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
-        diff.unshift({ type: 'same', text: oldLines[i - 1], oldNum: i, newNum: j });
-        i--;
-        j--;
-      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-        diff.unshift({ type: 'ins', text: newLines[j - 1], oldNum: null, newNum: j });
-        j--;
-      } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
-        diff.unshift({ type: 'del', text: oldLines[i - 1], oldNum: i, newNum: null });
-        i--;
-      }
-    }
-
-    return diff;
-  }
-
-  // ============================================================
-  // [Version Diff & Restore Modal]
-  // ============================================================
-  let activeSelectedRevision = null;
-  let cachedRevisions = [];
-
-  async function openDiffModal() {
-    if (!currentKey) return;
-    const revisions = await dbRequest(REVISION_STORE, 'readonly', (store) => store.index('draftKey').getAll(currentKey));
-    cachedRevisions = (revisions || []).sort((a, b) => b.id - a.id);
-
-    if (!cachedRevisions.length) {
-      if (window.showToast) showToast('비교 및 복구할 저장된 버전이 아직 없습니다. [버전 저장]을 먼저 눌러주세요.');
-      return;
-    }
-
-    renderRevisionSidebar();
-    selectRevisionForDiff(cachedRevisions[0]);
-    if (window.openModal) window.openModal('modalDraftDiff');
-    else $('modalDraftDiff')?.classList.add('active');
-    if (window.lucide?.createIcons) window.lucide.createIcons({ root: $('modalDraftDiff') });
-  }
-
-  function renderRevisionSidebar() {
-    const listEl = $('diffVersionList');
-    if (!listEl) return;
-
-    const currentContent = $('newEpContent')?.value || '';
-    const currentTotalChars = currentContent.length;
-
-    listEl.innerHTML = cachedRevisions.map((rev, index) => {
-      const date = new Date(rev.createdAt);
-      const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const dateStr = date.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
-      const revChars = (rev.content || '').length;
-      const charDiff = currentTotalChars - revChars;
-      const diffBadge = charDiff > 0 ? `+${charDiff.toLocaleString()}자` : charDiff < 0 ? `${charDiff.toLocaleString()}자` : '동일';
-      const isSelected = activeSelectedRevision?.id === rev.id;
-
-      return `
-        <div class="diff-version-card ${isSelected ? 'active' : ''}" data-revision-id="${rev.id}" onclick="window.CreatorDraftEditor.selectRevision(${rev.id})">
-          <div class="diff-card-header">
-            <span class="diff-card-num">#${index + 1} 버전</span>
-            <span class="diff-card-time">${dateStr} ${timeStr}</span>
-          </div>
-          <div class="diff-card-title">${escapeHtml(rev.title || '(제목 없음)')}</div>
-          <div class="diff-card-meta">
-            <span>${revChars.toLocaleString()}자</span>
-            <span class="diff-delta-badge ${charDiff > 0 ? 'pos' : charDiff < 0 ? 'neg' : 'zero'}">현재 대비 ${diffBadge}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function selectRevisionForDiff(revision) {
-    if (!revision) return;
-    activeSelectedRevision = revision;
-
-    document.querySelectorAll('.diff-version-card').forEach((card) => {
-      card.classList.toggle('active', Number(card.dataset.revisionId) === revision.id);
-    });
-
-    renderDiffComparison(revision);
-    const restoreBtn = $('btnConfirmRestoreRevision');
-    if (restoreBtn) restoreBtn.disabled = false;
-  }
-
-  function renderDiffComparison(rev) {
-    const headerEl = $('diffPreviewHeader');
-    const containerEl = $('diffSectionsContainer');
-    if (!containerEl) return;
-
-    const currentTitle = $('newEpTitle')?.value || '';
-    const currentContent = $('newEpContent')?.value || '';
-    const currentComment = $('newEpAuthorComment')?.value || '';
-
-    const revDate = new Date(rev.createdAt).toLocaleString();
-    const currentChars = currentContent.length;
-    const revChars = (rev.content || '').length;
-
-    if (headerEl) {
-      headerEl.innerHTML = `
-        <div class="diff-header-grid">
-          <div class="diff-col-box old">
-            <span class="badge-tag">선택 버전 (${revDate})</span>
-            <strong>${escapeHtml(rev.title || '(무제)')}</strong>
-            <small class="text-muted">본문 ${revChars.toLocaleString()}자</small>
-          </div>
-          <div class="diff-col-arrow"><i data-lucide="arrow-right"></i></div>
-          <div class="diff-col-box new">
-            <span class="badge-tag curr">현재 에디터 원고</span>
-            <strong>${escapeHtml(currentTitle || '(무제)')}</strong>
-            <small class="text-muted">본문 ${currentChars.toLocaleString()}자</small>
-          </div>
-        </div>
-      `;
-    }
-
-    const titleChanged = (rev.title || '') !== currentTitle;
-    const commentChanged = (rev.authorComment || '') !== currentComment;
-    const contentDiff = computeLineDiff(rev.content || '', currentContent);
-
-    const addedLines = contentDiff.filter(d => d.type === 'ins').length;
-    const deletedLines = contentDiff.filter(d => d.type === 'del').length;
-    const sameLines = contentDiff.filter(d => d.type === 'same').length;
-
-    let metaDiffHtml = '';
-    if (titleChanged || commentChanged) {
-      metaDiffHtml = `
-        <div class="diff-meta-box">
-          ${titleChanged ? `
-            <div class="diff-meta-row">
-              <span class="diff-meta-label">제목 변경:</span>
-              <del class="diff-del-inline">${escapeHtml(rev.title || '(제목 없음)')}</del>
-              <i data-lucide="chevrons-right" style="width:14px;height:14px;vertical-align:middle;"></i>
-              <ins class="diff-ins-inline">${escapeHtml(currentTitle || '(제목 없음)')}</ins>
-            </div>
-          ` : ''}
-          ${commentChanged ? `
-            <div class="diff-meta-row">
-              <span class="diff-meta-label">작가의 말:</span>
-              <del class="diff-del-inline">${escapeHtml(rev.authorComment || '(작가의 말 없음)')}</del>
-              <i data-lucide="chevrons-right" style="width:14px;height:14px;vertical-align:middle;"></i>
-              <ins class="diff-ins-inline">${escapeHtml(currentComment || '(작가의 말 없음)')}</ins>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }
-
-    const summaryHtml = `
-      <div class="diff-stat-bar">
-        <span>본문 줄 비교:</span>
-        <span class="diff-badge ins">+${addedLines}줄 추가됨</span>
-        <span class="diff-badge del">-${deletedLines}줄 삭제됨</span>
-        <span class="text-muted">${sameLines}줄 일치</span>
-      </div>
-    `;
-
-    const linesHtml = contentDiff.map((d) => {
-      const prefix = d.type === 'ins' ? '+' : d.type === 'del' ? '-' : ' ';
-      const lineNum = d.type === 'del' ? (d.oldNum || '') : (d.newNum || '');
-      return `
-        <div class="diff-line-row diff-type-${d.type}">
-          <span class="diff-line-num">${lineNum}</span>
-          <span class="diff-line-prefix">${prefix}</span>
-          <span class="diff-line-content">${escapeHtml(d.text) || '&nbsp;'}</span>
-        </div>
-      `;
-    }).join('');
-
-    containerEl.innerHTML = `
-      ${metaDiffHtml}
-      ${summaryHtml}
-      <div class="diff-code-wrapper">
-        <div class="diff-lines-container">${linesHtml}</div>
-      </div>
-    `;
-
-    if (window.lucide?.createIcons) window.lucide.createIcons({ root: containerEl });
-  }
-
-  async function confirmRestoreRevision() {
-    if (!activeSelectedRevision) return;
-    const targetRev = activeSelectedRevision;
-
-    // 1. 복구 직전 현재 원고를 안전하게 새 버전으로 자동 백업
-    const current = formData();
-    if (current.content || current.title) {
-      await addLocalRevision({
-        ...current,
-        title: current.title || '복구 직전 원고 백업'
-      });
-    }
-
-    // 2. 선택된 버전 복구 적용
-    applyDraft({
-      title: targetRev.title,
-      content: targetRev.content,
-      authorComment: targetRev.authorComment,
-      serverRevision
-    });
-
-    // 3. 로컬 DB 갱신
-    await saveLocal({ revision: false });
-
-    // 4. 모달 닫기 및 피드백
-    if (window.closeModal) window.closeModal('modalDraftDiff');
-    else $('modalDraftDiff')?.classList.remove('active');
-
-    if (window.showToast) {
-      showToast('선택한 버전으로 안전하게 복구되었습니다. (복구 직전 원고도 새 버전으로 백업됨)');
-    }
-  }
-
-  // ============================================================
-  // [Formatting Tools] 웹소설 전문 서식 정규화 도구
-  // ============================================================
-
-  // 1. 들여쓰기 정돈: 대화문("...") 외 일반 서술 문단 첫머리에 공백(2칸) 일괄 정돈
-  function formatIndentation() {
-    const textarea = $('newEpContent');
-    if (!textarea) return;
-    const content = textarea.value;
-    if (!content.trim()) return;
-
-    // 복구 대비 백업
-    addLocalRevision(formData());
-
-    const quoteChars = ['"', '“', '‘', "'", '(', '[', '<', '「', '『'];
-    const lines = content.split('\n');
-    let modified = 0;
-
-    const formatted = lines.map((line) => {
-      const trimmed = line.trimStart();
-      if (!trimmed) return ''; // 빈 줄 유지
-
-      const isQuote = quoteChars.some(q => trimmed.startsWith(q));
-      if (isQuote) {
-        // 대화문은 들여쓰기 없이 깔끔하게 유지
-        return trimmed;
-      } else {
-        // 서술문은 2칸 들여쓰기 표준화
-        modified++;
-        return '  ' + trimmed;
-      }
-    });
-
-    textarea.value = formatted.join('\n');
-    saveSoon();
-    if (window.showToast) showToast(`각 서술 문단(${modified}건)의 첫머리 들여쓰기를 정돈했습니다.`);
-  }
-
-  // 2. 대화문 정돈: 대화문 앞뒤 빈 줄 및 줄바꿈 구조화
-  function formatDialogue() {
-    const textarea = $('newEpContent');
-    if (!textarea) return;
-    const content = textarea.value;
-    if (!content.trim()) return;
-
-    // 복구 대비 백업
-    addLocalRevision(formData());
-
-    const lines = content.split('\n');
-    const quoteChars = ['"', '“', '‘', "'", '「', '『'];
-    const result = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const current = lines[i].trim();
-      if (!current) {
-        result.push('');
-        continue;
-      }
-
-      const isDialogue = quoteChars.some(q => current.startsWith(q));
-      const prevLine = result.length > 0 ? result[result.length - 1] : null;
-
-      // 이전 줄이 일반 서술문이고 이번 줄이 대화문이면 1줄 띄우기
-      if (isDialogue && prevLine && prevLine.trim() !== '') {
-        result.push('');
-      }
-
-      result.push(current);
-    }
-
-    textarea.value = result.join('\n');
-    saveSoon();
-    if (window.showToast) showToast('대화문과 서술문의 줄바꿈 간격을 보기 쉽게 정돈했습니다.');
-  }
-
-  // 3. 다중 빈 줄 및 불필요한 공백 정리
-  function formatCleanSpacing() {
-    const textarea = $('newEpContent');
-    if (!textarea) return;
-    const content = textarea.value;
-    if (!content.trim()) return;
-
-    // 복구 대비 백업
-    addLocalRevision(formData());
-
-    let cleaned = content
-      // 3개 이상의 연속된 줄바꿈을 2개로 축소
-      .replace(/\n{3,}/g, '\n\n')
-      // 각 라인의 끝부분 공백(trailing space) 제거
-      .split('\n')
-      .map(line => line.trimEnd())
-      .join('\n')
-      // 탭 문자를 스페이스 2칸으로 표준화
-      .replace(/\t/g, '  ');
-
-    textarea.value = cleaned;
-    saveSoon();
-    if (window.showToast) showToast('다중 빈 줄 및 불필요한 줄끝 공백을 깔끔하게 정리했습니다.');
-  }
-
-  // ============================================================
-  // [Mobile & Viewport Optimization]
-  // ============================================================
-  function setupMobileViewportHandling() {
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', () => {
-        const textarea = $('newEpContent');
-        if (document.activeElement === textarea) {
-          // 키보드가 올라왔을 때 커서 위치로 부드럽게 스크롤
-          textarea.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        }
-      });
-    }
-
-    // 미저장 변경사항이 있을 때만 브라우저 이탈 방지 경고
-    window.addEventListener('beforeunload', (e) => {
-      const statusEl = $('creatorDraftStatus');
-      if (currentKey && ($('newEpContent')?.value || $('newEpTitle')?.value) && statusEl && statusEl.classList.contains('is-saving')) {
-        e.preventDefault();
-        e.returnValue = '원고가 아직 기기 또는 서버에 저장 중입니다. 페이지를 벗어나시겠습니까?';
-        return e.returnValue;
-      }
+      const result=await api('list',{workId:c.workId,userId:c.userId});if(turn!==epoch||actor()?.userId!==c.userId)return;
+      for(const row of result.drafts)button('서버 원고: '+(row.title||'무제')+' · '+row.lifecycle,()=>openWork(c.workId,row.id));
+    }catch(e){if(turn===epoch)error(e);}
+    const legacy=await DraftStore.legacy(actor()?.author?.id,c.workId);
+    if(turn!==epoch||actor()?.userId!==c.userId)return;
+    for(const row of legacy)button('이전 편집기 원고 가져오기: '+(row.title||row.key),async()=>{
+      const verified=await window.WebNovelsAuth.api('/api/v2/creator/works/'+c.workId);
+      if(!verified.work||actor()?.userId!==c.userId)throw Error('OWNER_MISMATCH');
+      const imported=await DraftStore.importLegacy(c.userId,actor().author.id,c.workId,row);
+      // Stable mapping survives repeated imports; never delete the source.
+      let localOnly=false;try{await api('get',{workId:c.workId,id:imported.id,userId:c.userId});}catch(e){if(e.status===404)localOnly=true;else throw e;}
+      await openWork(c.workId,imported.id,{record:imported,localOnly});
     });
   }
-
-  async function clearCurrentDraft() {
-    if (!currentKey) return;
-    const key = currentKey;
-    await dbRequest(STORE_NAME, 'readwrite', (store) => store.delete(key));
-    currentKey = null;
-    serverRevision = null;
-    setStatus('발행 완료 — 로컬 초안을 정리했습니다', 'is-saved');
+  async function save(){const c=engine.current;if(!c)throw Error('작품을 선택해주세요.');await engine.flush(c);await engine.sync(c);if(c.seq>c.serverSeq)schedule(c);}
+  function download(c=engine.current){if(!c)return;const blob=new Blob([JSON.stringify({workId:c.workId,draftId:c.id,revision:c.revision,...c.snapshot},null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='원고-'+c.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  async function exportLegacy(){
+    const user=actor(),workId=$('newEpWorkSelect').value;if(!user?.author||!workId)throw Error('AUTHOR_REQUIRED');
+    await window.WebNovelsAuth.api('/api/v2/creator/works/'+workId);
+    const value=await DraftStore.exportLegacy(user.author.id,workId);if(actor()?.userId!==user.userId)throw Error('SESSION_CHANGED');
+    const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='이전-원고-'+workId+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
-
-  async function initialize() {
-    if (initialized || !$('newEpContent')) return;
-    initialized = true;
-
-    const fields = ['newEpTitle', 'newEpContent', 'newEpAuthorComment'];
-    fields.forEach((id) => $(id)?.addEventListener('input', saveSoon));
-
-    $('newEpWorkSelect')?.addEventListener('change', loadDraft);
-    $('newEpNumber')?.addEventListener('change', loadDraft);
-    $('newEpContent')?.addEventListener('blur', () => { saveLocal().then(syncServer); });
-
-    // 버전 저장 및 복구
-    $('btnSaveDraftVersion')?.addEventListener('click', async () => {
-      await saveLocal({ revision: true });
-      if (window.showToast) showToast('현재 원고를 복구 가능한 버전으로 저장했습니다.');
-    });
-    $('btnRestoreDraftVersion')?.addEventListener('click', openDiffModal);
-    $('btnConfirmRestoreRevision')?.addEventListener('click', confirmRestoreRevision);
-
-    // 웹소설 서식 정규화 버튼 이벤트
-    $('btnFormatIndent')?.addEventListener('click', formatIndentation);
-    $('btnFormatDialogue')?.addEventListener('click', formatDialogue);
-    $('btnFormatClean')?.addEventListener('click', formatCleanSpacing);
-
-    // 모바일 뷰포트 핸들링
-    setupMobileViewportHandling();
-
-    window.addEventListener('online', syncServer);
-    syncTimer = window.setInterval(syncServer, SYNC_INTERVAL);
-    await loadDraft();
+  async function transform(kind) {
+    const c=engine.current;if(!c||composing)return;let content=c.snapshot.content;
+    if(kind==='indent')content=content.split('\n').map(l=>!l.trim()?'':['"','“','‘',"'",'「','『','(','['].some(q=>l.trimStart().startsWith(q))?l.trimStart():'  '+l.trimStart()).join('\n');
+    if(kind==='dialogue')content=content.split('\n').map(l=>/^["“‘'「『]/.test(l.trim())?'\n'+l.trim()+'\n':l).join('\n').replace(/\n{3,}/g,'\n\n');
+    if(kind==='clean')content=content.replace(/[ \t]+$/gm,'').replace(/\n{3,}/g,'\n\n');
+    await engine.replace({...c.snapshot,content},'before-format');if(engine.current===c){form(c.snapshot);schedule(c);}
   }
-
-  window.CreatorDraftEditor = {
-    initialize,
-    loadDraft,
-    syncServer,
-    clearCurrentDraft,
-    openDiffModal,
-    selectRevision: (id) => {
-      const rev = cachedRevisions.find(r => r.id === id);
-      if (rev) selectRevisionForDiff(rev);
-    },
-    formatIndentation,
-    formatDialogue,
-    formatCleanSpacing
-  };
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize);
-  else initialize();
-}());
+  function compare(value) {
+    selected=value;const current=engine.current?.snapshot||{};
+    $('diffPreviewHeader').textContent='선택한 사본 → 현재 원고 (복구 직전 원고도 보존됩니다)';
+    $('diffSectionsContainer').innerHTML=['title','content','authorComment'].map(k=>`<h4>${esc({title:'제목',content:'본문',authorComment:'작가의 말'}[k])}</h4>`+draftLineDiff(value[k]||'',current[k]||'').map(d=>`<div class="diff-line-row diff-type-${d.type}"><span>${d.type==='ins'?'+':d.type==='del'?'−':' '} ${esc(d.text)}</span></div>`).join('')).join('');
+    $('btnConfirmRestoreRevision').disabled=engine.current?.lifecycle!=='ACTIVE';
+  }
+  async function openDiffModal(){
+    const c=engine.current;if(!c)return;await engine.flush(c);
+    const rows=(await DraftStore.history(c)).map(r=>({label:r.reason,value:r.snapshot}));
+    if(c.conflict)rows.unshift({label:'충돌한 서버 사본',value:c.conflict});
+    try{if(c.revision!=='0'){let before='0';do{const r=await api('history',{workId:c.workId,id:c.id,userId:c.userId,before});rows.push(...r.revisions.map(v=>({label:'서버 버전 '+v.revision,value:v})));before=r.revisions.length===20?r.revisions.at(-1).revision:null;}while(before);}}catch(e){error(e);}
+    if(engine.current!==c||actor()?.userId!==c.userId)return;selected=null;
+    $('diffVersionList').replaceChildren();rows.forEach(r=>{const b=document.createElement('button');b.type='button';b.textContent=r.label;b.className='diff-version-card';b.onclick=()=>compare(r.value);$('diffVersionList').append(b);});
+    $('btnConfirmRestoreRevision').disabled=true;$('diffSectionsContainer').textContent=rows.length?'비교할 버전을 선택해주세요.':'저장한 버전이 없습니다.';
+    window.openModal?.('modalDraftDiff');
+  }
+  async function beforeAccountChange(){stop();await engine.checkpoint();if(engine.current&&engine.current.seq>engine.current.serverSeq)toast('서버 미동기 원고는 이 기기에 보존됩니다. 같은 계정으로 로그인해 기기 사본을 복구해주세요.');}
+  function onAuthLost(){stop();epoch++;const c=engine.detach();works=[];selected=null;form({},true);
+    for(const id of ['newEpWorkSelect','draftCopies','diffVersionList','diffSectionsContainer','diffPreviewHeader','draftIdentity','creatorDraftError'])if($(id))$(id).replaceChildren();
+    if($('draftConflict'))$('draftConflict').hidden=true;if($('creatorDraftStatus'))$('creatorDraftStatus').textContent='로그인 후 원고를 복구할 수 있습니다.';
+    window.closeModal?.('modalDraftDiff');
+    if(c){toast('세션이 종료되어 원고 화면을 닫았습니다. 원고는 같은 계정의 기기 사본으로 보존합니다.');engine.flush(c).catch(()=>{download(c);toast('기기 저장 실패로 원고 백업 다운로드를 요청했습니다. 다운로드를 확인해주세요.');});}
+  }
+  async function enter(){if(!works.length)await loadWorks();const params=new URLSearchParams(location.search);if(params.get('work')){
+    const id=params.get('draft');let localOnly=false;
+    if(id)try{await api('get',{workId:params.get('work'),id});}catch(e){
+      const saved=await DraftStore.heads(actor()?.userId,params.get('work'));
+      if(e.status===404||saved.some(r=>r.id===id))localOnly=true;else throw e;
+    }
+    await openWork(params.get('work'),id,{localOnly});
+  }else if(engine.current){$('newEpWorkSelect').value=engine.current.workId;form(engine.current.snapshot);status(engine.current);}else form({},true);}
+  function initialize(){
+    form({},true);for(const id of Object.values(fields)){$(id)?.addEventListener('input',input);$(id)?.addEventListener('compositionstart',()=>{composing=true;stop();});$(id)?.addEventListener('compositionend',()=>{composing=false;input();});}
+    $('newEpWorkSelect')?.addEventListener('change',safe(async()=>{const id=$('newEpWorkSelect').value;if(!id){$('newEpWorkSelect').value=engine.current?.workId||'';return;}try{await openWork(id);}catch(e){$('newEpWorkSelect').value=engine.current?.workId||id;throw e;}}));
+    const bind=(id,fn)=>$(id)?.addEventListener('click',safe(fn));
+    bind('btnDraftDownload',()=>download());bind('btnLegacyDraftExport',exportLegacy);bind('btnDraftNew',()=>openWork(engine.current?.workId||$('newEpWorkSelect').value,null,{fresh:true}));
+    bind('btnDraftRefresh',()=>listCopies());bind('btnSaveDraftVersion',async()=>{const c=engine.current;if(c)await DraftStore.backup(c,c.snapshot,'manual');});
+    bind('btnRestoreDraftVersion',openDiffModal);bind('btnConfirmRestoreRevision',async()=>{if(selected){await engine.replace(selected);form(engine.current.snapshot);schedule();window.closeModal?.('modalDraftDiff');}});
+    bind('btnFormatIndent',()=>transform('indent'));bind('btnFormatDialogue',()=>transform('dialogue'));bind('btnFormatClean',()=>transform('clean'));
+    bind('btnDraftUndo',async()=>{if(engine.current?.undo){await engine.replace(engine.current.undo,'before-undo');form(engine.current.snapshot);schedule();}});
+    bind('btnConflictCompare',openDiffModal);for(const [id,keep]of [['btnConflictLocal',true],['btnConflictRemote',false]])bind(id,async()=>{await engine.resolve(keep);form(engine.current.snapshot);status(engine.current);});
+    bind('btnDraftFocus',()=>{$('creatorTab-new-ep').classList.toggle('draft-focus');$('newEpContent').focus();});
+    document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'&&engine.current){e.preventDefault();safe(save)();}if(e.key==='Escape')$('creatorTab-new-ep')?.classList.remove('draft-focus');});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)safe(()=>engine.checkpoint())();});
+    window.addEventListener('online',safe(async()=>{for(const c of engine.contexts.values())await engine.sync(c);}));
+    window.addEventListener('beforeunload',e=>{if([...engine.contexts.values()].some(c=>c.seq>c.localSeq)){e.preventDefault();e.returnValue='';}});
+    window.visualViewport?.addEventListener('resize',()=>{document.documentElement.style.setProperty('--draft-viewport',window.visualViewport.height+'px');if(document.activeElement===$('newEpContent'))$('newEpContent').scrollIntoView({block:'nearest'});});
+  }
+  window.CreatorDraftEditor={openWork:safe(openWork),enter:safe(enter),save:safe(save),syncServer:safe(save),download,openDiffModal:safe(openDiffModal),beforeAccountChange,onAuthLost,
+    checkpoint:()=>{epoch++;engine.cancelLoads();selected=null;window.closeModal?.('modalDraftDiff');return safe(()=>engine.checkpoint())();},clearCurrentDraft:async()=>{throw Error('발행된 원고도 보존합니다. 새 원고를 시작해주세요.');}};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
+})();

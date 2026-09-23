@@ -30,6 +30,10 @@ jobs:
       run: |
         npm run test:data
         npm run test:p0
+        npm run test:auth
+        npm run test:authoring-schema
+        npm run test:creator-works
+        npm run test:drafts
 
     - name: Push Prisma SQLite Schema
       run: npx prisma db push

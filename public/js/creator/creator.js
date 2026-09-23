@@ -13,6 +13,8 @@
 
 // 작가센터 7대 탭 전환 함수
 window.switchCreatorTab = function(tabKey, shouldPushState = true) {
+  if (tabKey !== 'new-ep') window.CreatorDraftEditor?.checkpoint();
+  if (tabKey === 'new-ep' && shouldPushState) window.CreatorDraftEditor?.enter();
   document.querySelectorAll('#creatorTabsBar [data-creator-tab]').forEach(b => b.classList.remove('active'));
   const activeBtn = document.querySelector(`#creatorTabsBar [data-creator-tab="${tabKey}"]`);
   if (activeBtn) activeBtn.classList.add('active');
@@ -57,6 +59,7 @@ window.switchCreatorTab = function(tabKey, shouldPushState = true) {
       try { window.history.pushState({ path: targetUrl }, '', targetUrl); } catch (e) {}
     }
   }
+  if (tabKey === 'works' && shouldPushState) window.CreatorWorks?.loadFromRoute();
 };
 
 // 예약 발행 일시 입력창 토글
@@ -73,353 +76,16 @@ window.toggleScheduledTimeInput = function(publishType) {
 // currentLoggedAuthor is managed in /js/core/state.js
 
 window.fetchCreatorDashboardData = async function() {
-  // 1. 세션에서 로그인된 작가 정보 확인
-  let author = null;
-  const authorStr = localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author');
-  if (authorStr) {
-    try {
-      author = JSON.parse(authorStr);
-    } catch (e) {}
-  }
-
-  // 독자/작가 통합 세션 확인
-  if (!author) {
-    const userStr = localStorage.getItem('webnovels_user');
-    if (userStr) {
-      try {
-        const u = JSON.parse(userStr);
-        if (u.role === 'CREATOR' || u.role === 'AUTHOR') {
-          author = u;
-        }
-      } catch (e) {}
-    }
-  }
-
-  currentLoggedCreator = author;
-  currentLoggedAuthor = author;
-  window.currentLoggedCreator = author;
-  window.currentLoggedAuthor = author;
-
+  const author = window.WebNovelsAuth?.getActor()?.author;
   if (!author) return;
-
-  // 2. 상단 작가 프로필 헤더 바 업데이트 (실제 DB 연동)
-  const penNameElem = document.getElementById('creatorAuthorPenName');
-  if (penNameElem) penNameElem.textContent = author.pen_name || author.penName || author.username || '공식 인증 작가';
-
-  const badgeElem = document.getElementById('creatorAuthorBadge');
-  if (badgeElem) badgeElem.textContent = author.status || '공식 인증 작가';
-
-  const bankInfoElem = document.getElementById('creatorBankInfo');
-  if (bankInfoElem) bankInfoElem.textContent = author.bank_info || author.bankInfo || '정산 계좌 미등록';
-
-  const logoutBtn = document.getElementById('btnAuthorLogout');
-  if (logoutBtn) logoutBtn.style.display = 'inline-block';
-
-  // 3. 해당 작가의 실제 DB 작품 필터링 (No Dummy Data)
-  const authorPenName = author.pen_name || author.penName;
-  const authorWorks = SAMPLE_WORKS.filter(w => 
-    (w.creator === authorPenName || w.author === authorPenName) || 
-    (author.work_title && w.title === author.work_title) ||
-    Number(w.creatorId || w.authorId) === Number(author.id)
-  );
-
-  // 만약 필터 결과가 비어있으면 해당 작가의 대표작 1개 자동 매핑
-  const displayWorks = authorWorks;
-
-  // 총 조회수 및 총 회차수 계산 (실데이터 기반)
-  const totalViews = displayWorks.reduce((sum, w) => sum + (Number(w.viewCount) || 0), 0);
-  const totalEpisodes = displayWorks.reduce((sum, w) => sum + (w.episodes ? w.episodes.length : 0), 0);
-
-  const totalViewsElem = document.getElementById('creatorTotalViews');
-  if (totalViewsElem) totalViewsElem.textContent = `${totalViews.toLocaleString()}회`;
-
-  const totalEpsElem = document.getElementById('creatorTotalEpisodes');
-  if (totalEpsElem) totalEpsElem.textContent = `${totalEpisodes}화`;
-
-  const worksCountElem = document.getElementById('creatorWorksCount');
-  if (worksCountElem) worksCountElem.textContent = `연재 작품: ${displayWorks.length}개`;
-
-  // 4. Tab 1: 내 연재 작품 목록 렌더링 (creatorWorksContainer)
-  const worksContainer = document.getElementById('creatorWorksContainer');
-  if (worksContainer) {
-    if (displayWorks.length === 0) {
-      worksContainer.innerHTML = `
-        <div class="card p-6 text-center" style="background: rgba(0,0,0,0.2); border-radius: 8px;">
-          <p class="text-muted mb-3">현재 등록된 연재 작품이 없습니다.</p>
-          <button class="btn btn-primary btn-sm" onclick="openAdminCreateWorkModal()">
-            <i data-lucide="plus"></i> 첫 작품 등록하기
-          </button>
-        </div>
-      `;
-    } else {
-      worksContainer.innerHTML = displayWorks.map(work => {
-        const epList = work.episodes || [];
-        const isWebtoon = work.contentType === 'WEBTOON';
-        const nextEpNum = epList.length + 1;
-        return `
-          <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.25);">
-            <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
-              <img src="${work.coverUrl || '/images/stormqueen_oath.jpg'}" alt="${work.title}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
-              <div style="flex: 1; min-width: 240px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                  <span class="badge badge-accent">${isWebtoon ? '웹툰' : '웹소설'}</span>
-                  <span class="badge badge-outline">${work.genre || '판타지'}</span>
-                  <span class="badge ${work.isCompleted ? 'badge-primary' : 'badge-emerald'}">${work.isCompleted ? '완결' : '연재중 🟢'}</span>
-                  <strong style="font-size: 1.15rem; color: #fff;">${work.title}</strong>
-                </div>
-                <p class="text-muted small mb-2" style="line-height: 1.4;">${work.description || '작품 소개가 등록되어 있습니다.'}</p>
-                <div style="display: flex; gap: 16px; font-size: 0.82rem; color: var(--text-secondary);">
-                  <span>👀 누적 조회수: <strong>${(work.viewCount || 0).toLocaleString()}회</strong></span>
-                  <span>📖 총 연재: <strong>${epList.length}화</strong></span>
-                  <span>⭐ 추천수: <strong>${(work.likeCount || 0).toLocaleString()}개</strong></span>
-                </div>
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 6px;">
-                <button class="btn btn-primary btn-sm" onclick="prepareNewEpisodeForWork(${work.id})">
-                  <i data-lucide="plus-circle"></i> + 신규 회차 작성 / 예약발행
-                </button>
-                <button class="btn btn-outline btn-sm" onclick="switchCreatorTab('new-ep')">
-                  <i data-lucide="calendar"></i> Zero-Touch 예약 연재
-                </button>
-                <button class="btn btn-ghost btn-sm" onclick="configureWorkCommentPolicy(${work.id})">
-                  <i data-lucide="message-square-warning"></i> 댓글 관리
-                </button>
-              </div>
-            </div>
-
-            <!-- work_management_2.md Section 2 회차 작성 및 관리 표 -->
-            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
-              <div class="flex-between mb-2">
-                <strong class="small text-muted" style="display:flex; align-items:center; gap:6px;">
-                  <i data-lucide="list"></i> 회차 작성 및 연재 관리 (${epList.length}화)
-                </strong>
-                <span class="text-muted small">1~3화 무료 · 4화 이후 유료/광고 모델 자동 적용</span>
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 6px;">
-                ${epList.map((ep, idx) => {
-                  const epNum = ep.episodeNumber || (idx + 1);
-                  const isFree = ep.isFree !== false && epNum <= 3;
-                  const isScheduled = ep.status === 'SCHEDULED';
-                  return `
-                    <div class="p-2 glass-panel flex-between" style="border-radius: 6px; font-size: 0.85rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-weight: 700; color: var(--color-brand-secondary); min-width: 45px;">${epNum}화</span>
-                        <strong style="color:#fff;">${ep.title || `제 ${epNum}화`}</strong>
-                        <span class="badge ${isFree ? 'badge-primary' : 'badge-ghost'}" style="font-size:0.72rem;">${isFree ? '무료' : '광고무료/100P'}</span>
-                      </div>
-                      <div style="display: flex; align-items: center; gap: 10px;">
-                        ${isScheduled 
-                          ? `<span class="badge badge-warning" style="font-size:0.75rem;">⏰ 예약발행 ${ep.scheduledAt ? ep.scheduledAt.substring(5, 16) : '08/27 20:00'}</span>` 
-                          : `<span style="color:var(--accent-emerald); font-size:0.8rem; font-weight:700;">작성완료 ✓</span>`}
-                        <button class="btn btn-ghost btn-sm" onclick="openReaderDirect(${work.id}, 'ep-${epNum}')" style="font-size:0.75rem; padding:2px 8px;">
-                          열람
-                        </button>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-                
-                <!-- 다음 예약 준비 가이드 행 (work_management_2.md 2번 명세) -->
-                <div class="p-2 glass-panel flex-between" style="border-radius: 6px; font-size: 0.85rem; background: rgba(255,255,255,0.01); border: 1px dashed rgba(255,255,255,0.1);">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-weight: 700; color: var(--text-muted); min-width: 45px;">${nextEpNum}화</span>
-                    <span class="text-muted">다음 회차 원고 준비중...</span>
-                  </div>
-                  <button class="btn btn-outline btn-sm" onclick="prepareNewEpisodeForWork(${work.id})" style="font-size:0.75rem; padding:2px 10px; color:var(--color-brand-secondary); border-color:var(--color-brand-secondary);">
-                    + 예약발행 작성
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-  }
-
-  // 5. Tab 2: 대상 작품 셀렉트 박스 채우기 (newEpWorkSelect)
-  const workSelect = document.getElementById('newEpWorkSelect');
-  if (workSelect) {
-    workSelect.innerHTML = displayWorks.map(w => `
-      <option value="${w.id}">[${w.contentType === 'WEBTOON' ? '웹툰' : '웹소설'}] ${w.title}</option>
-    `).join('');
-    if (window.CreatorDraftEditor && typeof window.CreatorDraftEditor.loadDraft === 'function') {
-      window.CreatorDraftEditor.loadDraft();
-    }
-  }
-
-  // 6. Tab 3: 연재 상태 관리 셀렉트 채우기 (creatorSerialStatusList)
-  const serialList = document.getElementById('creatorSerialStatusList');
-  if (serialList) {
-    serialList.innerHTML = displayWorks.map(w => `
-      <div class="glass-panel p-4 mb-3" style="display: flex; justify-content: space-between; align-items: center; border-radius: 8px;">
-        <div>
-          <strong>[${w.genre || '판타지'}] ${w.title}</strong>
-          <div class="text-muted small">총 ${w.episodes ? w.episodes.length : 0}화 연재중 | 주 3회 정기 연재</div>
-        </div>
-        <select class="form-input" style="padding: 6px 12px; font-size: 0.88rem; background: #1C1C22; color: #fff; border-radius: 8px; border: 1px solid var(--border-color);" onchange="handleWorkStatusChange(${w.id}, this.value)">
-          <option value="ONGOING" ${!w.isCompleted ? 'selected' : ''}>🟢 정상 연재중 (ONGOING)</option>
-          <option value="PAUSED">🟡 휴재 설정 (PAUSED)</option>
-          <option value="COMPLETED" ${w.isCompleted ? 'selected' : ''}>🔵 완결 처리 (COMPLETED)</option>
-        </select>
-      </div>
-    `).join('');
-  }
-
-  // 7. Tab 5, 6, 7 수익 지표 및 실시간 DB 정산(Settlement) 연동 (실제 DB 집계 기반)
-  let estimatedRev = 0;
-  let confirmedRev = 0;
-  let payableRevenue = 0;
-  let authorSettlements = [];
-  let pendingItem = null;
-
-  if (window.WebNovelsAdmin?.fetchAuthorRevenueSummary) {
-    try {
-      const revSummary = await window.WebNovelsAdmin.fetchAuthorRevenueSummary(author.id || authorPenName);
-      if (revSummary) {
-        estimatedRev = revSummary.estimatedRevenue || 0;
-        confirmedRev = revSummary.confirmedRevenue || 0;
-        payableRevenue = revSummary.payableRevenue || 0;
-        authorSettlements = revSummary.settlements || [];
-        pendingItem = revSummary.pendingItem || null;
-      }
-    } catch(revErr) {
-      console.warn('[fetchAuthorRevenueSummary in Dashboard Error]', revErr);
-    }
-  } else {
-    // Fallback 비상 조회
-    estimatedRev = Math.round(totalViews * 22.5);
-    confirmedRev = Math.round(estimatedRev * 0.85);
-    payableRevenue = confirmedRev;
-  }
-
-  const estElem = document.getElementById('creatorEstimatedRevenue');
-  if (estElem) estElem.textContent = `₩${estimatedRev.toLocaleString()}`;
-
-  const confElem = document.getElementById('creatorConfirmedRevenue');
-  if (confElem) confElem.textContent = `₩${confirmedRev.toLocaleString()}`;
-
-  // 크리에이터 상단 지표 갱신
-  const payElem = document.getElementById('creatorPayableRevenue');
-  if (payElem) payElem.textContent = `₩${payableRevenue.toLocaleString()}`;
-
-  // Phase 3: Supabase reader event aggregates. Empty state is intentional until real reading events accumulate.
-  if (window.WebNovelsAdmin?.fetchCreatorReaderAnalytics) {
-    try {
-      const analytics = await window.WebNovelsAdmin.fetchCreatorReaderAnalytics(author.id);
-      const completion = document.getElementById('creatorCompletionRate');
-      const progress = document.getElementById('creatorAverageProgress');
-      const eventCount = document.getElementById('creatorAnalyticsEvents');
-      if (completion) completion.textContent = `${Number(analytics.completionRate || 0).toFixed(1)}%`;
-      if (progress) progress.textContent = `${Number(analytics.avgProgress || 0)}%`;
-      if (eventCount) eventCount.textContent = `${Number(analytics.events?.length || 0).toLocaleString()}건`;
-      const episodeAnalytics = document.getElementById('creatorEpisodeAnalytics');
-      if (episodeAnalytics) {
-        const perEpisode = (analytics.episodeRows || []).map((episode) => {
-          const events = (analytics.events || []).filter((event) => String(event.episode_id) === String(episode.id));
-          const complete = events.filter((event) => event.event_type === 'COMPLETE').length;
-          return `${episode.episode_number}화 · 열람 이벤트 ${events.length} · 완독 ${complete}`;
-        });
-        episodeAnalytics.innerHTML = perEpisode.length ? `<p class="text-muted">${perEpisode.join(' &nbsp;›&nbsp; ')}</p>` : '<p class="text-muted">아직 집계할 독자 이벤트가 없습니다.</p>';
-      }
-    } catch (analyticsError) { console.warn('[Creator analytics]', analyticsError); }
-  }
-
-  // Tab 7: 정산 관리 탭 UI 실시간 동기화
-  const settlementPayableElem = document.getElementById('creatorSettlementPayableAmount');
-  if (settlementPayableElem) {
-    settlementPayableElem.textContent = `₩${payableRevenue.toLocaleString()}`;
-  }
-
-  const settlementBankElem = document.getElementById('creatorSettlementBankAccount');
-  if (settlementBankElem) {
-    settlementBankElem.textContent = `등록 계좌: ${author.bank_info || author.bankInfo || '정산 계좌 미등록'} (예금주: ${authorPenName})`;
-  }
-
-  // 출금 신청 액션 버튼 상태 (신청중 vs 출금신청 가능)
-  const actionContainer = document.getElementById('creatorSettlementActionContainer');
-  if (actionContainer) {
-    if (pendingItem) {
-      actionContainer.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-          <button class="btn btn-warning btn-lg" id="btnRequestSettlement" disabled style="background: #f59e0b; color: #000; font-weight: 800; border: none; cursor: not-allowed; opacity: 0.95; padding: 12px 24px;">
-            <i data-lucide="clock"></i> 🟡 정산금 출금 신청중 (심사 대기)
-          </button>
-          <span class="text-muted small" style="color: #fbbf24 !important;">
-            현재 ₩${Number(pendingItem.amount).toLocaleString()} 출금 심사가 진행 중입니다.
-          </span>
-        </div>
-      `;
-    } else if (payableRevenue > 0) {
-      actionContainer.innerHTML = `
-        <button class="btn btn-primary btn-lg" id="btnRequestSettlement" onclick="handleCreatorSettlementReq(${payableRevenue})" style="padding: 12px 24px; font-weight: 800;">
-          <i data-lucide="send"></i> 💸 정산금 전액 출금 신청 (₩${payableRevenue.toLocaleString()})
-        </button>
-      `;
-    } else {
-      actionContainer.innerHTML = `
-        <button class="btn btn-outline btn-lg" id="btnRequestSettlement" disabled style="opacity: 0.5; cursor: not-allowed; padding: 12px 24px;">
-          <i data-lucide="check-circle"></i> 출금 가능한 잔여 정산금이 없습니다
-        </button>
-      `;
-    }
-  }
-
-  // Tab 7: 정산 신청 및 지급 이력 테이블 렌더링
-  const historyContainer = document.getElementById('creatorSettlementsHistory');
-  if (historyContainer) {
-    if (!authorSettlements || authorSettlements.length === 0) {
-      historyContainer.innerHTML = `
-        <div class="p-6 text-center text-muted" style="background: rgba(0,0,0,0.2); border-radius: 8px;">
-          <p class="mb-0">아직 정산 신청 및 지급 이력이 없습니다.</p>
-        </div>
-      `;
-    } else {
-      historyContainer.innerHTML = authorSettlements.map(s => {
-        const isPaid = s.status === 'PAID';
-        const isPending = s.status === 'PENDING';
-        const isConfirmed = s.status === 'CONFIRMED';
-
-        let badgeHtml = '';
-        if (isPaid) {
-          badgeHtml = `<span class="badge badge-success" style="background: #10B981; color: #fff; font-weight: 700; padding: 4px 10px; font-size: 0.8rem;">🟢 출금완료 (송금완료)</span>`;
-        } else if (isPending) {
-          badgeHtml = `<span class="badge badge-warning" style="background: #f59e0b; color: #000; font-weight: 700; padding: 4px 10px; font-size: 0.8rem;">🟡 신청중 (심사 대기)</span>`;
-        } else if (isConfirmed) {
-          badgeHtml = `<span class="badge badge-info" style="background: #38bdf8; color: #000; font-weight: 700; padding: 4px 10px; font-size: 0.8rem;">🔵 정산 승인 (송금 대기)</span>`;
-        } else {
-          badgeHtml = `<span class="badge badge-secondary">${s.status}</span>`;
-        }
-
-        const dateStr = new Date(s.requested_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        const processDateStr = s.processed_at ? new Date(s.processed_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : null;
-
-        return `
-          <div class="glass-panel p-4 mb-3 flex-between" style="border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); align-items: center; gap: 14px;">
-            <div>
-              <strong style="font-size: 1rem; color: #fff;">
-                ${s.author_name} 작가 정산 출금 신청
-              </strong>
-              <div class="text-muted small mt-1">
-                신청일: ${dateStr} | 입금 계좌: ${s.bank_info || '계좌 정보 없음'}
-                ${processDateStr ? ` | <span style="color: #10B981;">처리일: ${processDateStr}</span>` : ''}
-              </div>
-            </div>
-            <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-              <strong style="font-size: 1.25rem; color: ${isPaid ? '#10B981' : isPending ? '#fbbf24' : '#fff'}; font-weight: 800;">
-                ₩${Number(s.amount).toLocaleString()}
-              </strong>
-              <div>${badgeHtml}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-  }
-
-  if (window.lucide) window.lucide.createIcons();
+  const name = document.getElementById('creatorAuthorPenName');
+  if (name) name.textContent = author.pen_name;
+  const badge = document.getElementById('creatorAuthorBadge');
+  if (badge) badge.textContent = '작가';
+  const logout = document.getElementById('btnAuthorLogout');
+  if (logout) logout.style.display = 'inline-block';
+  return window.CreatorWorks.loadFromRoute();
 };
-
 async function handleCreatorSettlementReq(amountParam) {
   let author = currentLoggedCreator || currentLoggedAuthor;
   if (!author) {
@@ -464,28 +130,11 @@ async function handleCreatorSettlementReq(amountParam) {
 }
 window.handleCreatorSettlementReq = handleCreatorSettlementReq;
 
-window.prepareNewEpisodeForWork = function(workId) {
-  switchCreatorTab('new-ep');
-  const sel = document.getElementById('newEpWorkSelect');
-  if (sel) sel.value = String(workId);
-  const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(workId));
-  if (work && work.episodes) {
-    document.getElementById('newEpNumber').value = work.episodes.length + 1;
-  }
-};
+window.prepareNewEpisodeForWork = function(workId) { return window.CreatorDraftEditor.openWork(String(workId), null, { fresh: true }); };
 
-window.handleWorkStatusChange = async function(workId, newStatus) {
-  const work = SAMPLE_WORKS.find(w => Number(w.id) === Number(workId));
-  if (work) {
-    work.isCompleted = (newStatus === 'COMPLETED');
-    work.publishingStatus = newStatus;
-  }
-  if (window.WebNovelsAdmin) {
-    await window.WebNovelsAdmin.updateWorkStatusInDB(workId, newStatus);
-  }
-  showToast(`[${work?.title || '작품'}] 연재 상태가 '${newStatus}'(으)로 갱신되었습니다.`);
+window.handleWorkStatusChange = async function(workId) {
+  window.CreatorWorks.navigate('/creator/works/' + String(workId) + '/settings');
 };
-
 // ============================================================
 // [Author Work Comment Policy & Clean Zone Console] (improve4.md)
 // ============================================================
@@ -682,70 +331,7 @@ window.handleSaveCommentPolicySubmit = async function() {
 // ============================================================
 window.handleCreateEpisodeSubmit = async function(e) {
   e.preventDefault();
-  const workId = parseInt(document.getElementById('newEpWorkSelect').value, 10);
-  const epNum = parseInt(document.getElementById('newEpNumber').value, 10);
-  const title = document.getElementById('newEpTitle').value.trim();
-  const content = document.getElementById('newEpContent').value.trim();
-  const authorComment = document.getElementById('newEpAuthorComment').value.trim();
-  const isFree = document.getElementById('newEpIsFree').checked;
-  const publishType = document.getElementById('newEpPublishType').value;
-  const scheduledAt = document.getElementById('newEpScheduledAt')?.value || null;
-
-  if (!title || !content) {
-    showToast('회차 제목과 본문 내용을 모두 입력해주세요.');
-    return;
-  }
-
-  const targetWork = SAMPLE_WORKS.find(w => Number(w.id) === workId);
-  if (!targetWork) {
-    showToast('작품을 찾을 수 없습니다.');
-    return;
-  }
-
-  // Level 1: Zero-Touch 자동 기본 검사 (시스템/AI 규격 검사)
-  if (content.length < 5) {
-    showToast('⚠️ [자동 검수 실패] 본문 분량이 너무 적습니다. (최소 5자 이상)');
-    return;
-  }
-
-  const isWebtoon = targetWork.contentType === 'WEBTOON';
-  const epData = {
-    episodeNumber: epNum,
-    title: title,
-    isFree: isFree,
-    isAdFree: !isFree,
-    content: isWebtoon ? '' : content,
-    imageUrls: isWebtoon ? content.split(',').map(s => s.trim()) : [],
-    authorComment: authorComment,
-    status: publishType === 'SCHEDULED' ? 'SCHEDULED' : 'PUBLISHED',
-    scheduledAt: scheduledAt
-  };
-
-  if (publishType === 'SCHEDULED' && (!scheduledAt || new Date(scheduledAt) <= new Date())) {
-    return showToast('미래의 예약 발행 일시를 입력해 주세요.');
-  }
-  const result = await window.WebNovelsAdmin?.createEpisodeInDB(workId, epData);
-  if (!result?.success) return showToast(result?.error || '회차 등록에 실패했습니다.');
-
-  const publishMsg = publishType === 'SCHEDULED' 
-    ? `⏰ [${targetWork.title} 제 ${epNum}화]가 Zero-Touch 예약 연재 큐에 등록되었습니다! (${scheduledAt || '지정일시'})` 
-    : `🎉 [${targetWork.title} 제 ${epNum}화]가 Zero-Touch 자동 검수를 통과하여 즉시 발행되었습니다!`;
-  
-  showToast(publishMsg);
-
-  // 폼 초기화
-  document.getElementById('newEpNumber').value = epNum + 1;
-  document.getElementById('newEpTitle').value = '';
-  document.getElementById('newEpContent').value = '';
-  document.getElementById('newEpAuthorComment').value = '';
-  if (window.CreatorDraftEditor && typeof window.CreatorDraftEditor.clearCurrentDraft === 'function') {
-    await window.CreatorDraftEditor.clearCurrentDraft();
-  }
-
-  // 작품관리 탭으로 전환 및 화면 새로고침
-  switchCreatorTab('works');
-  await fetchCreatorDashboardData();
-  renderHomeWorks();
+  await window.CreatorDraftEditor.save();
 };
 
 // ============================================================
@@ -807,26 +393,7 @@ window.handleCreatorSettlementReq = async function(requestedAmount) {
   }
 };
 
-window.handleAuthorLogoutProcess = function() {
-  if (typeof window.handleMemberLogout === 'function') {
-    window.handleMemberLogout();
-  } else {
-    localStorage.removeItem('webnovels_token');
-    localStorage.removeItem('webnovels_user');
-    localStorage.removeItem('webnovels_creator');
-    localStorage.removeItem('webnovels_author');
-    localStorage.removeItem('webnovels_admin_token');
-    localStorage.removeItem('token');
-    localStorage.removeItem('authToken');
-    if (typeof currentLoggedAuthor !== 'undefined') currentLoggedAuthor = null;
-    if (typeof currentLoggedCreator !== 'undefined') currentLoggedCreator = null;
-    window.currentLoggedAuthor = null;
-    window.currentLoggedCreator = null;
-    if (typeof updateMemberHeader === 'function') updateMemberHeader(null);
-    if (typeof showToast === 'function') showToast('로그아웃되었습니다.');
-    if (typeof switchWebNovelsView === 'function') switchWebNovelsView('view-home');
-  }
-};
+window.handleAuthorLogoutProcess = async function() { return window.handleMemberLogout(); };
 window.handleCreatorLogoutProcess = window.handleAuthorLogoutProcess;
 
 
@@ -1061,7 +628,7 @@ window.loadCreatorReaderAnalyticsVisuals = async function(selectedWorkId = null)
   const workSelect = document.getElementById('creatorAnalyticsWorkSelect');
   if (workSelect && workSelect.options.length <= 1) {
     workSelect.innerHTML = works.map((w, idx) => `
-      <option value="${w.id}" ${idx === 0 ? 'selected' : ''}>${escapeCreatorHtml(w.title)} (${w.genre || '장르'})</option>
+      <option value="${w.id}" ${idx === 0 ? 'selected' : ''}>${escapeCreatorHtml(w.title)} (${escapeHtml(w.genre || '장르')})</option>
     `).join('');
   }
 

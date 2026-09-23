@@ -60,3 +60,7 @@
 
 - [Cloudflare Pages Functions 라우팅](https://developers.cloudflare.com/pages/functions/routing/), [비밀값 바인딩](https://developers.cloudflare.com/pages/functions/bindings/)
 - [Supabase API 보안](https://supabase.com/docs/guides/api/securing-your-api), [RLS와 함수 권한](https://supabase.com/docs/guides/database/postgres/row-level-security), [Auth 사용자 검증](https://supabase.com/docs/reference/javascript/auth-getuser)
+
+## 2026-09-23: 작가 저장 모델 로컬 확장
+
+`database/authoring/001~003`에 별도 authoring 스키마와 private Storage 정책, 검증된 Auth 연결 함수를 추가했다. 로컬 PostgreSQL 합성 데이터 검증만 완료했으며 관리 API 401로 실제 DDL/백업 확인은 여전히 대기 중이다. 기존 P0 001/002를 운영에 적용하거나 P0_API_ENABLED를 활성화하지 않았다. [데이터 계약](docs/launch/data-contract.md), [적용·복원 절차](docs/launch/migration-runbook.md), [2단계 상태](improve2.md)를 함께 확인한다.
