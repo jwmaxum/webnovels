@@ -77,6 +77,8 @@ authoring SQL은 검토 완료 세션의 `webnovels.authoring_apply_verified='tr
 
 Cloudflare Dashboard → Workers & Pages에서 운영 주소 `webnovels-db4.pages.dev`를 제공하는 실제 프로젝트를 선택한다. 프로젝트 이름을 도메인만 보고 추정하지 않는다. Settings에서 production branch=`main`, build command=`npm run build`, output directory=`public`, repository root를 확인한다. 새 `build` 명령은 테스트 전체가 성공해야 컴파일까지 진행한다. Git 연결 설정은 [Cloudflare 공식 문서](https://developers.cloudflare.com/pages/configuration/git-integration/)를 따른다.
 
+이번 push의 GitHub Check가 반환한 실제 Pages 프로젝트는 `webnovels`다. [이번 배포의 Cloudflare Dashboard](https://dash.cloudflare.com/?to=/7c88b2d2b3fe9baf32dc744ac0a631b3/pages/view/webnovels/c59720a2-635a-4bfc-8961-7ffbbcb8f8f1)에서 로그·환경·도메인을 대조할 수 있다. Git 연결 배포는 실행되었지만 설정 변경 권한이 확보된 것은 아니다.
+
 Production 환경에 공개 연결과 서버 비밀을 서로 다른 항목으로 넣는다.
 
 | 설정 | 적용 방법/조건 |
@@ -108,6 +110,8 @@ npm run diagnose:launch
 ```
 
 GitHub 상태 결과는 `scratch/github-release-status.json`, 접근 결과는 `artifacts/launch-access-diagnostic.json`에 저장된다. Git push 성공, GitHub Actions 성공, Pages 배포 성공, 서비스 활성화 성공은 각각 확인한다. Pages 상태가 나타나지 않으면 Dashboard의 연결 저장소·자동 production 배포 설정과 Deployments 로그를 확인한다.
+
+Git push에서 `Permission ... denied to ...`와 HTTP 403이 나오면 Windows Credential Manager가 선택한 GitHub 계정의 저장소 권한을 확인한다. 이번 첫 시도도 이 문제였으며 쓰기 권한을 확인한 다른 로컬 PAT를 일회성 Git askpass로 전달해 성공했다. 재발 시 자격 증명 관리자의 해당 GitHub 항목을 올바른 계정으로 갱신한다. workflow 파일을 변경하는 토큰에는 workflow 권한도 필요하다. 토큰을 remote URL에 넣거나 셸 명령에 직접 붙이지 않는다.
 
 최종 기준은 `/api/v2/health`의 JSON 200, 공개 카탈로그·무료 본문 정상, 익명/다른 작가의 보호 데이터 거절, 실제 가입→작품→원고→게시→독자 열람, 예약 중복 방지, 파일 복구 및 운영 알림 수신이다. [인수 시나리오](acceptance-scenarios.md)를 실제 환경에서 완료해야 한다. 프로젝트 규칙상 브라우저/localhost 인수는 사용자 명시 요청 후 실행한다.
 

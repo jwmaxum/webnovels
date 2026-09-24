@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-09-24T20:57:36.399Z",
+  "commit": "2eea8eeec2e9fbce5702a585ceb15c9a3da01324",
+  "origin": "https://webnovels-db4.pages.dev",
+  "githubActions": "success",
+  "cloudflarePages": "success",
+  "cloudflareDeploymentId": "c59720a2-635a-4bfc-8961-7ffbbcb8f8f1",
+  "readOnlyHttp": true,
+  "browserAcceptance": false,
+  "databaseApplied": false,
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "no-cache",
+      "serviceNoticePresent": true
+    },
+    {
+      "path": "/js/core/service-status.js?v=110",
+      "status": 200,
+      "contentType": "application/javascript",
+      "cacheControl": "no-cache",
+      "matchesCommittedSource": true
+    },
+    {
+      "path": "/supabase-admin.js?v=110",
+      "status": 200,
+      "contentType": "application/javascript",
+      "cacheControl": "no-cache",
+      "matchesCommittedSource": true
+    },
+    {
+      "path": "/api/public-config.js",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8",
+      "cacheControl": "no-store",
+      "flags": {
+        "authorPublishEnabled": false,
+        "readerServiceEnabled": false,
+        "authorOperationsEnabled": false,
+        "adminOperationsEnabled": false,
+        "adminRoleChangesEnabled": false
+      }
+    },
+    {
+      "path": "/api/v2/health",
+      "status": 503,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store",
+      "code": "SECURE_API_NOT_ACTIVATED"
+    }
+  ]
+}

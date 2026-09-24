@@ -2,11 +2,21 @@
 
 ## 2026-09-25 코드 배포 후속 작업
 
-이하 12단계 표는 당시 기준선이다. 8~13단계 누적 변경과 후속 구동 수정을 `main`에 배포하는 작업을 진행한다. 관리 API 401, 운영 보안 API 503, 실제 백업·DB 전환·브라우저 인수 미완료로 **공개 오픈은 계속 NO GO**다.
+이하 12단계 표는 당시 기준선이다. 8~13단계 누적 변경과 후속 구동 수정을 `main`에 push했고 코드 배포가 성공했다. 관리 API 401, 운영 보안 API 503, 실제 백업·DB 전환·브라우저 인수 미완료로 **공개 오픈은 계속 NO GO**다.
+
+| 실제 확인 항목 | 결과 |
+|---|---|
+| 코드 커밋 | `2eea8eeec2e9fbce5702a585ceb15c9a3da01324` |
+| Git push | `main` 성공. 첫 시도의 저장된 다른 계정 403은 권한 있는 로컬 토큰의 일회성 askpass로 해결 |
+| GitHub Actions | [실행 36058069216](https://github.com/jwmaxum/webnovels/actions/runs/36058069216) — success |
+| Cloudflare Pages | 프로젝트 `webnovels`, 배포 `c59720a2-635a-4bfc-8961-7ffbbcb8f8f1` — success |
+| 운영 HTTP 확인 | 2026-09-25 05:57 KST. HTML/JS 200, 점검 안내 포함, 수정 JS 두 파일과 커밋 소스 일치, 캐시 재검증 적용 |
+| 운영 기능 상태 | health 503 `SECURE_API_NOT_ACTIVATED`, 게시/독자/작가운영/관리자운영/권한변경 공개 플래그 false |
+| SQL·브라우저 인수 | 미실행. [운영 HTTP 증거](../../artifacts/production-deployment-verification.json)는 이 인수를 대체하지 않음 |
 
 - 진단·오류 구분, 안전한 본문/목록 조회, 점검 안내 및 Pages 빌드 검증을 추가했다. `npm run build`가 전체 출시 검증을 선행한다.
 - 이 작업의 `npm run build`는 종료 코드 0으로 통과했다. 데이터·인증·Author/Creator·원고·파일·게시·독자·관리자·XSS·수익화 차단·접근 진단 회귀, Cloudflare Functions 번들 및 TypeScript 컴파일을 포함한다. DB 검증은 격리 PGlite이며 실제 SQL 적용/브라우저 검증은 수행하지 않았다.
-- GitHub 저장소 접근·push 권한과 workflow 권한을 읽기 확인했다. CI와 Pages는 push된 커밋에 대해 각각 확인해야 한다.
+- GitHub 저장소 접근·push 권한과 workflow 권한을 읽기 확인했고, 위 코드 커밋의 CI와 Pages 성공을 각각 확인했다. 이 기록을 담는 후속 문서 커밋과 기능 코드 커밋을 구분한다.
 - 관리 PAT 교체부터 실제 SQL·Cloudflare 적용까지는 [실제 서비스 활성화 절차](production-activation.md)를 따른다. 토큰·백업·검증된 계정 연결·Cloudflare 설정 권한이 없는 상태에서 운영 SQL이나 플래그를 변경하지 않았다.
 - `npm run release:status -- <전체 SHA>` 결과는 Git에서 제외한 `scratch/github-release-status.json`에 저장된다. 관리 접근 재확인은 [진단 JSON](../../artifacts/launch-access-diagnostic.json)에 기록된다.
 

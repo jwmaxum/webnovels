@@ -4,6 +4,8 @@
 
 **코드 배포와 서비스 활성화를 구분한다.** 실제 확인에서 Supabase 프로젝트 API는 200, 관리 SQL API는 401, 운영 보안 API는 `503 SECURE_API_NOT_ACTIVATED`다. 유효한 관리 PAT, DB 감사·백업·복원 및 Cloudflare 설정 확인이 필요하다.
 
+코드 커밋 `2eea8ee`는 `main` push와 GitHub Actions·Cloudflare Pages 배포가 성공했다. 운영 URL에서 새 JS가 커밋 소스와 일치하고 점검 안내가 포함됨을 HTTP로 확인했다. [실제 배포 확인 결과](../../artifacts/production-deployment-verification.json). 공개 오픈 판정은 여전히 NO GO다.
+
 - **[실제 서비스 활성화 절차](production-activation.md)**: 401 토큰 교체 위치, 재검증 명령, SQL 적용 순서·전제, Pages 환경변수·Cron·Auth 설정, 실패 시 담당자가 해야 할 일을 정리했다.
 - [접근 진단 결과](../../artifacts/launch-access-diagnostic.json), [남은 오픈 이슈](open-issues-after-stage13.md), [출시 기록](release-record.md).
 - 이번 수정: 관리 PAT/프로젝트 API 키와 401/403/네트워크 오류를 구분하는 진단, Pages의 `npm run build`에 전체 출시 검증 포함, 비무료·성인·예약 메타데이터 필터, 본문 조회의 구 DB/RPC 우회 제거, 서버 미활성 안내와 정적 파일 재검증 캐시 정책.
