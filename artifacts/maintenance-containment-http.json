@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-09-24T22:15:13.649Z",
+  "method": "read_only_HTTP_HEAD",
+  "databaseRowsReturned": false,
+  "checks": [
+    {
+      "name": "public_works",
+      "status": 206,
+      "contentRange": "*/16",
+      "expected": "allowed",
+      "passed": true
+    },
+    {
+      "name": "public_episodes",
+      "status": 206,
+      "contentRange": "*/48",
+      "expected": "allowed",
+      "passed": true
+    },
+    {
+      "name": "public_authors",
+      "status": 206,
+      "contentRange": "*/30",
+      "expected": "allowed",
+      "passed": true
+    },
+    {
+      "name": "author_password",
+      "status": 401,
+      "contentRange": null,
+      "expected": "denied",
+      "passed": true
+    },
+    {
+      "name": "reader_private",
+      "status": 401,
+      "contentRange": null,
+      "expected": "denied",
+      "passed": true
+    },
+    {
+      "name": "admin_private",
+      "status": 401,
+      "contentRange": null,
+      "expected": "denied",
+      "passed": true
+    },
+    {
+      "name": "provider_secret",
+      "status": 401,
+      "contentRange": null,
+      "expected": "denied",
+      "passed": true
+    },
+    {
+      "name": "episode_body",
+      "status": 401,
+      "contentRange": null,
+      "expected": "denied",
+      "passed": true
+    },
+    {
+      "name": "alternate_episode_body",
+      "status": 401,
+      "contentRange": null,
+      "expected": "denied",
+      "passed": true
+    },
+    {
+      "name": "legacy_drafts",
+      "status": 401,
+      "contentRange": null,
+      "expected": "denied",
+      "passed": true
+    }
+  ],
+  "productionHealth": {
+    "status": 503,
+    "code": "SECURE_API_NOT_ACTIVATED"
+  },
+  "browserAcceptance": false
+}

@@ -4,7 +4,7 @@
 
 **관리 API 401은 토큰 갱신 후 해결됐다(HTTP 201).** 실제 DB 감사에서 소유자 미연결 작품 20개, 본문 저장소 불일치 180개, Auth 계정 0개, 백업·새 마이그레이션 부재를 확인했다. 운영 보안 API는 아직 `503 SECURE_API_NOT_ACTIVATED`다.
 
-**지금 필요한 작업은 [토큰 갱신 후 점검·수정 절차](token-renewal-followup.md)를 따른다.** 작품/본문 확인 CSV 위치, 백업·초기 계정 연결, 준비된 권한 차단 SQL의 승인 상태와 사용자가 직접 변경할 Cloudflare 설정을 정리했다. `npm run audit:launch`로 실제 차단 조건을 재확인할 수 있다.
+**지금 필요한 작업은 [토큰 갱신 후 점검·수정 절차](token-renewal-followup.md)를 따른다.** 사용자 승인 후 유지보수 권한 차단 SQL을 운영에 적용했고, 42개 테이블의 데이터 보존과 실제 HTTP 접근 거절을 검증했다. 작품/본문 확인 CSV 위치, 백업·초기 계정 연결과 사용자가 직접 변경할 Cloudflare 설정도 정리했다. `npm run audit:launch`로 남은 전환 조건을 재확인할 수 있다.
 
 코드 커밋 `2eea8ee`는 `main` push와 GitHub Actions·Cloudflare Pages 배포가 성공했다. 운영 URL에서 새 JS가 커밋 소스와 일치하고 점검 안내가 포함됨을 HTTP로 확인했다. [실제 배포 확인 결과](../../artifacts/production-deployment-verification.json). 공개 오픈 판정은 여전히 NO GO다.
 

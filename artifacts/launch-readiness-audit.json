@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-24T21:25:08.072Z",
+  "checkedAt": "2026-09-24T22:14:46.473Z",
   "management": {
     "ok": true,
     "status": 201,
@@ -14,7 +14,6 @@
     "VERIFIED_AUTH_LINKS_REQUIRED",
     "AUTHORING_MIGRATIONS_INCOMPLETE",
     "P0_NOT_LOCKED",
-    "LEGACY_BROWSER_PRIVILEGES_OPEN",
     "LEGACY_BODY_SOURCE_CONFLICT",
     "PROVIDER_BACKUP_UNAVAILABLE"
   ],
@@ -61,115 +60,115 @@
     "legacy_revisions": 0,
     "confirmed_auth_users": 0,
     "legacy_body_conflicts": 180,
-    "browser_writable_tables": 39,
+    "browser_writable_tables": 0,
     "sensitive_column_access": [
       {
         "role": "authenticated",
         "table": "authors",
         "column": "password_hash",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "authors",
         "column": "password_hash",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "authors",
         "column": "email",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "authors",
         "column": "email",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "readers",
         "column": "password_hash",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "readers",
         "column": "password_hash",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "readers",
         "column": "email",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "readers",
         "column": "email",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "admin_users",
         "column": "email",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "admin_users",
         "column": "email",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "admin_users",
         "column": "password_hash",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "admin_users",
         "column": "password_hash",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "system_config",
         "column": "toss_secret_key",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "system_config",
         "column": "toss_secret_key",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "episodes",
         "column": "content",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "episodes",
         "column": "content",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "authenticated",
         "table": "episode_contents",
         "column": "text_content",
-        "can_select": true
+        "can_select": false
       },
       {
         "role": "anon",
         "table": "episode_contents",
         "column": "text_content",
-        "can_select": true
+        "can_select": false
       }
     ],
     "works_without_author_id": 20,

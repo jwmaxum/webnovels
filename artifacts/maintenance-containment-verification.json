@@ -1,0 +1,43 @@
+{
+  "appliedAt": "2026-09-24T22:13:49.673Z",
+  "projectRef": "ghwabesnydktumeyejnm",
+  "sql": "database/p0/003_maintenance_containment.sql",
+  "sqlSha256": "7ec0d048330ce03a3f6117ec1090309c0cf99867bc76643b0d710cceead5e984",
+  "scope": "maintenance_permissions_only",
+  "permissionBackup": "scratch/p0/maintenance-20260925",
+  "restoreSqlRehearsed": true,
+  "rowsPreserved": true,
+  "tableCount": 42,
+  "counts": [
+    {
+      "table": "authors",
+      "count": 30
+    },
+    {
+      "table": "episode_drafts",
+      "count": 2
+    },
+    {
+      "table": "episodes",
+      "count": 180
+    },
+    {
+      "table": "readers",
+      "count": 11
+    },
+    {
+      "table": "works",
+      "count": 30
+    }
+  ],
+  "checks": {
+    "anonymous_password_read": false,
+    "authenticated_provider_secret_read": false,
+    "anonymous_body_read": false,
+    "anonymous_legacy_body_rpc": false,
+    "public_title_read": true,
+    "p0_marker": null
+  },
+  "featureFlagsChanged": false,
+  "authoringMigrationsApplied": false
+}
