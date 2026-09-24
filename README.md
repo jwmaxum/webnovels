@@ -11,7 +11,7 @@
 
 출시 결정과 남은 조건은 [12단계 출시 기록](docs/launch/release-record.md), [11단계 출시 체크리스트](docs/launch/release-checklist.md), [10단계 전환 감사](docs/launch/stage10-cutover-audit.md)를 확인하세요. 과거 상태를 담은 [런칭 점검 보고서](LAUNCH_READINESS.md)는 날짜별 기록으로 유지합니다.
 
-**관리 API 401과 서비스 API 503의 해결 순서:** [실제 서비스 활성화 절차](docs/launch/production-activation.md)에 새 관리 PAT 발급·로컬 교체, 읽기 감사, 백업·SQL 순서, Cloudflare 설정과 확인 명령을 정리했습니다. `npm run diagnose:launch`로 비밀값 없이 현재 상태를 확인할 수 있습니다.
+**관리 API 401은 토큰 갱신으로 해결했습니다.** 실제 DB 감사에서 확인한 작품 소유자·본문 저장소·Auth 계정·백업 문제와 서비스 API 503의 해결 순서는 [후속 점검 기록](docs/launch/token-renewal-followup.md)을 확인하세요. `npm run diagnose:launch`, `npm run audit:launch`로 비밀값 없이 접근 상태와 DB 전환 조건을 확인할 수 있습니다.
 
 ## 구조와 로컬 검증
 

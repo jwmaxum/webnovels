@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-09-24T21:28:03.485Z",
+  "productionChangesCommitted": false,
+  "automaticApproval": "rejected_pending_explicit_user_approval",
+  "rehearsal": {
+    "completedAt": "2026-09-24T21:16:37.215Z",
+    "transaction": "rolled_back",
+    "rowsPreserved": true,
+    "tableCount": 42,
+    "restoreSqlExecutedAndRolledBack": true
+  },
+  "permissionBackup": {
+    "privateDirectory": "scratch/p0/maintenance-20260925",
+    "grantStatements": 716
+  },
+  "auditAclFix": {
+    "tableGrantEntries": 1410,
+    "columnGrantEntries": 0
+  },
+  "sqlSha256": "7ec0d048330ce03a3f6117ec1090309c0cf99867bc76643b0d710cceead5e984",
+  "sourceReview": {
+    "ownerRows": 20,
+    "bodyRows": 180,
+    "emptyEpisodeBodies": 78,
+    "bothBodySourcesNonempty": 102
+  }
+}

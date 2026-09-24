@@ -1,9 +1,9 @@
 {
-  "checkedAt": "2026-09-24T20:52:35.389Z",
+  "checkedAt": "2026-09-24T21:09:40.582Z",
   "management": {
-    "ok": false,
-    "status": 401,
-    "code": "MANAGEMENT_TOKEN_REJECTED",
+    "ok": true,
+    "status": 201,
+    "code": "MANAGEMENT_SQL_ACCESS_OK",
     "projectRef": "ghwabesnydktumeyejnm"
   },
   "dataApi": {

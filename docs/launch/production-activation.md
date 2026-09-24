@@ -2,11 +2,13 @@
 
 2026-09-25 확인. 이 문서는 실행 방법이며 DB 전환 완료 기록이 아니다. 실제 상태는 [접근 진단 JSON](../../artifacts/launch-access-diagnostic.json)과 [출시 기록](release-record.md)을 함께 확인한다.
 
+**최신:** PAT 갱신으로 401이 해결되어 실제 관리 SQL이 HTTP 201을 반환한다. 이후 확인된 데이터/계정/백업 문제와 실행 순서는 [토큰 갱신 후 점검](token-renewal-followup.md)을 먼저 읽는다. Cloudflare 설정은 사용자가 직접 변경한다. 아래 토큰 재발급 절차는 향후 401이 다시 발생할 때 사용한다.
+
 ## 1. 이번에 확인한 원인
 
 | 대상 | 실제 결과 | 의미와 조치 |
 |---|---|---|
-| Supabase 관리 SQL API | HTTP 401, `MANAGEMENT_TOKEN_REJECTED` | 로컬 `SUPABASE_ACCESS_TOKEN`이 거절된다. 만료·폐기·잘못된 값 중 어느 원인인지는 이 응답만으로 구분할 수 없다. 계정 소유자가 새 PAT를 발급해야 한다 |
+| Supabase 관리 SQL API | 토큰 갱신 후 HTTP 201, `MANAGEMENT_SQL_ACCESS_OK` | 관리 접근 해결. 실제 DDL·정합성·권한·백업 감사를 수행했다 |
 | Supabase 공개 키 / 서버 키의 메타데이터 HEAD | 각각 HTTP 200 | 프로젝트 데이터 API 연결은 된다. 이 성공은 관리 SQL 권한이나 RLS 안전성의 증거가 아니다 |
 | 서버 키로 `p0_migration_status` 조회 | HTTP 404 | 필요한 보안 전환 상태를 API에서 찾지 못한다. SQL Editor에서 객체 존재·권한·스키마 캐시를 확인해야 한다 |
 | 운영 `/api/v2/health` | HTTP 503, `SECURE_API_NOT_ACTIVATED` | Pages의 보안 API 활성화 조건이 충족되지 않았다. Git push만으로 DB/비밀 설정/기능 플래그가 바뀌지 않는다 |
@@ -115,4 +117,4 @@ Git push에서 `Permission ... denied to ...`와 HTTP 403이 나오면 Windows C
 
 최종 기준은 `/api/v2/health`의 JSON 200, 공개 카탈로그·무료 본문 정상, 익명/다른 작가의 보호 데이터 거절, 실제 가입→작품→원고→게시→독자 열람, 예약 중복 방지, 파일 복구 및 운영 알림 수신이다. [인수 시나리오](acceptance-scenarios.md)를 실제 환경에서 완료해야 한다. 프로젝트 규칙상 브라우저/localhost 인수는 사용자 명시 요청 후 실행한다.
 
-현재 새 관리 PAT, 백업/격리 복원 증거, 검증된 계정 연결, Cloudflare 설정 권한이 없어 운영 SQL/기능 활성화까지 진행할 수 없다. 제공업체 수익화·성인 기능은 계속 별도 출시 대상이다. 이 조건이 해소되면 2절 진단부터 이어서 진행한다.
+관리 PAT는 확보했다. 현재 필요한 것은 본문/소유자 정합화, 백업/격리 복원, 검증된 계정 연결과 사용자의 Cloudflare 설정이다. [후속 점검 기록](token-renewal-followup.md)에 실제 수치와 준비할 입력을 적었다. 제공업체 수익화·성인 기능은 계속 별도 출시 대상이다.

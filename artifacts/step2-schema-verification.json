@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-24T20:49:24.606Z",
+  "checkedAt": "2026-09-24T21:24:48.703Z",
   "engine": "PGlite isolated PostgreSQL",
   "syntheticDataOnly": true,
   "scope": "main preservation contracts; separate variant/gate tests reported by test runner",

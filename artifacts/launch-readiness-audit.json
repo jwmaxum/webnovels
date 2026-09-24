@@ -1,0 +1,184 @@
+{
+  "checkedAt": "2026-09-24T21:25:08.072Z",
+  "management": {
+    "ok": true,
+    "status": 201,
+    "code": "MANAGEMENT_SQL_ACCESS_OK",
+    "projectRef": "ghwabesnydktumeyejnm"
+  },
+  "databaseChecksPassed": false,
+  "runtimeAcceptance": "not_assessed",
+  "restoreAcceptance": "not_assessed",
+  "blockers": [
+    "WORK_OWNER_UNRESOLVED",
+    "VERIFIED_AUTH_LINKS_REQUIRED",
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BROWSER_PRIVILEGES_OPEN",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "PROVIDER_BACKUP_UNAVAILABLE"
+  ],
+  "integrity": {
+    "works": 30,
+    "episodes": 180,
+    "orphan_works": 20,
+    "work_ratings": [
+      {
+        "count": 30,
+        "rating": "ALL"
+      }
+    ],
+    "work_statuses": [
+      {
+        "count": 30,
+        "status": "PUBLISHED"
+      }
+    ],
+    "orphan_episodes": 0,
+    "episode_statuses": [
+      {
+        "count": 180,
+        "status": "PUBLISHED"
+      }
+    ],
+    "episode_number_gaps": 0,
+    "invalid_episode_numbers": 0,
+    "duplicate_admin_auth_groups": 0,
+    "duplicate_author_auth_groups": 0,
+    "duplicate_reader_auth_groups": 0,
+    "duplicate_episode_number_groups": 0
+  },
+  "database": {
+    "p0_marker": null,
+    "auth_users": 0,
+    "legacy_drafts": 2,
+    "linked_admins": 0,
+    "linked_authors": 0,
+    "linked_readers": 0,
+    "storage_buckets": 0,
+    "storage_objects": 0,
+    "authoring_marker": null,
+    "legacy_revisions": 0,
+    "confirmed_auth_users": 0,
+    "legacy_body_conflicts": 180,
+    "browser_writable_tables": 39,
+    "sensitive_column_access": [
+      {
+        "role": "authenticated",
+        "table": "authors",
+        "column": "password_hash",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "authors",
+        "column": "password_hash",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "authors",
+        "column": "email",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "authors",
+        "column": "email",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "readers",
+        "column": "password_hash",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "readers",
+        "column": "password_hash",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "readers",
+        "column": "email",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "readers",
+        "column": "email",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "admin_users",
+        "column": "email",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "admin_users",
+        "column": "email",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "admin_users",
+        "column": "password_hash",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "admin_users",
+        "column": "password_hash",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "system_config",
+        "column": "toss_secret_key",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "system_config",
+        "column": "toss_secret_key",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "episodes",
+        "column": "content",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "episodes",
+        "column": "content",
+        "can_select": true
+      },
+      {
+        "role": "authenticated",
+        "table": "episode_contents",
+        "column": "text_content",
+        "can_select": true
+      },
+      {
+        "role": "anon",
+        "table": "episode_contents",
+        "column": "text_content",
+        "can_select": true
+      }
+    ],
+    "works_without_author_id": 20,
+    "legacy_draft_owner_conflicts": 0
+  },
+  "providerBackups": {
+    "status": 200,
+    "count": 0,
+    "pitrEnabled": false,
+    "physicalRecoveryPointAvailable": false
+  }
+}

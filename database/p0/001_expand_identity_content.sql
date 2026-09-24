@@ -4,6 +4,20 @@ begin;
 set local lock_timeout = '5s';
 set local statement_timeout = '60s';
 
+-- Multiple legacy generations can contain different bodies. Never silently select one.
+-- The operator must preserve both sources, identify the authoritative version and reconcile first.
+do $$ declare body_conflict boolean; begin
+  if to_regclass('public.episode_contents') is not null then
+    if not exists(select 1 from information_schema.columns where table_schema='public'
+      and table_name='episode_contents' and column_name='text_content') then
+      raise exception 'Legacy body source structure requires review before expansion';
+    end if;
+    execute 'select exists(select 1 from public.episodes e join public.episode_contents c on c.episode_id=e.id
+      where e.content is distinct from c.text_content)' into body_conflict;
+    if body_conflict then raise exception 'Legacy body sources disagree: reconcile verified content before expansion'; end if;
+  end if;
+end $$;
+
 alter table public.readers add column if not exists auth_user_id uuid references auth.users(id) on delete set null;
 alter table public.authors add column if not exists auth_user_id uuid references auth.users(id) on delete set null;
 alter table public.admin_users add column if not exists auth_user_id uuid references auth.users(id) on delete set null;

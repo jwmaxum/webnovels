@@ -2,7 +2,9 @@
 
 ## 현재 구동 상태와 실행 방법 — 2026-09-25
 
-**코드 배포와 서비스 활성화를 구분한다.** 실제 확인에서 Supabase 프로젝트 API는 200, 관리 SQL API는 401, 운영 보안 API는 `503 SECURE_API_NOT_ACTIVATED`다. 유효한 관리 PAT, DB 감사·백업·복원 및 Cloudflare 설정 확인이 필요하다.
+**관리 API 401은 토큰 갱신 후 해결됐다(HTTP 201).** 실제 DB 감사에서 소유자 미연결 작품 20개, 본문 저장소 불일치 180개, Auth 계정 0개, 백업·새 마이그레이션 부재를 확인했다. 운영 보안 API는 아직 `503 SECURE_API_NOT_ACTIVATED`다.
+
+**지금 필요한 작업은 [토큰 갱신 후 점검·수정 절차](token-renewal-followup.md)를 따른다.** 작품/본문 확인 CSV 위치, 백업·초기 계정 연결, 준비된 권한 차단 SQL의 승인 상태와 사용자가 직접 변경할 Cloudflare 설정을 정리했다. `npm run audit:launch`로 실제 차단 조건을 재확인할 수 있다.
 
 코드 커밋 `2eea8ee`는 `main` push와 GitHub Actions·Cloudflare Pages 배포가 성공했다. 운영 URL에서 새 JS가 커밋 소스와 일치하고 점검 안내가 포함됨을 HTTP로 확인했다. [실제 배포 확인 결과](../../artifacts/production-deployment-verification.json). 공개 오픈 판정은 여전히 NO GO다.
 
