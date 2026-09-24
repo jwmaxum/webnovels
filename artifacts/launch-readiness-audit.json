@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-24T22:14:46.473Z",
+  "checkedAt": "2026-09-24T23:50:00.449Z",
   "management": {
     "ok": true,
     "status": 201,
@@ -10,17 +10,26 @@
   "runtimeAcceptance": "not_assessed",
   "restoreAcceptance": "not_assessed",
   "blockers": [
-    "WORK_OWNER_UNRESOLVED",
     "VERIFIED_AUTH_LINKS_REQUIRED",
     "AUTHORING_MIGRATIONS_INCOMPLETE",
     "P0_NOT_LOCKED",
     "LEGACY_BODY_SOURCE_CONFLICT",
     "PROVIDER_BACKUP_UNAVAILABLE"
   ],
+  "manualBackupEvidence": {
+    "createdAt": "2026-09-24T23:32:36.561Z",
+    "projectRef": "ghwabesnydktumeyejnm",
+    "sha256": "988c1e288126be833b307ffc8c3ef03377d1f8aff3a7fd9eb3a587276274ef74",
+    "tableDataEntries": 78,
+    "archiveReadable": true,
+    "hostedRestoreVerified": false,
+    "evidenceFile": "artifacts/launch-native-backup.json",
+    "archiveRecheckedByThisAudit": false
+  },
   "integrity": {
     "works": 30,
     "episodes": 180,
-    "orphan_works": 20,
+    "orphan_works": 0,
     "work_ratings": [
       {
         "count": 30,
@@ -59,7 +68,7 @@
     "authoring_marker": null,
     "legacy_revisions": 0,
     "confirmed_auth_users": 0,
-    "legacy_body_conflicts": 180,
+    "legacy_body_conflicts": 78,
     "browser_writable_tables": 0,
     "sensitive_column_access": [
       {
@@ -171,7 +180,7 @@
         "can_select": false
       }
     ],
-    "works_without_author_id": 20,
+    "works_without_author_id": 0,
     "legacy_draft_owner_conflicts": 0
   },
   "providerBackups": {

@@ -1,0 +1,100 @@
+{
+  "preparedAt": "2026-09-24T23:22:27.157Z",
+  "snapshotSha256": "c3f1d1b5f687330210063ed88d1cdf175f3dfc102cc677578221fb03ff3af1b2",
+  "seedSha256": "d07bc97afe8af51a265fb930b689e3e98783ce7e6782377eff1cbcd5ae617ae6",
+  "ownerCandidates": 20,
+  "blockedOwners": [],
+  "ownerMappings": [
+    {
+      "workId": 11,
+      "authorId": 11
+    },
+    {
+      "workId": 12,
+      "authorId": 12
+    },
+    {
+      "workId": 13,
+      "authorId": 13
+    },
+    {
+      "workId": 14,
+      "authorId": 14
+    },
+    {
+      "workId": 15,
+      "authorId": 15
+    },
+    {
+      "workId": 16,
+      "authorId": 16
+    },
+    {
+      "workId": 17,
+      "authorId": 17
+    },
+    {
+      "workId": 18,
+      "authorId": 18
+    },
+    {
+      "workId": 19,
+      "authorId": 19
+    },
+    {
+      "workId": 20,
+      "authorId": 20
+    },
+    {
+      "workId": 21,
+      "authorId": 21
+    },
+    {
+      "workId": 22,
+      "authorId": 22
+    },
+    {
+      "workId": 23,
+      "authorId": 23
+    },
+    {
+      "workId": 24,
+      "authorId": 24
+    },
+    {
+      "workId": 25,
+      "authorId": 25
+    },
+    {
+      "workId": 26,
+      "authorId": 26
+    },
+    {
+      "workId": 27,
+      "authorId": 27
+    },
+    {
+      "workId": 28,
+      "authorId": 28
+    },
+    {
+      "workId": 29,
+      "authorId": 29
+    },
+    {
+      "workId": 30,
+      "authorId": 30
+    }
+  ],
+  "ownerEvidence": "Explicit repository seed foreign keys + exact work id/title/type/status + author id/username/pen_name/status; cover drift preserved. Repairs seeded relationships, not Auth identity.",
+  "divergentBodies": 180,
+  "alternateExactSeedBodies": 180,
+  "emptyBodyByType": {
+    "NOVEL": 36,
+    "WEBTOON": 42
+  },
+  "emptyBodiesWithImages": 78,
+  "bodySelectionRequired": true,
+  "authIdentityProofRequired": true,
+  "productionChanged": false
+}

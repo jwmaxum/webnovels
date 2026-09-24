@@ -4,6 +4,13 @@ const {loadEnv,connection,managementToken,managementProbe}=require('./lib/launch
 async function main(){
  const env=loadEnv(),probe=await managementProbe(env);
  const report={checkedAt:new Date().toISOString(),management:probe,databaseChecksPassed:false,runtimeAcceptance:'not_assessed',restoreAcceptance:'not_assessed',blockers:[]};
+ // Local evidence never substitutes for hosted restore acceptance.
+ if(fs.existsSync('artifacts/launch-native-backup.json')){
+  const manual=JSON.parse(fs.readFileSync('artifacts/launch-native-backup.json','utf8'));
+  report.manualBackupEvidence={createdAt:manual.createdAt,projectRef:manual.projectRef,sha256:manual.sha256,
+   tableDataEntries:manual.tableDataEntries,archiveReadable:manual.archiveReadable,hostedRestoreVerified:manual.hostedRestoreVerified,
+   evidenceFile:'artifacts/launch-native-backup.json',archiveRecheckedByThisAudit:false};
+ }
  if(probe.ok){
   const {ref}=connection(env),headers={Authorization:'Bearer '+managementToken(env),'Content-Type':'application/json'};
   const query=async(name,sql)=>{
@@ -32,7 +39,7 @@ async function main(){
  // A successful database audit cannot attest to restore/browser acceptance or Pages bindings.
  report.databaseChecksPassed=report.blockers.length===0;
  fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync('artifacts/launch-readiness-audit.json',JSON.stringify(report,null,2)+'\n');
- console.log(JSON.stringify({checkedAt:report.checkedAt,management:probe,integrity:report.integrity,database:report.database,providerBackups:report.providerBackups,databaseChecksPassed:report.databaseChecksPassed,runtimeAcceptance:report.runtimeAcceptance,restoreAcceptance:report.restoreAcceptance,blockers:report.blockers},null,2));
+ console.log(JSON.stringify({checkedAt:report.checkedAt,management:probe,integrity:report.integrity,database:report.database,providerBackups:report.providerBackups,manualBackupEvidence:report.manualBackupEvidence,databaseChecksPassed:report.databaseChecksPassed,runtimeAcceptance:report.runtimeAcceptance,restoreAcceptance:report.restoreAcceptance,blockers:report.blockers},null,2));
  process.exitCode=report.databaseChecksPassed?0:2;
 }
 main().catch(e=>{console.error(/^[A-Z_0-9]+$/.test(e.message)?e.message:'LAUNCH_AUDIT_FAILED_DETAILS_WITHHELD');process.exitCode=2;});

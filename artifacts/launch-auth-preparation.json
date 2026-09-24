@@ -1,0 +1,18 @@
+{
+  "verifiedAt": "2026-09-24T23:25:59.474Z",
+  "snapshotSha256": "c3f1d1b5f687330210063ed88d1cdf175f3dfc102cc677578221fb03ff3af1b2",
+  "sqlSha256": "3b9305fa5a546112fba40fef47d5bc8b1a2e3ff7509085b0bb10b5242fada22c",
+  "oldTriggerFailureReproduced": true,
+  "legacyProfilesPreserved": true,
+  "localAuthInsertPassed": true,
+  "automaticProfileCreation": false,
+  "idempotent": true,
+  "productionApplied": true,
+  "productionAuthUsersCreated": 0,
+  "appliedAt": "2026-09-24T23:27:12.155Z",
+  "verification": {
+    "auth_users": 0,
+    "legacy_signup_triggers": 0,
+    "auth_link_columns": 3
+  }
+}

@@ -1,0 +1,485 @@
+{
+  "verifiedAt": "2026-09-24T23:31:11.925Z",
+  "snapshotSha256": "801764e7fb5b9f29d8395e256bd1bd1a77128f66d869d1513ae5fde1d776e13a",
+  "engine": "PGlite isolated in-memory PostgreSQL",
+  "source": "actual production rows",
+  "tablesVerified": 78,
+  "rowsVerified": 1109,
+  "publicConstraintsVerified": 98,
+  "allRowsMatch": true,
+  "fullSchemaRestore": false,
+  "hostedSupabaseRestore": false,
+  "limitations": [
+    "Generated values restored as ordinary values; defaults, triggers, roles, ACLs, RLS, sequences, views and RPC behavior not restored or accepted."
+  ],
+  "tables": [
+    {
+      "schema": "auth",
+      "name": "audit_log_entries",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "custom_oauth_providers",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "flow_state",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "identities",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "instances",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_amr_claims",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_challenges",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_factors",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_recovery_code_sets",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "mfa_recovery_codes",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_authorizations",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_client_states",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_clients",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "oauth_consents",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "one_time_tokens",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "refresh_tokens",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "saml_providers",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "saml_relay_states",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "schema_migrations",
+      "rows": 82,
+      "sha256": "5ed9bf2bd3b7e93e445e58c01bbb2799293d3d819ce2a7570da27033c51ef287"
+    },
+    {
+      "schema": "auth",
+      "name": "scim_tokens",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "scim_users",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "sessions",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "sso_domains",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "sso_providers",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "users",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "webauthn_challenges",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "auth",
+      "name": "webauthn_credentials",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "launch_recovery",
+      "name": "reconciliation_history",
+      "rows": 122,
+      "sha256": "f9ff330729c197beb68fbd0d2108ebb134b4337eee172cf4311687b4e0aa511e"
+    },
+    {
+      "schema": "public",
+      "name": "ad_events",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "ad_units",
+      "rows": 2,
+      "sha256": "57214534b46cf851723e99efe2ce57dc2777ee99d6c6555ba33711fd27b7a1e0"
+    },
+    {
+      "schema": "public",
+      "name": "admin_users",
+      "rows": 4,
+      "sha256": "c09d481f12e7bc8a8e2eed89558edad54389a4e978f4f6685810ea1573381c53"
+    },
+    {
+      "schema": "public",
+      "name": "audit_logs",
+      "rows": 3,
+      "sha256": "5f56988d216e008ec1abd5df6a2b292d99d021fbf1db008d6b8bc4eb0a9e9b16"
+    },
+    {
+      "schema": "public",
+      "name": "author_earnings",
+      "rows": 90,
+      "sha256": "78f4bff15e73bcf01cae57a4781d7c111a39dc0af455d5638f5a3604ff3460b4"
+    },
+    {
+      "schema": "public",
+      "name": "author_private_profiles",
+      "rows": 30,
+      "sha256": "a55a2b47a8c61c9f6db9c0a33dd6e04d694b385abc6a8a1b976a4e302b313145"
+    },
+    {
+      "schema": "public",
+      "name": "author_settlement_accounts",
+      "rows": 10,
+      "sha256": "e82cf23417d651ba25cdb1e45d917067e1c79d62098c2514926e3f7dde16db92"
+    },
+    {
+      "schema": "public",
+      "name": "author_settlements",
+      "rows": 16,
+      "sha256": "bbc435d12d07c23d05ebb70665260f73dbbf7fc65b1be4a89c80acca77bfc4a5"
+    },
+    {
+      "schema": "public",
+      "name": "author_subscriptions",
+      "rows": 14,
+      "sha256": "9710ff2da909879dbdd19015044b13e3c8b406c589e30aea7363ca05d84ffda5"
+    },
+    {
+      "schema": "public",
+      "name": "authors",
+      "rows": 30,
+      "sha256": "aac45c5434274a1c17d1c5e86911b251ce1582abd726055fb4ae928a543b6519"
+    },
+    {
+      "schema": "public",
+      "name": "comment_likes",
+      "rows": 5,
+      "sha256": "431e9c9ad87114ec6bc02be389b214816a9660fc31360ad3b11a82a4f18d3ce0"
+    },
+    {
+      "schema": "public",
+      "name": "comments",
+      "rows": 22,
+      "sha256": "9be7b45d120e63e35052fa24048cd278039f4334f125b53698a047aa5bc6e54d"
+    },
+    {
+      "schema": "public",
+      "name": "content_reviews",
+      "rows": 12,
+      "sha256": "25e6d08b1a15be3da30a23dd590319f727a3d1808e5d04e1b3d1ce7e0d026c08"
+    },
+    {
+      "schema": "public",
+      "name": "creator_comment_blocks",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "creator_supports",
+      "rows": 8,
+      "sha256": "e58f8791529ea17ff4845bfd0e3b9fffad85b154e9f0584d744b7b667f444549"
+    },
+    {
+      "schema": "public",
+      "name": "earning_ledger",
+      "rows": 11,
+      "sha256": "6605166dcc497297c84ba7574f604208a0aa739c82208deea627c8f036ae096c"
+    },
+    {
+      "schema": "public",
+      "name": "episode_contents",
+      "rows": 180,
+      "sha256": "2022d5d908fedec18cbc591581b783dd89c1f504c2947d00354a56d70bd33c8c"
+    },
+    {
+      "schema": "public",
+      "name": "episode_draft_revisions",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "episode_drafts",
+      "rows": 2,
+      "sha256": "06f58bb7ac7d7d7b97c2f02cd48d488d7468a9596a02eb13e76fd827bf5647fd"
+    },
+    {
+      "schema": "public",
+      "name": "episode_panels",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "episode_unlocks",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "episodes",
+      "rows": 180,
+      "sha256": "5b82b791f7f5cf503aafbbb5d8504c3b114ed6cb91a53c81ab146918e7a5625e"
+    },
+    {
+      "schema": "public",
+      "name": "events",
+      "rows": 2,
+      "sha256": "35f8053013efff503f027df59d2690586d37de8e888db93e3e422921d334c6a4"
+    },
+    {
+      "schema": "public",
+      "name": "fan_meeting_tickets",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "fan_meetings",
+      "rows": 1,
+      "sha256": "824a4d64df0e3686be9c965cc249647ab71e92df6ee19a17454b4923f40e2a28"
+    },
+    {
+      "schema": "public",
+      "name": "favorites",
+      "rows": 17,
+      "sha256": "6628e09e95ce0396a9eab7d8220f0429927af1e40584b836f14935f6dc664da3"
+    },
+    {
+      "schema": "public",
+      "name": "golden_best_snapshots",
+      "rows": 5,
+      "sha256": "e892403048062a6494e5d6c4dbbbe87868576252c7a087241f3195442c02eac8"
+    },
+    {
+      "schema": "public",
+      "name": "goods",
+      "rows": 2,
+      "sha256": "fdbf696360bc263b03e20db2cbe3d56b6c5cc59d2bc50a234ba8b91643292419"
+    },
+    {
+      "schema": "public",
+      "name": "goods_orders",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "platform_stats",
+      "rows": 1,
+      "sha256": "6a85503382188de995ac7fbc1fcfb8703c9b4c524d905ab5e87e8cc8baad0608"
+    },
+    {
+      "schema": "public",
+      "name": "point_accounts",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "point_transactions",
+      "rows": 8,
+      "sha256": "76598d14b6b32e5b988858f1b2be92d460a91fd8d29e241fc6a05678ec9cbbf7"
+    },
+    {
+      "schema": "public",
+      "name": "reader_events",
+      "rows": 80,
+      "sha256": "f89735d3ad2ea8e458586221725aaae44de6ff57952c7ba1a666feaf01812151"
+    },
+    {
+      "schema": "public",
+      "name": "readers",
+      "rows": 11,
+      "sha256": "622382bb34e7d091367db19c1a943bf72662ef057b458a22a2bdd8d48cd9630d"
+    },
+    {
+      "schema": "public",
+      "name": "reading_history",
+      "rows": 13,
+      "sha256": "ef7be2a0c45f70e4ce17e598aaf6f90ac7cdb3a852fae1b1213fe3bc2a04732c"
+    },
+    {
+      "schema": "public",
+      "name": "reports",
+      "rows": 8,
+      "sha256": "e5097c1395be03df625e7b62378e7cb20070a7aeffcd9a0cc3ddb6beb14c2c35"
+    },
+    {
+      "schema": "public",
+      "name": "revenue_events",
+      "rows": 4,
+      "sha256": "0d30b9149c0e6059b1ebd9898f74a059c25aeb954cdc7aa75b3e3b39d8c75813"
+    },
+    {
+      "schema": "public",
+      "name": "revenue_ledger",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "revenue_periods",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "public",
+      "name": "system_config",
+      "rows": 1,
+      "sha256": "2cf84fa0884f588b4399a7fbf22e56f73e4378dbeaa7ec7ca23ede086f94ae11"
+    },
+    {
+      "schema": "public",
+      "name": "work_comment_policies",
+      "rows": 30,
+      "sha256": "1d43e6b9d94a07d85a57b115df70d88779672cf4b3f741195c21069e1b05f5b6"
+    },
+    {
+      "schema": "public",
+      "name": "works",
+      "rows": 30,
+      "sha256": "f090a8fac5083c68d4fab744b5e0aba3e98662a6a7795dde17fbf29a36613641"
+    },
+    {
+      "schema": "storage",
+      "name": "buckets",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "storage",
+      "name": "buckets_analytics",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "storage",
+      "name": "buckets_vectors",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "storage",
+      "name": "migrations",
+      "rows": 73,
+      "sha256": "528bf74ccf0aba2ef806b167ed1019bac72908341137a0d4c916bac2439e3c9f"
+    },
+    {
+      "schema": "storage",
+      "name": "objects",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "storage",
+      "name": "s3_multipart_uploads",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "storage",
+      "name": "s3_multipart_uploads_parts",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "storage",
+      "name": "vector_indexes",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

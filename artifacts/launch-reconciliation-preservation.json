@@ -1,0 +1,25 @@
+{
+  "verifiedAt": "2026-09-24T23:32:38.230Z",
+  "beforeSnapshotSha256": "c3f1d1b5f687330210063ed88d1cdf175f3dfc102cc677578221fb03ff3af1b2",
+  "afterSnapshotSha256": "801764e7fb5b9f29d8395e256bd1bd1a77128f66d869d1513ae5fde1d776e13a",
+  "unchangedTables": 73,
+  "legacyReaderAndAdminFieldsPreserved": true,
+  "allOriginalEpisodesPreserved": true,
+  "emptyEpisodesHeld": 78,
+  "reviewFile": "scratch/launch/empty-body-review-20260925.csv",
+  "heldWorks": [
+    9,
+    10,
+    12,
+    14,
+    17,
+    19,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    28
+  ]
+}

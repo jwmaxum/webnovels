@@ -1,0 +1,16 @@
+{
+  "verifiedAt": "2026-09-24T23:22:32.285Z",
+  "batchId": "launch-c3f1d1b5f6873302-keep-existing-v1",
+  "snapshotSha256": "c3f1d1b5f687330210063ed88d1cdf175f3dfc102cc677578221fb03ff3af1b2",
+  "sqlSha256": "754dd3f576be96826d9b6b32fccd86fa961243ebd4a113ce817637ae6d9fa60b",
+  "owners": 20,
+  "bodies": 102,
+  "emptyBodiesHeld": 78,
+  "untouchedTablesVerified": 75,
+  "untargetedRowsPreserved": true,
+  "privateArchive": true,
+  "immutableArchive": true,
+  "stalePlanRejected": true,
+  "actualProductionDataInIsolatedPGlite": true,
+  "productionApplied": false
+}
