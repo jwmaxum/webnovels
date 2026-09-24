@@ -71,10 +71,12 @@ window.normalizeSearchText = normalizeSearchText;
 
 // 작품 표지 이미지 URL 추출 헬퍼
 const getWorkCover = (w) => {
-  if (!w) return '/images/stormqueen_oath.jpg';
-  const raw = w.coverUrl || w.coverImageUrl || w.cover_image || w.coverImage || '/images/stormqueen_oath.jpg';
-  if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) return raw;
-  return `/images/${raw}`;
+  const fallback='/images/stormqueen_oath.jpg';
+  if (!w) return fallback;
+  const raw = w.coverUrl || w.coverImageUrl || w.cover_image || w.coverImage || fallback;
+  if (typeof raw!=='string' || /[<>"'`\\()\s\x00-\x1f\x7f]/.test(raw)) return fallback;
+  if (raw.startsWith('https://') || (raw.startsWith('/') && !raw.startsWith('//'))) return raw;
+  return /^[A-Za-z0-9._-]+$/.test(raw) ? `/images/${raw}` : fallback;
 };
 window.getWorkCover = getWorkCover;
 
@@ -120,4 +122,3 @@ function updateSubscribeButtons(authorData) {
   if (window.lucide) window.lucide.createIcons();
 }
 window.updateSubscribeButtons = updateSubscribeButtons;
-

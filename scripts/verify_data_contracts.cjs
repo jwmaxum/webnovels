@@ -47,17 +47,9 @@ async function main() {
 
   b = browser([{ data: null, error: { message: 'database unavailable' } }]);
   await assert.rejects(b.api.fetchWorksFromSupabase(), error => error.message === 'database unavailable');
-  b = browser([{ data: null, error: { message: 'no writable row' } }]);
-  assert.equal((await b.api.updateWorkAdminSetting(1, 'isTopRecommended', true)).success, false);
-  assert.equal(b.calls.find(c => c.method === 'update').args[0].is_top_recommended, true);
-  assert.ok(b.calls.some(c => c.method === 'single'), 'A zero-row mutation must fail');
-
-  b = browser([{ data: { id: 1 }, error: null }]);
-  assert.equal((await b.api.updateEpisodeSetting(1, { title: 'edited', content: 'body', is_free: true })).success, true);
-  const update = b.calls.find(c => c.method === 'update').args[0];
-  assert.equal(update.content, 'body');
-  assert.equal(update.access_policy, 'FREE');
-  assert.equal(update.is_ad_free, false);
+  for (const method of ['createWorkInDB','updateWorkAdminSetting','deleteWorkFromDB',
+    'createEpisodeInDB','updateEpisodeSetting','deleteEpisodeFromDB'])
+    assert.equal(b.api[method], undefined, `Administrator proxy writer ${method} must be removed`);
 
   b = browser([{ data: null, error: null }]);
   assert.equal((await b.api.login('reader@example.test', 'password')).success, false, 'Ordinary Auth user cannot become super admin');
@@ -66,7 +58,8 @@ async function main() {
   assert.equal(b.storage.size, 0, 'Failed support must not manufacture a local ledger');
 
   b.context.SAMPLE_WORKS.push({ id: 1, status: 'DRAFT', episodes: [] }, { id: 2, status: 'PUBLISHED', episodes: [
-    { status: 'DRAFT' }, { status: 'PUBLISHED', scheduledAt: '2999-01-01' }, { status: 'PUBLISHED' }
+    { status: 'DRAFT' }, { status: 'PUBLISHED', scheduledAt: '2999-01-01' },
+    { status: 'PUBLISHED', isFree: true, accessPolicy: 'FREE' }
   ] });
   const visible = b.context.getPublishedWorks();
   assert.equal(visible.length, 1);
@@ -74,6 +67,6 @@ async function main() {
   b.storage.set('webnovels_favorites', '[999]');
   b.context.syncUserActivityToStorage({ favorites: [], subscribedAuthors: [], readingHistory: [], points: 0 });
   assert.equal(b.storage.get('webnovels_favorites'), '[]', 'Remote removal must clear cached favorites');
-  console.log('PASS: empty/error DB states, no fake content, metadata-only catalog, mutation acknowledgement, episode body/policy save, admin role denial, no fake support, publication filtering, remote cache replacement');
+  console.log('PASS: empty/error DB states, no fake content, metadata-only catalog, removed administrator writers, admin role denial, no fake support, publication filtering, remote cache replacement');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

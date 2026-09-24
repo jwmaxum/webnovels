@@ -1,5 +1,11 @@
 # Cloudflare Pages 배포와 P0 전환
 
+## 2026-09-24: 12단계 배포 보류 기록
+
+[출시 기록](docs/launch/release-record.md)의 판정은 **NO GO**다. 이번 읽기 전용 확인에서 운영 주소 HEAD는 200, `/api/public-config.js`는 200이고 공개 설정의 `authorPublishEnabled`는 `false`였다. 다른 새 기능 플래그는 해당 응답에 없어서 실제 Pages 바인딩을 확인할 수 없었다. `/api/v2/health`는 JSON 503이었다. 이는 서비스 인수나 DB 보안 상태의 증명이 아니다. 실제 배포·플래그 변경·SQL 적용은 수행하지 않았다.
+
+아래의 기존 P0 순차 절차는 역사적 계획이다. 현재 v2에는 작가 원고·파일·게시, 독자 및 관리자 운영 API의 로컬 구현이 추가됐지만 [10단계 전환](docs/launch/stage10-cutover-audit.md)과 [11단계 인수](docs/launch/acceptance-results.md)가 완료되지 않았다. `main` 자동 Pages 배포가 문서대로 설정됐다면 GitHub Actions CI 실패와 별개로 배포가 시작될 수 있으므로, 원격 브랜치 보호·Pages 빌드 게이트를 확인하기 전에는 CI 통과를 배포 차단 보장으로 취급하지 않는다.
+
 실제 운영: https://webnovels-db4.pages.dev/
 
 - Production branch: `main`

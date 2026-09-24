@@ -97,112 +97,27 @@ async function fetchDashboardKPI() {
   if (!supabaseClient) return null;
 
   try {
-    let totalUsers = null;
-    let totalAuthors = null;
-    let totalWorks = null;
-    let totalEpisodes = null;
-    let totalAdViews = 0;
-    let totalViews = 0;
-    let novelCount = 0;
-    let webtoonCount = 0;
-
-    // 1. readers count
-    const { count: usersCount } = await supabaseClient.from('readers').select('*', { count: 'exact', head: true });
-    if (typeof usersCount === 'number') totalUsers = usersCount;
-
-    // 2. authors count
-    const { count: authorsCount } = await supabaseClient.from('authors').select('*', { count: 'exact', head: true });
-    if (typeof authorsCount === 'number') totalAuthors = authorsCount;
-
-    // 3. works count & views & status
-    let ongoingCount = 0;
-    let completedCount = 0;
-    const { data: worksData } = await supabaseClient.from('works').select('id, content_type, view_count, status');
-    if (worksData) {
-      totalWorks = worksData.length;
-      novelCount = worksData.filter(w => w.content_type !== 'WEBTOON').length;
-      webtoonCount = worksData.filter(w => w.content_type === 'WEBTOON').length;
-      ongoingCount = worksData.filter(w => w.status !== 'COMPLETED').length;
-      completedCount = worksData.filter(w => w.status === 'COMPLETED').length;
-      totalViews = worksData.reduce((sum, w) => sum + (Number(w.view_count) || 0), 0);
+    const tables = ['readers', 'authors', 'works', 'episodes'];
+    const results = await Promise.all(tables.map(table =>
+      supabaseClient.from(table).select('*', { count: 'exact', head: true })
+    ));
+    if (results.some(result => result.error || typeof result.count !== 'number')) {
+      throw new Error('Dashboard counts unavailable');
     }
-
-    // 4. episodes count & 타입별 에피소드 & 오늘 발행 현황 집계
-    let novelEpisodes = 0;
-    let webtoonEpisodes = 0;
-    let todayPublished = 0;
-    let todayScheduled = 0;
-
-    const { data: epData, count: epCount } = await supabaseClient
-      .from('episodes')
-      .select('id, work_id, status, created_at, scheduled_at', { count: 'exact' });
-
-    if (typeof epCount === 'number') totalEpisodes = epCount;
-
-    if (epData && worksData) {
-      const webtoonWorkIds = new Set(worksData.filter(w => w.content_type === 'WEBTOON').map(w => w.id));
-      epData.forEach(ep => {
-        if (webtoonWorkIds.has(ep.work_id)) {
-          webtoonEpisodes++;
-        } else {
-          novelEpisodes++;
-        }
-
-        // 오늘 일자 (2026-08-22) 기준 발행 및 예약 카운트
-        const dateStr = ep.scheduled_at || ep.created_at;
-        if (dateStr && new Date(dateStr).toLocaleDateString('en-CA') === new Date().toLocaleDateString('en-CA')) {
-          if (ep.status === 'SCHEDULED') {
-            todayScheduled++;
-          } else {
-            todayPublished++;
-          }
-        }
-      });
-    }
-
-    // 5. ad_events count
-    const { count: adCount } = await supabaseClient.from('ad_events').select('*', { count: 'exact', head: true });
-    if (typeof adCount === 'number') totalAdViews = adCount;
-
-    // 6. revenue_periods / revenue_ledger 집계
-    let calculatedTotalRevenue = 0;
-    let calculatedAuthorRevenue = 0;
-    try {
-      const { data: revPeriods } = await supabaseClient
-        .from('revenue_periods')
-        .select('gross_revenue, writer_pool');
-      if (revPeriods && revPeriods.length > 0) {
-        calculatedTotalRevenue = revPeriods.reduce((sum, r) => sum + (Number(r.gross_revenue) || 0), 0);
-        calculatedAuthorRevenue = revPeriods.reduce((sum, r) => sum + (Number(r.writer_pool) || 0), 0);
-      }
-    } catch (e) {}
-
     return {
-      total_users: totalUsers ?? 0,
-      total_authors: totalAuthors ?? 0,
-      total_works: totalWorks ?? 0,
-      total_episodes: totalEpisodes ?? 0,
-      total_ad_views: totalAdViews,
-      total_views: totalViews,
-      novel_count: novelCount,
-      webtoon_count: webtoonCount,
-      novel_episodes: novelEpisodes,
-      webtoon_episodes: webtoonEpisodes,
-      today_published: todayPublished,
-      today_scheduled: todayScheduled + todayPublished,
-      ongoing_count: ongoingCount,
-      completed_count: completedCount,
-      total_revenue: calculatedTotalRevenue,
-      total_author_revenue: calculatedAuthorRevenue
+      total_users: results[0].count,
+      total_authors: results[1].count,
+      total_works: results[2].count,
+      total_episodes: results[3].count
     };
   } catch (err) {
-    console.error('[Dashboard KPI] 조회 실패:', err);
+    console.error('[Dashboard KPI] load failed:', err);
     return null;
   }
 }
 
 // ============================================================
-// 02-B. EPISODES SUMMARY STATS (실시간 회차 통계 집계)
+// // 02-B. EPISODES SUMMARY STATS (실시간 회차 통계 집계)
 // ============================================================
 async function fetchEpisodeSummaryStats() {
   if (!supabaseClient) initSupabaseAdmin();
@@ -234,22 +149,31 @@ async function fetchEpisodeSummaryStats() {
 
 // [Fetch Works with Authors & Episode Metadata]
 async function fetchWorksFromSupabase() {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return null;
-
   try {
-    // 1. works 테이블 전체 조회 (author 및 author_id 컬럼 모두 지원)
-    const publicationSafeFields = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
-    const { data: works, error: wErr } = await supabaseClient
-      .from('works')
-      .select(window.WEBNOVELS_CONFIG?.authorPublishEnabled ? publicationSafeFields : '*')
-      .order('id', { ascending: true });
-
-    if (wErr) throw wErr;
+    let works, authors=[], episodes;
+    if (window.WEBNOVELS_CONFIG?.readerServiceEnabled) {
+      const response=await fetch('/api/v2/catalog',{credentials:'omit'});
+      if(!response.ok)throw Error('PUBLIC_CATALOG_UNAVAILABLE');
+      const catalog=await response.json();
+      works=catalog.works;episodes=catalog.episodes;
+    } else {
+      if (!supabaseClient) initSupabaseAdmin();
+      if (!supabaseClient) return null;
+      const publicationSafeFields = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
+      const workResult = await supabaseClient.from('works')
+        .select(publicationSafeFields)
+        .order('id', { ascending: true });
+      if (workResult.error) throw workResult.error;
+      works=workResult.data;
+      const authorResult=await supabaseClient.from('authors').select('id, pen_name, username');
+      authors=authorResult.data||[];
+      const episodeResult=await supabaseClient.from('episodes')
+        .select('id, work_id, episode_number, title, access_policy, author_comment, status, view_count, is_free, is_ad_free, scheduled_at')
+        .order('episode_number', { ascending: true });
+      if (episodeResult.error) throw episodeResult.error;
+      episodes=episodeResult.data;
+    }
     if (!works?.length) return [];
-
-    // 2. authors 펜네임 매핑 테이블
-    const { data: authors } = await supabaseClient.from('authors').select('id, pen_name, username');
     const authorMap = {};
     if (authors) {
       authors.forEach(a => {
@@ -258,17 +182,11 @@ async function fetchWorksFromSupabase() {
     }
 
     // 3. episodes 메타데이터 조회
-    const { data: episodes, error: epErr } = await supabaseClient
-      .from('episodes')
-      .select('id, work_id, episode_number, title, access_policy, author_comment, status, view_count, is_free, is_ad_free, scheduled_at')
-      .order('episode_number', { ascending: true });
-
-    if (epErr) throw epErr;
     const epMap = {};
-    if (!epErr && episodes) {
+    if (episodes) {
       episodes.forEach(ep => {
         if (!epMap[ep.work_id]) epMap[ep.work_id] = [];
-        const isFree = ep.is_free !== undefined ? ep.is_free : (ep.access_policy === 'FREE' || Number(ep.episode_number) <= 3);
+        const isFree = ep.is_free === true && ep.access_policy === 'FREE';
         epMap[ep.work_id].push({
           id: ep.id,
           episodeNumber: Number(ep.episode_number),
@@ -290,14 +208,17 @@ async function fetchWorksFromSupabase() {
       const coverUrl = w.cover_image 
         ? (w.cover_image.startsWith('/') || w.cover_image.startsWith('http') ? w.cover_image : `/images/${w.cover_image}`)
         : '/images/stormqueen_oath.jpg';
+      const publicCoverUrl = window.WEBNOVELS_CONFIG?.readerServiceEnabled &&
+        (!/^(\/(?!\/)|https:\/\/)/.test(coverUrl) || /[<>"'`()\\;\s]/.test(coverUrl))
+        ? '/images/stormqueen_oath.jpg' : coverUrl;
 
       const resolvedAuthorName = w.author || (w.author_id && authorMap[w.author_id]) || '작가 정보 없음';
 
       const resolvedEpisodes = epMap[w.id] || [];
 
       return {
-        id: Number(w.id),
-        authorId: w.author_id ? Number(w.author_id) : null,
+        id: window.WEBNOVELS_CONFIG?.readerServiceEnabled ? String(w.id) : Number(w.id),
+        authorId: w.author_id ? (window.WEBNOVELS_CONFIG?.readerServiceEnabled ? String(w.author_id) : Number(w.author_id)) : null,
         title: w.title,
         author: resolvedAuthorName,
         contentType: w.content_type || 'NOVEL',
@@ -306,7 +227,7 @@ async function fetchWorksFromSupabase() {
         aiUsageType: w.ai_usage_type || 'NONE',
         tags: Array.isArray(w.tags) ? w.tags.join(', ') : (w.tags || '신작'),
         description: w.description || '',
-        coverUrl: coverUrl,
+        coverUrl: publicCoverUrl,
         viewCount: Number(w.view_count || 0),
         likeCount: Number(w.like_count || 0),
         status: w.status || 'ONGOING',
@@ -332,7 +253,7 @@ async function fetchEpisodesByWorkId(workId) {
   try {
     const { data, error } = await supabaseClient
       .from('episodes')
-      .select('id, work_id, episode_number, title, access_policy, author_comment, status, scheduled_at, view_count, is_free, is_ad_free, content, image_urls, created_at')
+      .select('id, work_id, episode_number, title, access_policy, author_comment, status, scheduled_at, view_count, is_free, is_ad_free, created_at')
       .eq('work_id', Number(workId))
       .order('episode_number', { ascending: true });
 
@@ -507,221 +428,21 @@ async function fetchWorkSeriesDashboardData(workId) {
 }
 
 // [Fetch Episode Protected Content on Demand]
-async function fetchEpisodeContentSecure(episodeId, workId = null, episodeNumber = null) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return null;
-
+async function fetchEpisodeContentSecure(episodeId) {
+  const id = String(episodeId || '');
+  if (!/^[1-9]\d{0,18}$/.test(id) || BigInt(id) > 9223372036854775807n) return null;
+  const path = '/api/v2/episodes/' + encodeURIComponent(id) + '/content';
   try {
-    let targetEpId = episodeId ? Number(episodeId) : null;
-
-    if (!targetEpId && workId && episodeNumber) {
-      const { data: epRow } = await supabaseClient
-        .from('episodes')
-        .select('id, content, image_urls')
-        .eq('work_id', Number(workId))
-        .eq('episode_number', Number(episodeNumber))
-        .single();
-      if (epRow) {
-        targetEpId = Number(epRow.id);
-        if (epRow.content) {
-          return { textContent: epRow.content, imageUrls: epRow.image_urls || [] };
-        }
-      }
+    let result;
+    if (window.WebNovelsAuth?.getActor()) result = await window.WebNovelsAuth.api(path);
+    else {
+      const response = await fetch(path, { credentials: 'omit' });
+      if (!response.ok) return null;
+      result = await response.json();
     }
-
-    if (!targetEpId) return null;
-
-    // 1. private.get_episode_content RPC 호출 시도
-    try {
-      const { data: rpcData, error: rpcErr } = await supabaseClient.rpc('get_episode_content', {
-        p_episode_id: targetEpId
-      });
-      if (!rpcErr && rpcData && rpcData.length > 0 && rpcData[0].text_content) {
-        return { textContent: rpcData[0].text_content, imageUrls: [] };
-      }
-    } catch (e) {}
-
-    // 2. episode_contents 테이블 직접 쿼리
-    let textContent = null;
-    try {
-      const { data: cRow } = await supabaseClient
-        .from('episode_contents')
-        .select('text_content')
-        .eq('episode_id', targetEpId)
-        .single();
-      if (cRow?.text_content) textContent = cRow.text_content;
-    } catch (e) {}
-
-    // 3. episodes 테이블 본문 컬럼 조회 (기존 시드 데이터 호환)
-    if (!textContent) {
-      try {
-        const { data: epData } = await supabaseClient
-          .from('episodes')
-          .select('content, image_urls')
-          .eq('id', targetEpId)
-          .single();
-        if (epData?.content) {
-          return { textContent: epData.content, imageUrls: epData.image_urls || [] };
-        }
-      } catch (e) {}
-    }
-
-    // 4. episode_panels 테이블 조회
-    let imageUrls = [];
-    try {
-      const { data: panels } = await supabaseClient
-        .from('episode_panels')
-        .select('image_url')
-        .eq('episode_id', targetEpId)
-        .order('panel_number', { ascending: true });
-      if (panels && panels.length > 0) {
-        imageUrls = panels.map(p => p.image_url);
-      }
-    } catch (e) {}
-
-    return { textContent, imageUrls };
-  } catch (err) {
-    console.error('[fetchEpisodeContentSecure Exception]', err);
-    return null;
-  }
-}
-
-// [Create Work with Database Auto-Increment ID & author_id FK]
-async function createWorkInDB(workData) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
-
-  try {
-    const cleanCover = workData.cover_image || workData.coverUrl || workData.coverImage || '/images/stormqueen_oath.jpg';
-    const finalCover = (cleanCover.startsWith('http') || cleanCover.startsWith('/')) ? cleanCover : `/images/${cleanCover}`;
-
-    let authorQuery = supabaseClient.from('authors').select('id, pen_name');
-    const authorId = workData.author_id || workData.authorId;
-    authorQuery = authorId ? authorQuery.eq('id', Number(authorId)) : authorQuery.eq('pen_name', workData.author);
-    const { data: author, error: authorError } = await authorQuery.single();
-    if (authorError || !author) return { success: false, error: '등록된 작가를 선택해 주세요.' };
-
-    const payload = {
-      title: workData.title,
-      author: author.pen_name,
-      author_id: author.id,
-      content_type: workData.contentType || workData.content_type || 'NOVEL',
-      genre: Array.isArray(workData.genre) ? workData.genre : [workData.genre || '판타지'],
-      tags: Array.isArray(workData.tags) ? workData.tags : [workData.tags || '신작', '정식연재'],
-      description: workData.description || '',
-      cover_image: finalCover,
-      rating: workData.rating || 'ALL',
-      status: workData.status || 'ONGOING',
-      is_completed: !!(workData.isCompleted || workData.is_completed),
-      is_top_recommended: !!(workData.isTopRecommended || workData.is_top_recommended),
-      is_popular_work: !!(workData.isPopularWork || workData.is_popular_work),
-      is_new_work: true,
-      view_count: 0,
-      like_count: 0
-    };
-
-    if (workData.id) {
-      payload.id = Number(workData.id);
-    }
-
-    const { data, error } = await supabaseClient
-      .from('works')
-      .insert([payload])
-      .select().single();
-
-    if (error) throw error;
-    window.dispatchEvent(new CustomEvent('webnovels:works-changed'));
-    return { success: true, data };
-  } catch (err) {
-    console.error('[createWorkInDB Error]', err);
-    return { success: false, error: err.message };
-  }
-}
-
-async function updateWorkAdminSetting(workId, fieldOrData, optionalValue) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 미연동' };
-  try {
-    let payload = {};
-    if (typeof fieldOrData === 'string') {
-      payload = { [fieldOrData]: optionalValue };
-    } else if (typeof fieldOrData === 'object' && fieldOrData !== null) {
-      payload = fieldOrData;
-    }
-    const fieldMap = { isTopRecommended: 'is_top_recommended', isPopularWork: 'is_popular_work', isNewWork: 'is_new_work', isCompleted: 'is_completed', contentType: 'content_type', coverUrl: 'cover_image', aiUsageType: 'ai_usage_type' };
-    payload = Object.fromEntries(Object.entries(payload).map(([key, value]) => [fieldMap[key] || key, value]));
-    const { data, error } = await supabaseClient
-      .from('works')
-      .update(payload)
-      .eq('id', Number(workId)).select('id').single();
-    if (error) throw error;
-    window.dispatchEvent(new CustomEvent('webnovels:works-changed'));
-    return { success: true, data };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
-async function deleteWorkFromDB(workId) {
-  if (!supabaseClient) return { success: false, error: 'DB 미연동' };
-  try {
-    const { data, error } = await supabaseClient
-      .from('works')
-      .delete()
-      .eq('id', Number(workId)).select('id').single();
-    if (error) throw error;
-    window.dispatchEvent(new CustomEvent('webnovels:works-changed'));
-    return { success: true, data };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
-async function createEpisodeInDB(workId, episode) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 연결이 필요합니다.' };
-  if (!Number.isInteger(Number(episode.episodeNumber)) || Number(episode.episodeNumber) < 1 || !episode.title?.trim()) {
-    return { success: false, error: '회차 번호와 제목을 확인해 주세요.' };
-  }
-  try {
-    const { data, error } = await supabaseClient.from('episodes').insert({
-      work_id: Number(workId), episode_number: Number(episode.episodeNumber), title: episode.title.trim(),
-      content: episode.content || '', image_urls: episode.imageUrls || [], author_comment: episode.authorComment || '',
-      is_free: !!episode.isFree, is_ad_free: !episode.isFree,
-      access_policy: episode.isFree ? 'FREE' : 'REWARDED_AD', status: episode.status || 'PUBLISHED',
-      scheduled_at: episode.scheduledAt || null
-    }).select('id').single();
-    if (error) throw error;
-    window.dispatchEvent(new CustomEvent('webnovels:episodes-changed'));
-    return { success: true, data };
-  } catch (error) { return { success: false, error: error.message }; }
-}
-
-async function updateEpisodeSetting(episodeId, fieldOrData, value) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 연결이 필요합니다.' };
-  const payload = typeof fieldOrData === 'string' ? { [fieldOrData]: value } : { ...fieldOrData };
-  if ('is_free' in payload) {
-    payload.is_ad_free = !payload.is_free;
-    payload.access_policy = payload.is_free ? 'FREE' : 'REWARDED_AD';
-  }
-  try {
-    const { data, error } = await supabaseClient.from('episodes').update(payload).eq('id', Number(episodeId)).select('id').single();
-    if (error) throw error;
-    window.dispatchEvent(new CustomEvent('webnovels:episodes-changed'));
-    return { success: true, data };
-  } catch (error) { return { success: false, error: error.message }; }
-}
-
-async function deleteEpisodeFromDB(episodeId) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 연결이 필요합니다.' };
-  try {
-    const { data, error } = await supabaseClient.from('episodes').delete().eq('id', Number(episodeId)).select('id').single();
-    if (error) throw error;
-    window.dispatchEvent(new CustomEvent('webnovels:episodes-changed'));
-    return { success: true, data };
-  } catch (error) { return { success: false, error: error.message }; }
+    if (!result?.episode) return null;
+    return { textContent: result.episode.content || '', imageUrls: result.episode.image_urls || [] };
+  } catch { return null; }
 }
 
 // [Record View Count with Atomic Increment]
@@ -762,432 +483,32 @@ async function recordWorkReadingView(workId, episodeNumber) {
 
 // [Log Ad Event]
 async function logAdEvent(userId, workId, episodeId, eventType = 'COMPLETE', adNetwork = 'ADMOB', revenue = 20) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return null;
-
-  try {
-    const { data, error } = await supabaseClient.from('ad_events').insert({
-      user_id: userId && typeof userId === 'string' && userId.length >= 32 ? userId : null,
-      work_id: workId ? Number(workId) : null,
-      episode_id: episodeId ? Number(episodeId) : null,
-      ad_network: adNetwork,
-      event_type: eventType,
-      reward_granted: eventType === 'REWARD' || eventType === 'COMPLETE',
-      revenue: Number(revenue) || 20,
-      currency: 'KRW'
-    }).select('id').single();
-
-    if (error) throw error;
-    return data ? data.id : null;
-  } catch (err) {
-    console.warn('[logAdEvent Warning]', err.message);
-    return null;
-  }
+  // An ad event must come from a verified server callback, never the browser.
+  return null;
 }
 
 // [Record Episode Unlock with source_event_id & 72h Expiration]
 async function recordEpisodeUnlock(userId, episodeId, unlockType = 'REWARDED_AD', sourceEventId = null) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !userId || !episodeId) return { success: false, error: '필수 파라미터 누락' };
-
-  try {
-    const expiresAt = unlockType === 'REWARDED_AD'
-      ? new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
-      : null;
-
-    const { data, error } = await supabaseClient
-      .from('episode_unlocks')
-      .insert({
-        user_id: typeof userId === 'string' && userId.length >= 32 ? userId : null,
-        episode_id: Number(episodeId),
-        unlock_type: unlockType,
-        source_event_id: sourceEventId,
-        granted_at: new Date().toISOString(),
-        expires_at: expiresAt,
-        status: 'ACTIVE'
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { success: true, unlock: data };
-  } catch (err) {
-    console.warn('[recordEpisodeUnlock Warning]', err.message);
-    return { success: false, error: err.message };
-  }
+  return { success: false, error: 'MONETIZATION_NOT_ACTIVATED' };
 }
 
 // [Unlock Episode with Ad Verification]
 async function unlockEpisodeWithAdSecure(userId, workId, episodeId) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!userId || !episodeId) return { success: false, error: '유저 및 회차 정보 필요' };
-
-  try {
-    // 1. 광고 완료 이벤트 생성 및 source_event_id 획득
-    const adEventId = await logAdEvent(userId, workId, episodeId, 'COMPLETE', 'ADMOB', 20);
-
-    // 2. private.grant_rewarded_ad_unlock RPC 호출 시도
-    if (adEventId && typeof userId === 'string' && userId.length >= 32) {
-      try {
-        const { data: rpcRes, error: rpcErr } = await supabaseClient.rpc('grant_rewarded_ad_unlock', {
-          p_user_id: userId,
-          p_episode_id: Number(episodeId),
-          p_ad_event_id: adEventId
-        });
-        if (!rpcErr && rpcRes?.success) {
-          return { success: true, unlock: rpcRes };
-        }
-      } catch (e) {}
-    }
-
-    // 3. Fallback: recordEpisodeUnlock 수행
-    return await recordEpisodeUnlock(userId, episodeId, 'REWARDED_AD', adEventId);
-  } catch (err) {
-    console.error('[unlockEpisodeWithAdSecure Error]', err);
-    return { success: false, error: err.message };
-  }
+  return { success: false, error: 'MONETIZATION_NOT_ACTIVATED' };
 }
 
 // ============================================================
 // 05. REVENUE & SETTLEMENTS
 // ============================================================
 
-async function allocateRevenue(periodMonth = new Date().toISOString().slice(0, 7)) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
+async function fetchAuthorEarnings() { return []; }
 
-  try {
-    const { data: adEvents } = await supabaseClient.from('ad_events').select('revenue, work_id');
-    let totalAdRevenue = 0;
-    if (adEvents && adEvents.length > 0) {
-      totalAdRevenue = adEvents.reduce((sum, e) => sum + Number(e.revenue || 0), 0);
-    }
-    if (totalAdRevenue === 0) return { success: false, error: '집계할 광고 매출이 없습니다.' };
+async function fetchAuthorSettlements() { return []; }
 
-    const writerPoolRatio = 0.625;
-    const networkFee = Math.floor(totalAdRevenue * 0.1);
-    const netRevenue = totalAdRevenue - networkFee;
-    const writerPool = Math.floor(netRevenue * writerPoolRatio);
-    const platformRevenue = netRevenue - writerPool;
-
-    const periodDateFormatted = `${periodMonth}-01`;
-    const { data: revPeriod, error: pErr } = await supabaseClient
-      .from('revenue_periods')
-      .upsert({
-        period_month: periodDateFormatted,
-        gross_revenue: totalAdRevenue,
-        network_fee: networkFee,
-        net_revenue: netRevenue,
-        writer_pool_ratio: writerPoolRatio,
-        writer_pool: writerPool,
-        platform_revenue: platformRevenue,
-        is_closed: false
-      }, { onConflict: 'period_month' })
-      .select()
-      .single();
-
-    if (pErr) console.warn('[revenue_periods upsert warning]', pErr.message);
-
-    const { data: worksList } = await supabaseClient.from('works').select('id, author_id, view_count');
-    if (worksList && worksList.length > 0) {
-      const totalWorkViews = worksList.reduce((sum, w) => sum + (Number(w.view_count) || 1), 0) || 1;
-
-      const earningsRows = worksList.map(w => {
-        const weight = (Number(w.view_count) || 1) / totalWorkViews;
-        const workGross = Math.floor(totalAdRevenue * weight);
-        const workAuthorRev = Math.floor(writerPool * weight);
-        const workPlatformFee = workGross - workAuthorRev;
-
-        return {
-          author_id: w.author_id || 1,
-          work_id: w.id,
-          period_date: periodDateFormatted,
-          gross_revenue: workGross,
-          platform_fee: workPlatformFee,
-          author_revenue: workAuthorRev,
-          status: 'CONFIRMED'
-        };
-      });
-
-      await supabaseClient.from('author_earnings').insert(earningsRows).catch(() => {});
-    }
-
-    return { success: true, period: revPeriod, authorPool: writerPool, creatorPool: writerPool, writerPool };
-  } catch (err) {
-    console.error('[allocateRevenue Error]', err);
-    return { success: false, error: err.message };
-  }
-}
-
-async function confirmRevenue(periodMonth = new Date().toISOString().slice(0, 7)) {
-  if (!supabaseClient) return { success: false, error: 'DB 미연결' };
-  try {
-    const periodDateFormatted = `${periodMonth}-01`;
-    const { data, error } = await supabaseClient
-      .from('revenue_periods')
-      .update({ is_closed: true, closed_at: new Date().toISOString() })
-      .eq('period_month', periodDateFormatted)
-      .select();
-    if (error) throw error;
-    return { success: true, data };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
-async function fetchRevenueEvents() {
-  if (!supabaseClient) return [];
-  try {
-    const { data, error } = await supabaseClient
-      .from('revenue_periods')
-      .select('*')
-      .order('period_month', { ascending: false })
-      .limit(10);
-    if (!error && data) {
-      return data.map(r => ({
-        period_month: String(r.period_month || '').substring(0, 7),
-        gross_revenue: Number(r.gross_revenue) || 0,
-        ad_network_fee: Number(r.network_fee ?? r.ad_network_fee ?? 0),
-        net_revenue: Number(r.net_revenue) || 0,
-        writer_pool_ratio: Number(r.writer_pool_ratio) || 0.625,
-        writer_pool: Number(r.writer_pool) || 0,
-        platform_revenue: Number(r.platform_revenue) || 0,
-        is_closed: !!r.is_closed
-      }));
-    }
-    return [];
-  } catch (e) {
-    return [];
-  }
-}
-
-async function fetchAuthorEarnings(authorIdOrName) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !authorIdOrName) return [];
-  try {
-    let aId = Number(authorIdOrName);
-    if (isNaN(aId) || aId <= 0) {
-      const cleanName = String(authorIdOrName).trim();
-      const { data: aData } = await supabaseClient
-        .from('authors')
-        .select('id')
-        .or(`pen_name.ilike.${cleanName},username.ilike.${cleanName}`)
-        .limit(1);
-      if (aData && aData.length > 0) aId = aData[0].id;
-    }
-    if (!aId || isNaN(aId)) return [];
-
-    const { data, error } = await supabaseClient
-      .from('author_earnings')
-      .select('*')
-      .eq('author_id', aId)
-      .order('period_date', { ascending: false });
-
-    if (!error && Array.isArray(data)) return data;
-    return [];
-  } catch (e) {
-    console.warn('[fetchAuthorEarnings Error]', e);
-    return [];
-  }
-}
-
-async function fetchAuthorSettlements(authorIdOrName) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !authorIdOrName) return [];
-  try {
-    let cleanName = String(authorIdOrName).trim();
-    let query = supabaseClient.from('author_settlements').select('*');
-
-    if (!isNaN(Number(authorIdOrName)) && Number(authorIdOrName) > 0) {
-      const aId = Number(authorIdOrName);
-      query = query.or(`author_id.eq.${aId},author_name.ilike.${cleanName},author_name_snapshot.ilike.${cleanName}`);
-    } else {
-      query = query.or(`author_name.ilike.${cleanName},author_name_snapshot.ilike.${cleanName}`);
-    }
-
-    const { data, error } = await query.order('requested_at', { ascending: false });
-    if (!error && Array.isArray(data)) return data;
-    return [];
-  } catch (e) {
-    console.warn('[fetchAuthorSettlements Error]', e);
-    return [];
-  }
-}
-
-async function fetchAuthorRevenueSummary(authorIdOrName) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !authorIdOrName) {
-    return {
-      estimatedRevenue: 0,
-      confirmedRevenue: 0,
-      payableRevenue: 0,
-      paidAmount: 0,
-      pendingAmount: 0,
-      todayRevenue: 0,
-      earningsRecords: [],
-      settlements: []
-    };
-  }
-
-  try {
-    const [earningsRecords, settlements] = await Promise.all([
-      fetchAuthorEarnings(authorIdOrName),
-      fetchAuthorSettlements(authorIdOrName)
-    ]);
-
-    // 1. 당월 실시간 예상 광고 수익 (PENDING + CONFIRMED 최신)
-    let estimatedRevenue = 0;
-    let confirmedRevenue = 0;
-    let todayRevenue = 0;
-
-    if (earningsRecords && earningsRecords.length > 0) {
-      for (const rec of earningsRecords) {
-        const rev = Number(rec.author_revenue) || 0;
-        if (rec.status === 'PENDING') {
-          estimatedRevenue += rev;
-        } else if (rec.status === 'CONFIRMED') {
-          confirmedRevenue += rev;
-        }
-      }
-      // 만약 당월 PENDING이 없으면 최신 확정수익을 기본 예상수익 풀로 참조
-      if (estimatedRevenue === 0 && confirmedRevenue > 0) {
-        estimatedRevenue = Math.round(confirmedRevenue * 0.25);
-      }
-      // 오늘 수익 (당월 예상치의 약 1/7 또는 최신 일자 환산)
-      todayRevenue = Math.round(estimatedRevenue / 7);
-    }
-
-    // 2. 정산금 기지급액 및 심사 대기액 계산
-    let paidAmount = 0;
-    let pendingAmount = 0;
-    let pendingItem = null;
-
-    if (settlements && settlements.length > 0) {
-      for (const s of settlements) {
-        const amt = Number(s.amount) || 0;
-        if (s.status === 'PAID') {
-          paidAmount += amt;
-        } else if (s.status === 'PENDING') {
-          pendingAmount += amt;
-          if (!pendingItem) pendingItem = s;
-        }
-      }
-    }
-
-    // 3. 실제 출금 가능 잔여 정산금 (Payable = 확정 누적 수익 - 기지급액 - 신청 대기액)
-    const payableRevenue = Math.max(0, confirmedRevenue - paidAmount - pendingAmount);
-
-    return {
-      estimatedRevenue,
-      confirmedRevenue,
-      payableRevenue,
-      paidAmount,
-      pendingAmount,
-      pendingItem,
-      todayRevenue,
-      earningsRecords,
-      settlements
-    };
-  } catch (err) {
-    console.error('[fetchAuthorRevenueSummary Error]', err);
-    return {
-      estimatedRevenue: 0,
-      confirmedRevenue: 0,
-      payableRevenue: 0,
-      paidAmount: 0,
-      pendingAmount: 0,
-      todayRevenue: 0,
-      earningsRecords: [],
-      settlements: []
-    };
-  }
-}
+async function fetchAuthorRevenueSummary() { return null; }
 
 async function requestSettlementSecure(authorId, amount, bankInfo = null) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !authorId) return { success: false, error: '작가 정보 누락' };
-
-  try {
-    try {
-      const { data: rpcRes, error: rpcErr } = await supabaseClient.rpc('request_author_settlement', {
-        p_author_id: Number(authorId),
-        p_amount: Number(amount)
-      });
-      if (!rpcErr && rpcRes?.success) {
-        return { success: true, settlementId: rpcRes.settlement_id };
-      }
-    } catch (e) {}
-
-    const { data: authorData } = await supabaseClient
-      .from('authors')
-      .select('pen_name')
-      .eq('id', Number(authorId))
-      .single();
-
-    const penName = authorData?.pen_name || '연재 작가';
-    const bankParts = String(bankInfo || '국민은행 999-888-777666').split(' ');
-
-    const payload = {
-      author_id: Number(authorId),
-      author_name_snapshot: penName,
-      bank_name_snapshot: bankParts[0] || '국민은행',
-      account_number_snapshot: bankParts.slice(1).join(' ') || '999-888-777666',
-      account_holder_snapshot: penName,
-      amount: Number(amount),
-      status: 'PENDING',
-      requested_at: new Date().toISOString()
-    };
-
-    const { data, error } = await supabaseClient
-      .from('author_settlements')
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { success: true, settlement: data };
-  } catch (err) {
-    console.error('[requestSettlementSecure Error]', err);
-    return { success: false, error: err.message };
-  }
-}
-
-async function approveSettlementSecure(settlementId, reviewerName = '최고관리자') {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !settlementId) return { success: false, error: '정산 ID 필요' };
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('author_settlements')
-      .update({
-        status: 'PAID',
-        processed_at: new Date().toISOString()
-      })
-      .eq('id', settlementId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { success: true, settlement: data };
-  } catch (err) {
-    console.error('[approveSettlementSecure Error]', err);
-    return { success: false, error: err.message };
-  }
-}
-
-async function fetchPendingSettlements() {
-  if (!supabaseClient) return [];
-  try {
-    const { data, error } = await supabaseClient
-      .from('author_settlements')
-      .select('*')
-      .eq('status', 'PENDING')
-      .order('requested_at', { ascending: false });
-    if (!error && data) return data;
-    return [];
-  } catch (e) {
-    return [];
-  }
+  return { success: false, error: 'MONETIZATION_NOT_ACTIVATED' };
 }
 
 // ============================================================
@@ -1345,67 +666,9 @@ async function toggleSubscriptionInDB(userId, authorNameOrId, isAdding = true) {
   } catch (error) { return { success: false, error: error.message }; }
 }
 
-async function updateReaderProfileInDB(userId, profileData) {
-  if (!supabaseClient || !userId || !profileData) return { success: false };
-  try {
-    const cleanId = String(userId).trim();
-    const updatePayload = {};
-    if (profileData.nickname !== undefined) updatePayload.nickname = profileData.nickname;
-    if (profileData.phone !== undefined) updatePayload.phone = profileData.phone;
-    if (profileData.is_adult_verified !== undefined) {
-      updatePayload.is_adult_verified = !!profileData.is_adult_verified;
-      if (profileData.is_adult_verified) updatePayload.adult_verified_at = new Date().toISOString();
-    }
-    if (profileData.subscription_status !== undefined) updatePayload.subscription_status = profileData.subscription_status;
-
-    let query = supabaseClient.from('readers').update(updatePayload);
-    if (!isNaN(cleanId) && Number(cleanId) > 0) {
-      query = query.or(`id.eq.${Number(cleanId)},username.ilike.${cleanId},email.ilike.${cleanId}`);
-    } else {
-      query = query.or(`username.ilike.${cleanId},email.ilike.${cleanId}`);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      console.warn('[updateReaderProfileInDB Error]', error);
-      return { success: false, error: error.message };
-    }
-    return { success: true };
-  } catch (err) {
-    console.error('[updateReaderProfileInDB Error]', err);
-    return { success: false, error: err.message };
-  }
-}
-
 // ---- 관리자 전용 독자 회원 정보 수정 ----
 async function updateReaderByAdmin(readerId, payload) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !readerId || !payload) return { success: false, error: '유효하지 않은 요청' };
-
-  try {
-    const updateData = {};
-    if (payload.nickname !== undefined) updateData.nickname = payload.nickname;
-    if (payload.email !== undefined) updateData.email = payload.email;
-    if (payload.phone !== undefined) updateData.phone = payload.phone;
-    if (payload.subscription_status !== undefined) updateData.subscription_status = payload.subscription_status;
-    if (payload.status !== undefined) updateData.status = payload.status;
-    if (payload.is_adult_verified !== undefined) {
-      updateData.is_adult_verified = !!payload.is_adult_verified;
-      if (payload.is_adult_verified) updateData.adult_verified_at = new Date().toISOString();
-    }
-
-    const { data, error } = await supabaseClient
-      .from('readers')
-      .update(updateData)
-      .eq('id', readerId)
-      .select();
-
-    if (error) throw error;
-    return { success: true, data };
-  } catch (err) {
-    console.error('[updateReaderByAdmin Error]', err);
-    return { success: false, error: err.message };
-  }
+  return { success: false, error: '기존 관리자 독자 정보 수정은 종료되었습니다. 검증된 계정 지원 절차를 이용해주세요.' };
 }
 
 // ---- 관리자 전용 독자 회원 비밀번호 변경 ----
@@ -1415,22 +678,7 @@ async function changeReaderPasswordByAdmin(readerId, newPassword) {
 
 // ---- 관리자 전용 독자 회원 삭제 ----
 async function deleteReaderByAdmin(readerId) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient || !readerId) return { success: false, error: '유효하지 않은 요청' };
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('readers')
-      .delete()
-      .eq('id', readerId)
-      .select();
-
-    if (error) throw error;
-    return { success: true, data };
-  } catch (err) {
-    console.error('[deleteReaderByAdmin Error]', err);
-    return { success: false, error: err.message };
-  }
+  return { success: false, error: '기존 관리자 독자 계정 삭제는 종료되었습니다. 검증된 계정 지원 절차를 이용해주세요.' };
 }
 
 async function checkReaderExists(username, email) {
@@ -1627,6 +875,8 @@ async function fetchSystemConfig() {
 
 let realtimeChannelInstance = null;
 function setupRealtimeSubscriptions(callbacks = {}) {
+  if (window.WEBNOVELS_CONFIG?.readerServiceEnabled ||
+      window.WEBNOVELS_CONFIG?.adminOperationsEnabled) return;
   if (!supabaseClient) initSupabaseAdmin();
   if (!supabaseClient || realtimeChannelInstance) return;
 
@@ -1643,18 +893,6 @@ function setupRealtimeSubscriptions(callbacks = {}) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'episodes' }, payload => {
         console.log('⚡ [Realtime] episodes 변경:', payload.eventType);
         if (typeof callbacks.onEpisodesChange === 'function') callbacks.onEpisodesChange(payload);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'author_settlements' }, payload => {
-        console.log('⚡ [Realtime] author_settlements 변경:', payload.eventType);
-        if (typeof callbacks.onSettlementsChange === 'function') callbacks.onSettlementsChange(payload);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'creator_supports' }, payload => {
-        console.log('⚡ [Realtime] creator_supports 변경:', payload.eventType);
-        if (typeof callbacks.onSupportsChange === 'function') callbacks.onSupportsChange(payload);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'earning_ledger' }, payload => {
-        console.log('⚡ [Realtime] earning_ledger 변경:', payload.eventType);
-        if (typeof callbacks.onLedgerChange === 'function') callbacks.onLedgerChange(payload);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, payload => {
         console.log('⚡ [Realtime] comments 변경:', payload.eventType);
@@ -1781,66 +1019,6 @@ async function recordAuditLogInDB(action, targetType, targetId, newData = {}) {
       ip_address: '127.0.0.1'
     });
   } catch (e) {}
-}
-
-async function fetchFanMeetingsFromDB() {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return [];
-  try {
-    const { data, error } = await supabaseClient
-      .from('fan_meetings')
-      .select('*')
-      .order('event_at', { ascending: true });
-    if (!error && Array.isArray(data)) return data;
-    return [];
-  } catch (e) {
-    return [];
-  }
-}
-
-async function fetchGoodsFromDB() {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return [];
-  try {
-    const { data, error } = await supabaseClient
-      .from('goods')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && Array.isArray(data)) return data;
-    return [];
-  } catch (e) {
-    return [];
-  }
-}
-
-async function fetchAdUnitsFromDB() {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return [];
-  try {
-    const { data, error } = await supabaseClient
-      .from('ad_units')
-      .select('*')
-      .order('created_at', { ascending: true });
-    if (!error && Array.isArray(data)) return data;
-    return [];
-  } catch (e) {
-    return [];
-  }
-}
-
-async function fetchEventsFromDB() {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return [];
-  try {
-    const { data, error } = await supabaseClient
-      .from('events')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && Array.isArray(data)) return data;
-    return [];
-  } catch (e) {
-    return [];
-  }
 }
 
 // ============================================================
@@ -1972,89 +1150,12 @@ async function fetchCreatorReaderAnalytics(authorId) {
 }
 
 async function supportCreator(workId, amountPoints, isAnonymous = false) {
-  if (!supabaseClient) initSupabaseAdmin();
-  if (!supabaseClient) return { success: false, error: 'DB 연결이 필요합니다.' };
-  try {
-    const { data, error } = await supabaseClient.rpc('support_creator', {
-      p_work_id: Number(workId), p_amount_points: Number(amountPoints),
-      p_idempotency_key: crypto.randomUUID(), p_is_anonymous: !!isAnonymous
-    });
-    if (error) throw error;
-    if (!data || data.success === false) return { success: false, error: data?.error || '후원이 승인되지 않았습니다.' };
-    return { success: true, result: data };
-  } catch (error) { return { success: false, error: error.message }; }
+  return { success: false, error: 'MONETIZATION_NOT_ACTIVATED' };
 }
 
-async function fetchWorkTopSupporters(workId) {
-  let supporters = [];
-  if (!supabaseClient) initSupabaseAdmin();
-  if (supabaseClient) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('creator_supports')
-        .select('id, reader_id, display_name, amount_points, is_anonymous, created_at')
-        .eq('work_id', Number(workId))
-        .order('amount_points', { ascending: false })
-        .limit(20);
-      if (!error && data && data.length > 0) {
-        supporters = data;
-      }
-    } catch (e) {
-      console.warn('[fetchWorkTopSupporters from Supabase failed]', e);
-    }
-  }
+async function fetchWorkTopSupporters() { return []; }
 
-  const allSupports = supporters;
-
-  const aggregated = {};
-  for (const s of allSupports) {
-    const name = s.is_anonymous ? '익명의 후원자' : (s.display_name || '익명 독자');
-    const key = s.is_anonymous ? `${name}-${s.id}` : name;
-    if (!aggregated[key]) {
-      aggregated[key] = { displayName: name, totalPoints: 0, count: 0, isAnonymous: !!s.is_anonymous, latestAt: s.created_at };
-    }
-    aggregated[key].totalPoints += Number(s.amount_points || 0);
-    aggregated[key].count += 1;
-  }
-
-  const list = Object.values(aggregated);
-  list.sort((a, b) => b.totalPoints - a.totalPoints);
-  return list.slice(0, 5);
-}
-
-async function fetchAuthorEarningLedger(authorId) {
-  let ledgerEntries = [];
-
-  // 1. Supabase earning_ledger 테이블 실제 데이터 직접 조회
-  if (!supabaseClient) initSupabaseAdmin();
-  if (supabaseClient && authorId) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('earning_ledger')
-        .select('*')
-        .eq('author_id', Number(authorId))
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (!error && data && data.length > 0) {
-        ledgerEntries = data.map(r => ({
-          id: r.id,
-          createdAt: r.created_at,
-          workTitle: `작품 #${r.work_id || '-'}`,
-          sourceType: r.source_type,
-          amount: Number(r.amount),
-          currency: r.currency || 'KRW',
-          status: r.status,
-          description: `${r.source_type} 수익 (${r.status})`
-        }));
-      }
-    } catch (e) {
-      console.warn('[fetchAuthorEarningLedger DB call]', e);
-    }
-  }
-
-  ledgerEntries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  return ledgerEntries;
-}
+async function fetchAuthorEarningLedger() { return []; }
 
 async function fetchEpisodeDraftFromDB() { throw new Error('USE_CREATOR_DRAFTS_API'); }
 async function saveEpisodeDraftToDB() { return { success: false, error: 'USE_CREATOR_DRAFTS_API' }; }
@@ -2115,7 +1216,6 @@ window.WebNovelsAdmin = {
   fetchCreatorsFromSupabase: fetchAuthorsFromSupabase,
   fetchReaderActivity,
   updateReaderActivity,
-  updateReaderProfileInDB,
   checkReaderExists,
   createReaderInDB,
   updateReaderByAdmin,
@@ -2128,19 +1228,10 @@ window.WebNovelsAdmin = {
   fetchPublishingCalendarEvents,
   fetchWorkSeriesDashboardData,
   fetchEpisodeContentSecure,
-  createWorkInDB,
-  createEpisodeInDB,
-  updateEpisodeSetting,
-  deleteEpisodeFromDB,
-  updateWorkAdminSetting,
-  deleteWorkFromDB,
   recordWorkReadingView,
   logAdEvent,
   recordEpisodeUnlock,
   unlockEpisodeWithAdSecure,
-  allocateRevenue,
-  confirmRevenue,
-  fetchRevenueEvents,
   fetchAuthorEarnings,
   fetchCreatorEarnings: fetchAuthorEarnings,
   fetchAuthorSettlements,
@@ -2148,8 +1239,6 @@ window.WebNovelsAdmin = {
   fetchAuthorRevenueSummary,
   fetchCreatorRevenueSummary: fetchAuthorRevenueSummary,
   requestSettlementSecure,
-  approveSettlementSecure,
-  fetchPendingSettlements,
   recordReadingProgressInDB,
   toggleFavoriteInDB,
   toggleSubscriptionInDB,
@@ -2186,8 +1275,4 @@ window.WebNovelsAdmin = {
   updateContentReviewInDB,
   fetchAuditLogsFromDB,
   recordAuditLogInDB,
-  fetchFanMeetingsFromDB,
-  fetchGoodsFromDB,
-  fetchAdUnitsFromDB,
-  fetchEventsFromDB
 };

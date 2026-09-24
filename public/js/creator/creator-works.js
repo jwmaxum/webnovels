@@ -110,13 +110,14 @@
       <label for="cwTags">태그 (쉼표로 구분, 최대 10개)</label><input id="cwTags" class="form-control" name="tags" value="${e((work.tags||[]).join(', '))}">
       <label for="cwRating">이용등급</label><select id="cwRating" class="form-control" name="rating">${options([['ALL','전체 이용가'],['AGE_15','15세 이상'],['AGE_19','19세 이상']],work.rating_confirmed?work.rating:'',!work.rating_confirmed)}</select>
       <label for="cwAI">AI 사용 표기</label><select id="cwAI" class="form-control" name="ai_usage_type">${options([['NONE','사용 안 함'],['ASSISTED','보조 사용'],['GENERATED','AI 생성 포함']],work.ai_confirmed?work.ai_usage_type:'',!work.ai_confirmed)}</select>
-      <label for="cwSerial">연재 상태 (공개 여부와 별개)</label><select id="cwSerial" class="form-control" name="serial_state">${options([['ONGOING','연재 중'],['HIATUS','휴재'],['COMPLETED','완결']],work.serial_state)}</select>
+      ${window.CreatorOperations?.active()?'':`<label for="cwSerial">연재 상태 (공개 여부와 별개)</label><select id="cwSerial" class="form-control" name="serial_state">${options([['ONGOING','연재 중'],['HIATUS','휴재'],['COMPLETED','완결']],work.serial_state)}</select>`}
       <p>표지는 파일 관리에서 올릴 수 있습니다. 표지가 없으면 제목으로 기본 표지를 표시합니다.</p>
       <button type="submit" class="btn btn-primary">설정 저장</button></fieldset></form>
+      ${window.CreatorOperations?.active()?'<div id="cwSerialOperations"></div>':''}
       ${work.visibility==='PUBLIC'&&!disabled?'<button type="button" class="btn btn-outline" id="cwPrivate">비공개로 전환</button>':''}
       <p>설정 저장은 공개 여부를 바꾸지 않습니다. 저장된 초안은 미리보기·게시에서 확인할 수 있습니다.</p>`;
-    else if(tab==='reactions')body='<p>댓글·독자 반응 관리 기능은 준비 중입니다.</p>';
-    else body=`<h4>회차 ${episodes.length}개</h4>${episodes.length?`<ol class="cw-episodes">${episodes.map(ep=>`<li>${e(ep.episode_number)}화 · ${e(ep.title)} <span>${e(ep.status)}</span>${ep.scheduled_at?' · 예약 '+e(ep.scheduled_at):''}</li>`).join('')}</ol>`:'<p>아직 작성한 회차가 없습니다.</p>'}<button type="button" id="cwDrafts" class="btn btn-primary">원고 작성·복구</button>`;
+    else if(tab==='reactions')body=window.CreatorOperations?.active()?'<div id="cwReactions"></div>':'<p>댓글·독자 반응 관리 기능은 준비 중입니다.</p>';
+    else body=`<h4>회차 ${episodes.length}개</h4>${window.CreatorOperations?.active()?'<div id="cwEpisodeOperations"></div>':episodes.length?`<ol class="cw-episodes">${episodes.map(ep=>`<li>${e(ep.episode_number)}화 · ${e(ep.title)} <span>${e(ep.status)}</span>${ep.scheduled_at?' · 예약 '+e(ep.scheduled_at):''}</li>`).join('')}</ol>`:'<p>아직 작성한 회차가 없습니다.</p>'}<button type="button" id="cwDrafts" class="btn btn-primary">원고 작성·복구</button>`;
     return `<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><header class="cw-card">${cover(work)}<div><h3>${e(work.title)}</h3><p>${status(work)}</p>
       ${work.moderation_state==='RESTRICTED'?`<p role="alert">운영 제한: ${e(work.moderation_reason)}</p>`:''}
       <p>최초 공개 전 확인: ${work.publication_missing?.length?e(work.publication_missing.join(', ')):'기본 정보 입력 완료 (게시 검증은 별도)'}</p></div></header>
@@ -146,6 +147,9 @@
         for(const key of ['rating','ai_usage_type'])if(!data[key])delete data[key];
         return mutate('update',data,tab);
       };
+      if(tab==='episodes')window.CreatorOperations?.episodes(root().querySelector('#cwEpisodeOperations'),id);
+      if(tab==='reactions')window.CreatorOperations?.reactions(root().querySelector('#cwReactions'),id);
+      if(tab==='settings')window.CreatorOperations?.serial(current,root().querySelector('#cwSerialOperations'));
     }catch(error){if(validRequest(seq,user))root().innerHTML=`<p role="alert">${e(message(error))}</p><button type="button" class="btn btn-outline" onclick="CreatorWorks.loadFromRoute()">다시 불러오기</button>`;}
   }
   async function mutate(action,data,tab) {

@@ -140,7 +140,7 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 3. 작품 상세 경로 (/works/:id)
   if (parts[0] === 'works') {
-    const workId = parts[1] ? Number(parts[1]) : 1;
+    const workId = parts[1] || '';
     if (typeof openWorkDetailDirect === 'function') {
       openWorkDetailDirect(workId, false);
     } else {
@@ -151,7 +151,7 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 4. 회차 읽기 경로 (/read/:workId/:epNum)
   if (parts[0] === 'read') {
-    const workId = parts[1] ? Number(parts[1]) : 1;
+    const workId = parts[1] || '';
     const epNum = parts[2] ? Number(parts[2]) : 1;
     if (typeof openReaderDirect === 'function') {
       openReaderDirect(workId, epNum, false);
@@ -176,13 +176,15 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 6. 작가센터 경로 (/author 또는 /creator)
   if (parts[0] === 'author' || parts[0] === 'creator' || hash === '#author' || hash === '#creator') {
-    const subTab = parts[1] || 'works';
+    const subTab = parts[1] || (window.CreatorOperations?.active() ? 'home' : 'works');
     switchWebNovelsView('view-creator', null, false);
     if (currentActiveView !== 'view-creator') return;
     if (subTab === 'works' && parts[2]) { switchCreatorTab('works', false); return; }
     if (typeof switchCreatorTab === 'function') {
       const tabMap = {
         'works': 'works',
+        'home': 'home',
+        'help': 'help',
         'episodes': 'new-ep',
         'status': 'status',
         'stats': 'stats',

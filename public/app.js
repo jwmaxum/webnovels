@@ -9,7 +9,7 @@
 // - Domain Modules:
 //   - /js/reader/reader.js    : 홈, 탐색, 작품상세, 뷰어, 댓글, 내 서재, 성인인증
 //   - /js/creator/creator.js  : 작가 스튜디오 대시보드, 회차발행, AI검수, 정산신청
-//   - /js/admin/admin.js      : 16대 관제 메뉴, 5대 검수, CMS 작품연재, Action Queue
+//   - /js/admin/admin.js      : 이전 관리자 화면 호환과 공용 읽기 함수
 // - Extension:
 //   - /supabase-admin.js      : Supabase 실시간 DB 및 관리자 확장 연동
 // ============================================================
@@ -97,6 +97,7 @@ function bindWebNovelsEvents() {
       document.querySelectorAll('.library-tab-panel').forEach(panel => panel.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById(`libraryTab-${tabName}`)?.classList.add('active');
+      if(tabName==='appeals')window.WebNovelsAppeals?.mount(document.getElementById('readerAppeals'));
     });
   });
 
@@ -207,7 +208,7 @@ function bindWebNovelsEvents() {
     if (typeof toggleFavoriteWork === 'function' && activeWork) toggleFavoriteWork(activeWork.id);
   });
   document.getElementById('btnDetailSubscribe')?.addEventListener('click', () => {
-    if (typeof toggleSubscribeAuthor === 'function' && activeWork) toggleSubscribeAuthor(activeWork.author);
+    if (typeof toggleSubscribeAuthor === 'function' && activeWork) toggleSubscribeAuthor(activeWork);
   });
 
   // Reader Events
@@ -332,10 +333,8 @@ window.openRankingFromNav = function(event) {
 window.openMobileMoreModal = function(event) {
   if (event) event.preventDefault();
 
-  let savedUser = null;
-  try {
-    savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-  } catch (e) {}
+  const verified = window.WebNovelsAuth?.getActor();
+  const member = verified && (verified.admin || verified.author || verified.reader);
 
   const emailEl = document.getElementById('mMoreUserEmail');
   const adultEl = document.getElementById('mMoreAdultStatus');
@@ -343,18 +342,17 @@ window.openMobileMoreModal = function(event) {
   const authLabel = document.getElementById('mMoreAuthLabel');
   const authIcon = document.getElementById('mMoreAuthIcon');
 
-  if (savedUser && savedUser.email) {
-    if (emailEl) emailEl.textContent = savedUser.nickname || savedUser.email.split('@')[0];
-    const isAdult = !!(savedUser.isAdultVerified || savedUser.is_adult_verified || window._isAdultVerified);
-    if (adultEl) adultEl.textContent = isAdult ? '🔞 19+ 성인 인증 완료' : '🔞 성인 미인증';
-    const pts = savedUser.points ?? userPoints ?? 0;
+  if (member) {
+    if (emailEl) emailEl.textContent = member.nickname || member.pen_name || member.username || '회원';
+    if (adultEl) adultEl.textContent = '🔞 성인 콘텐츠는 열람 시 인증 확인';
+    const pts = Number(verified.reader?.points) || 0;
     if (pointEl) pointEl.textContent = `🪙 ${pts.toLocaleString()} P`;
     if (authLabel) authLabel.textContent = '로그아웃';
     if (authIcon) authIcon.setAttribute('data-lucide', 'log-out');
   } else {
     if (emailEl) emailEl.textContent = '로그인이 필요합니다';
     if (adultEl) adultEl.textContent = '🔞 성인 미인증';
-    if (pointEl) pointEl.textContent = `🪙 ${(userPoints || 0).toLocaleString()} P`;
+    if (pointEl) pointEl.textContent = '🪙 0 P';
     if (authLabel) authLabel.textContent = '로그인 / 회원가입';
     if (authIcon) authIcon.setAttribute('data-lucide', 'log-in');
   }
@@ -446,6 +444,7 @@ async function initWebNovelsApp() {
     }
 
     try {
+      if (!window.AdminOperations?.active()) {
       const remoteReaders = window.WebNovelsAdmin.getCurrentAdmin() ? await window.WebNovelsAdmin.fetchReadersFromSupabase() : [];
       if (Array.isArray(remoteReaders)) {
         SAMPLE_READERS.length = 0;
@@ -462,6 +461,7 @@ async function initWebNovelsApp() {
           SAMPLE_AUTHORS.length = 0;
           SAMPLE_AUTHORS.push(...remoteCreators);
         }
+      }
       }
     } catch(err) {}
   }
@@ -483,8 +483,9 @@ async function initWebNovelsApp() {
     if (typeof renderSearchResults === 'function') renderSearchResults();
     if (currentActiveView === 'view-work-detail' && activeWork) openWorkDetailDirect(activeWork.id, false);
     if (currentActiveView === 'view-admin-cms') {
-      if (typeof renderAdminWorks === 'function') renderAdminWorks();
-      if (typeof loadDashboardKPIs === 'function') loadDashboardKPIs();
+      if (window.AdminOperations?.active()) window.AdminOperations.refresh();
+      else {if (typeof renderAdminWorks === 'function') renderAdminWorks();
+        if (typeof loadDashboardKPIs === 'function') loadDashboardKPIs();}
     }
   });
 
@@ -500,26 +501,28 @@ async function initWebNovelsApp() {
       }
     }
     const currentWorkId = document.getElementById('adminEpisodeWorkSelect')?.value;
-    if (currentWorkId && typeof renderAdminEpisodes === 'function') {
+    if (!window.AdminOperations?.active() && currentWorkId && typeof renderAdminEpisodes === 'function')
       renderAdminEpisodes(currentWorkId);
-    }
     if (typeof renderHomeWorks === 'function') renderHomeWorks();
     if (currentActiveView === 'view-work-detail' && activeWork) openWorkDetailDirect(activeWork.id, false);
-    if (currentActiveView === 'view-admin-cms' && typeof loadDashboardKPIs === 'function') {
-      loadDashboardKPIs();
+    if (currentActiveView === 'view-admin-cms') {
+      if(window.AdminOperations?.active())window.AdminOperations.refresh();
+      else if(typeof loadDashboardKPIs==='function')loadDashboardKPIs();
     }
   });
 
   window.addEventListener('webnovels:readers-changed', async (e) => {
     console.log('[Event-Driven Realtime] readers-changed 이벤트 수신 -> 독자 목록 UI 동기화');
-    if (typeof loadAdminUsers === 'function') {
+    if (window.AdminOperations?.active()) {if(currentActiveView==='view-admin-cms')window.AdminOperations.refresh();}
+    else if (typeof loadAdminUsers === 'function') {
       await loadAdminUsers(true);
     }
   });
 
   const onAuthorsChanged = async () => {
     console.log('[Event-Driven Realtime] authors-changed 이벤트 수신 -> 작가 목록 UI 동기화');
-    if (typeof loadAdminAuthors === 'function') {
+    if (window.AdminOperations?.active()) {if(currentActiveView==='view-admin-cms')window.AdminOperations.refresh();}
+    else if (typeof loadAdminAuthors === 'function') {
       await loadAdminAuthors(true);
     } else if (typeof loadAdminCreators === 'function') {
       await loadAdminCreators(true);
@@ -554,10 +557,7 @@ if (typeof window !== 'undefined') {
         onWorksChange: () => window.dispatchEvent(new CustomEvent('webnovels:works-changed')),
         onEpisodesChange: () => window.dispatchEvent(new CustomEvent('webnovels:episodes-changed')),
         onAuthorsChange: () => window.dispatchEvent(new CustomEvent('webnovels:works-changed')),
-        onSettlementsChange: (payload) => {
-          console.log('⚡ [Realtime UI] Settlements 갱신 수신:', payload.eventType);
-          if (typeof window.loadSettlementsList === 'function') window.loadSettlementsList();
-          if (typeof window.loadDashboardKPIs === 'function') window.loadDashboardKPIs();
+        onSettlementsChange: () => {
           if (typeof window.fetchCreatorDashboardData === 'function') window.fetchCreatorDashboardData();
         },
         onSupportsChange: (payload) => {
@@ -589,10 +589,9 @@ if (typeof window !== 'undefined') {
             window.loadEpisodeComments(window._currentReadingWorkId, window._currentReadingEpNum);
           }
         },
-        onReportsChange: (payload) => {
-          console.log('⚡ [Realtime UI] Reports 갱신 수신:', payload.eventType);
-          if (typeof window.renderDashboardActionQueuePreview === 'function') {
-            window.renderDashboardActionQueuePreview();
+        onReportsChange: () => {
+          if (window.AdminOperations?.active() && currentActiveView === 'view-admin-cms') {
+            window.AdminOperations.refresh();
           }
         }
       });

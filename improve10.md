@@ -44,10 +44,10 @@
 
 ## 실행 기록
 
-- 상태: 미착수
-- 시작일 / 완료일: — / —
-- 변경 파일 / 커밋: —
-- 검증 명령 / 결과 / 증거 경로: —
-- DB·Storage 적용 환경 / 버전: —
-- 외부 의존성·미해결 사항: —
+- 상태: 진행 중. [전환 감사와 잔여 경로](docs/launch/stage10-cutover-audit.md)에 구현·미완료 항목을 분리했다.
+- 시작일 / 완료일: 2026-09-24 / —
+- 변경 파일 / 커밋: `server/secure-api.mjs`, `server/stage8-api.mjs`, `src/app.ts`, `public/app.js`, `public/js/reader/reader.js`, `public/js/admin/admin.js`, `public/index.html`, `public/supabase-admin.js`, `database/p0/000_preflight.sql`, `database/authoring/011_reader_profile_cutover.sql`, 검증 스크립트. 미커밋.
+- 검증 명령 / 결과 / 증거 경로: `test:operations`, `test:admin-operations`, `test:auth`, `test:naming`, `test:data`, 개별 P0/Cloudflare/Provider 테스트, `npx tsc --noEmit` 통과. [검증 요약](artifacts/step10-cutover-verification.json). 합성 DB 검증만 수행.
+- DB·Storage 적용 환경 / 버전: 실제 적용 없음. PGlite에서 `authoring-011` 재적용·서비스 전용 실행과 P0 잠금의 직접 접근 거부 검증.
+- 외부 의존성·미해결 사항: 관리 API 401로 실제 DDL/백업/Auth 매핑 확인 불가. 기존 직접 DB·RPC/Storage 경로, UI 인수, 스테이징 리허설은 남아 있다.
 - 다음 단계 진입 판정: 대기(완료 조건 미검증)

@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-09-24T20:52:35.389Z",
+  "management": {
+    "ok": false,
+    "status": 401,
+    "code": "MANAGEMENT_TOKEN_REJECTED",
+    "projectRef": "ghwabesnydktumeyejnm"
+  },
+  "dataApi": {
+    "publishable": {
+      "status": 200
+    },
+    "server": {
+      "status": 200
+    }
+  },
+  "production": {
+    "/": {
+      "status": 200
+    },
+    "/api/public-config.js": {
+      "status": 200
+    },
+    "/api/v2/health": {
+      "status": 503,
+      "code": "SECURE_API_NOT_ACTIVATED"
+    }
+  },
+  "databaseSecurity": {
+    "status": 404,
+    "locked": false
+  }
+}

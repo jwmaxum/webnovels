@@ -4770,6 +4770,11 @@ body.portal-fullscreen-mode .main-content-wrapper {
   color: #cbd5e1;
 }
 
+.diff-line-row.diff-type-summary {
+  color: #fbbf24;
+  font-style: italic;
+}
+
 .diff-empty-notice {
   text-align: center;
   padding: 48px 16px;
@@ -5553,3 +5558,21 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .creator-file-row button { margin: 4px; }
 #creatorCoverCanvas { display: block; width: min(240px, 70vw); height: auto; background: #eee; margin: 12px 0; }
 #creatorFilesMessage { white-space: pre-wrap; overflow-wrap: anywhere; }
+.stage8-creator #creatorAuthorDetails,
+.stage8-creator #creatorAuthorBadge,
+.service-status { margin: 16px; padding: 16px; border: 1px solid var(--border-color); border-radius: 10px; }
+.service-status:not([hidden]) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.stage8-creator #creatorTabsBar [data-creator-tab="new-ep"],
+.stage8-creator #creatorTabsBar [data-creator-tab="status"],
+.stage8-creator #creatorTabsBar [data-creator-tab="stats"],
+.stage8-creator #creatorTabsBar [data-creator-tab="ad-rev"],
+.stage8-creator #creatorTabsBar [data-creator-tab="sales-rev"],
+.stage8-creator #creatorTabsBar [data-creator-tab="settlements"] { display:none; }
+#view-creator:not(.stage8-creator) #creatorTabsBar [data-creator-tab="home"],
+#view-creator:not(.stage8-creator) #creatorTabsBar [data-creator-tab="help"] { display:none; }
+.co-episode,.co-comment,.co-panel {padding:12px;border:1px solid var(--border-color);border-radius:8px;margin:8px 0;}
+.co-episode {display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
+#view-admin-cms.stage9-admin > .container:not(#adminOperationsShell) {display:none;}
+#adminOperationsNav {display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+#adminOperationsContent .co-panel button {margin-right:8px;margin-bottom:8px;}
+[data-library-tab="appeals"][hidden] {display:none;}

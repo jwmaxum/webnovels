@@ -80,6 +80,8 @@ C03 관련 `handleWorkStatusChange`는 정의되어 있으나 없는 `updateWork
 | R09 신인 추천·후원 명예의 전당 | fetchGoldenBestFromDB/fetchWorkTopSupporters | v_golden_best_current/golden_best_snapshots/creator_supports | 초기 비활성: 검증된 기본 노출만 유지, 확장 재검증 / 9·13 |
 | R10 공개 설정·Realtime·세션 | initSupabaseAdmin/setupRealtimeSubscriptions, `/api/public-config.js` | 공개 설정 및 DB 변경 구독 | 통합: 비밀값 격리·허용 테이블만 구독 / 3·10 |
 
+8단계 코드 기준으로 새 독자 플래그가 켜지면 R01, R04~R07의 독서 활동·댓글·환경설정은 v2 API를 사용한다. `fetchGoldenBestFromDB`, `fetchWorkTopSupporters`, `supportCreator`는 새 독자 경로에서 호출하지 않는다. 10단계에서 개인 프로필 변경 `updateReaderProfileInDB`를 제거하고 검증된 Auth UUID의 닉네임 변경을 서버 전용 `stage10_reader_profile`로 옮겼다. 플래그가 꺼진 구 경로의 `fetchReaderActivity`, `recordReadingProgressInDB`, `toggleFavoriteInDB`, `toggleSubscriptionInDB`, `fetchCommentsByEpisode`, `recordReaderEventInDB`, `fetchReaderPreferences`, `saveReaderPreferences`와 남은 관리자·정산·Realtime 직접 접근은 계속 감사 대상이다. [10단계 전환 감사](stage10-cutover-audit.md)를 참고한다. 구형 독서기록·관심·댓글 데이터는 신원 매핑과 중복 대조 전 자동 이관하지 않는다.
+
 ## D. 런타임/API 경계
 
 | 경로 | 현재 코드 | 1단계 판단 |
@@ -103,3 +105,10 @@ C03 관련 `handleWorkStatusChange`는 정의되어 있으나 없는 `updateWork
 4. 관리자 파일에 독자 검색 함수가 섞임: A19. 파일 전체 삭제 금지.
 5. 관리자 정산 함수와 작가 출금 함수의 중복 정의·별칭: 이름만 보고 삭제하지 않고 최종 등록과 호출 인자를 확인.
 6. 원격 열 접근 위험 신호 및 Auth 매핑 미완료: [기준선](baseline.md). 이번 단계에서 실제 원고/비밀번호 값은 읽지 않았다.
+
+## F. 9단계 로컬 정리 상태
+
+- 관리자 작품·회차 생성, 회차 본문 편집·무료 전환·물리 삭제, 작품 대량 상태 변경·삭제의 UI와 `WebNovelsAdmin` 직접 쓰기 export를 제거했다. 작가의 오래된 `updateWorkSerialStatus` 관리자 쓰기 별칭도 제거했다.
+- 새 관리자 화면은 `ADMIN_OPERATIONS_ENABLED`가 참일 때만 `/api/v2/admin/operations`를 사용한다. 인증된 Auth UUID와 최신 DB 권한은 서버 RPC에서 다시 검사한다. 플래그 비활성 구 화면은 인수·복구를 위해 남아 있고 직접 DB/RLS 폐쇄는 10단계 대상이다.
+- 구 정산 함수 중 `loadSettlementsList`는 전역 `window` 정의와 지역 함수가 병존한다. `handleRevenueCalculation`, `handleRevenueConfirm`, `handleApproveSettlement`도 두 차례 `window`에 할당된다. 하단 할당이 최종 전역 호출을 받으며 상단 조각은 과거 처리 흐름이다. 새 운영 화면은 어느 함수도 호출하지 않으며 초기 수익 메뉴를 제공하지 않는다. 구 코드 삭제는 거래 이력·13단계 운영 이관 검증과 함께 진행한다.
+- `case-resolve`는 상태 행 잠금과 고유 처리 이력으로 중복 처리를 막는다. 이의제기는 `/api/v2/appeals`와 별도 관리자 처리함에서 제출·재신청·심사하며 원 사건과 제재 기록을 보존한다.

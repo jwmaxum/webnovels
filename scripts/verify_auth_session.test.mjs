@@ -49,6 +49,16 @@ test('401 refreshes once; repeated denial removes authority; service failure nev
   s.respond(Response.json({error:'DATABASE_UNAVAILABLE'},{status:503}));
   await assert.rejects(s.api.login('writer@example.test','password'),e=>e.status===503);assert.equal(s.api.getActor(),null);
 });
+test('a denied reader action keeps the valid account session',async()=>{
+  const s=setup();await s.api.login('writer@example.test','password');
+  s.respond(Response.json({error:'COMMENTS_DISABLED'},{status:403}));
+  await assert.rejects(s.api.api('/api/v2/reader/hub?action=comment&workId=10&episodeId=100',
+    {method:'POST',body:JSON.stringify({content:'test'})}),e=>e.code==='COMMENTS_DISABLED');
+  assert.equal(s.api.getActor().userId,'uuid');
+  s.respond(Response.json({error:'ACCOUNT_INACTIVE'},{status:403}));
+  await assert.rejects(s.api.api('/api/v2/me'),e=>e.code==='ACCOUNT_INACTIVE');
+  assert.equal(s.api.getActor(),null);
+});
 test('signup stops before provider when closed; confirmed account can resume without another signup',async()=>{
   const s=setup();s.respond(Response.json({error:'ONBOARDING_NOT_ACTIVATED'},{status:503}));
   await assert.rejects(s.api.signup('author','writer@example.test','password','작가이름'));

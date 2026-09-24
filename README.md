@@ -1,121 +1,37 @@
-# WebNovels (웹노블즈) - 광고 기반 무료 웹소설 플랫폼
+# WebNovels
 
-> **WebNovels**는 독자가 유료 결제 없이 **30초 보상형 광고(Rewarded Ad)**를 시청하면 다음 회차를 무료로 즐길 수 있고, 발생한 광고 수익은 **62.5% 작가 Pool**로 투명하게 배분되는 **작가 상생형 웹소설 서비스 플랫폼**입니다.
+웹소설 독자 화면, 작가 스튜디오, 관리자 화면을 개발 중인 저장소입니다. **2026-09-24 현재 정식 출시 또는 제한 베타 승인 상태가 아닙니다.** 운영 주소는 문서상 [Cloudflare Pages](https://webnovels-db4.pages.dev/)이며, 주소가 응답한다는 사실은 데이터 보호·기능 인수·오픈 완료를 의미하지 않습니다.
 
----
+## 현재 범위
 
-> 운영 배포는 Cloudflare Pages입니다. 아래 기능 소개에는 이전 모의 구현 설명이 포함되어 있습니다. 현재 런칭 제한과 실제 개발 상태는 [P0 실행 계획](P0_IMPLEMENTATION_PLAN.md), [Cloudflare 배포 안내](CLOUDFLARE_DEPLOYMENT.md), [런칭 점검 보고서](LAUNCH_READINESS.md)를 먼저 확인하세요. 결제·성인인증은 키 입력만으로 운영 완료되는 상태가 아닙니다.
+- 독자·작가·관리자용 화면과 Cloudflare Pages Functions `/api/v2/*`가 있습니다. 새 업무 API는 기능 플래그와 DB 보안 버전이 준비되지 않으면 닫힙니다.
+- 계정·작품·원고·파일·게시·예약·독자/관리자 기능은 로컬 mock API와 격리 PostgreSQL에서 계약을 검증했습니다. 실제 Supabase/Auth/Storage, 메일, Cron, PC/모바일 인수는 남아 있습니다.
+- 기존 화면에는 광고 해금, 포인트, 후원, 성인인증, 수익·정산 안내가 남아 있습니다. 해당 운영 기능은 검증되지 않았고 새 v2 API는 503으로 닫혀 있습니다. 이를 사용할 수 있다는 안내로 해석하지 마세요.
+- 기존 데이터와 계정 매핑은 보존 대상입니다. 운영/공유 DB에서 초기화·재시드·`prisma db push`를 실행하지 않습니다.
 
-## 🌟 주요 특징 (Key Features)
+출시 결정과 남은 조건은 [12단계 출시 기록](docs/launch/release-record.md), [11단계 출시 체크리스트](docs/launch/release-checklist.md), [10단계 전환 감사](docs/launch/stage10-cutover-audit.md)를 확인하세요. 과거 상태를 담은 [런칭 점검 보고서](LAUNCH_READINESS.md)는 날짜별 기록으로 유지합니다.
 
-### 📖 1. Reading-First 독자 웹 플랫폼 (`/`)
-* **Mobile-First & Responsive UX**: 모바일 하단 바텀 네비게이션 및 데스크톱 네비게이션 지원.
-* **Hero Carousel & 이어보기**: 최근 읽던 작품과 읽기 진행률(예: `1화 75% 완료`)을 메인 홈에서 즉시 계속 읽기.
-* **작품 & 회차 연재**: 관람 등급(`ALL`, `15+`, `18+`), AI 사용 표기(`NONE`, `ASSISTED`, `FULL`), 1~3화 무료 & 4화 광고 Unlock 회차 구분.
-* **전문 웹소설 리더 (Fullscreen Reader)**:
-  * 3가지 독서 테마 지원 (`Light`, `Sepia`, `Dark`)
-  * 폰트 및 글자 크기(14px ~ 26px) 실시간 조절 Drawer
-* **보상형 광고 Unlock & Server-Side Verification (SSV)**:
-  * 4화 열람 시 30초 광고 시청 시뮬레이션 후 백엔드 서버 승인을 거쳐 100% 안전하게 무료 해금.
+## 구조와 로컬 검증
 
----
+| 경로 | 역할 |
+|---|---|
+| `public/` | 독자·작가·관리자 SPA 정적 파일 |
+| `functions/` | Cloudflare Pages Functions 진입점 |
+| `server/` | Worker 호환 v2 업무 API |
+| `database/authoring/`, `database/p0/` | 실제 스키마 감사·백업 확인 뒤 적용할 증분 SQL |
+| `src/`, `prisma/` | 과거 Express/SQLite 개발 코드. Cloudflare 업무 API가 아님 |
 
-### 🎨 2. 작가 스튜디오 (Creator Studio)
-* **3단계 투명 수익 대시보드 (Creator Transparency)**:
-  * 📊 **예상 수익 (Estimated)**: 실시간 광고 발생 추정치
-  * 🔒 **확정 수익 (Confirmed)**: 월말 마감 승인 완료된 정산금
-  * 💳 **정산 가능 금액 (Payable)**: 작가가 출금 가능한 정산금 및 정산 신청 위저드
-* **작품 & 회차 연재 관리**: 신규 작품 등록, 예약 발행, 회차 무료/광고 Unlock 설정.
+로컬에서 의존성을 설치하고 안전한 회귀 묶음과 빌드를 실행할 수 있습니다.
 
----
+    npm ci
+    npm test
+    npm run build
 
-### 🛡️ 3. 통합 관리자 CMS (Admin Web Application - `/admin`)
-* **최고 관리자 (Super Admin) 세팅**: `.env.local` 기반 자동 계정 세팅 ().
-* **서브 관리자 권한 매트릭스 (Fine-Grained RBAC)**:
-  * 16개 관리자 메뉴(`DASHBOARD`, `USER_MGMT`, `AUTHOR_MGMT`, `WORK_MGMT`, `EPISODE_MGMT`, `CONTENT_REVIEW`, `COMMENT_REPORT`, `AD_MGMT`, `AD_REVENUE`, `AUTHOR_SETTLEMENT`, `FAN_MEETING`, `GOODS_MGMT`, `EVENT_MGMT`, `ANALYTICS`, `SYSTEM_MGMT`, `SECURITY_MGMT`)에 대해 스위치 토글로 접근 권한 지정/수정.
-* **광고 수익배분 Engine (Revenue Allocation Engine)**:
-  * 월 광고 총매출, 수수료 차감 후 작가 Pool(62.5%) 자동 산정 (`Estimated`) 및 정산 마감 (`Confirmed`).
-* **작가 정산 승인 프로세스**: 작가의 출금 신청 확인 후 입금 완료(`PAID`) 승인.
-* **PG & PASS 본인인증 시스템 설정**:
-  * 토스페이먼츠 (Toss Payments) Secret Key 보안 마스킹 (`test****3b5z`) 및 LIVE/TEST 전환
-  * NHN KCP / PASS 성인 본인인증 키 설정 및 핑 테스트.
+`npm test`는 mock API와 격리 PGlite를 사용합니다. 과거 `scripts/verify_backend.ts`는 SQLite 데이터를 삭제하고 localhost 서버를 시작하므로 이 회귀 묶음에서 제외했습니다. 실환경 검증 명령과 순서는 [마이그레이션·백업 절차](docs/launch/migration-runbook.md)를 따릅니다. 자격 증명은 Git에 넣지 마세요.
 
----
+## 문서
 
-## 🛠️ 기술 스택 (Tech Stack)
-
-* **Backend**: Node.js (v24), Express, TypeScript, Prisma ORM, SQLite / Supabase
-* **Frontend**: HTML5, Vanilla CSS (Dark Glassmorphism Design Tokens), JavaScript (ESNext), Lucide Icons
-* **CI/CD & Deployment**: GitHub Actions CI, Cloudflare Pages Edge Deployment
-
----
-
-## 📁 프로젝트 폴더 구조 (Directory Structure)
-
-```text
-webnovels/
-├── .github/
-│   └── workflows/
-│       └── ci.yml             # GitHub Actions CI 빌드/테스트 워크플로우
-├── prisma/
-│   └── schema.prisma          # User, Work, Episode, AdImpression, RevenueEvent, SystemConfig DB 스키마
-├── public/                    # 메인 웹 서비스 및 관리자 CMS 프론트엔드 static 파일
-│   ├── images/                # AI 생성 대표 웹소설 표지 이미지 (cover_fantasy.png, cover_romance.png)
-│   ├── index.html             # WebNovels 메인 플랫폼 & Admin CMS SPA 레이아웃
-│   ├── styles.css             # 디자인 시스템 토큰, 리더 테마, 글래스모피즘 CSS
-│   └── app.js                 # 프론트엔드 비즈니스 로직 & REST API 연동
-├── scripts/
-│   └── verify_backend.ts      # 8단계 통합 백엔드/프론트엔드 시나리오 자동 검증 스크립트
-├── src/
-│   ├── app.ts                 # Express 애플리케이션 및 라우터 마운트
-│   ├── server.ts              # 서버 실행 및 SuperAdminInit 초기화
-│   ├── config/                # DB 및 JWT 환경 설정
-│   ├── middlewares/           # auth, requirePermission (RBAC), adultGuard
-│   ├── routes/                # auth, admin, creator, work, episode, ad, payment
-│   └── services/              # adUnlock, revenueEngine, tossPayment, kcpVerification, config
-├── .env.local                 # Super Admin credentials & API secrets
-├── design.md                  # Front-end Design System & Implementation Specification
-└── tsconfig.json              # TypeScript 컴파일 설정
-```
-
----
-
-## 🚀 시작하기 (Getting Started)
-
-### 1. 의존성 설치
-```bash
-npm install
-```
-
-### 2. 데이터베이스 초기화 (Prisma)
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-### 3. 개발 서버 실행
-```bash
-npm run dev
-```
-
-* **메인 서비스 플랫폼**: `http://localhost:4000/`
-* **통합 관리자 CMS**: `http://localhost:4000/admin`
-
-### 4. 통합 자동 테스트 실행 (Verification Test)
-```bash
-npm run test
-```
-
-### 5. Production 빌드
-```bash
-npm run build
-```
-
----
-
-## 🔑 주요 계정 정보 (Initial Credentials)
-
-* 
-## 📄 라이선스 (License)
-
-Copyright © 2026 WebNovels. All rights reserved.
+- [전체 단계](improve.md) · [12단계](improve12.md)
+- [Cloudflare 배포·전환 안내](CLOUDFLARE_DEPLOYMENT.md)
+- [Author/Creator 호환 계약](docs/launch/author-creator-contract.md)
+- [제한 베타 관찰표](docs/launch/beta-observation-sheet.md)

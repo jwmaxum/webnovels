@@ -15,7 +15,10 @@
     INVALID_SIGNUP: '이메일, 8자 이상 비밀번호, 2~40자 필명을 확인해주세요.',
     AUTH_REQUIRED: '다시 로그인해주세요.', INVALID_SESSION: '세션이 만료되었습니다. 다시 로그인해주세요.',
     ADMIN_FORBIDDEN: '관리자 권한이 없습니다.',
-    AUTH_IN_PROGRESS: '인증 요청을 처리 중입니다. 잠시 기다려주세요.'
+    AUTH_IN_PROGRESS: '인증 요청을 처리 중입니다. 잠시 기다려주세요.',
+    SECURE_API_NOT_ACTIVATED: '계정 서비스를 준비 중입니다. 점검이 끝난 뒤 다시 이용해주세요.',
+    DATABASE_SECURITY_MIGRATION_REQUIRED: '계정 서비스를 점검 중입니다. 잠시 후 다시 이용해주세요.',
+    ONBOARDING_NOT_ACTIVATED: '신규 가입을 준비 중입니다. 서비스 오픈 안내를 확인해주세요.'
   };
   function error(code, status, requestId) { return Object.assign(new Error(messages[code] || '인증 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.'), { code, status, requestId }); }
   function sdk() {
@@ -26,6 +29,11 @@
     window.CreatorDraftEditor?.onAuthLost();
     generation++; actor = null;
     window.CreatorWorks?.reset();
+    window.CreatorOperations?.reset();
+    window.AdminOperations?.reset();
+    window.WebNovelsAppeals?.reset();
+    window.ReaderHub?.reset();
+    if(window.WEBNOVELS_CONFIG?.readerServiceEnabled)window.ReaderPreferencesManager?.reset();
     keys.forEach(k => localStorage.removeItem(k));
     if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = false;
     if (typeof currentLoggedAuthor !== 'undefined') currentLoggedAuthor = null;
@@ -49,6 +57,8 @@
     if (typeof currentLoggedCreator !== 'undefined') currentLoggedCreator = value.author;
     window.currentLoggedAuthor = window.currentLoggedCreator = value.author;
     if (typeof updateMemberHeader === 'function') updateMemberHeader(user);
+    if(value.reader&&window.WEBNOVELS_CONFIG?.readerServiceEnabled)
+      window.ReaderPreferencesManager?.syncRemote(value.userId);
     return value;
   }
   function providerError(e) {
@@ -80,7 +90,8 @@
     const body = await response.json();
     if (epoch !== generation) throw error('INVALID_SESSION',401);
     if (!response.ok) {
-      if ([401,403].includes(response.status)) clear();
+      if (response.status===401 || (response.status===403 &&
+        ['ACCOUNT_INACTIVE','EMAIL_CONFIRMATION_REQUIRED','ACCOUNT_NOT_LINKED','INVALID_SESSION'].includes(body.error))) clear();
       throw error(body.error,response.status,body.requestId || response.headers.get('X-Request-ID'));
     }
     return body;

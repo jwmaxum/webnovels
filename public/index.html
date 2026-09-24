@@ -25,9 +25,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebNovels - 광고 기반 무료 웹소설 플랫폼</title>
+  <title>WebNovels - 웹소설 연재 플랫폼</title>
   <!-- SEO Meta Tags -->
-  <meta name="description" content="WebNovels - 돈을 내지 않아도 광고를 시청하면 다음 회차를 무료로 즐길 수 있는 작가 상생 웹소설 플랫폼">
+  <meta name="description" content="WebNovels에서 공개된 무료 웹소설을 읽고 연재하세요.">
   <meta name="theme-color" content="#6D5EF5">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='3' y1='3' x2='25' y2='25'%3E%3Cstop stop-color='%2325D1FF'/%3E%3Cstop offset='.6' stop-color='%239C65FF'/%3E%3Cstop offset='1' stop-color='%23FF4F9A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M5.8 4.1c0-1.2 1.4-1.9 2.4-1.3l14 9c1 .6 1 2.1 0 2.7l-14 9c-1 .7-2.4-.1-2.4-1.3V4.1Z' fill='url(%23g)'/%3E%3Cpath d='M9.3 8.2v11.6l8.9-5.8-8.9-5.8Z' fill='%23fff'/%3E%3C/svg%3E">
   <!-- Fonts -->
@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=106">
+  <link rel="stylesheet" href="/styles.css?v=110">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -148,7 +148,7 @@
 
           <!-- Header Actions: 포인트 🪙 1,000P + 👤 프로필/로그인 -->
           <div class="header-actions">
-            <div class="user-points-badge" id="headerPointsBadge">
+            <div class="user-points-badge" id="headerPointsBadge" style="display:none">
               🪙 <span id="headerPointsValue">0P</span>
             </div>
             <div class="user-profile-menu" id="userProfileMenu">
@@ -171,6 +171,10 @@
 
       <!-- Main Content Area -->
       <main class="webnovels-body">
+        <aside id="serviceStatus" class="service-status" role="status" aria-live="polite" hidden>
+          <span id="serviceStatusMessage"></span>
+          <button id="serviceStatusRetry" type="button" class="btn btn-outline btn-sm">연결 다시 확인</button>
+        </aside>
 
         <!-- View 1: Home View (PC & Mobile 메인 홈) -->
         <section id="view-home" class="main-view active">
@@ -247,7 +251,7 @@
             <button class="cdg-genre-pill" data-genre="현대 판타지">현대 판타지</button>
             <button class="cdg-genre-pill" data-genre="SF">SF</button>
             <button class="cdg-genre-pill" data-genre="호러">호러</button>
-            <button class="cdg-genre-pill" data-genre="19+ 성인">19+ 성인</button>
+            <button class="cdg-genre-pill" data-genre="19+ 성인" style="display:none">19+ 성인</button>
           </div>
           <!-- Filtered Works Grid -->
           <div class="cdg-scroll-row" id="genreWorksGrid">
@@ -284,12 +288,12 @@
             <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">전체보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
           </div>
 
-          <!-- Ad Unlock Promo Banner -->
+          <!-- Free serialization banner -->
           <div class="cdg-free-banner">
             <div class="cdg-free-banner-content">
-              <span class="cdg-free-badge"><i data-lucide="zap" style="width:12px;height:12px;"></i> 100% 무료 혜택</span>
-              <h3>"광고 30초 보고 다음 편 바로 무료 해금!"</h3>
-              <p>유료 결제 없이 광고를 시청하면 작가에게 직접 후원되고, 독자는 다음 회차를 즉시 무료로 감상할 수 있습니다.</p>
+              <span class="cdg-free-badge"><i data-lucide="book-open" style="width:12px;height:12px;"></i> 무료 연재</span>
+              <h3>공개된 무료 회차를 읽어보세요</h3>
+              <p>작가가 공개한 무료 웹소설을 감상할 수 있습니다.</p>
             </div>
           </div>
 
@@ -319,7 +323,7 @@
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('로맨스 판타지', this)">로맨스 판타지</button>
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('현대 판타지', this)">현대 판타지</button>
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('무협', this)">무협</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('19+ 성인', this)">19+ 성인</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('19+ 성인', this)" style="display:none">19+ 성인</button>
           </div>
 
           <!-- Comprehensive Multi-dimensional Filter Dashboard (improve3.md) -->
@@ -437,7 +441,7 @@
               </div>
               <h1 id="detailTitle" class="detail-title">작품 정보를 불러오는 중</h1>
               <p class="detail-author" id="detailAuthor">작가 정보 확인 중</p>
-              <p class="detail-desc" id="detailDescription">광고를 보면 다음 회차가 무료로 공개되는 대표 판타지 웹소설입니다.</p>
+              <p class="detail-desc" id="detailDescription">공개된 회차 정보를 확인하세요.</p>
 
               <div class="detail-actions">
                 <button class="btn btn-primary btn-lg" id="btnDetailReadFirst">
@@ -449,7 +453,7 @@
                 <button class="btn btn-outline btn-lg" id="btnDetailSubscribe">
                   <i data-lucide="user-plus"></i> 작가 구독
                 </button>
-                <button class="btn btn-outline btn-lg" id="btnDetailSupport" onclick="supportActiveWork()">
+                <button class="btn btn-outline btn-lg" id="btnDetailSupport" onclick="supportActiveWork()" style="display:none">
                   <i data-lucide="heart-handshake"></i> 작가 응원하기
                 </button>
               </div>
@@ -457,7 +461,7 @@
           </div>
 
           <!-- Top Supporters Wall Widget (improve5.md) -->
-          <div class="work-supporters-section mt-8 mb-6 card glass-panel p-6" id="workTopSupportersWidget" style="border-radius:12px; border:1px solid var(--border-color); background:rgba(255,255,255,0.02);">
+          <div class="work-supporters-section mt-8 mb-6 card glass-panel p-6" id="workTopSupportersWidget" style="display:none; border-radius:12px; border:1px solid var(--border-color); background:rgba(255,255,255,0.02);">
             <div class="flex-between mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.15rem;">
                 <i data-lucide="trophy" style="color:var(--accent-amber, #F59E0B);"></i> 이 작품의 명예의 전당 (Top Supporters)
@@ -578,7 +582,7 @@
                     <span class="cdg-badge-pink" id="creatorAuthorBadge">공식 인증 작가</span>
                   </div>
                   <div class="text-muted small mt-1" id="creatorAuthorMeta">
-                    웹소설·웹툰 작품 연재, 독자 반응 통계 및 투명 정산 관리 센터
+                    웹소설 작품 연재와 독자 반응 관리 센터
                   </div>
                 </div>
               </div>
@@ -602,15 +606,28 @@
             </div>
           </div>
 
-          <!-- Creator 7-Tab Navigation Menu -->
+          <!-- Primary author navigation; legacy routes remain addressable. -->
           <div class="cdg-genre-bar mb-4" id="creatorTabsBar">
-            <button class="cdg-genre-pill active" data-creator-tab="works"><i data-lucide="book-open" style="width:13px;height:13px;display:inline;"></i> 1. 작품관리</button>
+            <button class="cdg-genre-pill" data-creator-tab="home">홈</button>
+            <button class="cdg-genre-pill active" data-creator-tab="works"><i data-lucide="book-open" style="width:13px;height:13px;display:inline;"></i> 내 작품</button>
+            <button class="cdg-genre-pill" data-creator-tab="help">설정·도움말</button>
             <button class="cdg-genre-pill" data-creator-tab="new-ep"><i data-lucide="plus-circle" style="width:13px;height:13px;display:inline;"></i> 2. 회차등록</button>
             <button class="cdg-genre-pill" data-creator-tab="status"><i data-lucide="sliders" style="width:13px;height:13px;display:inline;"></i> 3. 연재관리</button>
             <button class="cdg-genre-pill" data-creator-tab="stats"><i data-lucide="bar-chart-2" style="width:13px;height:13px;display:inline;"></i> 4. 독자통계</button>
-            <button class="cdg-genre-pill" data-creator-tab="ad-rev"><i data-lucide="tv" style="width:13px;height:13px;display:inline;"></i> 5. 광고수익</button>
-            <button class="cdg-genre-pill" data-creator-tab="sales-rev"><i data-lucide="coins" style="width:13px;height:13px;display:inline;"></i> 6. 판매수익</button>
-            <button class="cdg-genre-pill" data-creator-tab="settlements"><i data-lucide="wallet" style="width:13px;height:13px;display:inline;"></i> 7. 정산관리</button>
+            <button class="cdg-genre-pill" data-creator-tab="ad-rev" style="display:none"><i data-lucide="tv" style="width:13px;height:13px;display:inline;"></i> 5. 광고수익</button>
+            <button class="cdg-genre-pill" data-creator-tab="sales-rev" style="display:none"><i data-lucide="coins" style="width:13px;height:13px;display:inline;"></i> 6. 판매수익</button>
+            <button class="cdg-genre-pill" data-creator-tab="settlements" style="display:none"><i data-lucide="wallet" style="width:13px;height:13px;display:inline;"></i> 7. 정산관리</button>
+          </div>
+
+          <div class="creator-tab-panel" id="creatorTab-home" style="display:none;">
+            <div class="card glass-panel p-4" id="creatorHomeContent" role="status"></div>
+          </div>
+          <div class="creator-tab-panel" id="creatorTab-help" style="display:none;">
+            <div class="card glass-panel p-4">
+              <h3>설정·도움말</h3>
+              <p>원고·회차·댓글 정책은 각 작품 관리 화면에서 설정합니다. 예약 실패는 홈과 작품의 공개·예약 회차에서 확인할 수 있습니다.</p>
+              <button type="button" class="btn btn-primary" onclick="CreatorWorks.navigate('/creator/works')">내 작품 보기</button>
+            </div>
           </div>
 
           <!-- Tab 1: Works Management (작품관리) -->
@@ -914,7 +931,7 @@
           <div class="panel-header library-panel-header">
             <div>
               <h2>내 서재</h2>
-              <p class="text-muted">읽던 작품, 관심 작품, 구독 작가와 성인 인증 상태를 한 화면에서 관리합니다.</p>
+              <p class="text-muted">읽던 작품, 관심 작품과 구독 작가를 한 화면에서 관리합니다.</p>
             </div>
             <button class="btn btn-outline" onclick="document.getElementById('btnSearchOpen').click()"><i data-lucide="search"></i> 새 작품 찾기</button>
           </div>
@@ -926,7 +943,7 @@
                 <div>
                   <h3 id="myNickname">열혈독자</h3>
                   <p id="myEmail" class="text-muted">reader@webnovels.com</p>
-                  <span class="badge badge-accent mt-2" id="myAdultBadge">성인 인증 미완료</span>
+                  <span class="badge badge-accent mt-2" id="myAdultBadge" style="display:none"></span>
                 </div>
               </div>
               <div class="library-stats">
@@ -934,7 +951,7 @@
                 <div><strong id="statFavoriteCount">0</strong><span>관심작</span></div>
                 <div><strong id="statAuthorCount">0</strong><span>구독작가</span></div>
               </div>
-              <div id="boxPassVerify">
+              <div id="boxPassVerify" style="display:none">
                 <button class="btn btn-primary w-full" id="btnStartPassVerify">
                   <i data-lucide="smartphone"></i> PASS 성인 인증
                 </button>
@@ -952,6 +969,7 @@
                 <button class="active" data-library-tab="continue">이어보기</button>
                 <button data-library-tab="favorites">관심 작품</button>
                 <button data-library-tab="authors">구독 작가</button>
+                <button data-library-tab="appeals" hidden>이의제기</button>
               </div>
               <div class="library-tab-panel active" id="libraryTab-continue">
                 <div class="library-list" id="libraryContinueList"></div>
@@ -962,6 +980,9 @@
               <div class="library-tab-panel" id="libraryTab-authors">
                 <div class="library-author-grid" id="libraryAuthorsList"></div>
               </div>
+              <div class="library-tab-panel" id="libraryTab-appeals">
+                <div id="readerAppeals"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -969,6 +990,12 @@
 
       <!-- View 7: Admin CMS Integration (Sidebar + 16 Panel Content Area) -->
       <section id="view-admin-cms" class="main-view">
+        <div id="adminOperationsShell" class="container section-padding" hidden>
+          <header class="card glass-panel p-4 mb-4"><h2>운영 관리</h2>
+            <p>계정 지원, 신고·검수, 작품 노출 제한과 기록을 관리합니다.</p>
+            <nav id="adminOperationsNav" aria-label="운영 메뉴"></nav></header>
+          <div id="adminOperationsContent" class="card glass-panel p-4" role="status"></div>
+        </div>
         <div class="container section-padding">
 
           <div class="admin-cms-layout">
@@ -1005,31 +1032,8 @@
                 <button class="admin-nav-item" data-subtab="episodes" data-perm="EPISODE_MGMT" onclick="switchAdminSubTab('episodes')">
                   <i data-lucide="file-text"></i> 05. 회차 관리
                 </button>
-                <button class="admin-nav-item" data-subtab="actionqueue" data-perm="CONTENT_REVIEW" onclick="switchAdminSubTab('actionqueue')" style="color: var(--accent-rose); font-weight: 700;">
-                  <i data-lucide="check-square"></i> 06. 콘텐츠 검수 <span class="badge badge-primary" style="font-size: 0.7rem; margin-left: 4px;" id="sidebarReviewCountBadge">3</span>
-                </button>
                 <button class="admin-nav-item" data-subtab="comments" data-perm="COMMENT_REPORT" onclick="switchAdminSubTab('comments')">
                   <i data-lucide="shield-alert"></i> 07. 댓글 / 신고
-                </button>
-
-                <div class="sidebar-category mt-3">광고 & 비즈니스 정산</div>
-                <button class="admin-nav-item" data-subtab="admgmt" data-perm="AD_MGMT" onclick="switchAdminSubTab('admgmt')">
-                  <i data-lucide="tv"></i> 08. 광고 관리
-                </button>
-                <button class="admin-nav-item" data-subtab="settlements" data-perm="AD_REVENUE" onclick="switchAdminSubTab('settlements')">
-                  <i data-lucide="wallet"></i> 09. 수익 / 정산
-                </button>
-                <button class="admin-nav-item" data-subtab="fanmeeting" data-perm="FAN_MEETING" onclick="switchAdminSubTab('fanmeeting')">
-                  <i data-lucide="mic"></i> 10. 팬미팅
-                </button>
-                <button class="admin-nav-item" data-subtab="goods" data-perm="GOODS_MGMT" onclick="switchAdminSubTab('goods')">
-                  <i data-lucide="shopping-bag"></i> 11. Goods
-                </button>
-                <button class="admin-nav-item" data-subtab="events" data-perm="EVENT_MGMT" onclick="switchAdminSubTab('events')">
-                  <i data-lucide="gift"></i> 12. 프로모션 / 이벤트
-                </button>
-                <button class="admin-nav-item" data-subtab="analytics" data-perm="ANALYTICS" onclick="switchAdminSubTab('analytics')">
-                  <i data-lucide="line-chart"></i> 13. Analytics
                 </button>
 
                 <div class="sidebar-category mt-3">시스템 & 보안 관제</div>
@@ -1045,93 +1049,16 @@
             <!-- Right Main Content Panel Container -->
             <main class="admin-main-content">
 
-              <!-- Menu 1: Dashboard (Zero-Touch Exception-First Operations) -->
+              <!-- Menu 1: Legacy dashboard -->
               <div id="adminTab-dashboard" class="admin-subtab active">
                 <div class="panel-header mb-4 flex-between">
                   <div>
-                    <h2><i data-lucide="layout-dashboard" class="icon-indigo"></i> DASHBOARD (Zero-Touch 콘텐츠 운영 관제탑)</h2>
-                    <p class="text-muted">관리자는 "발행 담당자"가 아닌 "예외사항 관리자" — 정상 작품은 시스템 자동 발행, 확인 필요 항목만 집중 조치</p>
-                  </div>
-                  <button class="btn btn-primary btn-sm" onclick="switchAdminSubTab('actionqueue')">
-                    <i data-lucide="bell"></i> 확인 필요 (Action Queue) 바로가기 →
-                  </button>
-                </div>
-
-                <!-- 1. 오늘의 콘텐츠 운영 관제 (Today Operations Strip) -->
-                <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.3);">
-                  <div class="flex-between mb-3">
-                    <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                      <i data-lucide="clock" class="icon-indigo"></i> 오늘 (Today) 자동 발행 및 운영 현황
-                    </h3>
-                    <span class="badge badge-accent">자동화 엔진 가동중 🟢</span>
-                  </div>
-                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
-                      <div class="text-muted small">오늘 발행 예정</div>
-                      <div style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-top: 4px;" id="kpiTodayScheduled">-건</div>
-                    </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
-                      <div class="text-muted small">정상 자동 발행 완료</div>
-                      <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-emerald); margin-top: 4px;" id="kpiTodayPublished">-건</div>
-                    </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 6px; border: 1px solid rgba(255,42,122,0.4); background: rgba(255,42,122,0.06); cursor: pointer;" onclick="switchAdminSubTab('actionqueue')">
-                      <div style="color: var(--accent-rose); font-weight: 700;" class="small">확인 필요 (Action Required)</div>
-                      <div style="font-size: 1.6rem; font-weight: 800; color: var(--color-brand-secondary); margin-top: 4px;" id="kpiTodayActionReq">-건 ⚠️</div>
-                    </div>
+                    <h2><i data-lucide="layout-dashboard" class="icon-indigo"></i> 관리자 운영 현황</h2>
+                    <p class="text-muted">확인 가능한 회원·작품·회차 수를 표시합니다.</p>
                   </div>
                 </div>
 
-                <!-- 2. 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 & 웹툰 & 연재/완결 가로 Row 정렬) -->
-                <div class="card glass-panel p-4 mb-4" style="border-radius: 10px; border: 1px solid var(--border-color); background: rgba(18, 18, 24, 0.85);">
-                  <div class="flex-between mb-3">
-                    <h3 style="margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; font-weight: 700; color: #fff;">
-                      <i data-lucide="layers" class="icon-indigo" style="color: var(--color-brand-primary);"></i> 콘텐츠 타입별 실시간 DB 연재 현황 (웹소설 & 웹툰 1:1 완벽 구분)
-                    </h3>
-                    <span class="badge badge-primary" style="background: rgba(255,42,122,0.15); color: var(--cdg-pink); border: 1px solid rgba(255,42,122,0.3); font-size: 0.75rem; font-weight: 700; padding: 4px 10px;">⚡ 실시간 DB 동기화</span>
-                  </div>
-                  <div class="content-status-row grid-4-col" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%;">
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(139,92,246,0.25); border-left: 4px solid #8b5cf6; background: rgba(139,92,246,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
-                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">📖 웹소설 (NOVEL)</div>
-                      <div style="font-size: 1.55rem; font-weight: 800; color: #a78bfa; margin: 4px 0 2px;" id="kpiNovelsCount">-작품</div>
-                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;" id="kpiNovelEpisodesCount">- 에피소드 (텍스트)</div>
-                    </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(236,72,153,0.25); border-left: 4px solid #ec4899; background: rgba(236,72,153,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
-                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">🎨 웹툰 (WEBTOON)</div>
-                      <div style="font-size: 1.55rem; font-weight: 800; color: #f472b6; margin: 4px 0 2px;" id="kpiWebtoonsCount">-작품</div>
-                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;" id="kpiWebtoonEpisodesCount">- 에피소드 (컷 이미지)</div>
-                    </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(16,185,129,0.25); border-left: 4px solid var(--accent-emerald); background: rgba(16,185,129,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
-                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">🟢 정상 연재중</div>
-                      <div style="font-size: 1.55rem; font-weight: 800; color: var(--accent-emerald); margin-4px 0 2px;" id="kpiOngoingCount">-작품</div>
-                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;">정기 발행 진행</div>
-                    </div>
-                    <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border: 1px solid rgba(56,189,248,0.25); border-left: 4px solid #38bdf8; background: rgba(56,189,248,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 96px;">
-                      <div class="text-muted small" style="font-weight: 600; color: #cbd5e1 !important;">🏁 완결 작품</div>
-                      <div style="font-size: 1.55rem; font-weight: 800; color: #38bdf8; margin: 4px 0 2px;" id="kpiCompletedCount">-작품</div>
-                      <div class="text-muted small" style="font-size: 0.76rem; color: #94a3b8 !important;">전체 회차 완결</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3. 확인이 필요한 콘텐츠 긴급 카드 (Action Queue Preview) -->
-                <div class="card glass-panel p-4 mb-4" style="border-radius: 8px; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.03);">
-                  <div class="flex-between mb-3">
-                    <strong style="color: var(--accent-rose); font-size: 1rem; display: flex; align-items: center; gap: 6px;">
-                      <i data-lucide="alert-triangle"></i> ⚠ 관리자 개입이 필요한 예외 항목 (<span id="kpiActionReqBadge">0건</span>)
-                    </strong>
-                    <button class="btn btn-outline btn-sm" onclick="switchAdminSubTab('actionqueue')" style="font-size: 0.8rem; padding: 4px 10px;">
-                      전체 확인 및 조치 →
-                    </button>
-                  </div>
-                  <div id="dashboardActionQueuePreviewContainer" style="display: flex; flex-direction: column; gap: 8px;">
-                    <!-- Supabase DB 실시간 렌더링 -->
-                    <div class="p-3 text-center text-muted small">
-                      <span class="spinner-border spinner-border-sm mr-2"></span>실시간 DB 예외 항목을 확인하고 있습니다...
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 4. 전체 플랫폼 통계 (5대 KPI 실시간 DB 연동) -->
+                <!-- 기본 운영 지표 -->
                 <div class="kpi-grid">
                   <div class="kpi-card glass-panel">
                     <div class="kpi-icon" style="background: rgba(109,94,245,0.15);"><i data-lucide="users"></i></div>
@@ -1153,70 +1080,8 @@
                     <div class="kpi-value" id="kpiTotalEpisodes">-</div>
                     <div class="kpi-label">총 에피소드</div>
                   </div>
-                  <div class="kpi-card glass-panel">
-                    <div class="kpi-icon" style="background: rgba(56,189,248,0.15);"><i data-lucide="tv"></i></div>
-                    <div class="kpi-value" id="kpiTotalAdViews">-회</div>
-                    <div class="kpi-label">광고 조회수</div>
-                  </div>
                 </div>
 
-                <div class="grid-2-col gap-6 mt-6">
-                  <div class="card glass-panel p-6">
-                    <h3><i data-lucide="activity" class="icon-indigo"></i> 최근 수익배분 이벤트</h3>
-                    <div id="revenueEventsContainer" class="mt-4">
-                      <p class="text-muted">Supabase 연동 후 실시간 수익 이벤트가 표시됩니다.</p>
-                    </div>
-                  </div>
-                  <div class="card glass-panel p-6">
-                    <h3><i data-lucide="shield" class="icon-indigo"></i> 서브 관리자 현황</h3>
-                    <p class="text-muted mt-2" id="dashboardSubAdminStatusText">등록된 서브 관리자 수 및 RBAC 권한 배정 상태를 확인합니다.</p>
-                    <div id="dashboardSubAdminListPreview" style="margin-top: 10px;"></div>
-                    <button class="btn btn-outline btn-sm mt-4" onclick="switchAdminSubTab('subadmins')">서브 관리자 권한 관리 바로가기 →</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu: Action Queue (확인 필요 관제 센터) -->
-              <div id="adminTab-actionqueue" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4 flex-between">
-                  <div>
-                    <h2 style="display: flex; align-items: center; gap: 8px;">
-                      <i data-lucide="bell" class="icon-indigo" style="color: var(--accent-rose);"></i> ACTION_QUEUE (확인 필요 예외 관제 센터)
-                    </h2>
-                    <p class="text-muted">실시간 DB 기반 콘텐츠 심사 / 독자 신고 / 작가 출금 정산 관리 관제 센터</p>
-                  </div>
-                  <button class="btn btn-outline btn-sm" onclick="renderActionQueue()">
-                    <i data-lucide="refresh-cw"></i> 실시간 큐 갱신
-                  </button>
-                </div>
-
-                <!-- 4개 레벨 요약 배너 -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;">
-                  <div class="card glass-panel p-3 text-center" style="border-left: 3px solid #ef4444; border-radius: 6px;">
-                    <div class="text-muted small">🔴 독자 신고 (미처리)</div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: #f87171; margin-top: 2px;" id="aqCountReports">0건</div>
-                  </div>
-                  <div class="card glass-panel p-3 text-center" style="border-left: 3px solid #f97316; border-radius: 6px;">
-                    <div class="text-muted small">🟠 심사 대기 (콘텐츠)</div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: #fb923c; margin-top: 2px;" id="aqCountReviews">0건</div>
-                  </div>
-                  <div class="card glass-panel p-3 text-center" style="border-left: 3px solid #eab308; border-radius: 6px;">
-                    <div class="text-muted small">🟡 출금 정산 (심사대기)</div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: #facc15; margin-top: 2px;" id="aqCountSettlements">0건</div>
-                  </div>
-                  <div class="card glass-panel p-3 text-center" style="border-left: 3px solid #38bdf8; border-radius: 6px;">
-                    <div class="text-muted small">🔵 총 미조치 예외</div>
-                    <div style="font-size: 1.4rem; font-weight: 800; color: #38bdf8; margin-top: 2px;" id="aqCountTotal">0건</div>
-                  </div>
-                </div>
-
-                <!-- Action Queue Task Items -->
-                <div class="card glass-panel p-4" style="border-radius: 8px;">
-                  <h3 class="mb-3" style="font-size: 1.05rem;"><i data-lucide="list-checks" class="icon-indigo"></i> 즉시 조치 대기열 (Action Items)</h3>
-                  <div id="actionQueueItemsContainer" style="display: flex; flex-direction: column; gap: 10px;">
-                    <!-- Injected by JS -->
-                  </div>
-                </div>
               </div>
 
               <!-- Menu 2: User Management -->
@@ -1285,29 +1150,26 @@
                     <button class="btn btn-outline btn-sm" onclick="toggleWorkCalendarView()">
                       <i data-lucide="calendar"></i> 연재 캘린더
                     </button>
-                    <button class="btn btn-primary btn-sm" onclick="openAdminCreateWorkModal()">
-                      <i data-lucide="plus"></i> 신규 작품 등록
-                    </button>
                   </div>
                 </div>
 
                 <!-- 1. work_management_2.md 1.2 요약 카드 바 -->
-                <div class="grid-4-col gap-3 mb-3">
+                <div class="grid-3-col gap-3 mb-3">
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; cursor: pointer;" onclick="filterWorksByStatus('ALL')">
                     <div class="text-muted small">전체 작품</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;"><span id="workSummaryTotalCount">30</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;"><span id="workSummaryTotalCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid var(--accent-emerald); cursor: pointer;" onclick="filterWorksByStatus('ONGOING')">
                     <div class="text-muted small">🟢 정상 연재</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;"><span id="workSummaryOngoingCount">25</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;"><span id="workSummaryOngoingCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid var(--accent-rose); cursor: pointer; background: rgba(239,68,68,0.08);" onclick="filterWorksByStatus('NEED_ACTION')">
                     <div class="text-muted small" style="color: var(--accent-rose); font-weight: 700;">⚠ 확인 필요 (문제)</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-rose); margin-top: 2px;"><span id="workSummaryActionCount">3</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-rose); margin-top: 2px;"><span id="workSummaryActionCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid #818cf8; cursor: pointer;" onclick="filterWorksByStatus('COMPLETED')">
                     <div class="text-muted small">⚫ 휴재 / 완결</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #818cf8; margin-top: 2px;"><span id="workSummaryCompletedCount">5</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: #818cf8; margin-top: 2px;"><span id="workSummaryCompletedCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                 </div>
 
@@ -1389,12 +1251,6 @@
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="small text-muted">선택된 작품: <strong id="selectedWorksCount" style="color: var(--color-brand-secondary);">0</strong>개</span>
                   </div>
-                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button class="btn btn-outline btn-sm" onclick="handleBulkWorkStatus('ONGOING')"><i data-lucide="play"></i> 일괄 연재</button>
-                    <button class="btn btn-outline btn-sm" onclick="handleBulkWorkStatus('PAUSED')"><i data-lucide="pause"></i> 일괄 휴재</button>
-                    <button class="btn btn-outline btn-sm" onclick="handleBulkWorkStatus('COMPLETED')"><i data-lucide="check-check"></i> 일괄 완결</button>
-                    <button class="btn btn-outline btn-sm style-danger" onclick="handleBulkWorkDelete()"><i data-lucide="trash-2"></i> 일괄 삭제</button>
-                  </div>
                 </div>
               </div>
 
@@ -1422,9 +1278,6 @@
                     </h2>
                     <p class="text-muted small mb-0">작품별 회차 실시간 DB 연동 · 무료↔유료 전환 · 발행 예외사항 집중 조치</p>
                   </div>
-                  <button class="btn btn-primary btn-sm" onclick="openAdminCreateEpisodeModal()">
-                    <i data-lucide="plus-circle"></i> 신규 회차 발행
-                  </button>
                 </div>
 
                 <!-- 1. work_management_2.md 1.3 회차 운영 상단 요약 바 (Supabase DB 실시간 연동) -->
@@ -1445,38 +1298,6 @@
                     <div class="text-muted small">🟢 발행 완료</div>
                     <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;">
                       <span id="epSummaryPublished">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">화</span>
-                    </div>
-                  </div>
-                  <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid var(--accent-rose); background: rgba(239,68,68,0.08);">
-                    <div class="text-muted small" style="color: var(--accent-rose); font-weight: 700;">⚠ 확인 필요 (예외)</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-rose); margin-top: 2px;">
-                      <span id="epSummaryActionReq">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">건</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 2. work_management_2.md 1.3 ⚠ 확인 필요 Action Panel (실시간 DB 연동) -->
-                <div class="card glass-panel p-4 mb-3" style="border-radius: 8px; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.05);">
-                  <div class="flex-between mb-3">
-                    <strong style="color: var(--accent-rose); display: flex; align-items: center; gap: 8px; font-size: 1rem;">
-                      <i data-lucide="alert-circle"></i> ⚠ 확인 필요 <span id="epActionReqHeaderCount">-건</span> (Zero-Touch 예외 처리)
-                    </strong>
-                    <button class="btn btn-outline btn-sm" onclick="switchAdminSubTab('actionqueue')" style="border-color: var(--accent-rose); color: var(--accent-rose);">
-                      Action Queue 집중 확인하기 →
-                    </button>
-                  </div>
-                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-                    <div class="p-2 glass-panel flex-between" style="border-radius: 6px; background: rgba(0,0,0,0.3);">
-                      <span>🔴 긴급 조치/정산대기</span>
-                      <strong style="color: var(--accent-rose);" id="epActionReqSettlements">-건</strong>
-                    </div>
-                    <div class="p-2 glass-panel flex-between" style="border-radius: 6px; background: rgba(0,0,0,0.3);">
-                      <span>🟠 신고접수</span>
-                      <strong style="color: #f97316;" id="epActionReqReports">-건</strong>
-                    </div>
-                    <div class="p-2 glass-panel flex-between" style="border-radius: 6px; background: rgba(0,0,0,0.3);">
-                      <span>🟡 콘텐츠 심사대기</span>
-                      <strong style="color: #eab308;" id="epActionReqReviews">-건</strong>
                     </div>
                   </div>
                 </div>
@@ -1540,11 +1361,6 @@
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="small text-muted">선택된 회차: <strong id="selectedEpisodesCount" style="color: var(--color-brand-secondary);">0</strong>개</span>
                   </div>
-                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button class="btn btn-outline btn-sm" onclick="handleBulkEpisodeFree(true)"><i data-lucide="unlock"></i> 일괄 무료 전환</button>
-                    <button class="btn btn-outline btn-sm" onclick="handleBulkEpisodeFree(false)"><i data-lucide="lock"></i> 일괄 유료 전환</button>
-                    <button class="btn btn-outline btn-sm style-danger" onclick="handleBulkEpisodeDelete()"><i data-lucide="trash-2"></i> 일괄 삭제</button>
-                  </div>
                 </div>
               </div>
 
@@ -1580,220 +1396,6 @@
                 <div class="card glass-panel p-6">
                   <div id="adminReportsListContainer">
                     <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>신고 목록 로딩 중...</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu 8: Ad Platform Management -->
-              <div id="adminTab-admgmt" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4 flex-between">
-                  <div>
-                    <h2><i data-lucide="tv" class="icon-indigo"></i> AD_MGMT (광고 플랫폼)</h2>
-                    <p class="text-muted">실시간 DB 기반 광고 구좌 및 단가(CPM/CPC) 관리</p>
-                  </div>
-                  <button class="btn btn-outline btn-sm" onclick="loadAdminAdUnits(true)">
-                    <i data-lucide="refresh-cw"></i> 새로고침
-                  </button>
-                </div>
-                <div class="card glass-panel p-6">
-                  <div id="adminAdUnitsContainer">
-                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>광고 구좌 로딩 중...</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu 9: Revenue Engine -->
-              <div id="adminTab-revenue" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
-                  <div>
-                    <h2><i data-lucide="calculator" class="icon-indigo"></i> AD_REVENUE (수익배분 Engine)</h2>
-                    <p class="text-muted">월 광고 매출 입력 · 수수료 차감 · 작가 Pool 배분 집계 및 확정</p>
-                  </div>
-                </div>
-                <div class="grid-2-col gap-6">
-                  <div class="card glass-panel p-6">
-                    <h3><i data-lucide="calculator"></i> 월 광고 매출 입력 & 수익배분 집계</h3>
-                    <form id="formRevenueCalcAdmin" onsubmit="event.preventDefault(); handleRevenueCalculation();">
-                      <div class="form-group mt-4">
-                        <label>정산 귀속 월 (YYYY-MM)</label>
-                        <input type="text" id="revPeriodMonth" class="admin-input" value="2026-08" required>
-                      </div>
-                      <div class="form-group mt-3">
-                        <label>광고 총매출 (원)</label>
-                        <input type="number" id="revGrossRevenue" class="admin-input" placeholder="0" value="0" required>
-                      </div>
-                      <div class="form-group mt-3">
-                        <label>플랫폼 수수료 (원)</label>
-                        <input type="number" id="revAdNetworkFee" class="admin-input" placeholder="0" value="0" required>
-                      </div>
-                      <div class="form-group mt-3">
-                        <label>작가 Pool 배분 비율 (기본 0.625 = 62.5%)</label>
-                        <input type="number" step="0.001" id="revAuthorPoolRatio" class="admin-input" value="0.625" required>
-                      </div>
-                      <button type="submit" class="btn btn-primary w-full mt-4">수익배분 집계 실행 (Supabase 저장)</button>
-                    </form>
-                  </div>
-                  <div class="card glass-panel p-6">
-                    <h3><i data-lucide="check-circle-2"></i> 월 정산 마감/확정 (Confirmed)</h3>
-                    <p class="text-muted mt-2">수집된 광고 매출을 마감하여 예상수익(Estimated)을 확정수익(Confirmed)으로 정산 전환합니다.</p>
-                    <div class="form-group mt-4">
-                      <label>마감 대상 월</label>
-                      <input type="text" id="revConfirmMonth" class="admin-input" value="2026-08">
-                    </div>
-                    <button class="btn btn-success w-full mt-4" onclick="handleRevenueConfirm()">정산 최종 마감 및 Confirmed 승인</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu 10: Author Settlements -->
-              <div id="adminTab-settlements" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4">
-                  <div>
-                    <h2><i data-lucide="wallet" class="icon-indigo"></i> SETTLEMENT (작가 정산 승인)</h2>
-                    <p class="text-muted">작가 정산 신청 검수 · 계좌 조회 · PAID 입금 승인 처리</p>
-                  </div>
-                </div>
-                <div class="card glass-panel p-6">
-                  <h3>미처리 정산 신청 목록</h3>
-                  <div id="settlementsContainer" class="mt-4">
-                    <div class="admin-loading-placeholder">
-                      <div class="spinner"></div>
-                      <p class="text-muted">정산 신청 목록 로딩 중...</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu 11: Fan Meeting Management -->
-              <div id="adminTab-fanmeeting" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4 flex-between">
-                  <div>
-                    <h2><i data-lucide="smile" class="icon-indigo"></i> FAN_MEETING (팬미팅 관리)</h2>
-                    <p class="text-muted">인기 작가 온/오프라인 팬미팅 개설 · 신청 현황 및 티케팅 실시간 관리</p>
-                  </div>
-                  <button class="btn btn-outline btn-sm" onclick="loadAdminFanMeetings(true)">
-                    <i data-lucide="refresh-cw"></i> 새로고침
-                  </button>
-                </div>
-                <div class="card glass-panel p-6">
-                  <div id="adminFanMeetingsContainer">
-                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>팬미팅 목록 로딩 중...</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu 12: Goods Commerce -->
-              <div id="adminTab-goods" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4 flex-between">
-                  <div>
-                    <h2><i data-lucide="shopping-bag" class="icon-indigo"></i> GOODS_MGMT (굿즈 커머스)</h2>
-                    <p class="text-muted">웹소설 IP 굿즈 상품 등록 · 재고 관리 · 주문 및 배송 현황</p>
-                  </div>
-                  <button class="btn btn-outline btn-sm" onclick="loadAdminGoods(true)">
-                    <i data-lucide="refresh-cw"></i> 새로고침
-                  </button>
-                </div>
-                <div class="card glass-panel p-6">
-                  <div id="adminGoodsContainer">
-                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>굿즈 목록 로딩 중...</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu 13: Event Management -->
-              <div id="adminTab-events" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4 flex-between">
-                  <div>
-                    <h2><i data-lucide="gift" class="icon-indigo"></i> EVENT_MGMT (이벤트 프로모션)</h2>
-                    <p class="text-muted">신규 가입 프로모션 · 무료 이용권 쿠폰 발급 · 출석체크 이벤트</p>
-                  </div>
-                  <button class="btn btn-outline btn-sm" onclick="loadAdminEvents(true)">
-                    <i data-lucide="refresh-cw"></i> 새로고침
-                  </button>
-                </div>
-                <div class="card glass-panel p-6">
-                  <div id="adminEventsContainer">
-                    <div class="text-center p-4 text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>이벤트 목록 로딩 중...</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu 14: Analytics -->
-              <div id="adminTab-analytics" class="admin-subtab" style="display: none;">
-                <div class="panel-header mb-4 flex-between">
-                  <div>
-                    <h2><i data-lucide="line-chart" class="icon-indigo"></i> ANALYTICS (매출 및 트래픽 통계)</h2>
-                    <p class="text-muted">실시간 DB 기반 월별 매출 성장 추이 · 62.5% 작가 정산 풀 · 장르별 점유율 비중 · 광고 트래픽 집계</p>
-                  </div>
-                  <button class="btn btn-outline btn-sm" onclick="loadAdminAnalytics(true)">
-                    <i data-lucide="refresh-cw"></i> 실시간 통계 새로고침
-                  </button>
-                </div>
-
-                <!-- 1. 당월 핵심 재무 & 트래픽 4대 KPI -->
-                <div class="grid-4-col gap-4 mb-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(255,42,122,0.3); background: rgba(255,42,122,0.05);">
-                    <div class="text-muted small">당월 총 플랫폼 광고 매출 (Gross)</div>
-                    <div id="analyticsGrossRev" class="kpi-value mt-2" style="color: var(--cdg-pink); font-size: 1.8rem; font-weight: 800;">₩0</div>
-                    <small class="text-muted" style="font-size: 0.75rem;" id="analyticsGrossSubText">실시간 광고 시청 집계 기반</small>
-                  </div>
-                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);">
-                    <div class="text-muted small">작가 정산 분배 예정 풀 (62.5%)</div>
-                    <div id="analyticsAuthorPool" class="kpi-value mt-2" style="color: #10B981; font-size: 1.8rem; font-weight: 800;">₩0</div>
-                    <small class="text-muted" style="font-size: 0.75rem;">순매출 집계 대기</small>
-                  </div>
-                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(59,130,246,0.3); background: rgba(59,130,246,0.05);">
-                    <div class="text-muted small">플랫폼 운영 순수익 (37.5%)</div>
-                    <div id="analyticsPlatformRev" class="kpi-value mt-2" style="color: #60A5FA; font-size: 1.8rem; font-weight: 800;">₩0</div>
-                    <small class="text-muted" style="font-size: 0.75rem;">인프라 및 운영 이익</small>
-                  </div>
-                  <div class="card glass-panel p-4 text-center" style="border-radius: 8px; border: 1px solid rgba(245,158,11,0.3); background: rgba(245,158,11,0.05);">
-                    <div class="text-muted small">누적 광고 완독 트래픽</div>
-                    <div id="analyticsTotalAdViews" class="kpi-value mt-2" style="color: #F59E0B; font-size: 1.8rem; font-weight: 800;">0회</div>
-                    <small class="text-muted" style="font-size: 0.75rem;">실시간 광고 시청 집계</small>
-                  </div>
-                </div>
-
-                <!-- 2. 월별 매출 성장 추이 테이블 및 시각화 -->
-                <div class="card glass-panel p-6 mb-4" style="border-radius: 8px;">
-                  <div class="flex-between mb-3">
-                    <h3 style="margin: 0;"><i data-lucide="trending-up" class="icon-indigo"></i> 월별 매출 성장 추이 (DB revenue_events)</h3>
-                    <span class="badge badge-accent">실시간 DB 동기화</span>
-                  </div>
-                  <div class="table-responsive">
-                    <table class="table" style="width: 100%; text-align: left; font-size: 0.9rem;">
-                      <thead>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
-                          <th class="p-3">정산 대상 월</th>
-                          <th class="p-3">총 광고 매출 (Gross)</th>
-                          <th class="p-3">광고 대행 수수료 (10%)</th>
-                          <th class="p-3">순매출 (Net)</th>
-                          <th class="p-3">작가 분배 풀 (62.5%)</th>
-                          <th class="p-3">플랫폼 수익 (37.5%)</th>
-                          <th class="p-3" style="text-align: right;">마감 상태</th>
-                        </tr>
-                      </thead>
-                      <tbody id="analyticsMonthlyTableBody">
-                        <tr><td colspan="7" class="p-4 text-center text-muted">매출 데이터를 불러오는 중입니다...</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- 3. 장르별 매출 및 트래픽 비중 (30개 작품 실데이터 집계) -->
-                <div class="grid-2-col gap-4">
-                  <div class="card glass-panel p-6" style="border-radius: 8px;">
-                    <h3 class="mb-3"><i data-lucide="pie-chart" class="icon-indigo"></i> 장르별 조회수 및 매출 점유율 비중</h3>
-                    <div id="analyticsGenreDistribution">
-                      <div class="p-4 text-center text-muted">장르별 점유율을 집계하고 있습니다...</div>
-                    </div>
-                  </div>
-
-                  <div class="card glass-panel p-6" style="border-radius: 8px;">
-                    <h3 class="mb-3"><i data-lucide="activity" class="icon-indigo"></i> 플랫폼 트래픽 & 콘텐츠 인프라 지표</h3>
-                    <div id="analyticsPlatformSummary">
-                      <div class="p-4 text-center text-muted">플랫폼 인프라 지표를 집계하고 있습니다...</div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -2267,13 +1869,7 @@
           <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body">
-          <form onsubmit="event.preventDefault(); showToast('🔑 서브 관리자 비밀번호가 성공적으로 변경되었습니다.'); closeAllModals();">
-            <div class="form-group mb-4">
-              <label>새 비밀번호 입력</label>
-              <input type="password" class="form-control" placeholder="새 비밀번호 입력" autocomplete="new-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg w-full">비밀번호 즉시 변경</button>
-          </form>
+          <p>관리자 비밀번호 직접 변경은 제공하지 않습니다. Auth 비밀번호 재설정 절차를 이용해 주세요.</p>
         </div>
       </div>
     <!-- Modal: Reader Detail & Management (Admin) -->
@@ -2287,6 +1883,7 @@
           <!-- 1. 기본 인적 정보 수정 폼 -->
           <form id="formEditReaderDetail" onsubmit="handleSaveReaderInfo(event)">
             <input type="hidden" id="readerDetailId" value="">
+            <p class="text-muted small">이 화면은 조회 전용입니다. 계정 제한·복구는 관리자 계정 지원 메뉴를 이용해 주세요.</p>
 
             <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
               <h4 style="margin: 0 0 14px 0; font-size: 1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
@@ -2307,18 +1904,18 @@
               <div class="grid-2-col gap-3 mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                   <label class="small text-muted">닉네임</label>
-                  <input type="text" id="readerDetailNickname" class="admin-input" placeholder="닉네임 입력">
+                  <input type="text" id="readerDetailNickname" class="admin-input" placeholder="닉네임" readonly>
                 </div>
                 <div class="form-group">
                   <label class="small text-muted">이메일 주소</label>
-                  <input type="email" id="readerDetailEmail" class="admin-input" placeholder="example@webnovels.com" required>
+                  <input type="email" id="readerDetailEmail" class="admin-input" placeholder="example@webnovels.com" readonly>
                 </div>
               </div>
 
               <div class="grid-2-col gap-3 mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                   <label class="small text-muted">연락처 (휴대폰 번호)</label>
-                  <input type="text" id="readerDetailPhone" class="admin-input" placeholder="+82-010-0000-0000">
+                  <input type="text" id="readerDetailPhone" class="admin-input" placeholder="+82-010-0000-0000" readonly>
                 </div>
                 <div class="form-group">
                   <label class="small text-muted">가입 일시</label>
@@ -2329,7 +1926,7 @@
               <div class="grid-3-col gap-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
                 <div class="form-group">
                   <label class="small text-muted">구독 상태</label>
-                  <select id="readerDetailSubStatus" class="admin-input">
+                  <select id="readerDetailSubStatus" class="admin-input" disabled>
                     <option value="일반 회원">일반 회원</option>
                     <option value="프리미엄 구독중">프리미엄 구독중</option>
                     <option value="VIP 회원">VIP 회원</option>
@@ -2337,14 +1934,14 @@
                 </div>
                 <div class="form-group">
                   <label class="small text-muted">PASS 성인 인증</label>
-                  <select id="readerDetailAdultVerified" class="admin-input">
+                  <select id="readerDetailAdultVerified" class="admin-input" disabled>
                     <option value="false">미인증</option>
                     <option value="true">🔞 인증 완료</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label class="small text-muted">계정 상태</label>
-                  <select id="readerDetailStatus" class="admin-input">
+                  <select id="readerDetailStatus" class="admin-input" disabled>
                     <option value="ACTIVE">ACTIVE (정상)</option>
                     <option value="SUSPENDED">SUSPENDED (이용정지)</option>
                   </select>
@@ -2352,7 +1949,7 @@
               </div>
 
               <div class="mt-3" style="text-align: right;">
-                <button type="submit" id="btnSaveReaderInfo" class="btn btn-primary btn-sm">
+                <button type="submit" id="btnSaveReaderInfo" class="btn btn-primary btn-sm" disabled>
                   <i data-lucide="save"></i> 인적 정보 변경사항 저장
                 </button>
               </div>
@@ -2364,10 +1961,10 @@
             <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
               <i data-lucide="key"></i> 비밀번호 강제 변경 / 재설정
             </h4>
-            <p class="text-muted small mb-3">회원이 비밀번호를 분실했거나 계정 보호를 위해 관리자 권한으로 새 비밀번호를 부여합니다.</p>
+            <p class="text-muted small mb-3">비밀번호는 Auth 재설정 절차를 통해 본인이 변경합니다.</p>
             <div style="display: flex; gap: 8px; align-items: center;">
-              <input type="password" id="readerDetailNewPassword" class="admin-input" placeholder="새 비밀번호 입력 (예: !12345)" required style="flex: 1;">
-              <button type="submit" id="btnChangeReaderPw" class="btn btn-outline btn-sm" style="white-space: nowrap;">
+              <input type="password" id="readerDetailNewPassword" class="admin-input" placeholder="직접 변경 종료" disabled style="flex: 1;">
+              <button type="submit" id="btnChangeReaderPw" class="btn btn-outline btn-sm" style="white-space: nowrap;" disabled>
                 비밀번호 즉시 변경
               </button>
             </div>
@@ -2380,9 +1977,9 @@
                 <strong style="color: #ef4444; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
                   <i data-lucide="alert-triangle"></i> 위험 구역 (Danger Zone)
                 </strong>
-                <p class="text-muted small mt-1 mb-0">해당 회원을 DB에서 영구 삭제합니다. 열람 기록 및 북마크가 모두 소멸됩니다.</p>
+                <p class="text-muted small mt-1 mb-0">직접 삭제는 제공하지 않습니다. 계정 제한·복구는 관리자 계정 지원 메뉴를 이용해 주세요.</p>
               </div>
-              <button type="button" class="btn btn-outline btn-sm style-danger" onclick="handleDeleteReader()" style="color: #ef4444; border-color: rgba(239,68,68,0.4); white-space: nowrap;">
+              <button type="button" class="btn btn-outline btn-sm style-danger" onclick="handleDeleteReader()" style="color: #ef4444; border-color: rgba(239,68,68,0.4); white-space: nowrap;" disabled>
                 🗑️ 회원 영구 삭제
               </button>
             </div>
@@ -2416,7 +2013,7 @@
               <textarea id="writeEpisodeContent" class="form-control" rows="10" placeholder="소설 본문 내용을 입력하세요..." required style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color); font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
             </div>
             <div class="small text-muted mb-4">
-              💡 1~3화는 독자 유입을 위해 무료로 즉시 공개되며, 4화부터는 광고 보고 연속 무료 열람 모델이 자동 적용됩니다.
+              💡 공개 전 미리보기와 예약 상태를 확인하세요. 현재 신규 유료·광고 해금은 제공하지 않습니다.
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-full">
               <i data-lucide="upload"></i> 회차 즉시 발행하기
@@ -2437,173 +2034,13 @@
           <form id="formEditProfile" onsubmit="handleSaveProfile(event)">
             <div class="form-group mb-4">
               <label>닉네임</label>
-              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" minlength="2" maxlength="40" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
             </div>
 
-            <div style="border-top: 1px solid rgba(255,255,255,0.08); margin: 16px 0 14px; padding-top: 12px;">
-              <h4 style="margin: 0 0 4px; font-size: 0.95rem; color: #fff;">🔑 비밀번호 변경 (선택)</h4>
-              <p class="text-muted small mb-3">비밀번호를 변경하지 않으려면 입력란을 비워두세요.</p>
-            </div>
-
-            <div class="form-group mb-3">
-              <label>현재 비밀번호</label>
-              <input type="password" id="editProfileCurrentPassword" class="form-control" placeholder="현재 비밀번호 확인" autocomplete="current-password" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
-
-            <div class="form-group mb-3">
-              <label>새 비밀번호 (6자 이상)</label>
-              <input type="password" id="editProfileNewPassword" class="form-control" placeholder="새 비밀번호 입력" autocomplete="new-password" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
-
-            <div class="form-group mb-4">
-              <label>새 비밀번호 확인</label>
-              <input type="password" id="editProfileConfirmPassword" class="form-control" placeholder="새 비밀번호 다시 입력" autocomplete="new-password" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
+            <p class="text-muted small mb-4">비밀번호는 로그인 화면의 재설정 메일로 변경할 수 있습니다.</p>
 
             <button type="submit" class="btn btn-primary btn-lg w-full" id="btnSaveProfile">
               <i data-lucide="check"></i> 변경 사항 저장
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Admin Create Work (신규 작품 등록 모달) -->
-    <div class="modal-backdrop" id="modalAdminCreateWork">
-      <div class="modal-dialog glass-panel" style="max-width: 520px;">
-        <div class="modal-header">
-          <h3><i data-lucide="book-plus" class="icon-indigo"></i> [관리자] 신규 작품 등록 (DB 반영)</h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
-        </div>
-        <div class="modal-body">
-          <form id="formAdminCreateWork" onsubmit="handleAdminCreateWorkSubmit(event)">
-            <div class="form-group mb-3">
-              <label>콘텐츠 유형</label>
-              <select id="adminNewWorkType" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-                <option value="NOVEL">웹소설 (NOVEL)</option>
-                <option value="WEBTOON">웹툰 (WEBTOON)</option>
-              </select>
-            </div>
-            <div class="form-group mb-3">
-              <label>작품 제목</label>
-              <input type="text" id="adminNewWorkTitle" class="form-control" placeholder="예: 차원 마법사의 귀환" required style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
-            <div class="form-group mb-3">
-              <label>작가명 (필명)</label>
-              <input type="text" id="adminNewWorkAuthor" class="form-control" placeholder="예: 판타지마스터" required style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
-            <div class="form-group mb-3">
-              <label>장르</label>
-              <select id="adminNewWorkGenre" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-                <option value="판타지">판타지</option>
-                <option value="무협">무협</option>
-                <option value="로맨스">로맨스</option>
-                <option value="현대 판타지">현대 판타지</option>
-                <option value="SF">SF</option>
-                <option value="호러">호러</option>
-                <option value="성인">성인 (19+)</option>
-                <option value="웹툰">웹툰</option>
-              </select>
-            </div>
-            <div class="form-group mb-3">
-              <div class="tag-input-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                <label style="margin: 0;">작품 태그 <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(표준 태그 권장, 최대 10개)</span></label>
-                <span class="text-muted small" id="workTagCountText">0/10</span>
-              </div>
-              <input type="hidden" id="adminNewWorkTags" name="tags" value="">
-              <div class="tag-input-container" id="workTagInputContainer">
-                <div class="tag-chips-box" id="workTagChips"></div>
-                <input type="text" id="workTagSearchInput" class="tag-search-input" placeholder="태그 입력 또는 아래 퀵태그 선택 (예: 회귀, 사이다, 아카데미...)">
-                <div class="tag-autocomplete-dropdown hidden" id="tagAutocompleteDropdown"></div>
-              </div>
-              <div class="quick-tag-suggestions" id="quickTagSuggestions">
-                <span class="quick-tag-title text-muted">인기 퀵태그:</span>
-                <button type="button" class="btn-quick-tag" data-tag="regression">#회귀</button>
-                <button type="button" class="btn-quick-tag" data-tag="possession">#빙의</button>
-                <button type="button" class="btn-quick-tag" data-tag="reincarnation">#환생</button>
-                <button type="button" class="btn-quick-tag" data-tag="catharsis">#사이다</button>
-                <button type="button" class="btn-quick-tag" data-tag="misunderstanding">#착각계</button>
-                <button type="button" class="btn-quick-tag" data-tag="academy">#아카데미</button>
-                <button type="button" class="btn-quick-tag" data-tag="hunter">#헌터</button>
-                <button type="button" class="btn-quick-tag" data-tag="system">#시스템</button>
-                <button type="button" class="btn-quick-tag" data-tag="growth">#성장</button>
-                <button type="button" class="btn-quick-tag" data-tag="revenge">#복수</button>
-              </div>
-            </div>
-            <div class="form-group mb-3">
-              <label>작품 설명 / 줄거리</label>
-              <textarea id="adminNewWorkDesc" class="form-control" rows="3" placeholder="작품 시놉시스를 입력하세요..." required style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);"></textarea>
-            </div>
-            <div class="form-group mb-4">
-              <label>표지 이미지</label>
-              <select id="adminNewWorkCover" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-                <optgroup label="✨ 고화질 일러스트 표지 (소설/웹툰)">
-                  <option value="cover_fantasy.png">cover_fantasy.png (판타지 마법)</option>
-                  <option value="cover_romance.png">cover_romance.png (로맨스/순정)</option>
-                  <option value="stormqueen_oath.jpg">stormqueen_oath.jpg (판타지 기사)</option>
-                  <option value="sword_dao_supreme.jpg">sword_dao_supreme.jpg (무협 패왕)</option>
-                  <option value="flower_blooming.jpg">flower_blooming.jpg (궁중 로맨스)</option>
-                  <option value="velvet_and_thorns.jpg">velvet_and_thorns.jpg (치명적 성인)</option>
-                  <option value="stellar_horizon.jpg">stellar_horizon.jpg (SF 우주)</option>
-                  <option value="seoul_sorcerer.jpg">seoul_sorcerer.jpg (현대 마왕)</option>
-                  <option value="darkness_swallowed_classroom.jpg">darkness_swallowed_classroom.jpg (호러 폐교)</option>
-                  <option value="sword_dao_defies_heavens.jpg">sword_dao_defies_heavens.jpg (천하제일 무협)</option>
-                </optgroup>
-                <optgroup label="🎨 웹툰 전용 표지">
-                  <option value="webtoon_1.svg">webtoon_1.svg (웹툰 판타지)</option>
-                  <option value="webtoon_2.svg">webtoon_2.svg (웹툰 로맨스)</option>
-                  <option value="webtoon_3.svg">webtoon_3.svg (웹툰 액션/헌터)</option>
-                  <option value="webtoon_4.svg">webtoon_4.svg (웹툰 드라마)</option>
-                </optgroup>
-                <optgroup label="📖 소설 타이포 표지">
-                  <option value="novel_1.svg">novel_1.svg (소설 모던 1)</option>
-                  <option value="novel_2.svg">novel_2.svg (소설 모던 2)</option>
-                  <option value="novel_3.svg">novel_3.svg (소설 모던 3)</option>
-                  <option value="novel_4.svg">novel_4.svg (소설 모던 4)</option>
-                </optgroup>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg w-full">
-              <i data-lucide="check"></i> 실시간 DB에 작품 등록하기
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Admin Create Episode (신규 회차 등록 모달) -->
-    <div class="modal-backdrop" id="modalAdminCreateEpisode">
-      <div class="modal-dialog glass-panel" style="max-width: 520px;">
-        <div class="modal-header">
-          <h3><i data-lucide="file-plus" class="icon-indigo"></i> [관리자] 신규 회차 추가 (DB 반영)</h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
-        </div>
-        <div class="modal-body">
-          <form id="formAdminCreateEpisode" onsubmit="handleAdminCreateEpisodeSubmit(event)">
-            <div class="form-group mb-3">
-              <label>대상 작품</label>
-              <select id="adminEpModalWorkSelect" class="form-control" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);"></select>
-            </div>
-            <div class="form-group mb-3">
-              <label>회차 번호</label>
-              <input type="number" id="adminEpModalNumber" class="form-control" min="1" value="1" required style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
-            <div class="form-group mb-3">
-              <label>회차 제목</label>
-              <input type="text" id="adminEpModalTitle" class="form-control" placeholder="예: 제 1 화: 새로운 각성" required style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-            </div>
-            <div class="form-group mb-3">
-              <label>회차 본문 (웹소설 텍스트 or 웹툰 이미지 URL 쉼표 구분)</label>
-              <textarea id="adminEpModalContent" class="form-control" rows="4" placeholder="본문 내용을 입력하세요..." required style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);"></textarea>
-            </div>
-            <div class="form-group mb-4">
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="adminEpModalIsFree" checked>
-                <span>무료 회차로 설정 (체크 해제 시 100P/광고 유료 회차)</span>
-              </label>
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg w-full">
-              <i data-lucide="upload"></i> 실시간 DB에 회차 발행하기
             </button>
           </form>
         </div>
@@ -2755,21 +2192,6 @@
       </div>
     </div>
 
-    <!-- Modal: Admin Episode Detail & 5-Step Review (회차 상세 & 5대 검수 Workflow) -->
-    <div class="modal-backdrop" id="modalAdminEpisodeDetail">
-      <div class="modal-dialog glass-panel" style="max-width: 720px; max-height: 90vh; overflow-y: auto;">
-        <div class="modal-header">
-          <h3 id="epDetailModalHeader" style="display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="check-square" class="icon-indigo"></i> 회차 상세 운영 및 콘텐츠 5대 검수 콘솔
-          </h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
-        </div>
-        <div class="modal-body" id="epDetailModalBody">
-          <!-- Dynamic episode edit & review checklist injected by JS -->
-        </div>
-      </div>
-    </div>
-
     <!-- Toast Notification Overlay -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -2787,11 +2209,11 @@
                 <div class="user-avatar" id="mMoreAvatar" style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-brand-gradient); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: #fff;">👤</div>
                 <div>
                   <div style="font-weight: 700; font-size: 1.05rem;" id="mMoreUserEmail">로그인이 필요합니다</div>
-                  <div class="text-muted small" id="mMoreAdultStatus">🔞 성인 미인증</div>
+                  <div class="text-muted small" id="mMoreAdultStatus" style="display:none"></div>
                 </div>
               </div>
               <div class="text-right">
-                <span class="badge badge-accent" id="mMorePointBadge" style="font-size: 0.82rem; padding: 4px 8px; cursor: pointer;" onclick="openWalletModal()">🪙 1,000 P</span>
+                <span class="badge badge-accent" id="mMorePointBadge" style="display:none" onclick="openWalletModal()"></span>
               </div>
             </div>
           </div>
@@ -2812,7 +2234,7 @@
                 <i data-lucide="bell" class="text-amber"></i>
                 <span>구독작가</span>
               </button>
-              <button class="mobile-more-btn" onclick="openWalletModal()">
+              <button class="mobile-more-btn" onclick="openWalletModal()" style="display:none">
                 <i data-lucide="wallet" class="text-emerald"></i>
                 <span>포인트 충전</span>
               </button>
@@ -2828,7 +2250,7 @@
                   <span class="portal-icon-box creator"><i data-lucide="feather"></i></span>
                   <div>
                     <div style="font-weight: 600;">작가 스튜디오 (Creator Portal)</div>
-                    <div class="text-muted" style="font-size: 0.76rem;">작품 연재, 회차 등록, 독자 반응 통계 및 정산</div>
+                    <div class="text-muted" style="font-size: 0.76rem;">작품 연재, 회차 등록과 독자 반응 관리</div>
                   </div>
                 </div>
                 <i data-lucide="chevron-right" class="text-muted"></i>
@@ -2849,7 +2271,7 @@
           <!-- Settings & Auth -->
           <div class="mobile-more-section">
             <div class="mobile-more-list">
-              <div class="mobile-more-list-item" style="cursor: pointer;" onclick="toggleAdultContentMode()">
+              <div class="mobile-more-list-item" style="display:none" onclick="toggleAdultContentMode()">
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <i data-lucide="shield-alert" style="color: #EF4444;"></i>
                   <span>19+ 성인 콘텐츠 필터</span>
@@ -2947,7 +2369,8 @@
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader-content.js?v=107"></script>
   <script src="/js/reader/reader.js?v=102"></script>
-  <script src="/js/reader/continue-reading.js?v=102"></script>
+  <script src="/js/reader/reader-hub.js?v=108"></script>
+  <script src="/js/reader/continue-reading.js?v=108"></script>
   <div class="modal" id="modalCreatorFiles" role="dialog" aria-modal="true" aria-labelledby="creatorFilesWorkTitle">
     <div class="modal-content creator-files-modal">
       <div class="modal-header"><h3 id="creatorFilesWorkTitle">작품 파일 관리</h3><button type="button" class="modal-close" aria-label="파일 관리 닫기">×</button></div>
@@ -3031,13 +2454,17 @@
   <script src="/js/creator/creator-files.js?v=106"></script>
   <script src="/js/creator/creator.js?v=105"></script>
   <script src="/js/creator/creator-works.js?v=106"></script>
+  <script src="/js/creator/creator-operations.js?v=108"></script>
   <script src="/js/admin/admin.js?v=102"></script>
+  <script src="/js/admin/admin-operations.js?v=109"></script>
   <!-- Supabase Extension & Bootstrap Entry -->
   <script src="/supabase-public-config.js?v=1"></script>
   <script src="/api/public-config.js"></script>
-  <script src="/supabase-admin.js?v=105"></script>
-  <script src="/js/core/auth-session.js?v=105"></script>
+  <script src="/supabase-admin.js?v=110"></script>
+  <script src="/js/core/auth-session.js?v=110"></script>
+  <script src="/js/core/appeals.js?v=109"></script>
   <script src="/js/core/auth-ui.js"></script>
+  <script src="/js/core/service-status.js?v=110"></script>
   <script src="/app.js?v=102"></script>
 </body>
 </html>

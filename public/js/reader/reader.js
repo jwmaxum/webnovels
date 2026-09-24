@@ -24,16 +24,19 @@
 // Single Work Card HTML Template (CDG PLAY Aesthetic - 실제 독자 조회수 실시간 연동)
 function renderCdgWorkCardHtml(w, options = {}) {
   const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
-  const cover = getWorkCover(w);
+  const cover = escapeHtml(getWorkCover(w));
+  const workId = /^[1-9]\d{0,18}$/.test(String(w.id)) ? String(w.id) : '';
+  const rank = Number.isInteger(Number(options.rank)) && Number(options.rank)>0 && Number(options.rank)<=100000
+    ? Number(options.rank) : null;
   const authorName = getAuthorName(w);
   const rawViews = Number(w.viewCount ?? w.view_count ?? 0);
   const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
 
   let rankBadgeHtml = '';
-  if (options.badge === 'GOLDEN' && options.rank) {
-    rankBadgeHtml = `<div class="cdg-rank-badge cdg-badge-golden" title="골든 베스트 ${options.rank}위">GOLDEN ${options.rank}위</div>`;
-  } else if (options.rank) {
-    rankBadgeHtml = `<div class="cdg-rank-badge rank-${options.rank}">${options.rank}</div>`;
+  if (options.badge === 'GOLDEN' && rank) {
+    rankBadgeHtml = `<div class="cdg-rank-badge cdg-badge-golden" title="골든 베스트 ${rank}위">GOLDEN ${rank}위</div>`;
+  } else if (rank) {
+    rankBadgeHtml = `<div class="cdg-rank-badge rank-${rank}">${rank}</div>`;
   }
 
   let cornerBadgeHtml = '';
@@ -49,11 +52,11 @@ function renderCdgWorkCardHtml(w, options = {}) {
 
   let goldenReasonHtml = '';
   if (options.badge === 'GOLDEN' && w.goldenBest?.reason) {
-    goldenReasonHtml = `<div class="cdg-card-golden-reason" title="최근 독자 반응 품질 기반 투명 추천">${w.goldenBest.reason}</div>`;
+    goldenReasonHtml = `<div class="cdg-card-golden-reason" title="최근 독자 반응 품질 기반 투명 추천">${escapeHtml(w.goldenBest.reason)}</div>`;
   }
 
   return `
-    <article class="cdg-work-card ${options.badge === 'GOLDEN' ? 'cdg-card-golden' : ''}" onclick="openWorkDetailDirect('${w.id}')" title="${escapeHtml(w.title)}">
+    <article class="cdg-work-card ${options.badge === 'GOLDEN' ? 'cdg-card-golden' : ''}" onclick="openWorkDetailDirect('${workId}')" title="${escapeHtml(w.title)}">
       <div class="cdg-card-cover">
         <img class="cdg-card-cover-img" src="${cover}" alt="${escapeHtml(w.title)}" loading="lazy">
         ${rankBadgeHtml}
@@ -63,7 +66,7 @@ function renderCdgWorkCardHtml(w, options = {}) {
         <span class="cdg-card-tag">${escapeHtml(w.genre || '웹소설')}</span>
         <h3 class="cdg-card-title">${escapeHtml(w.title)}</h3>
         <div class="cdg-card-meta">
-          <span>${authorName}</span>
+          <span>${escapeHtml(authorName)}</span>
           <span><i data-lucide="eye" style="width:11px;height:11px;display:inline;vertical-align:middle;"></i> ${viewFormatted}</span>
         </div>
         ${goldenReasonHtml}
@@ -88,7 +91,8 @@ function renderCdgHeroSlider(heroWorks) {
   }
 
   const slidesHtml = heroWorks.map((w, index) => {
-    const cover = getWorkCover(w);
+    const cover = escapeHtml(getWorkCover(w));
+    const workId = /^[1-9]\d{0,18}$/.test(String(w.id)) ? String(w.id) : '';
     const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
     return `
       <div class="cdg-hero-slide ${index === 0 ? 'active' : ''}" data-hero-index="${index}">
@@ -103,10 +107,10 @@ function renderCdgHeroSlider(heroWorks) {
           <h2 class="cdg-hero-title">${escapeHtml(w.title)}</h2>
           <p class="cdg-hero-desc">${escapeHtml(w.description || '광고를 시청하면 다음 회차가 100% 무료로 해금됩니다!')}</p>
           <div class="cdg-hero-actions">
-            <button class="btn btn-primary" onclick="openWorkDetailDirect('${w.id}')">
+            <button class="btn btn-primary" onclick="openWorkDetailDirect('${workId}')">
               <i data-lucide="play"></i> 지금 감상하기
             </button>
-            <button class="btn btn-outline" onclick="openWorkDetailDirect('${w.id}')">
+            <button class="btn btn-outline" onclick="openWorkDetailDirect('${workId}')">
               작품 정보
             </button>
           </div>
@@ -200,6 +204,8 @@ async function renderHomeWorks() {
     const trendingContainer = document.getElementById('trendingWorksGrid');
     if (trendingContainer) {
       const populars = getPublishedWorks().filter(isPopular);
+      if (window.ReaderHub?.active() && !populars.length)
+        populars.push(...getPublishedWorks().slice().sort((a,b)=>b.viewCount-a.viewCount).slice(0,4));
       trendingContainer.innerHTML = populars.slice(0, 4).map((w, idx) => {
         return renderCdgWorkCardHtml(w, { rank: idx + 1 });
       }).join('');
@@ -215,7 +221,7 @@ async function renderHomeWorks() {
       });
 
       const news = sortedByNewest.filter(isNew);
-      newWorksContainer.innerHTML = news.slice(0, 4).map(w => {
+      newWorksContainer.innerHTML = (window.ReaderHub?.active() && !news.length ? sortedByNewest : news).slice(0, 4).map(w => {
         return renderCdgWorkCardHtml(w, { badge: 'NEW' });
       }).join('');
     }
@@ -410,13 +416,17 @@ window.resetDiscoverFilters = function() {
 async function renderGoldenBest() {
   const container = document.getElementById('goldenBestWorksGrid');
   if (!container) return;
+  if (window.ReaderHub?.active()) {
+    document.getElementById('goldenBestSection').style.display = 'none';
+    return;
+  }
   let works = [];
   try {
     if (window.WebNovelsAdmin?.fetchGoldenBestFromDB) works = await window.WebNovelsAdmin.fetchGoldenBestFromDB();
   } catch (_) {}
   const publicWorks = getPublishedWorks();
   works = works.flatMap(row => {
-    const work = publicWorks.find(item => Number(item.id) === Number(row.id));
+    const work = publicWorks.find(item => String(item.id) === String(row.id));
     return work ? [{ ...work, goldenBest: row.goldenBest }] : [];
   });
   container.innerHTML = works.slice(0, 6).map((work) => renderCdgWorkCardHtml(work, { rank: work.goldenBest?.rank, badge: 'GOLDEN' })).join('') || '<p class="text-muted">집계된 추천 데이터가 없습니다.</p>';
@@ -497,7 +507,7 @@ function renderDiscoverWorks(explicitGenre = null) {
     filtered.sort((a, b) => ((b.episodes || []).length || Number(b.episodeCount ?? 0)) - ((a.episodes || []).length || Number(a.episodeCount ?? 0)));
   } else {
     // latest
-    filtered.sort((a, b) => Number(b.id) - Number(a.id));
+    filtered.sort((a, b) => BigInt(b.id) > BigInt(a.id) ? 1 : BigInt(b.id) < BigInt(a.id) ? -1 : 0);
   }
 
   // Update Result Count
@@ -522,7 +532,7 @@ function renderDiscoverWorks(explicitGenre = null) {
       const isAdult = w.rating === 'AGE_19' || w.genre === '성인' || (Array.isArray(w.genre) && w.genre.includes('성인'));
       const tagClass = isAdult ? 'tag-solid style-danger' : 'tag-outline';
       const tagText = isAdult ? '19+ 성인' : (Array.isArray(w.genre) ? w.genre[0] : (w.genre || '판타지'));
-      const cover = getWorkCover(w);
+      const cover = escapeHtml(getWorkCover(w));
       const rawViews = Number(w.viewCount ?? w.view_count ?? 0);
       const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
       const epCount = (w.episodes && w.episodes.length) ? w.episodes.length : (Number(w.episodeCount ?? w.episode_count ?? 1));
@@ -530,7 +540,7 @@ function renderDiscoverWorks(explicitGenre = null) {
       const statusBadge = isCompleted ? `<span class="badge-status completed" style="background:rgba(16,185,129,0.85);color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;">완결</span>` : `<span class="badge-status ongoing" style="background:rgba(99,102,241,0.85);color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;">${epCount}화</span>`;
 
       return `
-        <article class="feature-card cdg-discover-card" onclick="openWorkDetailDirect(${w.id})" style="cursor:pointer;">
+        <article class="feature-card cdg-discover-card" onclick="openWorkDetailDirect('${w.id}')" style="cursor:pointer;">
           <div class="art" style="background-image: url('${cover}'); background-size: cover; background-position: center; height: 180px; border-radius: 8px; position: relative;">
             <div style="position: absolute; top: 8px; right: 8px;">${statusBadge}</div>
           </div>
@@ -539,7 +549,7 @@ function renderDiscoverWorks(explicitGenre = null) {
               <span class="tag ${tagClass}">${escapeHtml(tagText)}</span>
             </div>
             <h3 style="font-size: 0.95rem; margin: 4px 0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(w.title)}</h3>
-            <p class="text-muted small" style="margin:0;">${getAuthorName(w)} · 조회 ${viewFormatted}</p>
+            <p class="text-muted small" style="margin:0;">${escapeHtml(getAuthorName(w))} · 조회 ${viewFormatted}</p>
           </div>
         </article>
       `;
@@ -569,7 +579,7 @@ function renderSearchResults(query = '') {
   } else if (sort === 'title') {
     results = results.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
   } else {
-    results = results.sort((a, b) => Number(b.id) - Number(a.id));
+    results = results.sort((a, b) => BigInt(b.id) > BigInt(a.id) ? 1 : BigInt(b.id) < BigInt(a.id) ? -1 : 0);
   }
 
   if (results.length === 0) {
@@ -591,14 +601,15 @@ function renderSearchResults(query = '') {
 
 function renderSearchResultItem(work) {
   const isAdult = work.rating === 'AGE_19' || work.genre === '성인';
-  const cover = getWorkCover(work);
+  const cover = escapeHtml(getWorkCover(work));
+  const workId = /^[1-9]\d{0,18}$/.test(String(work.id)) ? String(work.id) : '';
   return `
-    <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect(${work.id});" style="width: 100%; border-radius: 8px; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); color: #fff;">
+    <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect('${workId}');" style="width: 100%; border-radius: 8px; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); color: #fff;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <img src="${cover}" alt="${escapeHtml(work.title)}" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px;">
         <div>
           <strong>${escapeHtml(work.title)}</strong>
-          <div class="text-muted small">${getAuthorName(work)} · ${escapeHtml(isAdult ? '19+ 성인' : work.genre)} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</div>
+          <div class="text-muted small">${escapeHtml(getAuthorName(work))} · ${escapeHtml(isAdult ? '19+ 성인' : work.genre)} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</div>
         </div>
       </div>
       <i data-lucide="chevron-right"></i>
@@ -615,6 +626,13 @@ function normalizeSearchText(text) {
 // --- 3. 내 서재(Library) & 관심작품/구독작가/독서기록 ---
 
 async function saveReadingProgress(workId, epNum, progress = 0) {
+  if (window.ReaderHub?.active()) {
+    const episode=activeWork?.episodes?.find(e=>Number(e.episodeNumber)===Number(epNum));
+    if(!episode||!window.WebNovelsAuth?.getActor()?.reader)return;
+    try { await window.ReaderHub.change('progress',{workId,episodeId:episode.id},{progress}); }
+    catch(error){ console.warn('독서 이력 저장 실패',error); }
+    return;
+  }
   const user = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
   if (!user) return;
   const key = user.username || user.email || user.id;
@@ -624,6 +642,16 @@ async function saveReadingProgress(workId, epNum, progress = 0) {
 }
 
 async function toggleFavoriteWork(workId) {
+  if (window.ReaderHub?.active()) {
+    try {
+      const activity=await window.ReaderHub.activity();
+      const adding=!activity.favorites.some(id=>String(id)===String(workId));
+      await window.ReaderHub.change('favorite',{workId},{enabled:adding});
+      updateFavoriteButtons(workId);
+      showToast(adding?'관심 작품에 등록했습니다.':'관심 작품에서 해제했습니다.');
+    } catch {showToast('관심 작품 변경에 실패했습니다. 다시 로그인하거나 재시도해주세요.');}
+    return;
+  }
   try {
     const user = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
     if (!user) return showToast('로그인이 필요합니다.');
@@ -640,8 +668,10 @@ async function toggleFavoriteWork(workId) {
 window.toggleFavoriteWork = toggleFavoriteWork;
 
 function updateFavoriteButtons(workId) {
-  const favs = JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
-  const isFav = favs.includes(Number(workId));
+  const favs = window.ReaderHub?.active()
+    ? (window.ReaderHub.cached?.favorites||[])
+    : JSON.parse(localStorage.getItem('webnovels_favorites') || '[]');
+  const isFav = favs.some(id=>String(id)===String(workId));
   const btnDetailFav = document.getElementById('btnDetailFavorite');
   const btnStickyFav = document.getElementById('btnStickyHeart');
 
@@ -659,10 +689,22 @@ function updateFavoriteButtons(workId) {
 }
 
 async function toggleSubscribeAuthor(authorData) {
+  if (window.ReaderHub?.active()) {
+    const work=typeof authorData==='object'&&authorData?.authorId?authorData:activeWork;
+    if(!work?.authorId)return showToast('작가 ID를 확인할 수 없습니다.');
+    try {
+      const activity=await window.ReaderHub.activity();
+      const adding=!activity.subscriptions.some(s=>String(s.authorId)===String(work.authorId));
+      await window.ReaderHub.change('subscribe',{workId:work.id},{enabled:adding});
+      updateSubscribeButtons(work);
+      showToast(adding?'작가를 구독했습니다.':'구독을 취소했습니다.');
+    } catch {showToast('구독 변경에 실패했습니다. 다시 시도해주세요.');}
+    return;
+  }
   try {
     const user = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
     if (!user) return showToast('로그인이 필요합니다.');
-    const name = typeof authorData === 'object' ? authorData.penName || authorData.pen_name : authorData;
+    const name = typeof authorData === 'object' ? authorData.penName || authorData.pen_name || authorData.author : authorData;
     const key = user.username || user.email || user.id;
     const activity = await window.WebNovelsAdmin.fetchReaderActivity(key);
     const adding = !activity.subscribedAuthors.includes(name);
@@ -678,7 +720,9 @@ window.toggleSubscribeAuthor = toggleSubscribeAuthor;
 function updateSubscribeButtons(authorData) {
   const authorName = (typeof authorData === 'object' ? (authorData.penName || authorData.pen_name || authorData.name) : authorData) || '작자미상';
   const subAuthors = JSON.parse((localStorage.getItem('webnovels_subscribed_creators') || localStorage.getItem('webnovels_subscribed_authors')) || '[]');
-  const isSubbed = subAuthors.includes(authorName);
+  const isSubbed = window.ReaderHub?.active()
+    ? (window.ReaderHub.cached?.subscriptions||[]).some(s=>String(s.authorId)===String(authorData?.authorId||activeWork?.authorId))
+    : subAuthors.includes(authorName);
   const btnSub = document.getElementById('btnDetailSubscribe');
 
   if (btnSub) {
@@ -710,7 +754,7 @@ window.openAuthorWorksDirect = function(authorName) {
 
   if (listContainer) {
     listContainer.innerHTML = worksToShow.map((work) => {
-      const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+      const cover = escapeHtml(getWorkCover(work));
       const epCount = work.episodes?.length || 0;
       return `
         <div class="author-work-item glass-panel" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s;">
@@ -740,6 +784,8 @@ window.openAuthorWorksDirect = function(authorName) {
 };
 
 async function renderLibraryContent(skipRemote = false) {
+  const appealTab=document.querySelector('[data-library-tab="appeals"]');
+  if(appealTab)appealTab.hidden=!(window.WebNovelsAppeals?.active()&&window.WebNovelsAuth?.getActor()?.reader);
   const continueContainer = document.getElementById('libraryContinueList');
   const favoriteContainer = document.getElementById('libraryFavoritesList');
   const authorContainer = document.getElementById('libraryCreatorsList') || document.getElementById('libraryAuthorsList');
@@ -773,8 +819,17 @@ async function renderLibraryContent(skipRemote = false) {
     subAuthors = [];
   }
 
-  // [Self-Healing] 로그인 상태에서 서재 렌더링 시 DB에서 최신 활동 데이터 Fetch 및 스마트 복원
-  if (!skipRemote && savedUser && window.WebNovelsAdmin?.fetchReaderActivity && !window._isFetchingLibrary) {
+  if (window.ReaderHub?.active()) {
+    history=[];favs=[];subAuthors=[];
+    if (window.WebNovelsAuth?.getActor()?.reader) try {
+      const remote=await window.ReaderHub.activity(!skipRemote);
+      history=remote.readingHistory||[];
+      favs=(remote.favorites||[]).map(String);
+      subAuthors=(remote.subscriptions||[]).map(s=>s.name);
+    } catch {showToast('서재 데이터를 불러오지 못했습니다. 다시 시도해주세요.');}
+  }
+  // Legacy path remains until the stage 10 direct-DB cutover.
+  else if (!skipRemote && savedUser && window.WebNovelsAdmin?.fetchReaderActivity && !window._isFetchingLibrary) {
     window._isFetchingLibrary = true;
     try {
       const userIdent = savedUser.username || savedUser.email || savedUser.id;
@@ -796,7 +851,9 @@ async function renderLibraryContent(skipRemote = false) {
     }
   }
 
-  if (!savedUser) { history = []; favs = []; subAuthors = []; }
+  if (window.ReaderHub?.active()?!window.WebNovelsAuth?.getActor()?.reader:!savedUser) {
+    history = []; favs = []; subAuthors = [];
+  }
 
   // 좌측 프로필 통계 숫자 실시간 반영
   if (statReadingEl) statReadingEl.textContent = String(history.length);
@@ -807,12 +864,12 @@ async function renderLibraryContent(skipRemote = false) {
   if (continueContainer) {
     if (history.length > 0) {
       const validHistoryItems = history.map(item => {
-        const work = getPublishedWorks().find(w => Number(w.id) === Number(item.workId));
+        const work = getPublishedWorks().find(w => String(w.id) === String(item.workId));
         if (!work) return null;
         const totalEps = work.episodes?.length || 0;
         const readEpNum = Number(item.episodeNumber) || 1;
         const pct = Math.min(100, Math.round((readEpNum / totalEps) * 100));
-        const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+        const cover = escapeHtml(getWorkCover(work));
         return { work, totalEps, readEpNum, pct, cover };
       }).filter(Boolean);
 
@@ -834,7 +891,7 @@ async function renderLibraryContent(skipRemote = false) {
                 <div class="progress-bar-fill" style="width: ${topItem.pct}%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #6D5EF5 0%, #8B5CF6 50%, #25D1FF 100%); box-shadow: 0 0 12px rgba(109, 94, 245, 0.7);"></div>
               </div>
             </div>
-            <button class="btn btn-primary" onclick="openReaderDirect(${topItem.work.id}, ${topItem.readEpNum})" style="white-space: nowrap;">
+            <button class="btn btn-primary" onclick="openReaderDirect('${topItem.work.id}', ${topItem.readEpNum})" style="white-space: nowrap;">
               계속 읽기 <i data-lucide="chevron-right"></i>
             </button>
           </div>
@@ -845,7 +902,7 @@ async function renderLibraryContent(skipRemote = false) {
           html += `
             <div class="rest-history-list" style="display: flex; flex-direction: column; gap: 8px;">
               ${restItems.map(item => `
-                <button class="library-row" onclick="openReaderDirect(${item.work.id}, ${item.readEpNum})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                <button class="library-row" onclick="openReaderDirect('${item.work.id}', ${item.readEpNum})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
                   <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
                     <img src="${item.cover}" alt="${escapeHtml(item.work.title)} 표지" style="width: 48px; height: 64px; object-fit: cover; border-radius: 6px;">
                     <div style="flex: 1; max-width: 400px;">
@@ -895,16 +952,16 @@ async function renderLibraryContent(skipRemote = false) {
   // 2. 관심 작품 실시간 렌더링
   if (favoriteContainer) {
     if (favs.length > 0) {
-      const favWorks = getPublishedWorks().filter(w => favs.includes(Number(w.id)));
+      const favWorks = getPublishedWorks().filter(w => favs.some(id => String(id) === String(w.id)));
       favoriteContainer.innerHTML = favWorks.map(work => {
-        const cover = work.coverUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+        const cover = escapeHtml(getWorkCover(work));
         return `
-          <button class="library-row" onclick="openWorkDetailDirect(${work.id})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+          <button class="library-row" onclick="openWorkDetailDirect('${work.id}')" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <img src="${cover}" alt="${escapeHtml(work.title)} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
               <div>
                 <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${escapeHtml(work.title)}</strong>
-                <small class="text-muted">${work.author} · ${escapeHtml(work.genre)}</small>
+                <small class="text-muted">${escapeHtml(work.author)} · ${escapeHtml(work.genre)}</small>
               </div>
             </div>
             <i data-lucide="chevron-right"></i>
@@ -990,16 +1047,21 @@ async function renderLibraryContent(skipRemote = false) {
 // - 작가 구독 토글 (`toggleSubscribeAuthor(author)`)
 // - 개별 회차 클릭 시 뷰어로 이동
 // ============================================================
-window.openWorkDetailDirect = function(workId, shouldPushState = true) {
-  const targetId = Number(workId);
-  const work = getPublishedWorks().find(w => Number(w.id) === targetId);
+window.openWorkDetailDirect = function(workId, shouldPushState = true, didRefresh = false) {
+  const targetId = String(workId);
+  const work = getPublishedWorks().find(w => String(w.id) === targetId);
+  if(!work&&window.ReaderHub?.active()&&!didRefresh) {
+    refreshReaderCatalog(true).then(()=>openWorkDetailDirect(workId,shouldPushState,true))
+      .catch(()=>showToast('공개 작품 목록을 확인할 수 없습니다.'));
+    return;
+  }
   if (!work) return showToast('작품을 찾을 수 없습니다.');
   activeWork = work;
 
   // 만약 회차가 없거나 비어있는 경우 1~6회차 기본 생성
   if (!work.episodes) work.episodes = [];
 
-  const cover = work.coverUrl || work.coverImageUrl || (work.cover_image ? `/images/${work.cover_image}` : '/images/stormqueen_oath.jpg');
+  const cover = getWorkCover(work);
   const authorName = (typeof work.author === 'object' ? work.author?.penName : work.author) || '작자미상';
 
   document.getElementById('detailCoverImg').src = cover;
@@ -1012,7 +1074,7 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true) {
 
   // 관심등록 및 작가 구독 상태 버튼 업데이트
   updateFavoriteButtons(work.id);
-  updateSubscribeButtons(work.author);
+  updateSubscribeButtons(work);
 
   // Render Episode List
   const epList = document.getElementById('detailEpisodeList');
@@ -1031,15 +1093,15 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true) {
   sortedEpisodes.forEach(ep => {
     const isUnlocked = ep.isFree || unlockedEpisodes.has(`${work.id}-${ep.episodeNumber}`);
     epHtml += `
-      <div class="episode-row" onclick="openReaderDirect(${work.id}, ${ep.episodeNumber})" style="transition: background 0.2s ease;">
+      <div class="episode-row" onclick="openReaderDirect('${work.id}', ${ep.episodeNumber})" style="transition: background 0.2s ease;">
         <div class="ep-left">
           <span class="ep-number">${ep.episodeNumber}화</span>
-          <span class="ep-title">${ep.title}</span>
+          <span class="ep-title">${escapeHtml(ep.title)}</span>
         </div>
         <div class="ep-right">
           ${isUnlocked 
             ? '<span class="badge badge-accent">FREE (열람 가능)</span>' 
-            : '<span class="badge badge-warning">🔓 광고보고 무료열람</span>'}
+            : '<span class="badge badge-warning">열람 준비 중</span>'}
         </div>
       </div>
     `;
@@ -1049,8 +1111,9 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true) {
   switchWebNovelsView('view-work-detail', null, false);
   
   // 명예의 전당 (Top Supporters) 렌더링 (improve5.md)
-  if (typeof window.renderWorkTopSupporters === 'function') {
-    window.renderWorkTopSupporters(work.id);
+  for (const id of ['btnDetailSupport','workTopSupportersWidget']) {
+    const element=document.getElementById(id);
+    if(element)element.style.display='none';
   }
 
   if (shouldPushState) {
@@ -1064,96 +1127,12 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true) {
 // ============================================================
 // [Step 5 - improve5.md] 독자 작가 후원 모달 및 작품 명예의 전당(Top Supporters)
 // ============================================================
-window.renderWorkTopSupporters = async function(workId) {
-  const container = document.getElementById('workTopSupportersList');
-  if (!container) return;
-
-  container.innerHTML = `<div class="p-3 text-center text-muted small">서포터즈 목록을 불러오고 있습니다...</div>`;
-
-  let supporters = [];
-  if (window.WebNovelsAdmin?.fetchWorkTopSupporters) {
-    try {
-      supporters = await window.WebNovelsAdmin.fetchWorkTopSupporters(workId);
-    } catch(e) {
-      console.warn('[renderWorkTopSupporters error]', e);
-    }
-  }
-
-  if (!supporters || supporters.length === 0) {
-    container.innerHTML = `
-      <div class="p-4 text-center text-muted" style="grid-column: 1 / -1;">
-        <i data-lucide="award" style="width:32px; height:32px; opacity:0.4; margin-bottom:6px;"></i>
-        <p style="margin:0; font-size:0.85rem;">아직 이 작품의 서포터가 없습니다. 첫 번째 후원자가 되어 명예의 전당을 열어주세요!</p>
-      </div>
-    `;
-    if (window.lucide) window.lucide.createIcons();
-    return;
-  }
-
-  const rankBadges = [
-    { rank: 1, medal: '🥇 1위', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.35)' },
-    { rank: 2, medal: '🥈 2위', color: '#E2E8F0', bg: 'rgba(226, 232, 240, 0.10)', border: 'rgba(226, 232, 240, 0.30)' },
-    { rank: 3, medal: '🥉 3위', color: '#D97706', bg: 'rgba(217, 119, 6, 0.10)', border: 'rgba(217, 119, 6, 0.30)' },
-    { rank: 4, medal: '4위', color: '#94A3B8', bg: 'rgba(255, 255, 255, 0.04)', border: 'rgba(255, 255, 255, 0.08)' },
-    { rank: 5, medal: '5위', color: '#94A3B8', bg: 'rgba(255, 255, 255, 0.04)', border: 'rgba(255, 255, 255, 0.08)' }
-  ];
-
-  container.innerHTML = supporters.map((s, idx) => {
-    const meta = rankBadges[idx] || rankBadges[3];
-    const name = s.isAnonymous ? '익명의 후원자' : (s.displayName || '독자');
-    const pts = Number(s.totalPoints || 0);
-
-    return `
-      <div class="supporter-rank-card p-3 glass-panel" style="border-radius:10px; border:1px solid ${meta.border}; background:${meta.bg}; display:flex; align-items:center; gap:12px;">
-        <div style="font-weight:800; font-size:1.15rem; color:${meta.color}; min-width:42px; text-align:center;">
-          ${meta.medal}
-        </div>
-        <div style="flex:1; min-width:0;">
-          <div style="font-weight:700; font-size:0.9rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-            ${escapeReaderHtml(name)}
-          </div>
-          <div style="font-size:0.78rem; font-weight:700; color:var(--cdg-pink, #FF2A7A); margin-top:2px;">
-            ${pts.toLocaleString()} P 후원
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  if (window.lucide) window.lucide.createIcons();
+window.renderWorkTopSupporters = async function() {
+  // 후원 원장과 검증된 이벤트가 활성화되기 전에는 순위를 표시하지 않는다.
 };
 
 window.supportActiveWork = function() {
-  const work = (typeof activeWork !== 'undefined' && activeWork) ? activeWork : null;
-  if (!work) {
-    showToast('작품 정보를 찾을 수 없습니다.');
-    return;
-  }
-
-  const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-  const currentPts = (typeof currentUser !== 'undefined' && currentUser?.points !== undefined)
-    ? currentUser.points
-    : (savedUser ? (savedUser.points ?? 0) : 0);
-
-  const titleEl = document.getElementById('supportModalWorkTitle');
-  const authorEl = document.getElementById('supportTargetAuthor');
-  const workTitleEl = document.getElementById('supportTargetWorkTitle');
-  const balanceEl = document.getElementById('supportUserPointBalance');
-
-  if (titleEl) titleEl.textContent = `[${work.title}] 작가 응원`;
-  if (authorEl) authorEl.textContent = `${work.author || '작가'} 님`;
-  if (workTitleEl) workTitleEl.textContent = work.title;
-  if (balanceEl) balanceEl.textContent = `${currentPts.toLocaleString()} P`;
-
-  window.selectSupportAmount(5000);
-
-  const msgInput = document.getElementById('supportCheerMessage');
-  if (msgInput) msgInput.value = '';
-
-  const anonCheck = document.getElementById('supportIsAnonymous');
-  if (anonCheck) anonCheck.checked = false;
-
-  openModal('modalSupportCreator');
+  return showToast('후원 기능은 현재 사용할 수 없습니다.');
 };
 
 window.selectSupportAmount = function(amount) {
@@ -1192,62 +1171,7 @@ window.handleSupportCustomInput = function(val) {
 };
 
 window.handleConfirmSupportSubmit = async function() {
-  const work = (typeof activeWork !== 'undefined' && activeWork) ? activeWork : null;
-  if (!work) {
-    showToast('작품 정보가 없습니다.');
-    return;
-  }
-
-  const customInput = document.getElementById('supportCustomAmount');
-  const amount = Number(customInput?.value || 0);
-
-  if (!Number.isInteger(amount) || amount < 1000 || amount > 50000) {
-    showToast('⚠️ 후원 금액은 최소 1,000P에서 최대 50,000P까지 가능합니다.');
-    return;
-  }
-
-  const anonCheck = document.getElementById('supportIsAnonymous');
-  const isAnonymous = !!(anonCheck && anonCheck.checked);
-
-  const msgInput = document.getElementById('supportCheerMessage');
-  const cheerMessage = msgInput ? msgInput.value.trim() : '';
-
-  const btn = document.getElementById('btnConfirmSupport');
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm mr-2"></span>후원 처리 중...`;
-  }
-
-  try {
-    let result = null;
-    if (window.WebNovelsAdmin?.supportCreator) {
-      result = await window.WebNovelsAdmin.supportCreator(work.id, amount, isAnonymous, cheerMessage);
-    }
-
-    if (result && result.success) {
-      closeModal('modalSupportCreator');
-      showToast(`🎉 [${work.author || '작가'}님]께 ${amount.toLocaleString()}P를 성공적으로 후원했습니다! 감사합니다!`);
-      
-      if (typeof updateMemberHeader === 'function') updateMemberHeader();
-
-      await window.renderWorkTopSupporters(work.id);
-
-      if (typeof window.loadCreatorEarningLedger === 'function') {
-        window.loadCreatorEarningLedger();
-      }
-    } else {
-      showToast(`⚠️ 후원 실패: ${result?.error || '잠시 후 다시 시도해주세요.'}`);
-    }
-  } catch(e) {
-    console.error('[Support Error]', e);
-    showToast('⚠️ 후원 처리 중 오류가 발생했습니다.');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="gift"></i> <span id="btnSupportSubmitText">${amount.toLocaleString()}P 후원하기</span>`;
-      if (window.lucide) window.lucide.createIcons();
-    }
-  }
+  return showToast('후원 기능은 현재 사용할 수 없습니다.');
 };
 
 // 연재예정 회차 클릭 시 알림 핸들러
@@ -1266,12 +1190,9 @@ function escapeReaderHtml(value) {
   return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function hasApiSession() {
-  return (localStorage.getItem('webnovels_token') || '').split('.').length === 3;
-}
-
 window.selectParagraphComment = function(paragraphIndex, quoteText, contentVersion) {
-  window._paragraphComment = { paragraphIndex, quoteText: String(quoteText || '').slice(0, 300), contentVersion };
+  window._paragraphComment = { paragraphIndex, quoteText: String(quoteText || '').slice(0, 300),
+    paragraphText:String(quoteText||''),contentVersion };
   document.querySelectorAll('#readerBody .reader-paragraph').forEach((element) => element.classList.remove('is-comment-selected'));
   document.querySelector(`#readerBody [data-paragraph-index="${paragraphIndex}"]`)?.classList.add('is-comment-selected');
   if (window._currentReadingWorkId && window._currentReadingEpNum) {
@@ -1316,8 +1237,8 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     try { await refreshReaderCatalog(true); }
     catch { return showToast('공개 회차 목록을 갱신하지 못했습니다. 다시 시도해주세요.'); }
   }
-  const targetWorkId = Number(workId);
-  const work = getPublishedWorks().find(w => Number(w.id) === targetWorkId);
+  const targetWorkId = String(workId);
+  const work = getPublishedWorks().find(w => String(w.id) === targetWorkId);
   if (!work) return showToast('작품을 찾을 수 없습니다.');
   activeWork = work;
 
@@ -1333,42 +1254,15 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
 
   const ep = work.episodes.find(e => Number(e.episodeNumber) === epNum);
   if (!ep) return showToast('공개된 회차를 찾을 수 없습니다.');
-  const unlockKey = `${work.id}-${epNum}`;
-
-  // 1. 성인 콘텐츠 여부 확인 (비로그인 차단 및 PASS 성인인증 모달)
-  const isAdultWork = work.rating === 'AGE_19' || work.genre === '성인' || (Array.isArray(work.genre) && (work.genre.includes('성인') || work.genre.includes('19세 이상')));
-  if (isAdultWork) {
-    let savedUser = null;
-    try {
-      savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-    } catch(e) {}
-
-    if (!savedUser) {
-      showToast('🔒 19세 미만 이용불가 성인 콘텐츠입니다. 회원 로그인 후 이용해주세요.');
-      closeAllModals();
-      switchWebNovelsView('view-auth');
-      return;
-    }
-
-    const isVerified = !!(savedUser.isAdultVerified || savedUser.is_adult_verified || window._isAdultVerified);
-    if (!isVerified) {
-      openModal('modalPassAdultVerify');
-      return;
-    }
-  }
-
-  // 2. 광고/포인트 해금 필요 체크 (4화 이상 유료/잠긴 회차)
-  if (!ep.isFree && !unlockedEpisodes.has(unlockKey)) {
-    window._pendingAdUnlockEpKey = unlockKey;
-    window._pendingAdUnlockWorkId = work.id;
-    window._pendingAdUnlockEpNum = epNum;
-    
-    // 포인트 모달 보유 포인트 표시 동기화
-    const pointsEl = document.getElementById('modalCurrentPoints');
-    if (pointsEl) pointsEl.textContent = `${userPoints.toLocaleString()}P`;
-    
-    openModal('modalAdUnlock');
-    return;
+  // 유료·성인 권한은 서버에서만 판정한다. 레거시 브라우저 해금·성인인증 캐시는 사용하지 않는다.
+  const genres = Array.isArray(work.genre) ? work.genre : [work.genre];
+  const isAdultWork = ['AGE_19', 'ADULT', '19'].includes(work.rating) ||
+    genres.some(genre => ['성인', '19세 이상'].includes(genre));
+  const accessPolicy = ep.accessPolicy ?? ep.access_policy;
+  const protectedEpisode = isAdultWork || ep.isFree === false || ep.is_free === false ||
+    (accessPolicy && accessPolicy !== 'FREE');
+  if (protectedEpisode && !window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
+    return showToast('이 회차의 열람 기능은 현재 사용할 수 없습니다.');
   }
 
   activeEpisodeId = String(epNum);
@@ -1419,7 +1313,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
 
   // 실시간 읽기 내역 저장 및 조회수 카운트
   saveReadingProgress(work.id, epNum);
-  if (window.WebNovelsAdmin?.recordReaderEventInDB) {
+  if (!window.ReaderHub?.active() && window.WebNovelsAdmin?.recordReaderEventInDB) {
     window.WebNovelsAdmin.recordReaderEventInDB(work.id, ep.id || epNum, 'OPEN', 0, `${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`);
   }
 
@@ -1434,7 +1328,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       const images = loadedPanels;
       webtoonViewerEl.innerHTML = images.map(imgSrc => `
         <div class="webtoon-cut" style="margin: 0 auto; max-width: 720px; text-align: center;">
-          <img src="${imgSrc}" alt="${escapeHtml(work.title)} ${ep.title}" style="width: 100%; height: auto; display: block; margin-bottom: 2px; border-radius: 4px;" loading="lazy">
+          <img src="${imgSrc}" alt="${escapeHtml(work.title)} ${escapeHtml(ep.title)}" style="width: 100%; height: auto; display: block; margin-bottom: 2px; border-radius: 4px;" loading="lazy">
         </div>
       `).join('');
     }
@@ -1479,7 +1373,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       const currentScroll = window.scrollY;
       const pct = Math.min(100, Math.max(10, Math.round((currentScroll / totalHeight) * 100)));
       saveReadingProgress(work.id, epNum, pct);
-      if (window.WebNovelsAdmin?.recordReaderEventInDB) {
+      if (!window.ReaderHub?.active() && window.WebNovelsAdmin?.recordReaderEventInDB) {
         window.WebNovelsAdmin.recordReaderEventInDB(work.id, ep.id || epNum, pct >= 90 ? 'COMPLETE' : 'PROGRESS', pct, `${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`);
       }
     }, 500);
@@ -1504,7 +1398,8 @@ function renderReaderComments(workId, epNum) {
 window.submitReaderComment = function() {
   const workId = window._currentReadingWorkId || 1;
   const epNum = window._currentReadingEpNum || 1;
-  handleReaderCommentSubmit(workId, epNum);
+  const episode = activeWork?.episodes?.find(item => Number(item.episodeNumber) === Number(epNum));
+  handleReaderCommentSubmit(workId, window.ReaderHub?.active() ? episode?.id : epNum);
 };
 
 // 댓글 공감/좋아요 토글
@@ -1567,6 +1462,7 @@ class ReaderPreferencesStore {
   }
 
   load() {
+    if (window.WEBNOVELS_CONFIG?.readerServiceEnabled) return;
     try {
       const saved = localStorage.getItem('webnovels_reader_preferences');
       if (saved) {
@@ -1581,6 +1477,11 @@ class ReaderPreferencesStore {
   }
 
   save() {
+    if (window.ReaderHub?.active()) {
+      if(window.WebNovelsAuth?.getActor()?.reader)
+        window.ReaderHub.change('preferences',{}, {settings:this.pref}).catch(()=>{});
+      return;
+    }
     try {
       localStorage.setItem('webnovels_reader_preferences', JSON.stringify(this.pref));
       localStorage.setItem('webnovels_reader_theme', this.pref.theme);
@@ -1595,6 +1496,15 @@ class ReaderPreferencesStore {
   }
 
   async syncRemote(identifier) {
+    if (window.ReaderHub?.active()) {
+      if(!window.WebNovelsAuth?.getActor()?.reader)return;
+      try {
+        const activity=await window.ReaderHub.activity(true);
+        this.pref={...DEFAULT_READER_PREFERENCES,...activity.preferences};
+        this.apply();
+      } catch { /* Existing local view remains usable while remote settings fail. */ }
+      return;
+    }
     if (!identifier || !window.WebNovelsAdmin?.fetchReaderPreferences) return;
     try {
       const remotePref = await window.WebNovelsAdmin.fetchReaderPreferences(identifier);
@@ -1705,6 +1615,10 @@ class ReaderPreferencesStore {
     this.save();
     this.apply();
   }
+  reset() {
+    this.pref={...DEFAULT_READER_PREFERENCES};
+    this.apply();
+  }
 }
 
 window.ReaderPreferencesManager = new ReaderPreferencesStore();
@@ -1773,10 +1687,10 @@ window.checkNicknameDuplicate = function() {
     msgEl.style.display = 'block';
     if (isDuplicated) {
       msgEl.style.color = '#ef4444';
-      msgEl.innerHTML = `❌ <strong>${nickname}</strong> 은(는) 이미 사용 중인 별명입니다.`;
+      msgEl.textContent = `❌ ${nickname} 은(는) 이미 사용 중인 별명입니다.`;
     } else {
       msgEl.style.color = '#10b981';
-      msgEl.innerHTML = `✓ <strong>${nickname}</strong> 은(는) 사용 가능한 멋진 별명입니다!`;
+      msgEl.textContent = `✓ ${nickname} 은(는) 사용 가능한 멋진 별명입니다!`;
     }
   }
   showToast(isDuplicated ? '❌ 이미 사용 중인 Nickname입니다.' : '✓ 사용 가능한 Nickname(별명)입니다!');
@@ -1798,10 +1712,10 @@ window.checkAuthorPenNameDuplicate = function() {
     msgEl.style.display = 'block';
     if (isDuplicated) {
       msgEl.style.color = '#ef4444';
-      msgEl.innerHTML = `❌ <strong>${penName}</strong> 은(는) 이미 등록된 필명입니다.`;
+      msgEl.textContent = `❌ ${penName} 은(는) 이미 등록된 필명입니다.`;
     } else {
       msgEl.style.color = '#10b981';
-      msgEl.innerHTML = `✓ <strong>${penName}</strong> 은(는) 등록 가능한 작가 필명입니다!`;
+      msgEl.textContent = `✓ ${penName} 은(는) 등록 가능한 작가 필명입니다!`;
     }
   }
   showToast(isDuplicated ? '❌ 이미 등록된 필명입니다.' : '✓ 등록 가능한 작가 필명입니다!');
@@ -1988,7 +1902,7 @@ function updateMemberHeader(user) {
     // [중요] 이미 성인인증을 완료한 경우 PASS 성인 인증 버튼 및 안내 문구 숨김 처리
     const boxPassVerify = document.getElementById('boxPassVerify');
     if (boxPassVerify) {
-      boxPassVerify.style.display = (user.isAdultVerified || window._isAdultVerified) ? 'none' : 'block';
+      boxPassVerify.style.display = 'none';
     }
   } else {
     // [비로그인 상태] 게스트일 때는 "작품 등록", "관리자" 메뉴를 다시 기본 표시로 복원
@@ -2018,7 +1932,7 @@ function updateMemberHeader(user) {
       myAdultBadge.className = 'badge badge-accent mt-2';
     }
     if (boxPassVerify) {
-      boxPassVerify.style.display = 'block';
+      boxPassVerify.style.display = 'none';
     }
     window._isAdultVerified = false;
   }
@@ -2035,30 +1949,17 @@ async function handlePassAdultVerify() {
 }
 
 // ----------------------------------------------------
-// 6. 독자 회원 정보 수정 (닉네임 & 기존 비밀번호 확인 후 새 비밀번호 변경)
+// 6. 독자 회원 정보 수정 (검증된 Auth UUID 기반 닉네임 변경)
 // ----------------------------------------------------
 window.openEditProfileModal = function() {
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
-  } catch(e) {}
-
-  if (!user) {
+  const reader = window.WebNovelsAuth?.getActor()?.reader;
+  if (!reader) {
     showToast('로그인이 필요한 서비스입니다.');
     openModal('modalAuth');
     return;
   }
-
   const nickInput = document.getElementById('editProfileNickname');
-  const curPwInput = document.getElementById('editProfileCurrentPassword');
-  const newPwInput = document.getElementById('editProfileNewPassword');
-  const confirmPwInput = document.getElementById('editProfileConfirmPassword');
-
-  if (nickInput) nickInput.value = user.nickname || user.username || '';
-  if (curPwInput) curPwInput.value = '';
-  if (newPwInput) newPwInput.value = '';
-  if (confirmPwInput) confirmPwInput.value = '';
-
+  if (nickInput) nickInput.value = reader.nickname || reader.username || '';
   openModal('modalEditProfile');
 };
 
@@ -2066,75 +1967,21 @@ window.handleSaveProfile = async function(event) {
   if (event) event.preventDefault();
 
   const nick = document.getElementById('editProfileNickname')?.value.trim();
-  const currentPassword = document.getElementById('editProfileCurrentPassword')?.value.trim();
-  const newPassword = document.getElementById('editProfileNewPassword')?.value.trim();
-  const confirmPassword = document.getElementById('editProfileConfirmPassword')?.value.trim();
-
-  if (!nick) {
-    showToast('닉네임을 입력해주세요.');
+  if (!nick || nick.length < 2 || nick.length > 40) {
+    showToast('닉네임은 2~40자로 입력해주세요.');
     return;
   }
-
-  if (newPassword) {
-    if (!currentPassword) {
-      showToast('비밀번호를 변경하려면 현재 비밀번호를 입력해주세요.');
-      return;
-    }
-    if (newPassword.length < 6) {
-      showToast('새 비밀번호는 최소 6자 이상이어야 합니다.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      showToast('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
-      return;
-    }
+  if (!window.ReaderHub?.active()) {
+    showToast('프로필 변경 기능은 보안 전환 후 제공됩니다.');
+    return;
   }
-
-  const token = localStorage.getItem('webnovels_token');
-  const reqBody = { nickname: nick };
-  if (newPassword) {
-    reqBody.currentPassword = currentPassword;
-    reqBody.newPassword = newPassword;
-  }
-
   try {
-    if (token && !token.startsWith('reader-token') && (!token.startsWith('creator-') && !token.startsWith('author-'))) {
-      const res = await fetch('/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(reqBody)
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        showToast(`❌ ${data.error || '정보 수정에 실패했습니다.'}`);
-        return;
-      }
-
-      let user = JSON.parse(localStorage.getItem('webnovels_user') || '{}');
-      user.nickname = data.user.nickname;
-      localStorage.setItem('webnovels_user', JSON.stringify(user));
-      updateMemberHeader(user);
-      closeAllModals();
-      showToast('🎉 회원 정보가 성공적으로 수정되었습니다.');
-      return;
-    }
-
-    // 로컬/Supabase 모드
-    let user = JSON.parse(localStorage.getItem('webnovels_user') || '{}');
-    user.nickname = nick;
-    localStorage.setItem('webnovels_user', JSON.stringify(user));
-    if (window.WebNovelsAdmin?.updateReaderProfileInDB) {
-      window.WebNovelsAdmin.updateReaderProfileInDB(user.username || user.email || user.id, { nickname: nick });
-    }
-    updateMemberHeader(user);
+    await window.ReaderHub.change('profile', {}, { nickname: nick });
+    await window.WebNovelsAuth.validate();
     closeAllModals();
-    showToast('🎉 회원 정보가 성공적으로 수정되었습니다.');
+    showToast('회원 정보가 수정되었습니다.');
   } catch (err) {
-    showToast('회원 정보 수정 중 오류가 발생했습니다.');
+    showToast('회원 정보가 저장되지 않았습니다. 다시 시도해주세요.');
   }
 };
 
@@ -2160,10 +2007,12 @@ window.filterParagraphComments = function(paragraphIndex) {
     const pEl = document.querySelector(`#readerBody [data-paragraph-index="${paragraphIndex}"]`);
     if (pEl) {
       pEl.classList.add('is-comment-selected');
-      const cleanText = pEl.textContent.replace(/💬\s*\d+$/, '').trim();
+      const paragraphText = pEl.firstChild?.nodeType === Node.TEXT_NODE ? pEl.firstChild.nodeValue : '';
+      const cleanText = paragraphText.trim();
       window._paragraphComment = {
         paragraphIndex,
         quoteText: cleanText.slice(0, 300),
+        paragraphText,
         contentVersion: pEl.getAttribute('data-content-version') || 'v1'
       };
     }
@@ -2184,23 +2033,47 @@ window.loadEpisodeComments = async function(workId, episodeId) {
   const container = document.getElementById('readerCommentsList');
   if (!container) return;
 
+  // These IDs are also used in legacy inline controls. Never interpolate an
+  // untrusted identifier into an HTML attribute or event handler.
+  const safeId = value => /^(?:[1-9]\d{0,18}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(String(value ?? ''));
+  if (!safeId(workId) || !safeId(episodeId)) {
+    container.textContent = '댓글을 불러오지 못했습니다.';
+    return;
+  }
+
   container.innerHTML = `<div class="p-3 text-center text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>댓글을 불러오는 중입니다...</div>`;
 
   try {
     let comments = [];
-    if (window.WebNovelsAdmin?.fetchCommentsByEpisode) {
+    if (window.ReaderHub?.active()) {
+      const result=await window.ReaderHub.api('comments',{workId,episodeId});
+      comments=result.comments||[];
+      window._currentContentVersionId=result.versionId||null;
+    } else if (window.WebNovelsAdmin?.fetchCommentsByEpisode) {
       comments = await window.WebNovelsAdmin.fetchCommentsByEpisode(workId, episodeId);
     }
 
-    if (!comments) {
-      comments = [];
-    }
+    comments = Array.isArray(comments) ? comments.filter(c =>
+      safeId(c?.id) && (!c.parent_id || safeId(c.parent_id))) : [];
 
     // Update paragraph comment count badges in readerBody
     const pCountMap = {};
+    const pHashMap = {};
+    if(window.ReaderHub?.active()&&window._currentContentVersionId) {
+      for(const pEl of document.querySelectorAll('#readerBody .reader-paragraph')) {
+        pEl.querySelector('.paragraph-badge')?.remove();
+        const raw=new TextEncoder().encode(pEl.textContent);
+        const hash=await crypto.subtle.digest('SHA-256',raw);
+        pHashMap[pEl.getAttribute('data-paragraph-index')]=Array.from(new Uint8Array(hash))
+          .map(b=>b.toString(16).padStart(2,'0')).join('');
+      }
+    }
     comments.forEach(c => {
       const pIdx = c.anchor_paragraph ?? c.anchorParagraph;
-      if (pIdx !== undefined && pIdx !== null && pIdx !== '') {
+      const matchesCurrent=!window.ReaderHub?.active()||
+        (String(c.anchor_version_id)===String(window._currentContentVersionId)&&
+          c.anchor_hash===pHashMap[String(pIdx)]);
+      if (matchesCurrent && pIdx !== undefined && pIdx !== null && pIdx !== '') {
         pCountMap[pIdx] = (pCountMap[pIdx] || 0) + 1;
       }
     });
@@ -2228,7 +2101,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     let rootComments = comments.filter(c => !c.parent_id);
     let activeCreator = null;
     try { activeCreator = JSON.parse(localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author') || 'null'); } catch (_) {}
-    const canModerate = !!activeCreator && (String(activeCreator.id || activeCreator.authorId || activeCreator.creatorId) === String(activeWork?.authorId || activeWork?.author_id) || String(activeCreator.pen_name || activeCreator.penName) === String(activeWork?.author));
+    const canModerate = !window.ReaderHub?.active() && !!activeCreator && (String(activeCreator.id || activeCreator.authorId || activeCreator.creatorId) === String(activeWork?.authorId || activeWork?.author_id) || String(activeCreator.pen_name || activeCreator.penName) === String(activeWork?.author));
     const replyMap = {};
     comments.filter(c => c.parent_id).forEach(r => {
       if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
@@ -2248,14 +2121,16 @@ window.loadEpisodeComments = async function(workId, episodeId) {
           </button>
         </div>
       `;
-      rootComments = rootComments.filter(c => (c.anchor_paragraph ?? c.anchorParagraph) == window._filterParagraphIndex);
+      rootComments = rootComments.filter(c => (c.anchor_paragraph ?? c.anchorParagraph) == window._filterParagraphIndex &&
+        (!window.ReaderHub?.active()||(String(c.anchor_version_id)===String(window._currentContentVersionId)&&
+          c.anchor_hash===pHashMap[String(window._filterParagraphIndex)])));
     }
 
     const selectedParagraph = window._paragraphComment;
     const paragraphContext = selectedParagraph ? `
       <div class="paragraph-comment-context">
         <span>문단 #${Number(selectedParagraph.paragraphIndex) + 1} 인용</span><q>${escapeReaderHtml(selectedParagraph.quoteText)}</q>
-        <button type="button" onclick="window._paragraphComment = null; loadEpisodeComments(${workId}, ${episodeId})">선택 해제</button>
+        <button type="button" onclick="window._paragraphComment = null; loadEpisodeComments('${workId}', '${episodeId}')">선택 해제</button>
       </div>` : '';
 
     let html = `
@@ -2266,7 +2141,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
         <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.05); color:#fff; border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
         <div class="flex-between mt-2" style="display:flex; justify-content:space-between; align-items:center;">
           <label class="text-muted" style="font-size:.78rem; cursor:pointer;"><input id="readerCommentSpoiler" type="checkbox"> ⚠️ 스포일러 포함</label>
-          <button class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit(${workId}, ${episodeId})">
+          <button class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit('${workId}', '${episodeId}')">
             댓글 등록
           </button>
         </div>
@@ -2297,19 +2172,19 @@ window.loadEpisodeComments = async function(workId, episodeId) {
         html += `
           <div class="comment-item" id="comment-${c.id}">
             <div class="comment-header">
-              <span class="comment-author">👤 ${c.nickname || '독자'}</span>
+              <span class="comment-author">👤 ${escapeReaderHtml(c.nickname || '독자')}</span>
               <span class="comment-time">${timeStr}</span>
             </div>
-            ${c.quote_text ? `<div class="comment-quote">${escapeReaderHtml(c.quote_text)}</div>` : ''}
+            ${c.quote_text ? `<div class="comment-quote">${escapeReaderHtml(c.quote_text)}${window.ReaderHub?.active()&&String(c.anchor_version_id)!==String(window._currentContentVersionId)?' · 이전 공개본 문맥':''}</div>` : ''}
             <div class="comment-content">${spoilerBlock}</div>
             <div class="comment-actions">
               <button class="btn-like-comment" onclick="handleLikeComment('${c.id}')" id="btnLike-${c.id}">
-                ❤️ 공감 <span id="likeCount-${c.id}">${c.likes_count || 0}</span>
+                ❤️ 공감 <span id="likeCount-${c.id}">${Math.max(0, Number(c.likes_count) || 0)}</span>
               </button>
               <button class="btn-reply-toggle" onclick="toggleReplyInput('${c.id}')">
                 💬 답글 (${replies.length})
               </button>
-              ${canModerate ? `<button class="btn-reply-toggle" onclick="authorHideComment('${c.id}')">숨김</button><button class="btn-reply-toggle" onclick="authorBlockCommenter(${workId}, '${c.user_id}')">독자 차단</button>` : ''}
+              ${canModerate ? `<button class="btn-reply-toggle" onclick="authorHideComment('${c.id}')">숨김</button>${safeId(c.user_id) ? `<button class="btn-reply-toggle" onclick="authorBlockCommenter('${workId}', '${c.user_id}')">독자 차단</button>` : ''}` : ''}
             </div>
 
             <!-- 대댓글 입력창 -->
@@ -2317,7 +2192,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
               <textarea id="replyText-${c.id}" class="form-control" rows="2" placeholder="답글을 입력하세요..." style="width:100%; background:rgba(255,255,255,0.05); color:#fff; border-radius:6px; padding:6px; border:1px solid var(--border-color); font-size:0.85rem;"></textarea>
               <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
                 <button class="btn btn-ghost btn-sm" onclick="toggleReplyInput('${c.id}')">취소</button>
-                <button class="btn btn-primary btn-sm" onclick="handleReaderReplySubmit(${workId}, ${episodeId}, '${c.id}')">답글 등록</button>
+                <button class="btn btn-primary btn-sm" onclick="handleReaderReplySubmit('${workId}', '${episodeId}', '${c.id}')">답글 등록</button>
               </div>
             </div>
           </div>
@@ -2342,13 +2217,13 @@ window.loadEpisodeComments = async function(workId, episodeId) {
           html += `
             <div class="comment-item is-reply" id="comment-${r.id}">
               <div class="comment-header">
-                <span class="comment-author" style="color:var(--cdg-pink);">↳ 👤 ${r.nickname || '독자'}</span>
+                <span class="comment-author" style="color:var(--cdg-pink);">↳ 👤 ${escapeReaderHtml(r.nickname || '독자')}</span>
                 <span class="comment-time">${rTimeStr}</span>
               </div>
               <div class="comment-content">${replySpoilerBlock}</div>
               <div class="comment-actions">
                 <button class="btn-like-comment" onclick="handleLikeComment('${r.id}')" id="btnLike-${r.id}">
-                  ❤️ 공감 <span id="likeCount-${r.id}">${r.likes_count || 0}</span>
+                  ❤️ 공감 <span id="likeCount-${r.id}">${Math.max(0, Number(r.likes_count) || 0)}</span>
                 </button>
               </div>
             </div>
@@ -2367,6 +2242,29 @@ window.loadEpisodeComments = async function(workId, episodeId) {
 };
 
 window.handleReaderCommentSubmit = async function(workId, episodeId) {
+  if (window.ReaderHub?.active()) {
+    const input=document.getElementById('readerCommentInput');
+    if(!input?.value.trim())return showToast('댓글 내용을 입력해주세요.');
+    if(!window.WebNovelsAuth?.getActor()?.reader)return showToast('독자 로그인이 필요합니다.');
+    const data={content:input.value.trim(),isSpoiler:!!document.getElementById('readerCommentSpoiler')?.checked};
+    const paragraph=window._paragraphComment;
+    if(paragraph) {
+      if(!window._currentContentVersionId)return showToast('본문 버전을 확인한 뒤 다시 시도해주세요.');
+      const raw=new TextEncoder().encode(paragraph.paragraphText);
+      const hash=await crypto.subtle.digest('SHA-256',raw);
+      data.anchorIndex=paragraph.paragraphIndex;
+      data.anchorHash=Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      data.versionId=window._currentContentVersionId;
+    }
+    try {
+      await window.ReaderHub.change('comment',{workId,episodeId},data);
+      input.value='';window._paragraphComment=null;
+      await loadEpisodeComments(workId,episodeId);
+      showToast('댓글을 등록했습니다.');
+    } catch {showToast('댓글을 저장하지 못했습니다. 정책과 본문 버전을 확인해주세요.');}
+    return;
+  }
+
   const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
   if (!savedUser) {
     showToast('🔒 댓글 작성은 로그인 회원만 가능합니다.');
@@ -2440,6 +2338,16 @@ window.handleReaderCommentSubmit = async function(workId, episodeId) {
 };
 
 window.handleReaderReplySubmit = async function(workId, episodeId, parentId) {
+  if (window.ReaderHub?.active()) {
+    const input=document.getElementById(`replyText-${parentId}`);
+    if(!input?.value.trim())return showToast('답글 내용을 입력해주세요.');
+    try {
+      await window.ReaderHub.change('comment',{workId,episodeId},{content:input.value.trim(),parentId});
+      input.value='';await loadEpisodeComments(workId,episodeId);
+      showToast('답글을 등록했습니다.');
+    } catch {showToast('답글을 저장하지 못했습니다.');}
+    return;
+  }
   const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
   if (!savedUser) {
     showToast('🔒 답글 작성은 로그인 회원만 가능합니다.');
@@ -2462,6 +2370,20 @@ window.handleReaderReplySubmit = async function(workId, episodeId, parentId) {
   showToast('💬 답글이 등록되었습니다.');
   input.value = '';
   loadEpisodeComments(workId, episodeId);
+};
+
+window.handleLikeComment = async function(commentId) {
+  if(!window.ReaderHub?.active())return showToast('댓글 공감 기능을 다시 확인해주세요.');
+  if(!window.WebNovelsAuth?.getActor()?.reader)return showToast('독자 로그인이 필요합니다.');
+  const workId=window._currentReadingWorkId;
+  const episode=activeWork?.episodes?.find(e=>Number(e.episodeNumber)===Number(window._currentReadingEpNum));
+  if(!workId||!episode)return;
+  try {
+    const result=await window.ReaderHub.change('like',{workId,episodeId:episode.id},{commentId});
+    const count=document.getElementById('likeCount-'+commentId);
+    if(count)count.textContent=String(result.likes);
+    showToast(result.liked?'댓글에 공감했습니다.':'공감을 취소했습니다.');
+  } catch {showToast('댓글 공감에 실패했습니다.');}
 };
 
 

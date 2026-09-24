@@ -60,6 +60,8 @@
 
 `database/p0/002_lockdown_after_cutover.sql`은 **이번 2단계에서 실행하지 않는다.** 모든 활성 프론트/API 전환과 권한 검증이 완료되는 10단계의 별도 작업이다.
 
+2026-09-24의 [10단계 감사](stage10-cutover-audit.md)는 합성 DB에서 잠금·프로필 RPC를 검증한 진행 기록이다. 기존 직접 DB·Storage 경로와 실제 DDL/백업 검증이 남아 있으므로 스테이징에도 아직 잠금을 적용하지 않았다. 010 다음의 `authoring/011_reader_profile_cutover.sql` 역시 실제 적용 전 스키마 감사와 세션 검토 게이트가 필요하다.
+
 - 기존 P0 public 잠금은 authoring 별도 스키마에 대한 grant를 넓히지 않는다.
 - authoring 마이그레이션은 P0 expanded→locked 전환이나 P0_API_ENABLED 활성화를 수행하지 않는다.
 - 3단계 서버가 새 스키마에 접근할 때는 명시적 인증/소유권 검증과 좁은 서버 전용 API를 추가한다. 새 스키마를 브라우저에 직접 공개하지 않는다.

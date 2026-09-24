@@ -24,3 +24,9 @@
 6단계 추가: [007_creator_files.sql](007_creator_files.sql). 업로드 prepare/commit·취소 tombstone·revision 원본 연결·표지 version 조건부 교체·소유자 내보내기·참조 없는 정리 후보 조회. [적용/복구 조건](../../docs/launch/creator-files-contract.md)을 확인하고 private Storage 002와 006 이후 적용한다. 실제 객체 자동 삭제는 하지 않는다. 로컬 검증은 `npm run test:files`이며 실제 Supabase/Storage에는 미적용이다.
 
 7단계 추가: [008_creator_publications.sql](008_creator_publications.sql). 저장 revision 기반 무료 게시·예약·공개본 수정, 예약 상태 전이·실행 결과와 운영 이벤트를 추가한다. [게시 계약](../../docs/launch/creator-publication-contract.md)을 확인하고 007 이후 검토 적용한다. 별도 Cloudflare Cron Worker가 필요하며 기본 플래그는 비활성이다. 로컬 검증은 `npm run test:publication`이다.
+
+8단계 추가: [009_creator_reader_operations.sql](009_creator_reader_operations.sql). Auth UUID별 독서기록·관심·구독·환경설정, 서버 전용 공개 카탈로그·댓글 정책/문단 버전·작품별 차단/신고·통계·알림·연재 상태를 추가한다. [운영 계약](../../docs/launch/creator-reader-operations-contract.md)을 확인하고 실제 백업·스키마 감사·008 적용 뒤 검토한다. 기본 플래그는 비활성이다. 로컬 검증은 `npm run test:operations`이다.
+
+9단계 추가: [010_admin_operations.sql](010_admin_operations.sql). 관리자 사건·작품 제한·권한 변경 이력과 제한적 서버 전용 운영 RPC를 추가한다. [관리자 운영 계약](../../docs/launch/admin-operations-contract.md)을 확인하고 실제 legacy 신고·검수·감사 테이블 및 009 적용 상태를 검토한 뒤 실행한다. 운영 DB에는 미적용이며 `ADMIN_OPERATIONS_ENABLED`는 기본 비활성이다. 로컬 검증은 `npm run test:admin-operations`다.
+
+10단계 진행 중: [011_reader_profile_cutover.sql](011_reader_profile_cutover.sql). 검증된 Auth UUID의 활성 독자 닉네임만 서버 전용 RPC로 수정한다. 실제 `readers`/`auth.users` 열·제약과 010 적용을 감사하고 백업한 뒤 검토 세션 게이트로 실행한다. [전환 감사](../../docs/launch/stage10-cutover-audit.md)의 직접 접근·Storage 잔여 경로가 닫히기 전에는 전환 완료나 플래그 활성화로 해석하지 않는다. 실제 DB에는 미적용이다.

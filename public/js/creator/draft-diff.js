@@ -5,9 +5,23 @@
     const m = oldLines.length;
     const n = newLines.length;
 
-    // Safety fallback for very large texts to avoid O(M*N) memory spikes
-    if (m * n > 250000) {
-      return oldLines.map((text,i)=>({type:'del',text,oldNum:i+1})).concat(newLines.map((text,i)=>({type:'ins',text,newNum:i+1})));
+    // A preview is bounded; the full snapshots remain available for restore/export.
+    if (m * n > 250000 || m + n > 1000 || oldText.length + newText.length > 100000) {
+      const sample=(lines,type)=>{
+        const indices=lines.length>100
+          ? [...Array(50).keys(),...Array.from({length:50},(_,i)=>lines.length-50+i)]
+          : lines.map((_,i)=>i);
+        const result=[];
+        for(const i of indices){
+          if(i===lines.length-50 && lines.length>100)
+            result.push({type:'summary',text:`${lines.length-100}개 줄 생략 (비교 미리보기 한도)`});
+          const text=lines[i];
+          result.push({type,text:text.length>2000?text.slice(0,2000)+'… (긴 줄 생략)':text,
+            ...(type==='del'?{oldNum:i+1}:{newNum:i+1})});
+        }
+        return result;
+      };
+      return sample(oldLines,'del').concat(sample(newLines,'ins'));
     }
 
     // Dynamic programming matrix for Longest Common Subsequence (LCS)

@@ -58,7 +58,7 @@ app.get('/api/ready', async (_req, res) => {
 });
 // These legacy handlers simulate provider verification. Never expose them in production.
 app.use(['/api/ads/request-rewarded', '/api/ads/verify-unlock', '/api/auth/verify-adult'], (_req, res, next) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
     return res.status(503).json({ error: '광고 및 본인인증 제공업체 검증 연동이 완료되지 않았습니다.' });
   }
   next();
@@ -93,6 +93,9 @@ app.get(FRONTEND_ROUTES, (_req: Request, res: Response) => {
 
 // Health Check API
 app.get('/api/health', (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+    return res.status(503).json({ error: 'LEGACY_API_CLOSED' });
+  }
   res.json({
     status: 'ok',
     service: 'Ad-Based Web Novel Creator Platform Backend API',
@@ -102,6 +105,11 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // 도메인별 API 라우터 마운트
 app.use('/api', (_req, res, next) => {
+  // This SQLite/Prisma application is retained for local development only.
+  // Production traffic must use the Cloudflare /api/v2 service instead.
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+    return res.status(503).json({ error: 'LEGACY_API_CLOSED' });
+  }
   if (!JWT_CONFIGURED) {
     return res.status(503).json({ error: '서버 인증 설정이 완료되지 않았습니다.' });
   }

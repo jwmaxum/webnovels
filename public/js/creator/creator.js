@@ -13,6 +13,11 @@
 
 // 작가센터 7대 탭 전환 함수
 window.switchCreatorTab = function(tabKey, shouldPushState = true) {
+  if (['ad-rev','sales-rev','settlements'].includes(tabKey)) {
+    showToast('수익·정산 기능은 현재 사용할 수 없습니다.');
+    tabKey = 'works';
+  }
+  if (!window.CreatorOperations?.active() && ['home','help'].includes(tabKey)) tabKey='works';
   if (tabKey !== 'new-ep') window.CreatorDraftEditor?.checkpoint();
   if (tabKey === 'new-ep' && shouldPushState) window.CreatorDraftEditor?.enter();
   document.querySelectorAll('#creatorTabsBar [data-creator-tab]').forEach(b => b.classList.remove('active'));
@@ -25,27 +30,18 @@ window.switchCreatorTab = function(tabKey, shouldPushState = true) {
 
   if (window.lucide) window.lucide.createIcons();
 
-  if (tabKey === 'ad-rev' || tabKey === 'sales-rev' || tabKey === 'settlements') {
-    const authorStr = localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author') || localStorage.getItem('webnovels_user');
-    let aId = 1;
-    try {
-      const parsed = JSON.parse(authorStr || '{}');
-      aId = parsed.creatorId || parsed.authorId || parsed.id || 1;
-    } catch(e) {}
-    if (typeof window.loadCreatorStudioEarnings === 'function') {
-      window.loadCreatorStudioEarnings(aId);
-    }
-  }
-
   if (tabKey === 'stats') {
     if (typeof window.loadCreatorReaderAnalyticsVisuals === 'function') {
       window.loadCreatorReaderAnalyticsVisuals();
     }
   }
+  if (tabKey === 'home') window.CreatorOperations?.home();
 
   if (shouldPushState) {
     const tabUrlMap = {
       'works': 'works',
+      'home': 'home',
+      'help': 'help',
       'new-ep': 'episodes',
       'status': 'status',
       'stats': 'stats',
@@ -84,49 +80,16 @@ window.fetchCreatorDashboardData = async function() {
   if (badge) badge.textContent = '작가';
   const logout = document.getElementById('btnAuthorLogout');
   if (logout) logout.style.display = 'inline-block';
-  return window.CreatorWorks.loadFromRoute();
+  document.getElementById('view-creator')?.classList.toggle('stage8-creator',
+    window.CreatorOperations?.active()===true);
+  if (/^\/(creator|author)\/works(?:\/|$)/.test(location.pathname))
+    return window.CreatorWorks.loadFromRoute();
+  if (window.CreatorOperations?.active() && /^\/(creator|author)\/?$/.test(location.pathname))
+    return window.CreatorOperations.home();
 };
-async function handleCreatorSettlementReq(amountParam) {
-  let author = currentLoggedCreator || currentLoggedAuthor;
-  if (!author) {
-    const authorStr = localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author');
-    if (authorStr) {
-      try { author = JSON.parse(authorStr); } catch (e) {}
-    }
-  }
-
-  if (!author) {
-    showToast('⚠️ 작가 로그인이 필요합니다.');
-    return;
-  }
-
-  const payableRevenue = typeof amountParam === 'number' && !isNaN(amountParam) ? amountParam : 
-    (Number(document.getElementById('creatorSettlementPayableAmount')?.textContent?.replace(/[^0-9]/g, '')) || 0);
-
-  if (payableRevenue <= 0) {
-    showToast('⚠️ 현재 출금 가능한 정산 잔여액이 없습니다.');
-    return;
-  }
-
-  const penName = author.pen_name || author.penName || author.username || '연재 작가';
-  const confirmed = confirm(`[정산금 출금 신청]\n\n신청 작가: ${penName}\n출금 신청액: ₩${payableRevenue.toLocaleString()}\n\n해당 금액으로 정산 출금을 신청하시겠습니까?`);
-  if (!confirmed) return;
-
-  if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.requestSettlementSecure === 'function') {
-    showToast('⏳ 정산금 출금 신청을 처리 중입니다...');
-    const bank = author.bank_info || author.bankInfo || '정산 계좌 미등록';
-    const res = await window.WebNovelsAdmin.requestSettlementSecure(author.id, payableRevenue, bank);
-    if (res.success) {
-      showToast(`🎉 ₩${payableRevenue.toLocaleString()} 정산금 출금 신청이 완료되었습니다! (심사 대기)`);
-      if (typeof window.fetchCreatorDashboardData === 'function') {
-        await window.fetchCreatorDashboardData();
-      }
-    } else {
-      showToast(`❌ 출금 신청 실패: ${res.error || '오류 발생'}`);
-    }
-  } else {
-    showToast('❌ 정산 서비스 연동 상태를 확인할 수 없습니다.');
-  }
+async function handleCreatorSettlementReq() {
+  showToast('정산 신청 기능은 현재 사용할 수 없습니다.');
+  return { success: false, error: 'MONETIZATION_NOT_ACTIVATED' };
 }
 window.handleCreatorSettlementReq = handleCreatorSettlementReq;
 
@@ -336,63 +299,8 @@ window.handleCreateEpisodeSubmit = async function(e) {
 
 // ============================================================
 // [Function] handleCreatorSettlementReq
-// [Purpose] 작가가 출금 신청을 클릭했을 때 실제 DB(author_settlements)에 PENDING 상태로 INSERT하고 UI에 '신청중' 반영
+// 정산 신청은 서버 원장과 운영 지급 절차가 확인될 때까지 비활성이다.
 // ============================================================
-window.handleCreatorSettlementReq = async function(requestedAmount) {
-  const sampleList = (typeof SAMPLE_CREATORS !== 'undefined' ? SAMPLE_CREATORS : SAMPLE_AUTHORS);
-  const author = currentLoggedCreator || currentLoggedAuthor;
-  if (!author) return showToast('작가 로그인이 필요합니다.');
-  const penName = author.pen_name || author.penName || author.username || '작가';
-  const bankInfo = author.bank_info || author.bankInfo || '정산 계좌 미등록';
-
-  let amount = Number(requestedAmount);
-  if (!amount || isNaN(amount) || amount <= 0) {
-    const payElem = document.getElementById('creatorPayableRevenue');
-    const txt = payElem ? payElem.textContent.replace(/[^0-9]/g, '') : '0';
-    amount = Number(txt) || 0;
-  }
-
-  if (amount <= 0) {
-    showToast('⚠️ 출금 가능한 정산금이 없습니다.');
-    return;
-  }
-
-  // 버튼 로딩 상태 표시
-  const btn = document.getElementById('btnRequestSettlement');
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm mr-2"></span>출금 신청 접수중...`;
-  }
-
-  try {
-    let result = null;
-    if (window.WebNovelsAdmin && typeof window.WebNovelsAdmin.requestSettlementSecure === 'function') {
-      result = await window.WebNovelsAdmin.requestSettlementSecure(author.id, amount, bankInfo);
-    }
-
-    if (result && result.success) {
-      showToast(`💸 [${penName}] ₩${amount.toLocaleString()} 정산금 출금 신청이 성공적으로 접수되었습니다! (상태: 🟡 신청중)`);
-    } else {
-      showToast(result?.error || '출금 신청에 실패했습니다. 신청 내역이 저장되지 않았습니다.');
-    }
-
-    // 작가 대시보드 화면 및 정산 탭 즉시 갱신 (출금 가능액 차감 및 '신청중' 버튼 표시)
-    await fetchCreatorDashboardData();
-
-    // 관리자 Action Queue 갱신
-    if (typeof window.loadActionQueueFromDB === 'function') {
-      await window.loadActionQueueFromDB();
-      if (typeof window.renderDashboardActionQueuePreview === 'function') {
-        window.renderDashboardActionQueuePreview();
-      }
-    }
-  } catch (err) {
-    console.error('[Settlement Req Error]', err);
-    showToast('⚠️ 출금 신청 처리 중 오류가 발생했습니다.');
-    await fetchCreatorDashboardData();
-  }
-};
-
 window.handleAuthorLogoutProcess = async function() { return window.handleMemberLogout(); };
 window.handleCreatorLogoutProcess = window.handleAuthorLogoutProcess;
 
@@ -402,61 +310,13 @@ window.handleCreatorLogoutProcess = window.handleAuthorLogoutProcess;
 // ============================================================
 // [Step 4] 작가 크리에이터 스튜디오 4대 실시간 수익 지표 연동 (하드코딩 제거 및 실제 DB 수치 반영)
 // ============================================================
-window.loadCreatorStudioEarnings = async function(authorId) {
-  try {
-    let estimatedRevenue = 0;
-    let confirmedRevenue = 0;
-    let payableRevenue = 0;
-    let todayEarnings = 0;
-
-    if (window.WebNovelsAdmin && authorId) {
-      if (typeof window.WebNovelsAdmin.fetchAuthorRevenueSummary === 'function') {
-        const summary = await window.WebNovelsAdmin.fetchAuthorRevenueSummary(authorId);
-        if (summary) {
-          estimatedRevenue = summary.estimatedRevenue || 0;
-          confirmedRevenue = summary.confirmedRevenue || 0;
-          payableRevenue = summary.payableRevenue || 0;
-          todayEarnings = summary.todayRevenue || 0;
-        }
-      } else if (typeof window.WebNovelsAdmin.fetchAuthorEarnings === 'function') {
-        const records = await window.WebNovelsAdmin.fetchAuthorEarnings(authorId);
-        if (records && records.length > 0) {
-          estimatedRevenue = records.reduce((sum, r) => sum + (r.status === 'PENDING' ? Number(r.author_revenue || 0) : 0), 0);
-          confirmedRevenue = records.reduce((sum, r) => sum + (r.status === 'CONFIRMED' ? Number(r.author_revenue || 0) : 0), 0);
-          if (estimatedRevenue === 0 && confirmedRevenue > 0) estimatedRevenue = Math.round(confirmedRevenue * 0.25);
-          payableRevenue = confirmedRevenue;
-          todayEarnings = Math.round(estimatedRevenue / 7);
-        }
-      }
-    }
-
-    const elEst = document.getElementById('creatorEstimatedRevenue');
-    if (elEst) elEst.textContent = `₩${estimatedRevenue.toLocaleString()}`;
-
-    const elConf = document.getElementById('creatorConfirmedRevenue');
-    if (elConf) elConf.textContent = `₩${confirmedRevenue.toLocaleString()}`;
-
-    const elPay = document.getElementById('creatorPayableRevenue');
-    if (elPay) elPay.textContent = `₩${payableRevenue.toLocaleString()}`;
-
-    const elSettlementPay = document.getElementById('creatorSettlementPayableAmount');
-    if (elSettlementPay) elSettlementPay.textContent = `₩${payableRevenue.toLocaleString()}`;
-
-    const elSalesCount = document.getElementById('creatorSalesCount');
-    const elSalesRev = document.getElementById('creatorSalesRevenue');
-    if (elSalesCount) elSalesCount.textContent = `${Math.round(estimatedRevenue / 100).toLocaleString()} 회`;
-    if (elSalesRev) elSalesRev.textContent = `₩${Math.round(estimatedRevenue * 0.1).toLocaleString()}`;
-
-    // 수익 원장(Ledger) 동기화
-    if (typeof window.loadCreatorEarningLedger === 'function') {
-      window.loadCreatorEarningLedger();
-    }
-
-    return { estimatedRevenue, confirmedRevenue, payableRevenue, todayEarnings };
-  } catch (e) {
-    console.warn('[Creator Earnings Sync Error]', e);
-    return { estimatedRevenue: 0, confirmedRevenue: 0, payableRevenue: 0, todayEarnings: 0 };
+window.loadCreatorStudioEarnings = async function() {
+  for (const id of ['creatorEstimatedRevenue','creatorConfirmedRevenue',
+    'creatorPayableRevenue','creatorSettlementPayableAmount','creatorSalesCount','creatorSalesRevenue']) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = '서비스 준비 중';
   }
+  return null;
 };
 
 // ============================================================
@@ -466,34 +326,11 @@ window._creatorLedgerEntries = [];
 window._creatorLedgerFilterSource = 'ALL';
 window._creatorLedgerFilterStatus = 'ALL';
 
-window.loadCreatorEarningLedger = async function(forceRefresh = false) {
+window.loadCreatorEarningLedger = async function() {
   const container = document.getElementById('creatorLedgerContainer');
-  if (!container) return;
-
-  container.innerHTML = `
-    <div class="p-4 text-center text-muted">
-      <span class="spinner-border spinner-border-sm mr-2"></span>원장 기록을 조회하고 있습니다...
-    </div>
-  `;
-
-  const authorStr = localStorage.getItem('webnovels_creator') || localStorage.getItem('webnovels_author') || localStorage.getItem('webnovels_user');
-  let aId = 1;
-  try {
-    const parsed = JSON.parse(authorStr || '{}');
-    aId = parsed.creatorId || parsed.authorId || parsed.id || 1;
-  } catch(e) {}
-
-  let entries = [];
-  if (window.WebNovelsAdmin?.fetchAuthorEarningLedger) {
-    try {
-      entries = await window.WebNovelsAdmin.fetchAuthorEarningLedger(aId);
-    } catch(e) {
-      console.warn('[loadCreatorEarningLedger error]', e);
-    }
-  }
-
-  window._creatorLedgerEntries = entries || [];
-  window.renderCreatorEarningLedger();
+  if (container) container.textContent = '수익 원장은 현재 제공하지 않습니다.';
+  window._creatorLedgerEntries = [];
+  return null;
 };
 
 window.filterCreatorLedger = function(sourceType) {
@@ -1085,13 +922,6 @@ if (typeof window !== 'undefined') {
   window.fetchCreatorDashboardData = fetchCreatorDashboardData;
   window.fetchAuthorDashboardData = fetchCreatorDashboardData;
   window.handleCreateEpisodeSubmit = handleCreateEpisodeSubmit;
-  window.updateWorkSerialStatus = async function(workId, status) {
-    const result = await window.WebNovelsAdmin?.updateWorkAdminSetting(workId, {
-      status, is_completed: status === 'COMPLETED'
-    });
-    showToast(result?.success ? '연재 상태가 저장되었습니다.' : '연재 상태 저장에 실패했습니다.');
-    if (result?.success) await fetchCreatorDashboardData();
-  };
   window.handleCreatorSettlementReq = handleCreatorSettlementReq;
   window.handleAuthorSettlementReq = handleCreatorSettlementReq;
   window.handleAuthorLogoutProcess = handleAuthorLogoutProcess;

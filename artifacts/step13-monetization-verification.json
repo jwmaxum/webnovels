@@ -1,0 +1,30 @@
+{
+  "stage": 13,
+  "checkedAt": "2026-09-25",
+  "status": "LOCAL_LEGACY_PATHS_CLOSED_LIVE_MONETIZATION_NOT_READY",
+  "openingDecision": "NO_GO",
+  "scope": "Free first opening baseline; monetization and adult content are separate releases",
+  "localChecks": {
+    "npm test": "passed, including stage13 disabled-path regression and Cloudflare Functions bundling",
+    "npm run build": "passed",
+    "npm run test:naming": "passed",
+    "npm run test:p0": "passed",
+    "npm run test:publication": "passed",
+    "npm run test:stage13": "passed after final reader guard update",
+    "git diff --check": "passed"
+  },
+  "liveChecks": {
+    "supabaseSchemaRlsStorage": "not verified; management schema audit previously returned HTTP 401",
+    "providerContractsAndCredentials": "not verified",
+    "realTransactionsAndLedger": "not executed",
+    "browserAndDeviceAcceptance": "not executed under project testing rule",
+    "productionSql": "not executed",
+    "featureFlags": "not changed",
+    "deployment": "not executed"
+  },
+  "documents": [
+    "docs/launch/monetization-contract.md",
+    "docs/launch/open-issues-after-stage13.md",
+    "docs/launch/release-record.md"
+  ]
+}

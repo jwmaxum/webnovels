@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-09-24T06:52:43Z",
+  "environment": "local Windows workspace; synthetic PGlite database",
+  "stage": "9 core local implementation; production acceptance pending",
+  "productionDatabaseApplied": false,
+  "browserAcceptanceRun": false,
+  "featureFlagsEnabled": false,
+  "checks": {
+    "test:admin-operations": "pass: 13 API, UI, and synthetic DB tests",
+    "test:data": "pass",
+    "test:auth": "pass",
+    "test:naming": "pass",
+    "test:creator-works": "pass",
+    "test:drafts": "pass",
+    "test:files": "pass",
+    "test:publication": "pass",
+    "test:operations": "pass",
+    "test:authoring-schema": "pass",
+    "P0 individual files": "pass: verify_secure_api, verify_cloudflare_routes, verify_providers",
+    "test:p0 npm script": "could not run as a group: node --test child process spawn EPERM in sandbox",
+    "tsc --noEmit": "pass",
+    "git diff --check": "pass",
+    "JavaScript syntax": "pass",
+    "legacy admin cleanup": "pass: removed duplicate business writers, unsupported menus, fake Action Queue and sample dashboard counts"
+  },
+  "remaining": [
+    "4-8 production prerequisite and 010 migration review/application",
+    "Auth reset support and role-change reauthentication",
+    "legacy administrator direct database route closure in stage 10",
+    "browser, device, and separate-account acceptance"
+  ]
+}

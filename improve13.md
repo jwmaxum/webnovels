@@ -64,10 +64,10 @@
 
 ## 실행 기록
 
-- 상태: 미착수
-- 시작일 / 완료일: — / —
-- 변경 파일 / 커밋: —
-- 검증 명령 / 결과 / 증거 경로: —
-- DB·Storage 적용 환경 / 버전: —
-- 외부 의존성·미해결 사항: —
-- 다음 단계 진입 판정: 대기(완료 조건 미검증)
+- 상태: 진행 중 — 무료 오픈을 위한 구형 수익·성인 진입점 로컬 차단. A~C와 완료 조건은 미달성
+- 시작일 / 완료일: 2026-09-24 / —
+- 변경 파일 / 커밋: `public/supabase-admin.js`, `public/js/reader/reader.js`, `public/js/core/state.js`, `public/js/creator/creator.js`, `public/index.html`, `scripts/verify_stage13_disabled.test.mjs`, `scripts/verify_data_contracts.cjs`, `package.json` 및 아래 문서. 커밋 없음
+- 검증 명령 / 결과 / 증거 경로: `npm run test:stage13`, `npm run test:naming`, `npm run test:p0` 통과. 추가 회귀 결과는 [13단계 검증 요약](artifacts/step13-monetization-verification.json) 참조
+- DB·Storage 적용 환경 / 버전: 로컬 코드만 변경. 실제 SQL·Storage·운영 플래그 변경 없음
+- 외부 의존성·미해결 사항: Supabase 관리 감사 HTTP 401, 실제 원장/기존 거래 대조, 제공업체 계약·상점·키·광고 검증, 분배·정산·취소 정책, 실환경 인수. [수익화 출시 계약](docs/launch/monetization-contract.md)과 [운영 배포·공개 오픈 이슈](docs/launch/open-issues-after-stage13.md) 참조
+- 다음 단계 진입 판정: **NO GO**. 무료 공개 오픈도 10~12단계 게이트 미완료로 보류하며 유료·성인은 별도 출시 대기

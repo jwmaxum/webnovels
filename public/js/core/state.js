@@ -17,9 +17,15 @@ const COMMENTS_STORE = {};
 
 // Display filtering is not authorization. The DB must enforce the same policy.
 function getPublishedWorks() {
-  return SAMPLE_WORKS.filter(w => ['PUBLISHED', 'ONGOING', 'PAUSED', 'COMPLETED'].includes(w.status))
-    .map(w => ({ ...w, episodes: (w.episodes || []).filter(ep =>
-      ep.status === 'PUBLISHED' && (!ep.scheduledAt || new Date(ep.scheduledAt) <= new Date())) }));
+  return SAMPLE_WORKS.filter(w => {
+    const genres = Array.isArray(w.genre) ? w.genre : [w.genre];
+    return ['PUBLISHED', 'ONGOING', 'PAUSED', 'COMPLETED'].includes(w.status) &&
+      !['AGE_19', 'ADULT', '19'].includes(w.rating) &&
+      !genres.some(genre => ['성인', '19세 이상'].includes(genre));
+  }).map(w => ({ ...w, episodes: (w.episodes || []).filter(ep =>
+    ep.status === 'PUBLISHED' && (!ep.scheduledAt || new Date(ep.scheduledAt) <= new Date()) &&
+    (ep.isFree === true || ep.is_free === true) &&
+    (ep.accessPolicy ?? ep.access_policy ?? 'FREE') === 'FREE') }));
 }
 
 // ------------------------------------------------------------
@@ -39,8 +45,6 @@ let currentLoggedCreator = currentLoggedAuthor;
 // 잔액은 DB 프로필 조회 후 반영
 let userPoints = 0;
 
-// Action Queue 실시간 예외 관제 센터 데이터
-let ACTION_QUEUE_ITEMS = [];
 
 // CMS: 작품 연재 관리 필터 상태
 let adminWorkFilterState = {
@@ -88,7 +92,6 @@ if (typeof window !== 'undefined') {
   window.currentLoggedAuthor = currentLoggedAuthor;
   window.currentLoggedCreator = currentLoggedAuthor;
   window.userPoints = userPoints;
-  window.ACTION_QUEUE_ITEMS = ACTION_QUEUE_ITEMS;
   window.adminWorkFilterState = adminWorkFilterState;
   window.syncUserActivityToStorage = syncUserActivityToStorage;
 }

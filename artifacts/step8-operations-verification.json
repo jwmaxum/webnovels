@@ -1,0 +1,42 @@
+{
+  "recorded_at": "2026-09-24T04:20:05Z",
+  "stage": 8,
+  "status": "local_verified_external_integration_pending",
+  "new_tests": {
+    "command": "npm run test:operations",
+    "passed": 11,
+    "failed": 0,
+    "scope": "API activation, verified Auth UUID and ID bounds; account-scoped reader cache; synthetic PostgreSQL 001-009 reapply, service-only RPCs, private catalog exclusion, reader activity, comment policy/block/report evidence, serial cancellation, withdrawal and immutable paragraph anchors"
+  },
+  "regression": [
+    {"command": "npm run test:naming", "passed": 3, "failed": 0},
+    {"command": "npm run test:auth", "passed": 14, "failed": 0},
+    {"command": "npm run test:creator-works", "passed": 17, "failed": 0},
+    {"command": "npm run test:drafts", "passed": 23, "failed": 0},
+    {"command": "npm run test:files", "passed": 24, "failed": 0},
+    {"command": "npm run test:publication", "passed": 15, "failed": 0},
+    {"command": "node scripts/verify_secure_api.test.mjs", "passed": 26, "failed": 0},
+    {"command": "node scripts/verify_cloudflare_routes.test.mjs", "passed": 4, "failed": 0},
+    {"command": "npm run test:data", "status": "passed"},
+    {"command": "npx tsc --noEmit", "status": "passed"},
+    {"command": "node --check (changed stage 8 runtime JavaScript)", "status": "passed"},
+    {"command": "git diff --check", "status": "passed"}
+  ],
+  "synthetic_database": "PGlite fixture only; no real Supabase data, schema, Storage, RLS or device acceptance",
+  "production": {
+    "database_009_applied": false,
+    "reader_service_enabled": false,
+    "author_operations_enabled": false,
+    "browser_acceptance": false,
+    "legacy_reader_data_reconciled": false,
+    "commit_created": false,
+    "pushed": false
+  },
+  "pending": [
+    "Verify real backup and schema; reconcile legacy comment block identities and reader activity before applying 009",
+    "Stage, deploy and exercise Supabase/PostgREST, Cloudflare Cron, RLS, Storage and cross-account access",
+    "Check PC/mobile, direct links, refresh, cross-device preferences and large-catalog behavior in a browser when authorized",
+    "Connect administrator report resolution and inquiry delivery to the preserved author notices",
+    "Complete the stage 10 direct database access audit and cutover before operational acceptance"
+  ]
+}

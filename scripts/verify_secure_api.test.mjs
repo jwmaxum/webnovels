@@ -75,40 +75,28 @@ test('unlinked, blocked and anonymous Auth accounts rejected', async () => {
 test('duplicate mapping fails closed', async () => {
   const s = setup(); s.tables.readers.push({ ...s.reader, id: 11 }); assert.equal((await s.request('/me')).status, 503);
 });
-test('reader cannot list users or mutate content', async () => {
-  const s = setup(); assert.equal((await s.request('/admin/readers')).status, 403);
-  assert.equal((await s.request('/works/1', { method: 'PATCH', body: { title: 'changed' } })).status, 403);
-  assert.equal(s.calls.filter(c => c.method === 'PATCH').length, 0);
+test('superseded v2 metadata, account and write endpoints are closed for every role', async () => {
+  for (const tables of [{}, { authors: [author()] }, { admin_users: [admin()] }]) {
+    const s = setup({ tables });
+    for (const path of ['/admin/readers', '/admin/config', '/works', '/works/1']) {
+      assert.equal((await s.request(path)).status, 410);
+    }
+    for (const path of ['/works/1', '/episodes/3']) {
+      const response = await s.request(path, { method: 'PATCH', body: { title: 'legacy' } });
+      assert.equal(response.status, 410);
+      assert.equal((await response.json()).error, 'LEGACY_API_CLOSED');
+    }
+    assert.ok(!s.calls.some(call => call.method === 'PATCH'));
+  }
 });
-test('another author cannot edit this work or its draft', async () => {
-  const s = setup({ tables: { authors: [author(99)] } }); s.episode.status = 'DRAFT';
-  assert.equal((await s.request('/works/1', { method: 'PATCH', body: { title: 'changed' } })).status, 403);
-  assert.equal((await s.request('/episodes/3', { method: 'PATCH', body: { content: 'stolen' } })).status, 403);
-});
-test('owner may edit metadata, but cannot change owner, publish or inflate counts', async () => {
-  const s = setup({ tables: { authors: [author()] } });
-  assert.equal((await s.request('/works/1', { method: 'PATCH', body: { title: 'New title' } })).status, 200);
-  assert.equal(s.calls.find(c => c.method === 'PATCH').url.searchParams.get('author_id'), 'eq.20');
-  for (const body of [{ author_id: 99 }, { status: 'PUBLISHED' }, { view_count: 9999 }, { title: '' }]) assert.equal((await s.request('/works/1', { method: 'PATCH', body })).status, 400);
-});
-test('author cannot directly replace published body; draft writes mirror atomically', async () => {
-  const s = setup({ tables: { authors: [author()] } });
-  assert.equal((await s.request('/episodes/3', { method: 'PATCH', body: { content: 'edit' } })).status, 403);
-  s.episode.status = 'DRAFT';
-  assert.equal((await s.request('/episodes/3', { method: 'PATCH', body: { title: 'draft', content: 'edit' } })).status, 200);
-  const writes = s.calls.filter(c => c.method === 'PATCH'); assert.equal(writes.length, 1); assert.equal(writes[0].url.searchParams.get('status'), 'eq.DRAFT');
-});
-test('revoked admin role and permission changes checked on each request', async () => {
-  const a = admin('SUB_ADMIN', ['USERS_READ']); const s = setup({ tables: { admin_users: [a] } });
-  assert.equal((await s.request('/admin/readers')).status, 200); a.permissions = [];
-  assert.equal((await s.request('/admin/readers')).status, 403); a.is_active = false;
-  assert.equal((await s.request('/me')).status, 403);
-});
-test('admin responses never select password or provider secret', async () => {
-  const s = setup({ tables: { admin_users: [admin()] } });
-  const r = await s.request('/admin/config'); assert.equal(r.status, 200); assert.ok(!(await r.text()).includes('secret'));
-  await s.request('/admin/readers');
-  assert.ok(s.calls.every(c => !/password|secret_key|site_key|\*/.test(c.url.searchParams.get('select') || '')));
+test('administrator permission does not grant private manuscript access', async () => {
+  const s = setup({ tables: { readers: [], admin_users: [admin()] } });
+  s.work.status = 'DRAFT'; s.episode.status = 'DRAFT';
+  assert.equal((await s.request('/episodes/3/content')).status, 404);
+  assert.ok(!s.calls.some(call => call.url.pathname.endsWith('secure_episode_contents')));
+  const owner = setup({ tables: { readers: [], authors: [author()] } });
+  owner.work.status = 'DRAFT'; owner.episode.status = 'DRAFT';
+  assert.equal((await owner.request('/episodes/3/content')).status, 200);
 });
 test('free published episode body is fetched from protected table, not fake content', async () => {
   const s = setup(); const r = await s.request('/episodes/3/content', { token: null }); assert.equal(r.status, 200);
@@ -139,17 +127,11 @@ test('adult verification cannot be supplied by client flags', async () => {
   const q = s.calls.find(c => c.url.pathname.endsWith('p0_identity_verifications')).url.searchParams;
   assert.equal(q.get('provider_mode'), 'eq.LIVE'); assert.equal(q.get('revoked_at'), 'is.null'); assert.match(q.get('expires_at'), /^gt\./);
 });
-test('admin must supply consistent free policy and valid types', async () => {
-  const s = setup({ tables: { admin_users: [admin()] } });
-  for (const body of [{ is_free: true, access_policy: 'PAID' }, { is_free: 'true', access_policy: 'FREE' }, { is_ad_free: true }, { image_urls: ['javascript:bad'] }]) assert.equal((await s.request('/episodes/3', { method: 'PATCH', body })).status, 400);
-  assert.equal((await s.request('/episodes/3', { method: 'PATCH', body: { is_free: true, access_policy: 'FREE' } })).status, 200);
-});
-test('zero-row write is not reported as successful', async () => {
-  const s = setup({ tables: { authors: [author()] }, writeConflict: true }); assert.equal((await s.request('/works/1', { method: 'PATCH', body: { title: 'Changed' } })).status, 409);
-});
-test('cross-origin mutation blocked and upstream errors redacted', async () => {
-  const s = setup(); assert.equal((await s.request('/works/1', { method: 'PATCH', body: { title: 'bad' }, origin: 'https://attacker.example' })).status, 403);
-  const broken = setup({ dbError: 'readers' }); const r = await broken.request('/me'); assert.equal(r.status, 503); assert.ok(!(await r.text()).includes('upstream secret'));
+test('upstream errors are redacted', async () => {
+  const broken = setup({ dbError: 'readers' });
+  const response = await broken.request('/me');
+  assert.equal(response.status, 503);
+  assert.ok(!(await response.text()).includes('upstream secret'));
 });
 test('unintegrated money and identity endpoints never fake success', async () => {
   const s = setup(); for (const path of ['/payments/confirm','/ads/verify','/adult-verification/confirm','/settlements','/support']) assert.equal((await s.request(path, { method: 'POST', body: {} })).status, 503);
@@ -188,11 +170,4 @@ test('distributed onboarding counter rejects repeated attempts with retry hint',
   const s=setup({rateLimited:true,user:{id:uid,email:'new@example.test',email_confirmed_at:'2026-09-20'}});
   const response=await s.request('/onboarding',onboarding);assert.equal(response.status,429);assert.equal(response.headers.get('Retry-After'),'60');
   assert.ok(!s.calls.some(c=>c.url.pathname.endsWith('/complete_authoring_signup')));
-});
-test('creator cutover closes legacy owner write paths instead of bypassing work state/version',async()=>{
-  const s=setup({tables:{authors:[author()]}});const bindings={...env,AUTHOR_WORKS_ENABLED:'true'};
-  assert.equal((await s.request('/works/1',{method:'PATCH',body:{title:'legacy'},bindings})).status,409);
-  s.episode.status='DRAFT';
-  assert.equal((await s.request('/episodes/3',{method:'PATCH',body:{content:'legacy'},bindings})).status,503);
-  assert.ok(!s.calls.some(c=>c.method==='PATCH'));
 });

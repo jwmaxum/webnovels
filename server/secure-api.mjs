@@ -3,13 +3,15 @@ import { creatorWorkApi } from './creator-work-api.mjs';
 import { creatorDraftApi } from './creator-draft-api.mjs';
 import { creatorFileApi } from './creator-file-api.mjs';
 import { creatorPublicationApi } from './creator-publication-api.mjs';
+import { stage8Api } from './stage8-api.mjs';
+import { stage9Api } from './stage9-api.mjs';
+import { stage9AppealApi } from './stage9-appeal-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
 const AUTHOR_FIELDS = 'id,auth_user_id,username,pen_name,profile_image,bio,status';
 const ADMIN_FIELDS = 'id,auth_user_id,username,nickname,role,permissions,is_active';
 const PUBLIC_STATES = new Set(['PUBLISHED', 'ONGOING', 'PAUSED', 'COMPLETED']);
-const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ADMIN', 'SUB_ADMIN']);
 const SCHEMA_VERSION = 'p0-20260921';
 
 class ApiError extends Error {
@@ -32,16 +34,7 @@ function validId(value) {
   if (!/^[1-9]\d{0,18}$/.test(String(value))) fail(400, 'INVALID_ID');
   return String(value);
 }
-function allowedAdmin(actor, permission) {
-  const a = actor?.admin;
-  if (!a || a.is_active !== true || !ADMIN_ROLES.has(a.role)) return false;
-  if (a.role === 'SUPER_ADMIN') return true;
-  return Array.isArray(a.permissions) && a.permissions.includes(permission);
-}
 function owns(actor, work) { return activeAuthor(actor?.author) && equalId(actor.author.id, work.author_id); }
-function authorizeContent(actor, work) {
-  if (!allowedAdmin(actor, 'CONTENT_WRITE') && !owns(actor, work)) fail(403, 'CONTENT_FORBIDDEN');
-}
 async function readBody(request) {
   if (!request.headers.get('content-type')?.includes('application/json')) fail(415, 'JSON_REQUIRED');
   if (Number(request.headers.get('content-length')) > 1_000_000) fail(413, 'BODY_TOO_LARGE');
@@ -63,20 +56,6 @@ async function readBody(request) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) fail(400, 'INVALID_JSON');
   return body;
 }
-function validatePatch(body, fields) {
-  if (!Object.keys(body).length || Object.keys(body).some(k => !fields.includes(k))) fail(400, 'FIELD_NOT_ALLOWED');
-  for (const key of ['title', 'description', 'author_comment', 'content', 'cover_image']) {
-    if (key in body && (typeof body[key] !== 'string' || (key === 'title' && (!body[key].trim() || body[key].length > 200)))) fail(400, 'INVALID_FIELD');
-  }
-  if ('cover_image' in body && body.cover_image && !/^(https:\/\/|\/(?!\/))/.test(body.cover_image)) fail(400, 'INVALID_IMAGE_URL');
-  for (const key of ['is_free', 'is_ad_free', 'is_top_recommended', 'is_popular_work', 'is_new_work', 'is_completed']) {
-    if (key in body && typeof body[key] !== 'boolean') fail(400, 'INVALID_FIELD');
-  }
-  if ('image_urls' in body && (!Array.isArray(body.image_urls) || body.image_urls.length > 200 || body.image_urls.some(x => typeof x !== 'string' || !/^https:\/\//.test(x)))) fail(400, 'INVALID_IMAGE_URL');
-  if ('genre' in body && (!Array.isArray(body.genre) || body.genre.some(x => typeof x !== 'string'))) fail(400, 'INVALID_FIELD');
-  return body;
-}
-
 export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   return async function handle(request, env) {
     const requestId = crypto.randomUUID();
@@ -164,6 +143,14 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         return episode;
       }
       const path = url.pathname;
+      if (path === '/api/v2/catalog' || path === '/api/v2/reader/hub' ||
+          path === '/api/v2/creator/operations') {
+        return reply(await stage8Api({request,env,actor,db,readBody,fail}));
+      }
+      if (path === '/api/v2/admin/operations')
+        return reply(await stage9Api({request,env,actor,db,readBody,fail}));
+      if (path === '/api/v2/appeals')
+        return reply(await stage9AppealApi({request,env,actor,db,readBody,fail}));
       if (path === '/api/v2/creator/publications' || path.startsWith('/api/v2/creator/publications/')) {
         return reply(await creatorPublicationApi({ request, env, actor, db, readBody, fail }));
       }
@@ -200,35 +187,14 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         return reply({ ...result, actor: await actor() });
       }
       if (path === '/api/v2/me' && request.method === 'GET') return reply(await actor());
-      if (path === '/api/v2/admin/readers' && request.method === 'GET') {
-        if (!allowedAdmin(await actor(), 'USERS_READ')) fail(403, 'ADMIN_FORBIDDEN');
-        return reply({ readers: await db('readers', { select: 'id,username,nickname,status,is_adult_verified,points,created_at', order: 'id.asc', limit: '100' }) });
-      }
-      if (path === '/api/v2/admin/config' && request.method === 'GET') {
-        if (!allowedAdmin(await actor(), 'CONFIG_READ')) fail(403, 'ADMIN_FORBIDDEN');
-        // No provider secret values, even for administrators.
-        return reply({ config: one(await db('system_config', { select: 'id,service_name,maintenance_mode,minimum_settlement_amount,reward_ad_enabled', limit: '1' })) });
-      }
-      if (path === '/api/v2/works' && request.method === 'GET') {
-        return reply({ works: await db('works', { select: WORK_FIELDS, status: 'in.(PUBLISHED,ONGOING,PAUSED,COMPLETED)', order: 'id.asc', limit: '100' }) });
-      }
-      let match = path.match(/^\/api\/v2\/works\/(\d+)$/);
-      if (match && request.method === 'PATCH') {
-        const who = await actor(); const work = await getWork(match[1]); authorizeContent(who, work);
-        const admin = allowedAdmin(who, 'CONTENT_WRITE');
-        if (!admin && env.AUTHOR_WORKS_ENABLED === 'true') fail(409, 'USE_CREATOR_WORKS_API');
-        const fields = ['title', 'description', 'cover_image', 'genre'];
-        if (admin) fields.push('status', 'is_top_recommended', 'is_popular_work', 'is_new_work', 'is_completed');
-        const body = validatePatch(await readBody(request), fields);
-        if ('status' in body && !['DRAFT', 'REVIEW_REQUESTED', ...PUBLIC_STATES, 'HIDDEN'].includes(body.status)) fail(400, 'INVALID_STATUS');
-        const saved = one(await db('works', { id: 'eq.' + work.id, ...(!admin ? { author_id: 'eq.' + who.author.id } : {}), select: WORK_FIELDS }, { method: 'PATCH', body }));
-        if (!saved) fail(409, 'WRITE_NOT_APPLIED');
-        return reply({ work: saved });
-      }
-      match = path.match(/^\/api\/v2\/episodes\/(\d+)\/content$/);
+      // Superseded endpoints cannot bypass the versioned creator and administrator RPCs.
+      if (path === '/api/v2/admin/readers' || path === '/api/v2/admin/config' ||
+          path === '/api/v2/works' || /^\/api\/v2\/works\/\d+$/.test(path))
+        fail(410, 'LEGACY_API_CLOSED');
+      let match = path.match(/^\/api\/v2\/episodes\/(\d+)\/content$/);
       if (match && request.method === 'GET') {
         const who = await actor(false); const episode = await getEpisode(match[1]); const work = await getWork(episode.work_id);
-        const editor = allowedAdmin(who, 'CONTENT_WRITE') || owns(who, work);
+        const editor = owns(who, work);
         if (!editor) {
           if (!isPublished(work, episode, now())) fail(404, 'EPISODE_NOT_FOUND');
           if (isAdult(work)) {
@@ -252,24 +218,8 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         if (!content) fail(404, 'CONTENT_NOT_FOUND');
         return reply({ success: true, episode: { ...episode, ...content } });
       }
-      match = path.match(/^\/api\/v2\/episodes\/(\d+)$/);
-      if (match && request.method === 'PATCH') {
-        const who = await actor(); const episode = await getEpisode(match[1]); const work = await getWork(episode.work_id); authorizeContent(who, work);
-        const admin = allowedAdmin(who, 'CONTENT_WRITE');
-        // Published body changes require admin review; an owner may edit only unpublished drafts.
-        if (!admin && env.AUTHOR_WORKS_ENABLED === 'true') fail(503, 'AUTHOR_EDITOR_NOT_ACTIVATED');
-        if (!admin && episode.status !== 'DRAFT') fail(403, 'DRAFT_ONLY');
-        const body = validatePatch(await readBody(request), ['title', 'content', 'image_urls', 'author_comment', ...(admin ? ['status', 'is_free', 'is_ad_free', 'access_policy'] : [])]);
-        if ('status' in body && !['DRAFT', 'PUBLISHED', 'HIDDEN', 'REVIEW_REQUESTED'].includes(body.status)) fail(400, 'INVALID_STATUS');
-        if ('is_free' in body || 'access_policy' in body || 'is_ad_free' in body) {
-          if (typeof body.is_free !== 'boolean' || !['FREE', 'REWARDED_AD', 'PAID'].includes(body.access_policy) || body.is_free !== (body.access_policy === 'FREE')) fail(400, 'INVALID_ACCESS_POLICY');
-          body.is_ad_free = body.is_free;
-        }
-        // Migration trigger mirrors content into its protected table in the same DB transaction.
-        const saved = one(await db('episodes', { id: 'eq.' + episode.id, work_id: 'eq.' + work.id, ...(!admin ? { status: 'eq.DRAFT' } : {}), select: EPISODE_FIELDS }, { method: 'PATCH', body }));
-        if (!saved) fail(409, 'WRITE_NOT_APPLIED');
-        return reply({ episode: saved });
-      }
+      if (/^\/api\/v2\/episodes\/\d+$/.test(path))
+        fail(410, 'LEGACY_API_CLOSED');
       if (/^\/api\/v2\/(payments|ads|adult-verification|points|support|settlements)(\/|$)/.test(path)) {
         await actor(); fail(503, 'PROVIDER_AND_LEDGER_NOT_READY');
       }

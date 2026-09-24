@@ -1,5 +1,11 @@
 # 서비스 런칭 점검 — 2026-09-21
 
+## 2026-09-24 추가 판정
+
+과거 점검 기록은 아래에 보존한다. [12단계 출시 기록](docs/launch/release-record.md)의 현재 판정은 **NO GO**이며 제한 베타·운영 전환·공개 오픈을 실행하지 않았다. 10단계 실환경 전환과 11단계 브라우저·기기·Storage·복원·알림 인수가 남아 있다. 로컬 `npm test`와 빌드는 통과했으나 실제 서비스 권한·원고 보존을 증명하지 않는다.
+
+읽기 전용 운영 주소 확인에서 홈페이지 HEAD 200, 공개 설정 GET 200(`authorPublishEnabled=false`, 다른 새 플래그는 응답에 없음), v2 health GET JSON 503을 확인했다. 원격 바인딩·DDL·백업·배포 ID는 확인하지 못했고 변경하지 않았다. 광고·포인트·후원·정산/출금 UI와 새 v2 API의 503 게이트가 일치하지 않아 고객 대상 오픈 범위도 확정되지 않았다.
+
 ## 판정
 
 운영 환경 정정: 실제 서비스는 **Cloudflare Pages — https://webnovels-db4.pages.dev/** 이다. 아래 과거 Vercel 확인 기록은 별도 배포에 대한 것이며 Cloudflare 운영 검증을 의미하지 않는다. 현재 P0 실행 상태는 `P0_IMPLEMENTATION_PLAN.md`, Cloudflare 전환 절차는 `CLOUDFLARE_DEPLOYMENT.md`를 기준으로 한다.

@@ -18,19 +18,19 @@
 
 | 단계 | 실행 문서 | 목표 | 선행 조건 | 상태 |
 |---|---|---|---|---|
-| 6e1 | [improve1.md](improve1.md) | 기능·권한·삭제 대상·데이터 기준선 확정 | 분석 문서 | 완료 (2026-09-23) |
+| 1 | [improve1.md](improve1.md) | 기능·권한·삭제 대상·데이터 기준선 확정 | 분석 문서 | 완료 (2026-09-23) |
 | 2 | [improve2.md](improve2.md) | DB·계정 이관·백업·초안/공개본 모델 | 1 | 진행 중: 로컬 구현·검증 완료, 실환경 확인 대기 |
 | 3 | [improve3.md](improve3.md) | Auth·작가가입·서버 권한·API 기반 | 2 | 진행 중: 로컬 구현·검증 완료, 메일·실환경 통합 대기 |
 | 4 | [improve4.md](improve4.md) | 작가 전용 작품 등록·수정·목록 | 3 | 진행 중: 로컬 구현·검증 완료, 실환경 통합 대기 |
 | 5 | [improve5.md](improve5.md) | 원고 자동저장·복구·동시 편집 안정화 | 4 | 로컬 구현·검증 완료 / 실환경 대기 |
 | 6 | [improve6.md](improve6.md) | 파일 가져오기·표지 업로드·내보내기 | 5 | 로컬 구현·검증 완료 / 실환경 대기 |
 | 7 | [improve7.md](improve7.md) | 미리보기·게시·예약·공개본 수정 | 6 | 진행 중: 로컬 구현·검증 완료, DB·Cron·브라우저 인수 대기 |
-| 8 | [improve8.md](improve8.md) | 작가 직접 연재·댓글 관리 및 독자 연결 | 7 | 미착수 |
-| 9 | [improve9.md](improve9.md) | 관리자 중복 기능 삭제·운영 화면 통합 | 8 | 미착수 |
-| 10 | [improve10.md](improve10.md) | 전체 클라이언트 API 전환·RLS·구 경로 폐쇄 | 9 | 미착수 |
-| 11 | [improve11.md](improve11.md) | 회귀·보안·모바일·성능·운영 검증 | 10 | 미착수 |
-| 12 | [improve12.md](improve12.md) | 제한 베타·실배포·오픈 판정 | 11 | 미착수 |
-| 13 | [improve13.md](improve13.md) | 수익화·성인·확장 기능의 별도 출시 | 기본은 12 이후 | 미착수·초기 오픈 제외 |
+| 8 | [improve8.md](improve8.md) | 작가 직접 연재·댓글 관리 및 독자 연결 | 7 | 로컬 구현·검증 완료 / 실환경 대기 |
+| 9 | [improve9.md](improve9.md) | 관리자 중복 기능 삭제·운영 화면 통합 | 8 | 핵심 로컬 구현·검증 완료 / 계정 복구·실환경 대기 |
+| 10 | [improve10.md](improve10.md) | 전체 클라이언트 API 전환·RLS·구 경로 폐쇄 | 9 | 진행 중: 일부 경로 폐쇄·합성 DB 검증, 실환경 전환 대기 |
+| 11 | [improve11.md](improve11.md) | 회귀·보안·모바일·성능·운영 검증 | 10 | 진행 중: 로컬 품질 게이트 구축, 실환경 인수·운영 훈련 대기 |
+| 12 | [improve12.md](improve12.md) | 제한 베타·실배포·오픈 판정 | 11 | 진행 중: 출시 기준선 기록, NO GO·배포 미실행 |
+| 13 | [improve13.md](improve13.md) | 수익화·성인·확장 기능의 별도 출시 | 기본은 12 이후 | 로컬 구형 경로 차단·계약 정리, 외부 연동/실환경 미완료 |
 
 **핵심 순서: 작가 기능 구축 → 검증 → 관리자 대행 기능 삭제 → 구 API/DB 경로 폐쇄 → 운영 검증 → 오픈.**
 
@@ -109,3 +109,11 @@
 4단계의 작가 전용 작품 관리·서버 API·005 SQL을 구현했다. [작품 관리 계약](docs/launch/creator-works-contract.md)에 휴지통/예약 취소/복구와 미검증 실환경 조건을 기록했다. 5단계에서 원고 편집·자동저장을 이어 구현했다.
 
 5단계 고정 원고 ID·탭별 기기 사본·revision 조건부 저장·충돌/버전 복구 및 006 SQL의 로컬 구현과 검증을 마쳤다. [원고 계약](docs/launch/creator-drafts-contract.md)에 실제 DB/브라우저 인수를 남겼다. 6단계 파일 가져오기·표지·내보내기 및 007 SQL도 로컬 구현·검증했다. [파일 계약](docs/launch/creator-files-contract.md)에 실제 Storage·Images·브라우저 인수 조건을 남겼다. 7단계 미리보기·무료 게시·예약 실행·공개본 수정 및 008 SQL의 로컬 구현·검증을 마쳤다. [게시 계약](docs/launch/creator-publication-contract.md)에 실제 DB·Cron·브라우저·운영 알림 인수를 남겼다.
+
+10단계는 [전환 감사](docs/launch/stage10-cutover-audit.md)에 따라 구 API·독자 프로필의 일부 경로를 닫고 합성 DB에서 P0 잠금을 검증하는 중이다. 직접 DB/Storage 경로와 실제 스키마·백업·스테이징 리허설이 남아 있으므로 완료 판정과 플래그 활성화를 보류한다.
+
+11단계는 안전한 CI 회귀 묶음, Cloudflare Functions 소스 번들 검사, 일부 저장형 XSS 수정과 긴 원고 Diff 상한을 로컬에서 검증했다. [인수 결과](docs/launch/acceptance-results.md)와 [출시 게이트](docs/launch/release-checklist.md)에 실제 브라우저·모바일·Storage·운영 복원/알림 및 10단계 선행 조건을 미실행으로 기록했다.
+
+12단계는 [출시 기록](docs/launch/release-record.md)에 운영 주소의 읽기 전용 상태, 현재 범위 불일치와 선행 게이트를 기록했다. 10·11단계 완료 근거가 없어 제한 베타·배포·공개 오픈은 실행하지 않았다.
+
+13단계는 무료 오픈 범위에서 구형 광고·후원·정산 브라우저 경로를 닫고 [수익화 계약](docs/launch/monetization-contract.md)을 정리했다. 실제 업체 거래·단일 원장·성인 인증·정산·실환경 검증은 미완료이며, [운영 배포·공개 오픈 이슈](docs/launch/open-issues-after-stage13.md)에 선행 조건을 모았다.
