@@ -69,11 +69,13 @@ test('browser roles cannot invoke account RPCs or change mappings; exposed priva
  }finally{await db.close();}
 });
 const token='eyJtest.eyJtest.signature';
-async function invoke(path,{method='GET',data,origin='https://example.test',identity=admin,ready=true,syncStatus=200,headers={},env={}}={}){
+async function invoke(path,{method='GET',data,origin='https://example.test',identity=admin,ready=true,syncStatus=200,redirect=false,headers={},env={}}={}){
  const calls=[];
  const request=new Request('https://example.test'+path,{method,headers:{Authorization:'Bearer '+token,...(data?{'Content-Type':'application/json',Origin:origin}:{}),...headers},...(data?{body:JSON.stringify(data)}:{})});
  const response=await accountApi(request,{SUPABASE_URL:'https://example.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_test',...env},{fetchImpl:async(url,options)=>{
+   assert.equal(options.redirect,'manual','Worker-compatible redirect prevention is required');
    const route=new URL(url).pathname;calls.push({route,options});
+   if(redirect)return new Response(null,{status:302,headers:{Location:'https://external.invalid'}});
    if(route.endsWith('launch_accounts_ready'))return Response.json(ready);
    if(route==='/auth/v1/user')return Response.json({id:identity,email_confirmed_at:'2026-09-25'});
    if(route.endsWith('launch_account_actor'))return Response.json({userId:identity,admin:identity===admin?{role:'SUPER_ADMIN',is_active:true}:null,author:identity===author?{id:'1'}:null});
@@ -93,6 +95,7 @@ test('account rollout validates real Auth and DB readiness while content routes 
  assert.equal((await invoke('/api/v2/creator/works')).response,null);
  assert.equal((await invoke('/api/v2/me',{env:{P0_API_ENABLED:'true'}})).response,null);
  assert.equal((await invoke('/api/v2/accounts/health',{env:{ACCOUNT_API_DISABLED:'true'}})).response.status,503);
+ const redirected=await invoke('/api/v2/accounts/health',{redirect:true});assert.equal(redirected.response.status,503);assert.equal(redirected.calls.length,1);
 });
 test('admin mutations reject foreign origins and privilege fields, and retryable ban failure keeps account disabled',async()=>{
  const data={kind:'author',id:'1',revision:'1',reason:'Remove virtual account'};

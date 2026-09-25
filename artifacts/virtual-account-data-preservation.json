@@ -1,0 +1,218 @@
+{
+  "checkedAt": "2026-09-25T03:29:18.668Z",
+  "scope": "All public table rows; exclude only intended auth_user_id profile mapping",
+  "tables": 42,
+  "allPreserved": true,
+  "details": [
+    {
+      "table": "ad_events",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "ad_units",
+      "rows": 2,
+      "preserved": true
+    },
+    {
+      "table": "admin_users",
+      "rows": 4,
+      "preserved": true
+    },
+    {
+      "table": "audit_logs",
+      "rows": 3,
+      "preserved": true
+    },
+    {
+      "table": "author_earnings",
+      "rows": 90,
+      "preserved": true
+    },
+    {
+      "table": "author_private_profiles",
+      "rows": 30,
+      "preserved": true
+    },
+    {
+      "table": "author_settlement_accounts",
+      "rows": 10,
+      "preserved": true
+    },
+    {
+      "table": "author_settlements",
+      "rows": 16,
+      "preserved": true
+    },
+    {
+      "table": "author_subscriptions",
+      "rows": 14,
+      "preserved": true
+    },
+    {
+      "table": "authors",
+      "rows": 30,
+      "preserved": true
+    },
+    {
+      "table": "comment_likes",
+      "rows": 5,
+      "preserved": true
+    },
+    {
+      "table": "comments",
+      "rows": 22,
+      "preserved": true
+    },
+    {
+      "table": "content_reviews",
+      "rows": 12,
+      "preserved": true
+    },
+    {
+      "table": "creator_comment_blocks",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "creator_supports",
+      "rows": 8,
+      "preserved": true
+    },
+    {
+      "table": "earning_ledger",
+      "rows": 11,
+      "preserved": true
+    },
+    {
+      "table": "episode_contents",
+      "rows": 180,
+      "preserved": true
+    },
+    {
+      "table": "episode_draft_revisions",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "episode_drafts",
+      "rows": 2,
+      "preserved": true
+    },
+    {
+      "table": "episode_panels",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "episode_unlocks",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "episodes",
+      "rows": 180,
+      "preserved": true
+    },
+    {
+      "table": "events",
+      "rows": 2,
+      "preserved": true
+    },
+    {
+      "table": "fan_meeting_tickets",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "fan_meetings",
+      "rows": 1,
+      "preserved": true
+    },
+    {
+      "table": "favorites",
+      "rows": 17,
+      "preserved": true
+    },
+    {
+      "table": "golden_best_snapshots",
+      "rows": 5,
+      "preserved": true
+    },
+    {
+      "table": "goods",
+      "rows": 2,
+      "preserved": true
+    },
+    {
+      "table": "goods_orders",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "platform_stats",
+      "rows": 1,
+      "preserved": true
+    },
+    {
+      "table": "point_accounts",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "point_transactions",
+      "rows": 8,
+      "preserved": true
+    },
+    {
+      "table": "reader_events",
+      "rows": 80,
+      "preserved": true
+    },
+    {
+      "table": "readers",
+      "rows": 11,
+      "preserved": true
+    },
+    {
+      "table": "reading_history",
+      "rows": 13,
+      "preserved": true
+    },
+    {
+      "table": "reports",
+      "rows": 8,
+      "preserved": true
+    },
+    {
+      "table": "revenue_events",
+      "rows": 4,
+      "preserved": true
+    },
+    {
+      "table": "revenue_ledger",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "revenue_periods",
+      "rows": 0,
+      "preserved": true
+    },
+    {
+      "table": "system_config",
+      "rows": 1,
+      "preserved": true
+    },
+    {
+      "table": "work_comment_policies",
+      "rows": 30,
+      "preserved": true
+    },
+    {
+      "table": "works",
+      "rows": 30,
+      "preserved": true
+    }
+  ]
+}

@@ -55,3 +55,5 @@ revision이 다른 동시 요청은 409로 거절한다. Auth ban 동기화 실�
 `test:launch`에 가상 계정 DB/API 권한·삭제 보존·동기화 실패·revision·Origin 검증을 포함했다. 기존 Auth·명칭·P0·관리자 운영 테스트와 TypeScript를 함께 실행한다.
 
 브라우저 인수는 실행하지 않았다. 실제 Supabase API, 로컬 핸들러, 격리 DB 검증을 구분한다. 전체 공개 오픈에는 여전히 78개 본문 확인, 콘텐츠 SQL 전환, 격리 Supabase 전체 복원, SMTP/redirect 설정 및 기능별 인수가 필요하다. 공통 비밀번호는 운영자가 요청한 가상 계정에만 적용했다.
+
+첫 배포에서 Cloudflare가 `redirect: error`를 지원하지 않아 호출 전에 503이 발생한 것을 확인했다. [workerd 구현](https://github.com/cloudflare/workerd/blob/main/src/workerd/api/http.h)에 맞춰 `manual`과 3xx 명시 거절로 수정했다. 비밀 헤더를 다른 호스트로 전달하지 않으며 이 동작을 회귀 테스트에 포함했다.

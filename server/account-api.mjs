@@ -19,9 +19,11 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
     }
     const remote=async(route,options={})=>{
       let response;
-      try {response=await fetchImpl(new URL(route,base),{...options,redirect:'error',signal:AbortSignal.timeout(12000),
+      // workerd accepts manual/follow; reject redirects explicitly below.
+      try {response=await fetchImpl(new URL(route,base),{...options,redirect:'manual',signal:AbortSignal.timeout(12000),
         headers:{apikey:secret,...(secret.startsWith('eyJ')?{Authorization:'Bearer '+secret}:{}),'Content-Type':'application/json',...options.headers}});}
       catch{fail(503,'AUTH_UNAVAILABLE');}
+      if(response.status>=300&&response.status<400)fail(503,'AUTH_UNAVAILABLE');
       return response;
     };
     const rpc=async(name,body={})=>{
