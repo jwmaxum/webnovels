@@ -1,11 +1,12 @@
 // Bounded account rollout with a separate, operator-enabled database readiness gate.
 // Content, publication and signup continue through the existing P0 gates.
+import {adminConsoleApi} from './admin-console-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch}={}) {
   const url=new URL(request.url),path=url.pathname;
   const me=path==='/api/v2/me'&&env.P0_API_ENABLED!=='true';
-  if(!me&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts'].includes(path))return null;
+  if(!me&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
@@ -51,6 +52,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
       if(request.method!=='GET')fail(405,'METHOD_NOT_ALLOWED');
       return reply({...actor,accountServiceReady:true,accountServiceOnly:true});
     }
+    if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail}));
     if(!actor.admin?.is_active||actor.admin.role!=='SUPER_ADMIN')fail(403,'ADMIN_FORBIDDEN');
     if([...url.searchParams.keys()].some(k=>k!=='action'))fail(400,'INVALID_QUERY');
     const action=url.searchParams.get('action')||'list';

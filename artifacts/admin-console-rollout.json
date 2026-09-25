@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-09-25T10:12:51.180Z",
+  "snapshotSha256": "bf1854edfa69169ec340d0588293d637a209b764f0206cb10c6ff92f9bd0b863",
+  "migrationSha256": "b7b6cd0f439ad78dd966c0cd3b2b0bfe8ea09955b3b0ef980adbff76671af3fd",
+  "localProductionDataRehearsal": true,
+  "publicDataPreserved": true,
+  "counts": {
+    "dashboard": 30,
+    "works": 30,
+    "episodes": 180,
+    "accounts": 30,
+    "cases": 12,
+    "roles": 4,
+    "settlements": 16,
+    "audit": 1
+  },
+  "productionApplied": true,
+  "browserAcceptance": false,
+  "productionRoleChangesTested": false,
+  "productionRpcVerifiedAt": "2026-09-25T10:14:11.860Z",
+  "productionCounts": {
+    "dashboard": 30,
+    "works": 30,
+    "episodes": 180,
+    "accounts": 30,
+    "accounts-readers": 11,
+    "cases": 12,
+    "roles": 4,
+    "settlements": 16,
+    "audit": 1
+  },
+  "productionPublicTablesUnchanged": 42
+}

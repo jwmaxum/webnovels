@@ -5580,6 +5580,42 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .main-view.account-only > :not(.account-access-summary) {display:none!important;}
 .account-access-summary p {margin:1rem 0;}
 .account-access-summary button {margin-right:.75rem;}
-#adminOperationsNav {display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+#adminOperationsShell {max-width:1600px;}
+#adminOperationsShell[hidden] {display:none;}
+.cms-header {display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:24px;}
+.cms-header h1 {font-size:clamp(1.5rem,3vw,2.1rem);margin:4px 0 10px;}
+.cms-eyebrow {font-size:.75rem;font-weight:700;letter-spacing:.13em;color:var(--primary-color,#ff358c);}
+#adminConsoleIdentity {color:var(--text-muted,#aaa);font-size:.9rem;}
+.cms-layout {display:grid;grid-template-columns:230px minmax(0,1fr);gap:24px;align-items:start;}
+.cms-sidebar {padding:16px;border-radius:16px;position:sticky;top:20px;}
+#adminOperationsNav {display:flex;flex-direction:column;gap:4px;}
+.cms-nav-group {font-size:.75rem;color:var(--text-muted,#aaa);padding:14px 12px 4px;margin:0;}
+.cms-nav-link {text-align:left;border:1px solid transparent;border-radius:9px;padding:11px 12px;color:inherit;background:transparent;cursor:pointer;font:inherit;font-size:.9rem;}
+.cms-nav-link:hover {background:rgba(255,255,255,.05);}
+.cms-nav-link.active {background:rgba(255,45,130,.12);border-color:rgba(255,45,130,.35);color:#ff68a7;font-weight:700;}
+.cms-nav-link:focus-visible,.cms-toolbar button:focus-visible {outline:2px solid #ff68a7;outline-offset:3px;}
+#adminOperationsContent {min-width:0;min-height:520px;}
+#adminOperationsContent h2 {font-size:1.4rem;margin-bottom:20px;}
+#adminOperationsContent h3 {margin:18px 0 12px;}
+.cms-toolbar,.cms-search {display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0;}
+.cms-search {margin:0;}
+.cms-search input,.cms-role form>label input {background:var(--bg-secondary,#23232c);color:inherit;border:1px solid var(--border-color,#45454f);border-radius:8px;padding:10px;max-width:100%;}
+.cms-notice {padding:12px 14px;border-left:3px solid #7161a8;background:rgba(128,110,180,.08);color:var(--text-muted,#c1bfcb);font-size:.9rem;line-height:1.7;margin:14px 0;}
+.cms-notice:empty {display:none;}
+.cms-metrics {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.cms-metric {display:flex;flex-direction:column;gap:12px;padding:20px;border:1px solid var(--border-color,#353541);border-radius:12px;}
+.cms-metric span {color:var(--text-muted,#aaa);font-size:.85rem;}
+.cms-metric strong {font-size:1.9rem;}
+.cms-table-wrap {overflow-x:auto;margin:16px 0;}
+.cms-table {width:100%;border-collapse:collapse;font-size:.88rem;text-align:left;}
+.cms-table th,.cms-table td {padding:13px 12px;border-bottom:1px solid var(--border-color,#353541);vertical-align:top;overflow-wrap:anywhere;min-width:80px;}
+.cms-table th {font-weight:600;color:var(--text-muted,#aaa);white-space:nowrap;}
+.cms-table tbody tr:hover {background:rgba(255,255,255,.025);}
+.cms-permissions {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0;}
+.cms-permissions label {display:flex;gap:8px;align-items:center;font-size:.88rem;}
+.cms-role form>label {display:block;margin:14px 0;font-size:.9rem;}
+.cms-role form>label input {display:block;width:100%;margin-top:8px;}
+@media(max-width:1000px){.cms-layout {grid-template-columns:190px minmax(0,1fr);gap:14px;}.cms-permissions {grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:700px){.cms-header {align-items:flex-start;flex-direction:column;gap:8px;}.cms-layout {grid-template-columns:1fr;}.cms-sidebar {position:static;padding:12px;}#adminOperationsNav {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}.cms-nav-group {grid-column:1/-1;padding-top:8px;}.cms-nav-link {padding:10px 8px;font-size:.85rem;}.cms-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}.cms-permissions {grid-template-columns:1fr;}.cms-search {width:100%;}.cms-search input {flex:1;min-width:0;}}
 #adminOperationsContent .co-panel button {margin-right:8px;margin-bottom:8px;}
 [data-library-tab="appeals"][hidden] {display:none;}

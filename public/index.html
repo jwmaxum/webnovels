@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=110">
+  <link rel="stylesheet" href="/styles.css?v=112">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -991,10 +991,14 @@
       <!-- View 7: Admin CMS Integration (Sidebar + 16 Panel Content Area) -->
       <section id="view-admin-cms" class="main-view">
         <div id="adminOperationsShell" class="container section-padding" hidden>
-          <header class="card glass-panel p-4 mb-4"><h2>운영 관리</h2>
-            <p>계정 지원, 신고·검수, 작품 노출 제한과 기록을 관리합니다.</p>
-            <nav id="adminOperationsNav" aria-label="운영 메뉴"></nav></header>
-          <div id="adminOperationsContent" class="card glass-panel p-4" role="status"></div>
+          <header class="cms-header">
+            <div><p class="cms-eyebrow">WEBNOVELS ADMIN</p><h1>서비스 운영 CMS</h1><p id="adminConsoleIdentity"></p></div>
+            <div class="cms-toolbar"><a class="btn btn-outline btn-sm" href="/home">사이트 보기</a><button type="button" class="btn btn-outline btn-sm" onclick="handleAdminLogoutProcess()">로그아웃</button></div>
+          </header>
+          <div class="cms-layout">
+            <aside class="cms-sidebar glass-panel"><nav id="adminOperationsNav" aria-label="관리자 운영 메뉴"></nav></aside>
+            <div id="adminOperationsContent" class="card glass-panel p-4" aria-label="관리자 작업 영역"></div>
+          </div>
         </div>
         <div class="container section-padding">
 
@@ -2456,7 +2460,8 @@
   <script src="/js/creator/creator-works.js?v=106"></script>
   <script src="/js/creator/creator-operations.js?v=108"></script>
   <script src="/js/admin/admin.js?v=102"></script>
-  <script src="/js/admin/admin-operations.js?v=111"></script>
+  <script src="/js/admin/admin-console.js?v=112"></script>
+  <script src="/js/admin/admin-operations.js?v=112"></script>
   <!-- Supabase Extension & Bootstrap Entry -->
   <script src="/supabase-public-config.js?v=1"></script>
   <script src="/api/public-config.js"></script>

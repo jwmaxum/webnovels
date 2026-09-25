@@ -1,5 +1,7 @@
 # 9단계 관리자 운영 계약
 
+2026-09-25 후속 요청: [관리자 CMS 메뉴 복구](admin-console-rollout.md). 전체 콘텐츠 전환 전에도 CMS 목록·기존 정산 기록을 조회하고, 현재 비밀번호 재확인 후 기존 서브관리자의 업무 권한을 설정하는 제한된 경로를 추가한다. 아래 초기 메뉴 제거 기록은 당시 범위이며 새 정산 메뉴는 조회 전용이다. 기존 stage9 기능 플래그와 지급 차단은 유지한다.
+
 ## 적용 경계
 
 `ADMIN_OPERATIONS_ENABLED`와 `ADMIN_ROLE_CHANGES_ENABLED`는 기본 `false`다. `authoring-009`까지 실제 DB에 적용되고 4~8단계 작가·독자 대체 경로가 계정별로 검증된 뒤, 기존 검수·신고·감사 테이블 형태와 복원 백업을 대조하여 `010_admin_operations.sql`을 검토 적용한다. 검토 세션에 `webnovels.authoring_apply_verified=true`를 설정해야 실행된다. 합성 PGlite 통과는 운영 DB 적용 증거가 아니다. 운영 플래그 활성화는 별도 인수 후 수행한다.
