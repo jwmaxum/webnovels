@@ -29,5 +29,5 @@ test('Cloudflare legacy API returns explicit error instead of static HTML', asyn
 });
 test('new API remains unavailable until DB and Cloudflare cutover are ready', async () => {
   const response = await secureRequest({ request: new Request('https://webnovels-db4.pages.dev/api/v2/me'), env: {} });
-  assert.equal(response.status, 503); assert.equal((await response.json()).error, 'SECURE_API_NOT_ACTIVATED');
+  assert.equal(response.status, 503); assert.equal((await response.json()).error, 'SERVER_CONFIGURATION_REQUIRED');
 });

@@ -5573,6 +5573,13 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .co-episode,.co-comment,.co-panel {padding:12px;border:1px solid var(--border-color);border-radius:8px;margin:8px 0;}
 .co-episode {display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
 #view-admin-cms.stage9-admin > .container:not(#adminOperationsShell) {display:none;}
+.va-filters {display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0;}
+.va-account {margin:1rem 0;padding:1.25rem;border:1px solid var(--border-color, #353541);border-radius:12px;}
+.va-account form label {display:block;margin:.7rem 0;}
+.va-account form input,.va-account form textarea {display:block;width:100%;margin-top:.4rem;}
+.main-view.account-only > :not(.account-access-summary) {display:none!important;}
+.account-access-summary p {margin:1rem 0;}
+.account-access-summary button {margin-right:.75rem;}
 #adminOperationsNav {display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
 #adminOperationsContent .co-panel button {margin-right:8px;margin-bottom:8px;}
 [data-library-tab="appeals"][hidden] {display:none;}

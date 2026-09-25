@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-09-25T03:04:59.560Z",
+  "backupSha256": "47b8f2627802aa7dd1be7e623e625fc6ea26d80a7c50cadf50a6571076cfb035",
+  "schemaSha256": "868b77462c51c63916bf3ce661280d15b09274cf7fe25a459046cb2857d60ac7",
+  "linkingSha256": "cc2857675b30f987bed52625b50facedbd136678f17aa27c28531c08e6ec24c0",
+  "virtualAuthors": 30,
+  "virtualReaders": 10,
+  "administrator": 1,
+  "localRealDataRehearsal": true,
+  "productionApplied": true,
+  "appliedAt": "2026-09-25T03:05:02.525Z",
+  "schemaVerifiedAt": "2026-09-25T03:26:23.774Z"
+}

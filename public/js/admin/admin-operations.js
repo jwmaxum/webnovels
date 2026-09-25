@@ -1,7 +1,7 @@
 // Stage 9 administrator operations. The old console remains dormant until cutover.
 (function(){
   'use strict';
-  const active=()=>window.WEBNOVELS_CONFIG?.adminOperationsEnabled===true;
+  const active=()=>window.WEBNOVELS_CONFIG?.adminOperationsEnabled===true||!!actor()?.accountServiceReady;
   const actor=()=>window.WebNovelsAuth?.getActor();
   const root=()=>document.getElementById('adminOperationsContent');
   const shell=()=>document.getElementById('adminOperationsShell');
@@ -10,7 +10,7 @@
     subadmins:'roles',security:'audit',analytics:'dashboard'};
   const retired=new Set(['admgmt','settlements','revenue','fanmeeting','goods','events']);
   const menu=[['dashboard','현황'],['cases','신고·검수'],['appeals','이의제기'],['accounts','계정 지원'],
-    ['works','작품 운영'],['roles','관리 권한'],['audit','처리 기록']];
+    ['works','작품 운영'],['roles','관리 권한'],['audit','처리 기록'],['virtual-accounts','가상 계정']];
   const sources=[['CONTENT_REVIEW','콘텐츠 검수','CONTENT_REVIEW'],
     ['COMMENT_REPORT','작품 댓글 신고','COMMENT_REPORT'],['REPORT','기존 신고','COMMENT_REPORT']];
   const rolePermissions=[['OPERATIONS_READ','운영 현황'],['ACCOUNTS_READ','계정 조회'],
@@ -21,7 +21,8 @@
   let page='dashboard',kind='reader',source='CONTENT_REVIEW',turn=0;
   const own=()=>actor()?.admin;
   const can=permission=>own()?.role==='SUPER_ADMIN'||own()?.permissions?.includes(permission);
-  const canRead=key=>key==='dashboard'?(can('OPERATIONS_READ')||can('DASHBOARD')):
+  const canRead=key=>key==='virtual-accounts'?own()?.role==='SUPER_ADMIN':
+    !window.WEBNOVELS_CONFIG?.adminOperationsEnabled?false:key==='dashboard'?(can('OPERATIONS_READ')||can('DASHBOARD')):
     key==='cases'?(can('CASE_READ')||can('CONTENT_REVIEW')||can('COMMENT_REPORT')):
     key==='appeals'?can('CASE_READ'):
     key==='accounts'?(can('ACCOUNTS_READ')||can('USER_MGMT')||can('CREATOR_MGMT')):
@@ -66,6 +67,7 @@
         root().replaceChildren();message('이 메뉴는 초기 운영 범위에서 제공하지 않습니다. 기존 기록은 보존됩니다.');return;
       }
       if(!canRead(page)){root().replaceChildren();message('이 화면을 볼 권한이 없습니다.');return;}
+      if(page==='virtual-accounts'){await window.VirtualAccounts.render(root());return;}
       let result;
       if(page==='accounts'){
         if(kind==='reader'&&!can('ACCOUNTS_READ')&&!can('USER_MGMT'))kind='author';
@@ -187,7 +189,9 @@
   }
   function navigate(tab,shouldPushState=true){
     if(!active())return legacySwitch(tab,shouldPushState);
+    window.VirtualAccounts?.reset();
     page=retired.has(tab)?'retired':routes[tab]||tab;
+    if(!window.WEBNOVELS_CONFIG?.adminOperationsEnabled&&page==='accounts')page='virtual-accounts';
     if(!menu.some(([key])=>key===page)&&page!=='retired')page='retired';
     if(tab==='dashboard'&&!canRead('dashboard'))page=menu.find(([key])=>canRead(key))?.[0]||'retired';
     if(tab==='authors'||tab==='creators')kind='author';
@@ -201,5 +205,5 @@
   const legacySwitch=window.switchAdminSubTab,legacyDashboard=window.loadAdminDashboard;
   window.switchAdminSubTab=(tab,shouldPush)=>navigate(tab,shouldPush);
   window.loadAdminDashboard=()=>active()?navigate(location.pathname.split('/')[2]||'dashboard',false):legacyDashboard?.();
-  window.AdminOperations=Object.freeze({active,api,navigate,refresh:render,reset(){turn++;if(root())root().replaceChildren();}});
+  window.AdminOperations=Object.freeze({active,api,navigate,refresh:render,reset(){turn++;window.VirtualAccounts?.reset();if(root())root().replaceChildren();}});
 })();

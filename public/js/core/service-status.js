@@ -22,6 +22,12 @@
         message.textContent = ready
           ? '일부 연재·독자 기능을 준비 중입니다. 이용 가능한 기능은 순차적으로 안내하겠습니다.'
           : '서비스 연결을 준비 중입니다. 로그인·가입·연재 기능은 점검이 끝난 뒤 이용할 수 있습니다.';
+        if(!ready){
+          const accounts=await fetch('/api/v2/accounts/health',{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(8000)});
+          const accountBody=accounts.ok?await accounts.json():null;
+          if(accountBody?.status==='ok'&&accountBody.scope==='accounts')
+            message.textContent='등록된 계정으로 로그인할 수 있습니다. 신규 가입과 연재·독자 기능은 준비 중입니다.';
+        }
       } catch {
         banner.hidden = false;
         message.textContent = '서비스 연결을 확인하지 못했습니다. 잠시 후 다시 확인해 주세요.';

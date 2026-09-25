@@ -1,10 +1,10 @@
 {
-  "verifiedAt": "2026-09-24T23:31:11.925Z",
-  "snapshotSha256": "801764e7fb5b9f29d8395e256bd1bd1a77128f66d869d1513ae5fde1d776e13a",
+  "verifiedAt": "2026-09-25T03:12:34.291Z",
+  "snapshotSha256": "f8295c6f24bd204f59094ac57a63d314ef496c0cbdea0d26f079d68076fef355",
   "engine": "PGlite isolated in-memory PostgreSQL",
   "source": "actual production rows",
-  "tablesVerified": 78,
-  "rowsVerified": 1109,
+  "tablesVerified": 82,
+  "rowsVerified": 1278,
   "publicConstraintsVerified": 98,
   "allRowsMatch": true,
   "fullSchemaRestore": false,
@@ -34,8 +34,8 @@
     {
       "schema": "auth",
       "name": "identities",
-      "rows": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "rows": 42,
+      "sha256": "82eef7256d063ed78b7b19a0c4cc6312f2196bccedb2d16865b6b0c9e585b5a7"
     },
     {
       "schema": "auth",
@@ -46,8 +46,8 @@
     {
       "schema": "auth",
       "name": "mfa_amr_claims",
-      "rows": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "rows": 1,
+      "sha256": "e69dc9c9db0455d09a747b079d84877430febf935cf3ac56206ea6c48773ccf2"
     },
     {
       "schema": "auth",
@@ -106,8 +106,8 @@
     {
       "schema": "auth",
       "name": "refresh_tokens",
-      "rows": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "rows": 1,
+      "sha256": "f2898614dc12a9b3fba603c895cc39c3c44e1cd5d504d94eb8acf4b057339294"
     },
     {
       "schema": "auth",
@@ -142,8 +142,8 @@
     {
       "schema": "auth",
       "name": "sessions",
-      "rows": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "rows": 1,
+      "sha256": "97d21f67be5f748d92d4b9f3d52f547f965ca8f43ed3681fb68370d377c99002"
     },
     {
       "schema": "auth",
@@ -160,8 +160,8 @@
     {
       "schema": "auth",
       "name": "users",
-      "rows": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "rows": 42,
+      "sha256": "c4d2d46bb0964fc37cb073ae94b4b8b4565ae3c5659b3809b7bcf9043298aedc"
     },
     {
       "schema": "auth",
@@ -177,9 +177,33 @@
     },
     {
       "schema": "launch_recovery",
+      "name": "account_audit",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "schema": "launch_recovery",
+      "name": "account_links",
+      "rows": 41,
+      "sha256": "de86c3d7636ba6edf5290465136ca90ae417a30625be947059b0b81088f2e7e6"
+    },
+    {
+      "schema": "launch_recovery",
+      "name": "account_service",
+      "rows": 1,
+      "sha256": "500882bdf458533d243664a9b567c2ad61764b4de324bbb0aa38dbe64ff7c1c0"
+    },
+    {
+      "schema": "launch_recovery",
       "name": "reconciliation_history",
       "rows": 122,
       "sha256": "f9ff330729c197beb68fbd0d2108ebb134b4337eee172cf4311687b4e0aa511e"
+    },
+    {
+      "schema": "launch_recovery",
+      "name": "virtual_accounts",
+      "rows": 40,
+      "sha256": "1f46b105c5219c883c6156a648515878400623c0e9a776c0c5ea46e4f7f1743b"
     },
     {
       "schema": "public",
@@ -197,7 +221,7 @@
       "schema": "public",
       "name": "admin_users",
       "rows": 4,
-      "sha256": "c09d481f12e7bc8a8e2eed89558edad54389a4e978f4f6685810ea1573381c53"
+      "sha256": "d285603af6a8fdb45de879e71a9f56a844aff9cda84a8fd9091999c50759404b"
     },
     {
       "schema": "public",
@@ -239,7 +263,7 @@
       "schema": "public",
       "name": "authors",
       "rows": 30,
-      "sha256": "aac45c5434274a1c17d1c5e86911b251ce1582abd726055fb4ae928a543b6519"
+      "sha256": "83e6785a886a2caa727172f81a48f81d066191b8160a26108ada4e8768611ab8"
     },
     {
       "schema": "public",
@@ -383,7 +407,7 @@
       "schema": "public",
       "name": "readers",
       "rows": 11,
-      "sha256": "622382bb34e7d091367db19c1a943bf72662ef057b458a22a2bdd8d48cd9630d"
+      "sha256": "04467a635f41b222a1d9ef4c49fbdac12d3e85f2ced7f1b0f7373f2b1659f45e"
     },
     {
       "schema": "public",

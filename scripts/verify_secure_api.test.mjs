@@ -23,6 +23,7 @@ function setup(options = {}) {
     assert.equal(init.headers.apikey, env.SUPABASE_SECRET_KEY);
     if (options.dbError && table === options.dbError) return new Response('upstream secret information', { status: 500 });
     if (table === 'consume_authoring_signup_attempt') return Response.json(!options.rateLimited);
+    if (table === 'launch_accounts_ready') return Response.json(false);
     if (table === 'authoring_signup_ready') return Response.json(true);
     if (table === 'complete_authoring_signup') {
       const input = JSON.parse(init.body); tables.authors = [author()]; return Response.json({ created: true });
@@ -46,7 +47,8 @@ const author = (id = 20) => ({ id, auth_user_id: uid, status: 'APPROVED', pen_na
 const admin = (role = 'SUPER_ADMIN', permissions = []) => ({ id: 50, auth_user_id: uid, role, permissions, is_active: true });
 
 test('missing activation or migration cannot open service-role API', async () => {
-  const s = setup(); assert.equal((await s.request('/me', { bindings: { ...env, P0_API_ENABLED: 'false' } })).status, 503); assert.equal(s.calls.length, 0);
+  const s = setup(); assert.equal((await s.request('/me', { bindings: { ...env, P0_API_ENABLED: 'false' } })).status, 503);
+  assert.ok(s.calls.every(c => c.url.pathname.endsWith('launch_accounts_ready')), 'only independent account readiness may be checked');
   s.tables.p0_migration_status[0].phase = 'expanded'; assert.equal((await s.request('/me')).status, 503);
 });
 test('publishable key cannot be used as server authority', async () => {

@@ -18,7 +18,9 @@
     AUTH_IN_PROGRESS: '인증 요청을 처리 중입니다. 잠시 기다려주세요.',
     SECURE_API_NOT_ACTIVATED: '계정 서비스를 준비 중입니다. 점검이 끝난 뒤 다시 이용해주세요.',
     DATABASE_SECURITY_MIGRATION_REQUIRED: '계정 서비스를 점검 중입니다. 잠시 후 다시 이용해주세요.',
-    ONBOARDING_NOT_ACTIVATED: '신규 가입을 준비 중입니다. 서비스 오픈 안내를 확인해주세요.'
+    ONBOARDING_NOT_ACTIVATED: '신규 가입을 준비 중입니다. 서비스 오픈 안내를 확인해주세요.',
+    ACCOUNT_SERVICE_NOT_ACTIVATED: '계정 서비스를 준비 중입니다. 잠시 후 다시 시도해주세요.',
+    AUTH_SYNC_REQUIRED: '계정의 인증 상태를 다시 동기화해야 합니다. 관리자에게 문의해주세요.'
   };
   function error(code, status, requestId) { return Object.assign(new Error(messages[code] || '인증 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.'), { code, status, requestId }); }
   function sdk() {

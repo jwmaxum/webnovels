@@ -2,6 +2,8 @@
 
 2026-09-25. 운영 프로젝트 `ghwabesnydktumeyejnm`, Pages `webnovels`.
 
+후속 계정 작업: 명시 요청에 따라 가상 작가 30·독자 10과 직접 생성한 최고 관리자 1명을 Auth에 연결했다. [계정 인증·관리 적용 기록](virtual-accounts-rollout.md)을 우선 참고한다. 본문·콘텐츠 서비스의 남은 전환 조건은 계속 적용된다.
+
 ## 현재 결과
 
 | 항목 | 실제 수행 결과 |
@@ -11,10 +13,10 @@
 | 보류 본문 | **78건**의 빈 본문과 이미지 참조, 상대 저장소의 예시문을 모두 보존했다. 현재 유형은 NOVEL 36건 / WEBTOON 42건. 13개 작품에 걸쳐 있어 유형/이미지/원문을 함께 검토해야 한다 |
 | 변경 이력 | 비공개 `launch_recovery.reconciliation_history`에 변경 전후 **122건** 보존. 브라우저/서비스 역할 접근 거절, UPDATE/DELETE 차단 |
 | Auth 준비 | Auth UUID를 integer `readers.id`에 넣던 구 가입 트리거 오류를 재현하고 제거했다. 독자·작가·관리자에 별도 `auth_user_id` 연결 열/고유 인덱스 준비. 기존 프로필 ID·비밀번호·역할 보존 |
-| Auth 실제 연결 | **0건**. 운영 최고관리자의 소유 확인 정보와 확인 완료 Auth UUID가 아직 제공되지 않았다. 시드 이메일로 사용자를 만들거나 임의로 관리자 연결하지 않았다 |
+| Auth 실제 연결 | **41건**. 후속 명시 요청에 따라 가상 작가 30·독자 10과 확인 완료된 기존 최고 관리자 1 연결. 근거와 변경 전 백업 보존 |
 | 백업 | 변경 전 77개 테이블/987행, 변경 후 78개 테이블/1,109행의 동일 시점 데이터 백업. 변경 후 **pg_dump 17.11 custom archive**도 확보(78개 TABLE DATA 항목) |
 | 복원 검증 | 실제 행을 격리 PGlite에 복원하여 전체 행 일치와 public 제약조건 **98개** 검증. 네이티브 아카이브는 `pg_restore --list` 통과. **Supabase 전체 스키마·서비스 복원 시험은 미실행** |
-| 서비스 | 보안 전환 마커/기능 조건이 미완료이므로 `503 SECURE_API_NOT_ACTIVATED` 유지. 기능 플래그 변경 없음 |
+| 서비스 | 콘텐츠 API는 `503 SECURE_API_NOT_ACTIVATED` 유지. 계정 전용 API는 별도 DB 준비 검사로 로그인·가상 계정 관리 제공. 기존 기능 플래그 변경 없음 |
 
 증거: [적용 결과](../../artifacts/launch-reconciliation-applied.json), [원본 보존 대조](../../artifacts/launch-reconciliation-preservation.json), [Auth 준비](../../artifacts/launch-auth-preparation.json), [네이티브 백업](../../artifacts/launch-native-backup.json), [데이터 복원](../../artifacts/launch-data-restore.json).
 

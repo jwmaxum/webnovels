@@ -60,12 +60,13 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   }
 
   // 작가 스튜디오 진입 시 데이터 로드
-  if (viewId === 'view-creator' && typeof fetchCreatorDashboardData === 'function') {
+  const accountOnly=window.showAccountAccessSummary?.(viewId);
+  if (!accountOnly && viewId === 'view-creator' && typeof fetchCreatorDashboardData === 'function') {
     fetchCreatorDashboardData();
   }
 
   // 내 서재 진입 시 렌더링
-  if (viewId === 'view-mypage' && typeof renderLibraryContent === 'function') {
+  if (!accountOnly && viewId === 'view-mypage' && typeof renderLibraryContent === 'function') {
     renderLibraryContent();
   }
 

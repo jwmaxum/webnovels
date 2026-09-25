@@ -1,17 +1,24 @@
 {
-  "createdAt": "2026-09-24T23:32:36.561Z",
+  "createdAt": "2026-09-25T03:13:50.213Z",
   "projectRef": "ghwabesnydktumeyejnm",
   "tool": "pg_dump (PostgreSQL) 17.11",
+  "requestedSchemas": [
+    "public",
+    "auth",
+    "storage",
+    "authoring",
+    "launch_recovery"
+  ],
   "schemas": [
     "auth",
     "launch_recovery",
     "public",
     "storage"
   ],
-  "bytes": 472874,
-  "sha256": "988c1e288126be833b307ffc8c3ef03377d1f8aff3a7fd9eb3a587276274ef74",
+  "bytes": 507411,
+  "sha256": "20140776743837ef92b63fed5a7a02dc403c516c51bd9b6dc2a79fe98f7ec0c1",
   "format": "PostgreSQL custom archive",
-  "tableDataEntries": 78,
+  "tableDataEntries": 82,
   "archiveReadable": true,
   "hostedRestoreVerified": false,
   "providerLoginReadOnly": true,
@@ -23,12 +30,5 @@
     "Cluster roles and provider-managed internals/configuration are not included.",
     "Storage file bytes and external assets are separate.",
     "Off-device copy and hosted Supabase restoration not yet verified."
-  ],
-  "requestedSchemas": [
-    "public",
-    "auth",
-    "storage",
-    "authoring",
-    "launch_recovery"
   ]
 }

@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-09-25T03:13:43.125Z",
+  "admin": {
+    "role": "SUPER_ADMIN",
+    "active": true,
+    "linked": true,
+    "confirmed": true
+  },
+  "links": 41,
+  "account_enabled": true,
+  "virtual_authors": 30,
+  "virtual_readers": 10,
+  "browser_rpc_execute": 0,
+  "unconfirmed_virtual": 0
+}

@@ -6,6 +6,7 @@ import { creatorPublicationApi } from './creator-publication-api.mjs';
 import { stage8Api } from './stage8-api.mjs';
 import { stage9Api } from './stage9-api.mjs';
 import { stage9AppealApi } from './stage9-appeal-api.mjs';
+import { accountApi } from './account-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
@@ -58,6 +59,8 @@ async function readBody(request) {
 }
 export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   return async function handle(request, env) {
+    const accountResponse = await accountApi(request, env, { fetchImpl });
+    if (accountResponse) return accountResponse;
     const requestId = crypto.randomUUID();
     const reply = (data, status = 200) => {
       const response = json(data, status);
