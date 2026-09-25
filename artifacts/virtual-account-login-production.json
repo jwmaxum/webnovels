@@ -1,0 +1,291 @@
+{
+  "checkedAt": "2026-09-25T03:46:32.621Z",
+  "environment": "https://webnovels-db4.pages.dev",
+  "total": 40,
+  "authSucceeded": 40,
+  "appSucceeded": 40,
+  "authorAdminDenied": true,
+  "results": [
+    {
+      "kind": "author",
+      "profileId": "1",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true,
+      "adminAccessDenied": true
+    },
+    {
+      "kind": "author",
+      "profileId": "10",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "11",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "12",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "13",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "14",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "15",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "16",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "17",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "18",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "19",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "2",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "20",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "21",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "22",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "23",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "24",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "25",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "26",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "27",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "28",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "29",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "3",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "30",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "4",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "5",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "6",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "7",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "8",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "author",
+      "profileId": "9",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "1",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "10",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "2",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "3",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "4",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "5",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "6",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "7",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "8",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    },
+    {
+      "kind": "reader",
+      "profileId": "9",
+      "auth": true,
+      "appStatus": 200,
+      "correctProfile": true
+    }
+  ]
+}

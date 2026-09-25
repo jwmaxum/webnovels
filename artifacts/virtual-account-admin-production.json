@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-09-25T03:46:52.237Z",
+  "origin": "https://webnovels-db4.pages.dev",
+  "authMethod": "temporary Admin API generated link; no email sent; password unchanged",
+  "meStatus": 200,
+  "role": "SUPER_ADMIN",
+  "listStatus": 200,
+  "virtualAccounts": 40,
+  "profileUpdateStatus": 200,
+  "profileValuesPreserved": true,
+  "auditStatus": 200,
+  "auditRecorded": true
+}

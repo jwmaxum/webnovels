@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-09-25T03:47:41.262Z",
+  "deployedCommit": "805a7a29ad7e95aa72f8408c7c1427fc1e8dfa04",
+  "origin": "https://webnovels-db4.pages.dev",
+  "ci": "https://github.com/jwmaxum/webnovels/actions/runs/36091450341",
+  "ciSucceeded": true,
+  "cloudflareDeployment": "fc6a5b20-c710-414e-a486-dd70c1dbb0f4",
+  "assets": [
+    {
+      "path": "/js/admin/virtual-accounts.js",
+      "status": 200,
+      "matchesSource": true,
+      "sha256": "d3e63eab905de80c47bfb5b96a4a30ccd8d71512508f7b01d019523ecab6b375"
+    },
+    {
+      "path": "/js/admin/admin-operations.js",
+      "status": 200,
+      "matchesSource": true,
+      "sha256": "5e3118098b3aee2423a6b4205c62dd682de6282fce2ee935c86e715db1ccc8b1"
+    },
+    {
+      "path": "/js/core/account-access.js",
+      "status": 200,
+      "matchesSource": true,
+      "sha256": "4ff920bfa0d20151fe0d21f0b5dccfb08e3aca1e293bb013e3886b0fc706a8f9"
+    },
+    {
+      "path": "/js/core/auth-session.js",
+      "status": 200,
+      "matchesSource": true,
+      "sha256": "d617a12a3e9b8abfe0ee84a7e25bbb230c553d831b35b60a3f1f6a6301daa31a"
+    }
+  ],
+  "endpoints": [
+    {
+      "path": "/api/v2/accounts/health",
+      "status": 200,
+      "code": "ok"
+    },
+    {
+      "path": "/api/v2/me",
+      "status": 401,
+      "code": "AUTH_REQUIRED"
+    },
+    {
+      "path": "/api/v2/admin/virtual-accounts",
+      "status": 401,
+      "code": "AUTH_REQUIRED"
+    },
+    {
+      "path": "/api/v2/health",
+      "status": 503,
+      "code": "SECURE_API_NOT_ACTIVATED"
+    }
+  ],
+  "browserAcceptance": false
+}

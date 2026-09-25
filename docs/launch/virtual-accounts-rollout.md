@@ -15,6 +15,17 @@
 
 증거: [계정 연결](../../artifacts/virtual-account-provisioning.json), [실제 Auth 통합 검증](../../artifacts/virtual-account-login-integration.json).
 
+## 운영 배포 확인
+
+코드 `805a7a29ad7e95aa72f8408c7c1427fc1e8dfa04`를 main에 push했고 [GitHub 검사](https://github.com/jwmaxum/webnovels/actions/runs/36091450341)와 Cloudflare Pages 배포가 성공했다. 운영 주소는 [WebNovels](https://webnovels-db4.pages.dev)다.
+
+- 배포된 사이트에서 **40/40** 계정의 실제 비밀번호 인증과 `/api/v2/me` 프로필 일치 확인. 작가의 관리자 API 접근은 403.
+- 관리자 실제 Auth 세션으로 `/me`, 가상 계정 40개 조회, writer30 프로필 값 유지 저장, 변경 이력 조회 모두 200. 비밀번호 변경과 메일 발송 없이 임시 검증 세션을 사용한 뒤 해당 세션만 종료했다.
+- 계정 health는 200, 익명 `/me`·관리자 API는 401. 콘텐츠 health는 전체 전환 전까지 503.
+- 브라우저 화면 인수는 미실행. HTTP 배포 자산 일치, 실제 Auth/API, 로컬 UI VM 테스트 결과를 구분한다.
+
+증거: [운영 계정 로그인](../../artifacts/virtual-account-login-production.json), [운영 관리자](../../artifacts/virtual-account-admin-production.json), [배포 자산·응답](../../artifacts/virtual-account-deployment.json), [원본 데이터 보존](../../artifacts/virtual-account-data-preservation.json).
+
 ## SQL과 백업
 
 1. 변경 전 백업: `scratch/launch/backups/2026-09-25T02-50-00-034Z/`.
