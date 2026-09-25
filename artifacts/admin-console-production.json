@@ -1,0 +1,83 @@
+{
+  "checkedAt": "2026-09-25T10:23:02.562Z",
+  "origin": "https://webnovels-db4.pages.dev",
+  "commit": "daf418c13e01ca33bea0698ccd80e6f922c6718e",
+  "assets": [
+    {
+      "file": "/js/admin/admin-console.js",
+      "status": 200,
+      "matches": true
+    },
+    {
+      "file": "/js/admin/admin-operations.js",
+      "status": 200,
+      "matches": true
+    },
+    {
+      "file": "/styles.css",
+      "status": 200,
+      "matches": true
+    }
+  ],
+  "adminHtmlStatus": 200,
+  "authenticatedReads": [
+    {
+      "action": "dashboard",
+      "status": 200,
+      "count": 30
+    },
+    {
+      "action": "works",
+      "status": 200,
+      "count": 30
+    },
+    {
+      "action": "episodes",
+      "status": 200,
+      "count": 180
+    },
+    {
+      "action": "accounts&kind=author",
+      "status": 200,
+      "count": 30
+    },
+    {
+      "action": "accounts&kind=reader",
+      "status": 200,
+      "count": 11
+    },
+    {
+      "action": "cases&source=CONTENT_REVIEW",
+      "status": 200,
+      "count": 12
+    },
+    {
+      "action": "cases&source=REPORT",
+      "status": 200,
+      "count": 8
+    },
+    {
+      "action": "roles",
+      "status": 200,
+      "count": 4
+    },
+    {
+      "action": "settlements",
+      "status": 200,
+      "count": 16
+    },
+    {
+      "action": "audit",
+      "status": 200,
+      "count": 1
+    }
+  ],
+  "anonymousStatus": 401,
+  "reauthWithoutPasswordStatus": 400,
+  "accountsHealth": 200,
+  "contentHealth": 503,
+  "browserAcceptance": false,
+  "productionPermissionsChanged": false,
+  "noEmailSent": true,
+  "passwordUnchanged": true
+}
