@@ -49,4 +49,18 @@
 - [`author-dashboard-auth-integration.json`](../../artifacts/author-dashboard-auth-integration.json): 실제 Supabase Auth/PostgREST + 로컬 서버 핸들러 검증. 실제 작가 비밀번호 재확인 후 잘못된 버전을 409로 거절했고, 계좌/프로필에 검증 값을 남기지 않았다. 배포 HTTP/브라우저 인수와 구분한다.
 - 긴급 중단: 기존 서버 설정 `AUTHOR_WORKSPACE_DISABLED=true`. 새 계좌/감사 자료를 삭제하거나 이전 가상 계좌로 되돌리지 않는다.
 
-배포 결과는 확인 후 아래에 기록한다.
+## 화면 인수 절차
+
+1. 배포 후 강력 새로고침하고 작가로 로그인하여 `/creator`에 진입한다. 대시보드·내 작품·수익 내역·내 정보·정산 계좌의 네 메뉴를 확인한다.
+2. 대시보드의 작품 수와 내 작품 목록을 대조하고, 작품 버튼으로 기존 원고 편집에 진입한다.
+3. 수익 내역에서 전체 기간 및 기록이 있는 월을 조회한다. 이전 자료의 검증 대기 표시와 실제 예상수익의 집계 전 표시를 확인한다.
+4. 본인의 필명/소개를 저장하고 새로고침해 유지되는지 확인한다. 두 창에서 동시에 수정하면 나중의 오래된 저장은 충돌로 거절되어야 한다.
+5. 실제로 사용할 본인 명의 계좌를 입력하고 현재 비밀번호로 저장한다. 저장 후 전체 번호 대신 끝 4자리와 확인 대기가 표시되어야 한다. 검증용 가짜 계좌를 운영에 등록하지 않는다.
+6. 독자 또는 작가 프로필 없는 관리자로 계정을 바꾸면 이전 작가 정보가 지워지고 작가 전용 조회/수정이 거절되어야 한다.
+
+## 배포 결과
+
+- 코드 커밋 `a448d06e8440871d57598431ec57d3c443b149ca`, main push 완료.
+- [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/36226654580)와 [Cloudflare Pages 배포](https://dash.cloudflare.com/?to=/7c88b2d2b3fe9baf32dc744ac0a631b3/pages/view/webnovels/efe2fa80-e533-4918-8920-bc26be71333c) 성공, 2026-09-26 16:26 KST 확인.
+- 로컬 전체 `npm run build` 통과. 이후 진입 경로·숨김 CSS 회귀를 포함한 대시보드 5개, 명칭 계약 3개, Auth 세션 10개 검증도 통과. CI는 최종 코드의 전체 검증을 통과했다.
+- [`author-dashboard-deployment.json`](../../artifacts/author-dashboard-deployment.json)에 배포 상태 및 운영 HTTP 확인을 기록한다. 작업 환경에서 Pages 접속은 `ECONNRESET`으로 실패하여 화면 인수는 미실시다. 실제 Supabase DB/Auth 검증과 CI/배포 성공을 화면 인수 완료로 해석하지 않는다.

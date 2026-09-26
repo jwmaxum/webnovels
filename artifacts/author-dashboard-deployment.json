@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-09-26T07:27:29.562Z",
+  "codeCommit": "a448d06e8440871d57598431ec57d3c443b149ca",
+  "cloudflare": {
+    "name": "Cloudflare Pages",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/jwmaxum/webnovels/runs/108362249031",
+    "detailsUrl": "https://dash.cloudflare.com/?to=/7c88b2d2b3fe9baf32dc744ac0a631b3/pages/view/webnovels/efe2fa80-e533-4918-8920-bc26be71333c"
+  },
+  "ci": [
+    {
+      "name": "WebNovels CI / Build & Test Workflow",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jwmaxum/webnovels/actions/runs/36226654580"
+    }
+  ],
+  "productionHttp": [
+    {
+      "path": "/creator",
+      "status": null,
+      "error": "ECONNRESET"
+    },
+    {
+      "path": "/js/creator/creator-dashboard.js?v=115",
+      "status": null,
+      "error": "ECONNRESET"
+    },
+    {
+      "path": "/api/v2/accounts/health",
+      "status": null,
+      "error": "ECONNRESET"
+    }
+  ],
+  "browserAcceptance": false,
+  "sqlApplied": true,
+  "liveSupabaseAuthVerified": true
+}
