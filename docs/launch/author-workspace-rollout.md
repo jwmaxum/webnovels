@@ -40,8 +40,17 @@
 - `node scripts/prepare_author_workspace.mjs <백업 폴더>`: 실제 데이터 복사본에 적용, private 신규 작품 등록·설정 수정·원고 저장·재조회·버전 이력·멱등성·충돌·다른 작가/독자 차단, 기존 public 42개 테이블 보존 확인. `--apply`는 리허설 이후 변경되지 않은 원본 행을 재검사하고 한 트랜잭션으로 운영 적용한다.
 - 운영 SQL 적용 완료. `authoring-001/003/004/005/006`, 기존 초안 2건과 계정 연결 근거 41건을 확인했다. 실제 운영 트랜잭션에서 작품 생성·수정, 원고 저장·재조회·이력·재시도·충돌 및 타 작가/독자 차단을 검증한 후 롤백했다. 기존 public 42개 테이블의 전체 행이 보존되었다. [SQL 적용·검증 결과](../../artifacts/author-workspace-rollout.json).
 - 변경 전 네이티브 백업: `native-2026-09-26T06-39-59-874Z/`, pg_dump 17.11, 85개 TABLE DATA, SHA-256 `d8e7cb58f16ed311105f44eb5fde85ec17b93d6cbb6ecc12b61ccf63f9801d2b`, 아카이브 목차 검증 완료.
+- 적용 후 데이터 백업: `2026-09-26T06-48-29-401Z/`, 102개 테이블, SHA-256 `4c00b49b033fcbdcbe02dc3265d9e27e0bfb3a4854eaf5c3bf391e705f0a3381`.
 - 작가 2·독자 1·최고 관리자 1의 실제 Supabase Auth/PostgREST를 새 서버 핸들러에 연결해 검증했다. 작가 `/me`·작품·원고 목록 200, 독자/관리자의 작가 경로 403, 타 작가 작품 404, 위조 필드 400. 비밀번호 변경/메일 발송 없이 검증 세션만 종료했다. [실제 인증 통합 결과](../../artifacts/author-workspace-auth-integration.json). 로컬 서버 핸들러 실행이며 배포된 Pages HTTP 확인과 구분한다.
-- 전체 `npm run build`와 새로운 DB/API/UI 회귀 테스트 4개 통과. 코드 배포 결과는 후속 기록한다.
+- 전체 `npm run build`와 새로운 DB/API/UI 회귀 테스트 4개 통과.
 - 브라우저/localhost 인수 및 호스팅 Supabase 전체 복원은 실행하지 않았다. 로컬 PGlite 시험, 실제 DB, Auth/HTTP 검증 결과를 구분한다.
 
 사용 확인: 작가 로그인 후 내 작품 → 새 작품 등록 → 작품 설정 저장 → 원고 작성·복구 → 제목/본문 입력 → 초안 저장. `기기·서버 저장 완료`를 확인하고 새로고침 후 서버 원고를 다시 연다. 일반 독자·관리자·로그아웃 상태에서는 파일 가져오기 창이 하단에 없어야 한다.
+
+## 배포 결과
+
+- 커밋 `aeac74f4c0158fd45e6884b75e4562be1b503a92`, main push 완료.
+- [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/36224843868) 및 [Cloudflare Pages](https://dash.cloudflare.com/?to=/7c88b2d2b3fe9baf32dc744ac0a631b3/pages/view/webnovels/f27962a1-eff1-4cad-8215-5380fb08d292) 성공. 2026-09-26 15:52 KST 확인.
+- 관련 CSS/JS의 캐시 버전을 114로 올렸다. 기존 로그인 세션의 기능 정보는 새로고침 시 `/api/v2/me`에서 다시 확인한다.
+- 배포 후 이 작업 환경에서 운영 도메인의 TLS 연결이 `ECONNRESET`으로 중단되어, 배포된 자산 및 Pages HTTP 최종 확인은 대기다. Supabase 직접 DB와 실제 Auth/PostgREST 통합 검증은 위 기록대로 완료했다. 브라우저 확인을 완료했다고 기록하지 않는다.
+- [배포 확인 자료](../../artifacts/author-workspace-deployment.json). 화면에서 이전 안내가 남아 있으면 Ctrl+Shift+R 후 작가 계정으로 로그인하여 위 사용 절차를 확인한다.
