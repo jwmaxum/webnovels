@@ -28,7 +28,7 @@
     key==='cases'?(can('CASE_READ')||can('CONTENT_REVIEW')||can('COMMENT_REPORT')):
     key==='appeals'?can('CASE_READ'):
     key==='accounts'?(can('ACCOUNTS_READ')||can('USER_MGMT')||can('CREATOR_MGMT')):
-    key==='works'?(can('CONTENT_METADATA_READ')||can('WORK_MGMT')):
+    key==='works'?(can('CONTENT_METADATA_READ')||can('WORK_MGMT')||can('CURATION_WRITE')):
     key==='episodes'?(can('CONTENT_METADATA_READ')||can('EPISODE_MGMT')):
     key==='settlements'?(can('SETTLEMENTS_READ')||can('AUTHOR_SETTLEMENT')):
     key==='settings'?own()?.role==='SUPER_ADMIN':

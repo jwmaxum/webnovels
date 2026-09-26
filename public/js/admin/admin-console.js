@@ -18,7 +18,39 @@
     if(!items.length){notice(root,'조회 결과가 없습니다.');return;}
     const wrap=el(root,'div',null,'cms-table-wrap'),t=el(wrap,'table',null,'cms-table');
     const head=el(el(t,'thead'),'tr');for(const [label] of columns)el(head,'th',label).scope='col';
-    const body=el(t,'tbody');for(const item of items){const row=el(body,'tr');for(const [,value] of columns)el(row,'td',value(item)??'—');}
+    const body=el(t,'tbody');for(const item of items){const row=el(body,'tr');for(const [,value,renderCell] of columns){const cell=el(row,'td');
+      if(renderCell)renderCell(cell,item);else cell.textContent=String(value(item)??'—');}}
+  }
+  function curationEditor(cell,work,valid){
+    if(!can('CURATION_WRITE')){el(cell,'span',[work.is_top_recommended?'추천':'',work.is_popular_work?'인기':'',work.is_new_work?'신작':''].filter(Boolean).join(' · ')||'없음');el(cell,'small','조회 전용 · 홈 큐레이션 권한 필요');return;}
+    const fields=[['is_top_recommended','추천'],['is_popular_work','인기'],['is_new_work','신작']];
+    const form=el(cell,'form',null,'cms-curation'),choices=el(form,'div',null,'cms-curation-options');
+    form.setAttribute('aria-label',`${work.title} 홈 노출 설정`);
+    const checks=fields.map(([key,label])=>{const field=el(choices,'label'),input=el(field,'input');input.type='checkbox';input.checked=!!work[key];input.name=key;el(field,'span',label);return input;});
+    const reasonLabel=el(form,'label','변경 사유'),reason=el(reasonLabel,'input');reason.type='text';reason.maxLength=500;reason.placeholder='선택 입력';
+    const actions=el(form,'div',null,'cms-toolbar'),save=button(actions,'저장',null,'btn btn-primary btn-sm');save.type='submit';
+    const reset=button(actions,'되돌리기',()=>{checks.forEach((input,i)=>{input.checked=!!work[fields[i][0]];});reason.value='';feedback.textContent='마지막 저장 상태로 되돌렸습니다.';changed();});
+    const feedback=el(form,'p');feedback.setAttribute('role','status');
+    let busy=false,conflict=false;
+    function changed(){const dirty=checks.some((input,i)=>input.checked!==!!work[fields[i][0]]);save.disabled=busy||conflict||!dirty;reset.disabled=busy||conflict||!dirty;}
+    checks.forEach(input=>{input.onchange=()=>{feedback.textContent='변경한 설정을 저장해주세요.';changed();};});changed();
+    form.onsubmit=async event=>{event.preventDefault();if(!valid()||busy||conflict||save.disabled)return;
+      if(reason.value.trim()&&reason.value.trim().length<3){feedback.textContent='변경 사유는 3자 이상 입력하거나 비워주세요.';return;}
+      busy=true;checks.forEach(input=>{input.disabled=true;});reason.disabled=true;changed();feedback.textContent='저장 중입니다…';
+      const flags=Object.fromEntries(checks.map((input,i)=>[fields[i][0],input.checked]));
+      try{
+        const result=await window.WebNovelsAuth.api('/api/v2/admin/console?action=curation-update',{method:'POST',body:JSON.stringify({
+          workId:String(work.id),revision:work.curation_revision,flags,reason:reason.value.trim()||'관리자 작품 CMS 홈 노출 설정 변경'})});
+        if(!valid())return;
+        if(result.saved!==true||String(result.work?.id)!==String(work.id)||typeof result.work?.curation_revision!=='string'||fields.some(([key])=>typeof result.work?.[key]!=='boolean'))throw Error('INVALID_SAVE_RESPONSE');
+        Object.assign(work,result.work);checks.forEach((input,i)=>{input.checked=work[fields[i][0]];});reason.value='';
+        feedback.textContent='저장되었습니다.';
+        try{window.applyHomeCuration?.(result.work);}catch{ /* The committed save stays successful if local catalog refresh fails. */ }
+      }catch(e){if(valid()){
+        conflict=e?.code==='CONFLICT';feedback.textContent=conflict?'다른 관리자가 먼저 수정했습니다. 새로고침 후 최신 설정을 확인해주세요.':
+          e?.code==='ADMIN_FORBIDDEN'?'홈 노출 설정을 변경할 권한이 없습니다.':'저장을 확인하지 못했습니다. 새로고침하여 실제 저장 상태를 확인해주세요.';
+      }}finally{busy=false;if(valid()){checks.forEach(input=>{input.disabled=conflict;});reason.disabled=conflict;changed();}}
+    };
   }
   function settings(root){
     const config=window.WEBNOVELS_CONFIG||{};
@@ -80,10 +112,10 @@
       }
       const items=result.items||[];
       if(page==='works'){
-        notice(root,'작품과 회차의 등록 상태를 조회합니다. 본문 편집은 작가 스튜디오에서 진행하며, 공개·큐레이션 조치는 콘텐츠 서비스 연결 후 사용할 수 있습니다.');
+        notice(root,'홈 노출 설정에서 추천·인기·신작을 선택하고 작품별로 저장하세요. 모두 해제하면 해당 세 섹션의 선정 대상에서 제외됩니다. 실제 표시는 작품의 공개 조건과 섹션별 표시 수에 따릅니다.');
         table(root,[['작품',x=>`#${x.id} ${x.title}`],['소유 작가',x=>x.author_id?`${x.author||'이름 미등록'} (#${x.author_id})`:'연결 확인 필요'],
           ['유형 / 등급',x=>`${x.content_type||'—'} / ${x.rating||'—'}`],['등록 상태',x=>x.status],['회차',x=>x.episodes],
-          ['본문 확인 필요',x=>x.empty_originals],['홈 노출 설정',x=>[x.is_top_recommended?'추천':'',x.is_popular_work?'인기':'',x.is_new_work?'신작':''].filter(Boolean).join(' · ')||'없음']],items);
+          ['본문 확인 필요',x=>x.empty_originals],['홈 노출 설정',null,(cell,work)=>curationEditor(cell,work,valid)]],items);
       }else if(page==='episodes')table(root,[['작품',x=>x.work_title],['회차',x=>x.episode_number],['제목',x=>x.title],['등록 상태',x=>x.status],['무료 설정',x=>x.is_free?'무료':'비무료'],['원본 본문',x=>x.has_original?'있음':'검토 필요']],items);
       else if(page==='accounts')table(root,[['번호',x=>x.id],['표시 이름',x=>x.name],['상태',x=>x.status],['인증 연결',x=>x.linked?'연결됨':'연결 필요']],items);
       else if(page==='cases')table(root,[['대상',x=>x.label],['상태',x=>x.status],['접수일',x=>date(x.created_at)]],items);

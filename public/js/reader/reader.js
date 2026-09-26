@@ -180,6 +180,15 @@ function renderGenreRecommendations(selectedGenre = '전체') {
 }
 
 // Main Home Works Orchestrator (CMS Curation Flags Driven)
+window.applyHomeCuration = function(work) {
+  const item=SAMPLE_WORKS.find(w=>String(w.id)===String(work.id));
+  if(!item)return;
+  for(const [stored,display] of [['is_top_recommended','isTopRecommended'],['is_popular_work','isPopularWork'],['is_new_work','isNewWork']]){
+    if(typeof work[stored]==='boolean')item[stored]=item[display]=work[stored];
+  }
+  // Update only an existing public catalog entry; private CMS rows never enter the catalog.
+  renderHomeWorks().catch(()=>{});
+};
 async function renderHomeWorks() {
   try {
     if (!getPublishedWorks() || getPublishedWorks().length === 0) {
@@ -204,11 +213,9 @@ async function renderHomeWorks() {
     const trendingContainer = document.getElementById('trendingWorksGrid');
     if (trendingContainer) {
       const populars = getPublishedWorks().filter(isPopular);
-      if (window.ReaderHub?.active() && !populars.length)
-        populars.push(...getPublishedWorks().slice().sort((a,b)=>b.viewCount-a.viewCount).slice(0,4));
       trendingContainer.innerHTML = populars.slice(0, 4).map((w, idx) => {
         return renderCdgWorkCardHtml(w, { rank: idx + 1 });
-      }).join('');
+      }).join('') || '<p class="text-muted">등록된 인기 작품이 없습니다.</p>';
     }
 
     // 3. ✨ 새로운 작품 (가장 최근 작가가 등록한 최신 신작 우선 정렬)
@@ -221,9 +228,9 @@ async function renderHomeWorks() {
       });
 
       const news = sortedByNewest.filter(isNew);
-      newWorksContainer.innerHTML = (window.ReaderHub?.active() && !news.length ? sortedByNewest : news).slice(0, 4).map(w => {
+      newWorksContainer.innerHTML = news.slice(0, 4).map(w => {
         return renderCdgWorkCardHtml(w, { badge: 'NEW' });
-      }).join('');
+      }).join('') || '<p class="text-muted">등록된 신작이 없습니다.</p>';
     }
 
     // 4. 장르별 추천 (기본: 전체)

@@ -5611,6 +5611,16 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .cms-table th,.cms-table td {padding:13px 12px;border-bottom:1px solid var(--border-color,#353541);vertical-align:top;overflow-wrap:anywhere;min-width:80px;}
 .cms-table th {font-weight:600;color:var(--text-muted,#aaa);white-space:nowrap;}
 .cms-table tbody tr:hover {background:rgba(255,255,255,.025);}
+.cms-curation {min-width:240px;max-width:340px;}
+.cms-curation-options {display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+.cms-curation-options label {display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;}
+.cms-curation input[type="checkbox"] {width:17px;height:17px;accent-color:#ff358c;}
+.cms-curation>label {display:block;font-size:.8rem;color:var(--text-muted,#aaa);}
+.cms-curation input[type="text"] {display:block;width:100%;padding:8px;margin-top:5px;border:1px solid var(--border-color,#45454f);border-radius:7px;background:var(--bg-secondary,#23232c);color:var(--text-color,#eee);}
+.cms-curation .cms-toolbar {margin:10px 0 4px;}
+.cms-curation p {font-size:.8rem;line-height:1.5;max-width:32ch;}
+.cms-curation button:disabled {opacity:.45;cursor:default;}
+.cms-table td>small {display:block;white-space:nowrap;margin-top:6px;color:var(--text-muted,#aaa);}
 .cms-permissions {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0;}
 .cms-permissions label {display:flex;gap:8px;align-items:center;font-size:.88rem;}
 .cms-role form>label {display:block;margin:14px 0;font-size:.9rem;}

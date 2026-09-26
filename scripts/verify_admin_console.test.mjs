@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import ts from 'typescript';
 import {PGlite} from '@electric-sql/pglite';
 import {accountApi} from '../server/account-api.mjs';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
@@ -29,9 +30,36 @@ async function fixture(){
  await db.exec(`insert into launch_recovery.account_links(kind,profile_id,auth_user_id,evidence_ref,operator_ref,backup_sha256) values
  ('admin','${admin}','${admin}','fixture','test',repeat('a',64)),('admin','${sub}','${sub}','fixture','test',repeat('a',64)),('author','1','${writer}','fixture','test',repeat('a',64));
  update launch_recovery.account_service set enabled=true;`);
- await db.exec(read('database/launch/005_admin_console.sql'));return db;
+ await db.exec(read('database/launch/005_admin_console.sql'));
+ await db.exec(read('database/launch/006_work_curation.sql'));return db;
 }
 async function rpc(db,who,action,data={}){return (await db.query('select launch_admin_console($1,$2,$3) value',[who,action,data])).rows[0].value;}
+test('curation changes only three flags, preserves rows, requires permission and revision, and records durable audit',async()=>{
+ const db=await fixture();try{
+   const original=(await db.query('select * from works where id=1')).rows[0];
+   const flags={is_top_recommended:true,is_popular_work:true,is_new_work:false};
+   const data={workId:'1',revision:'0',flags,reason:'Homepage editorial selection'};
+   for(const user of [writer,sub])assert.equal((await rpc(db,user,'curation-update',data)).status,403);
+   for(const invalid of [{...data,status:'PUBLISHED'},{...data,flags:{...flags,is_new_work:'true'}},{...data,flags:{...flags,author_id:2}},{...data,reason:''}])
+     assert.equal((await rpc(db,admin,'curation-update',invalid)).status,400);
+   const saved=await rpc(db,admin,'curation-update',data);assert.equal(saved.saved,true);assert.equal(saved.work.curation_revision,'1');
+   const after=(await db.query('select * from works where id=1')).rows[0];assert.deepEqual(after,{...original,...flags});
+   assert.equal((await db.query('select content from episodes where id=1')).rows[0].content,'PRIVATE MANUSCRIPT');
+   assert.equal((await rpc(db,admin,'works')).items[0].curation_revision,'1');
+   assert.equal((await rpc(db,admin,'curation-update',data)).status,409);
+   assert.equal((await rpc(db,admin,'curation-update',{...data,revision:'1'})).changed,false);
+   assert.equal((await rpc(db,admin,'audit')).items[0].action,'curation-update');
+   await assert.rejects(db.exec('delete from launch_recovery.work_curation_audit'),/immutable/);
+   await db.exec(`update admin_users set permissions='["CURATION_WRITE"]' where id='${sub}'`);
+   assert.equal((await rpc(db,sub,'works')).total,1);
+   const next=await rpc(db,sub,'curation-update',{...data,revision:'1',flags:{...flags,is_top_recommended:false}});assert.equal(next.work.curation_revision,'2');
+   // Other authorized SQL/legacy writers also advance the revision, including A->B->A changes.
+   await db.exec('update works set is_new_work=true where id=1;update works set is_new_work=false where id=1');
+   assert.equal((await rpc(db,sub,'curation-update',{...data,revision:'2'})).status,409);
+   await db.exec(read('database/launch/006_work_curation.sql'));
+   assert.equal((await rpc(db,admin,'works')).items[0].curation_revision,'4');
+ }finally{await db.close();}
+});
 test('console inventory is server authorized and excludes manuscripts, accounts and financial secrets',async()=>{
  const db=await fixture();try{
    const dashboard=await rpc(db,admin,'dashboard');assert.equal(dashboard.works,1);assert.equal(dashboard.episodes,2);assert.equal(dashboard.emptyOriginals,1);
@@ -91,6 +119,15 @@ test('API requires owner password reauthentication and origin, and sends only sa
  const forwarded=result.calls.find(x=>x.path.endsWith('launch_admin_console'));assert.doesNotMatch(forwarded.body,/password|temporary-verification/);
  assert.equal(JSON.parse(forwarded.body).p_user,admin);
 });
+test('curation API rejects forged owners, cross-origin and malformed flags without invoking a write RPC',async()=>{
+ const body={workId:'1',revision:'0',flags:{is_top_recommended:true,is_popular_work:false,is_new_work:true},reason:'Change home selection'};
+ const req={action:'curation-update',method:'POST',body};
+ for(const change of [{identity:writer},{identity:sub},{origin:'https://evil.test'},{body:{...body,author_id:1}},{body:{...body,flags:{...body.flags,is_new_work:'true'}}}]){
+   const r=await invoke({...req,...change});assert.ok([400,403].includes(r.response.status));assert.ok(!r.calls.some(x=>x.path.endsWith('launch_admin_console')));
+ }
+ const saved=await invoke(req);assert.equal(saved.response.status,200);assert.ok(!saved.calls.some(x=>x.path==='/auth/v1/token'));
+ assert.equal(JSON.parse(saved.calls.find(x=>x.path.endsWith('launch_admin_console')).body).p_action,'curation-update');
+});
 class Node{
  constructor(tag){this.tag=tag;this.children=[];this.textContent='';this.value='';this.attributes={};this.classList={add(){}};}
  append(n){this.children.push(n);}replaceChildren(){this.children=[];}setAttribute(k,v){this.attributes[k]=v;}
@@ -138,4 +175,34 @@ test('role form posts the selected target and revision, clears password input an
  const sent=JSON.parse(calls.find(x=>x.options).options.body);assert.equal(sent.adminId,sub);assert.equal(sent.revision,'a'.repeat(32));
  assert.deepEqual(sent.permissions,['OPERATIONS_READ','CONTENT_METADATA_READ']);assert.equal(inputs.find(x=>x.type==='password').value,'');
  assert.equal(calls.length,3);
+});
+test('curation UI supports edit/save/reset, preserves failed choices and locks stale edits without faking success',async()=>{
+ const root=new Node('div'),calls=[];let failure=null,updated=null;
+ const work={id:'1',title:'Work',curation_revision:'0',is_top_recommended:false,is_popular_work:true,is_new_work:false};
+ const context={URLSearchParams,document:{createElement:t=>new Node(t)},WebNovelsAuth:{getActor:()=>({userId:admin,admin:{role:'SUPER_ADMIN'}}),
+   api:async(url,options)=>{calls.push({url,options});if(options){if(failure)throw {code:failure};return {saved:true,work:{id:'1',curation_revision:'1',...JSON.parse(options.body).flags}};}return {items:[{...work}],total:1};}},applyHomeCuration:x=>{updated=x;}};
+ context.window=context;vm.createContext(context);vm.runInContext(read('public/js/admin/admin-console.js'),context);
+ await context.AdminConsole.render(root,'works');const form=root.querySelectorAll('form').find(n=>n.className==='cms-curation');
+ const checks=form.querySelectorAll('input').filter(n=>n.type==='checkbox'),save=form.querySelectorAll('button').find(n=>n.textContent==='저장');
+ assert.equal(save.disabled,true);checks[0].checked=true;checks[0].onchange();assert.equal(save.disabled,false);
+ form.querySelectorAll('button').find(n=>n.textContent==='되돌리기').onclick();assert.equal(checks[0].checked,false);
+ checks[0].checked=true;checks[0].onchange();failure='NETWORK';await form.onsubmit({preventDefault(){}});assert.equal(checks[0].checked,true);assert.equal(save.disabled,false);
+ failure=null;await form.onsubmit({preventDefault(){}});assert.equal(save.disabled,true);assert.equal(updated.is_top_recommended,true);
+ assert.equal(JSON.parse(calls.find(x=>x.options).options.body).revision,'0');
+ checks[2].checked=true;checks[2].onchange();failure='CONFLICT';await form.onsubmit({preventDefault(){}});assert.equal(save.disabled,true);assert.equal(checks[2].disabled,true);
+ assert.ok(form.querySelectorAll('p').some(n=>n.textContent.includes('다른 관리자')));
+});
+test('public home sections honor cleared flags and local refresh never adds private CMS works',async()=>{
+ const source=read('public/js/reader/reader.js'),ast=ts.createSourceFile('reader.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+ const fn=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='renderHomeWorks').getText(ast);
+ const apply=ast.statements.find(n=>ts.isExpressionStatement(n)&&n.getText(ast).startsWith('window.applyHomeCuration =')).getText(ast);
+ const nodes=Object.fromEntries(['trendingWorksGrid','newWorksGrid'].map(id=>[id,{innerHTML:''}]));
+ const works=[{id:1,isTopRecommended:false,isPopularWork:false,isNewWork:false,episodes:[]}];
+ const context={SAMPLE_WORKS:works,getPublishedWorks:()=>works,document:{getElementById:id=>nodes[id]},ReaderHub:{active:()=>true},
+   renderCdgHeroSlider(){},renderCdgWorkCardHtml:()=>'<article>work</article>',renderGenreRecommendations(){},renderGoldenBest:async()=>{},console:{error(){}}};
+ context.window=context;vm.createContext(context);vm.runInContext(fn+'\n'+apply,context);await context.renderHomeWorks();
+ assert.ok(!nodes.trendingWorksGrid.innerHTML.includes('<article>'));assert.ok(!nodes.newWorksGrid.innerHTML.includes('<article>'));
+ context.applyHomeCuration({id:'private',is_popular_work:true});assert.equal(works.length,1);
+ context.applyHomeCuration({id:'1',is_popular_work:true,is_top_recommended:false,is_new_work:false});assert.equal(works[0].isPopularWork,true);
+ assert.ok(nodes.trendingWorksGrid.innerHTML.includes('<article>'));
 });

@@ -20,8 +20,8 @@ export async function adminConsoleApi({request,user,actor,remote,rpc,fail}) {
     if(action==='cases'){
       data.source=url.searchParams.get('source');if(!['CONTENT_REVIEW','REPORT'].includes(data.source))fail(400,'INVALID_CASE_SOURCE');
     }
-  }else if(action==='role-update'){
-    if(actor.admin.role!=='SUPER_ADMIN')fail(403,'ADMIN_FORBIDDEN');
+  }else if(['role-update','curation-update'].includes(action)){
+    if(actor.admin.role!=='SUPER_ADMIN'&&(action==='role-update'||!actor.admin.permissions?.includes('CURATION_WRITE')))fail(403,'ADMIN_FORBIDDEN');
     if(request.method!=='POST')fail(405,'METHOD_NOT_ALLOWED');
     if([...url.searchParams.keys()].some(k=>k!=='action')||url.searchParams.getAll('action').length!==1)fail(400,'INVALID_QUERY');
     if(request.headers.get('origin')!==url.origin)fail(403,'ORIGIN_REQUIRED');
@@ -31,6 +31,16 @@ export async function adminConsoleApi({request,user,actor,remote,rpc,fail}) {
     while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>12000){await reader.cancel();fail(413,'BODY_TOO_LARGE');}parts.push(value);}
     const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}
     let body;try{body=JSON.parse(new TextDecoder().decode(bytes));}catch{fail(400,'INVALID_PERMISSIONS');}
+    if(action==='curation-update'){
+      const fields=['is_top_recommended','is_popular_work','is_new_work'];
+      if(!body||Array.isArray(body)||typeof body!=='object'||Object.keys(body).some(k=>!['workId','revision','flags','reason'].includes(k))||
+        typeof body.workId!=='string'||!/^[1-9]\d{0,18}$/.test(body.workId)||BigInt(body.workId)>9223372036854775807n||
+        typeof body.revision!=='string'||!/^(0|[1-9]\d{0,18})$/.test(body.revision)||BigInt(body.revision)>9223372036854775807n||
+        !body.flags||typeof body.flags!=='object'||Array.isArray(body.flags)||Object.keys(body.flags).some(k=>!fields.includes(k))||
+        fields.some(k=>typeof body.flags[k]!=='boolean')||typeof body.reason!=='string'||body.reason.trim().length<3||body.reason.length>500)
+        fail(400,'INVALID_CURATION');
+      data=body;
+    }else{
     if(!body||Array.isArray(body)||typeof body!=='object'||Object.keys(body).some(k=>!['adminId','revision','permissions','reason','password'].includes(k))||
       !/^[0-9a-f-]{36}$/i.test(body.adminId||'')||!/^[0-9a-f]{32}$/.test(body.revision||'')||
       !Array.isArray(body.permissions)||body.permissions.length>PERMISSIONS.size||body.permissions.some(p=>!PERMISSIONS.has(p))||
@@ -45,6 +55,7 @@ export async function adminConsoleApi({request,user,actor,remote,rpc,fail}) {
     const logout=await remote('/auth/v1/logout?scope=local',{method:'POST',headers:{Authorization:'Bearer '+proof.access_token}});
     if(!logout.ok||proof.user?.id!==user.id)fail(403,'ADMIN_REAUTH_FAILED');
     const {password,...safe}=body;data=safe;
+    }
   }else fail(400,'INVALID_ACTION');
   return rpc('launch_admin_console',{p_user:user.id,p_action:action,p_data:data});
 }
