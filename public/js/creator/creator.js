@@ -13,12 +13,17 @@
 
 // 작가센터 7대 탭 전환 함수
 window.switchCreatorTab = function(tabKey, shouldPushState = true) {
-  if (window.WebNovelsAuth?.getActor()?.authorWorkspaceReady && !['works','new-ep'].includes(tabKey)) tabKey='works';
+  const dashboard=window.CreatorDashboard?.active();
+  if (dashboard) {
+    tabKey=({'ad-rev':'earnings','sales-rev':'earnings',settlements:'earnings',help:'profile',stats:'home',status:'works'})[tabKey]||tabKey;
+    if(!['home','works','new-ep','earnings','profile'].includes(tabKey))tabKey='home';
+  }
+  window.CreatorDashboard?.reset();
   if (['ad-rev','sales-rev','settlements'].includes(tabKey)) {
     showToast('수익·정산 기능은 현재 사용할 수 없습니다.');
     tabKey = 'works';
   }
-  if (!window.CreatorOperations?.active() && ['home','help'].includes(tabKey)) tabKey='works';
+  if (!dashboard && !window.CreatorOperations?.active() && ['home','help'].includes(tabKey)) tabKey='works';
   if (tabKey !== 'new-ep') window.CreatorDraftEditor?.checkpoint();
   if (tabKey === 'new-ep' && shouldPushState) window.CreatorDraftEditor?.enter();
   document.querySelectorAll('#creatorTabsBar [data-creator-tab]').forEach(b => b.classList.remove('active'));
@@ -36,7 +41,9 @@ window.switchCreatorTab = function(tabKey, shouldPushState = true) {
       window.loadCreatorReaderAnalyticsVisuals();
     }
   }
-  if (tabKey === 'home') window.CreatorOperations?.home();
+  if (tabKey === 'home') dashboard ? window.CreatorDashboard.home() : window.CreatorOperations?.home();
+  if (tabKey === 'earnings') window.CreatorDashboard?.earnings();
+  if (tabKey === 'profile') window.CreatorDashboard?.profile();
 
   if (shouldPushState) {
     const tabUrlMap = {
@@ -72,7 +79,7 @@ window.toggleScheduledTimeInput = function(publishType) {
 // ============================================================
 // currentLoggedAuthor is managed in /js/core/state.js
 
-window.fetchCreatorDashboardData = async function() {
+window.fetchCreatorDashboardData = async function({loadContent=true}={}) {
   const author = window.WebNovelsAuth?.getActor()?.author;
   if (!author) return;
   const name = document.getElementById('creatorAuthorPenName');
@@ -83,8 +90,14 @@ window.fetchCreatorDashboardData = async function() {
   if (logout) logout.style.display = 'inline-block';
   document.getElementById('view-creator')?.classList.toggle('stage8-creator',
     window.CreatorOperations?.active()===true);
+  if(!loadContent)return;
   if (/^\/(creator|author)\/works(?:\/|$)/.test(location.pathname))
     return window.CreatorWorks.loadFromRoute();
+  if (window.CreatorDashboard?.active()) {
+    const section=/^\/(creator|author)\/([^/]+)/.exec(location.pathname)?.[2]||'home';
+    if(section==='episodes')return;
+    return window.switchCreatorTab(section,false);
+  }
   if (window.CreatorOperations?.active() && /^\/(creator|author)\/?$/.test(location.pathname))
     return window.CreatorOperations.home();
 };

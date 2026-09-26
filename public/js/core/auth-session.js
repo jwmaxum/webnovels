@@ -32,6 +32,7 @@
     generation++; actor = null;
     window.CreatorWorks?.reset();
     window.CreatorOperations?.reset();
+    window.CreatorDashboard?.reset();
     window.AdminOperations?.reset();
     window.WebNovelsAppeals?.reset();
     window.ReaderHub?.reset();

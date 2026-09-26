@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-09-26T07:16:58.758Z",
+  "backupSha256": "2b9d2e0f7bc030dde76a595ec5d7df03fc3c8c43bdc5fb31327a697206ac1d9b",
+  "migrationSha256": "5d581b52dc3c74c733b20f6aae1c31b8815fbdf0b54f0d92988648fa33dd7fb3",
+  "actualDataLocalRehearsal": true,
+  "existingTablesPreserved": 102,
+  "idempotentMigration": true,
+  "ownerIsolation": true,
+  "profileRevisionConflict": true,
+  "bankMasked": true,
+  "payoutsEnabled": false,
+  "productionApplied": true,
+  "browserAcceptance": false,
+  "productionTransactionVerification": true,
+  "verificationWritesRolledBack": true
+}

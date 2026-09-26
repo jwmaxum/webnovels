@@ -5569,8 +5569,8 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .stage8-creator #creatorTabsBar [data-creator-tab="ad-rev"],
 .stage8-creator #creatorTabsBar [data-creator-tab="sales-rev"],
 .stage8-creator #creatorTabsBar [data-creator-tab="settlements"] { display:none; }
-#view-creator:not(.stage8-creator) #creatorTabsBar [data-creator-tab="home"],
-#view-creator:not(.stage8-creator) #creatorTabsBar [data-creator-tab="help"] { display:none; }
+#view-creator:not(.stage8-creator):not(.private-author-workspace) #creatorTabsBar [data-creator-tab="home"],
+#view-creator:not(.stage8-creator):not(.private-author-workspace) #creatorTabsBar [data-creator-tab="help"] { display:none; }
 .co-episode,.co-comment,.co-panel {padding:12px;border:1px solid var(--border-color);border-radius:8px;margin:8px 0;}
 .co-episode {display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
 #view-admin-cms.stage9-admin > .container:not(#adminOperationsShell) {display:none;}
@@ -5579,11 +5579,31 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .va-account form label {display:block;margin:.7rem 0;}
 .va-account form input,.va-account form textarea {display:block;width:100%;margin-top:.4rem;}
 .main-view.account-only > :not(.account-access-summary) {display:none!important;}
-.private-author-workspace #creatorTabsBar [data-creator-tab]:not([data-creator-tab="works"]):not([data-creator-tab="new-ep"]),
+.private-author-workspace #creatorTabsBar [data-creator-tab]:not([data-creator-tab="works"]):not([data-creator-tab="home"]):not([data-creator-tab="earnings"]):not([data-creator-tab="profile"]),
 .private-author-workspace #creatorAuthorDetails,
 .private-author-workspace #btnCreatorFiles,.private-author-workspace #btnOpenPublication {display:none!important;}
 .account-access-summary p {margin:1rem 0;}
 .account-access-summary button {margin-right:.75rem;}
+.author-section-heading {display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:1.5rem;}
+.author-section-heading p {margin-top:.5rem;}
+.author-dashboard-stats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1.5rem 0;}
+.author-stat {background:var(--bg-card,#181820);border:1px solid var(--border-color,#333);border-radius:12px;padding:1.25rem;}
+.author-stat span {color:var(--text-muted,#aaa);display:block;margin-bottom:.6rem;}
+.author-stat strong {font-size:1.65rem;}.author-stat small {font-size:1rem;margin-left:.3rem;}
+.author-dashboard-actions {display:flex;align-items:center;flex-wrap:wrap;gap:.75rem;margin:1.5rem 0;}
+.author-recent-works {display:grid;gap:.75rem;margin-top:1rem;}
+.author-recent-works button {display:flex;justify-content:space-between;text-align:left;gap:1rem;white-space:normal;}
+.author-recent-works small {flex-shrink:0;}
+.author-profile-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2rem;}
+.author-profile-form {display:flex;flex-direction:column;gap:1rem;min-width:0;}
+.author-profile-form label {display:grid;gap:.5rem;}
+.author-profile-form .form-input {width:100%;box-sizing:border-box;}
+.author-profile-form .author-bank-consent {display:flex;align-items:flex-start;line-height:1.6;font-size:.9rem;}
+.author-bank-consent input {margin-top:.4rem;}
+.author-table-scroll {overflow-x:auto;}.author-earnings-table {width:100%;border-collapse:collapse;}
+.author-earnings-table th,.author-earnings-table td {padding:1rem;text-align:left;border-bottom:1px solid var(--border-color,#333);}
+.author-earnings-table th {white-space:nowrap;}
+@media(max-width:800px){.author-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));}.author-profile-grid{grid-template-columns:1fr;}.author-section-heading h2{font-size:1.4rem;}}
 #adminOperationsShell {max-width:1600px;}
 #adminOperationsShell[hidden] {display:none;}
 .cms-header {display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:24px;}

@@ -14,6 +14,7 @@
 function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   window.CreatorDraftEditor?.checkpoint();
   window.CreatorFiles?.reset();
+  window.CreatorDashboard?.reset();
   window.CreatorPublications?.reset();
   // 관리자 메뉴 접근 시 로그인 검증
   const adminLoggedIn = !!window.WebNovelsAuth?.getActor()?.admin;
@@ -64,7 +65,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   // 작가 스튜디오 진입 시 데이터 로드
   const accountOnly=window.showAccountAccessSummary?.(viewId);
   if (!accountOnly && viewId === 'view-creator' && typeof fetchCreatorDashboardData === 'function') {
-    fetchCreatorDashboardData();
+    fetchCreatorDashboardData({loadContent:shouldPushState});
   }
 
   // 내 서재 진입 시 렌더링
@@ -179,7 +180,7 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 6. 작가센터 경로 (/author 또는 /creator)
   if (parts[0] === 'author' || parts[0] === 'creator' || hash === '#author' || hash === '#creator') {
-    const subTab = parts[1] || (window.CreatorOperations?.active() ? 'home' : 'works');
+    const subTab = parts[1] || ((window.CreatorDashboard?.active() || window.CreatorOperations?.active()) ? 'home' : 'works');
     switchWebNovelsView('view-creator', null, false);
     if (currentActiveView !== 'view-creator') return;
     if (subTab === 'works' && parts[2]) { switchCreatorTab('works', false); return; }
