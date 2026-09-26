@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-09-26T06:46:15.946Z",
+  "transport": "local production handler with live Supabase Auth and PostgREST; not deployed Pages HTTP",
+  "results": [
+    {
+      "role": "author",
+      "me": 200,
+      "workspaceReady": true,
+      "works": 200,
+      "drafts": 200,
+      "forgedOwner": 400,
+      "publication": 503
+    },
+    {
+      "role": "author",
+      "me": 200,
+      "workspaceReady": true,
+      "works": 200,
+      "drafts": 200,
+      "forgedOwner": 400,
+      "publication": 503
+    },
+    {
+      "role": "reader",
+      "me": 200,
+      "workspaceReady": false,
+      "works": 403
+    },
+    {
+      "role": "admin",
+      "me": 200,
+      "workspaceReady": false,
+      "works": 403
+    }
+  ],
+  "temporarySessionsSignedOut": true,
+  "noEmailSent": true,
+  "passwordsUnchanged": true,
+  "productionManuscriptsChanged": false,
+  "browserAcceptance": false
+}

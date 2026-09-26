@@ -11,21 +11,24 @@
 
 // 모달 열기
 function openModal(id) {
+  const creatorFlags = { modalCreatorFiles: 'authorFilesEnabled', modalCreatorPublication: 'authorPublishEnabled' };
+  if (creatorFlags[id] && (window.WebNovelsAuth?.getActor()?.author?.status !== 'APPROVED' ||
+      window.WEBNOVELS_CONFIG?.[creatorFlags[id]] !== true || !/^\/(creator|author)(\/|$)/.test(window.location.pathname))) return;
   const m = document.getElementById(id);
-  if (m) m.classList.add('active');
+  if (m) { m.hidden = false; m.classList.add('active'); }
 }
 window.openModal = openModal;
 
 // 특정 모달 닫기
 function closeModal(id) {
   const m = document.getElementById(id);
-  if (m) m.classList.remove('active');
+  if (m) { m.classList.remove('active'); m.hidden = true; }
 }
 window.closeModal = closeModal;
 
 // 모든 모달 닫기
 function closeAllModals() {
-  document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.modal-backdrop').forEach(m => { m.classList.remove('active'); m.hidden = true; });
 }
 window.closeAllModals = closeAllModals;
 

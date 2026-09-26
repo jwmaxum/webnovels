@@ -1,13 +1,19 @@
--- STEP 2: additive, NOT applied to production. Apply after p0/001, never auto-enable v2.
+-- Additive foundation. Full cutover uses P0; reviewed private workspace may use launch/007.
 begin;
 set local lock_timeout = '5s';
 set local statement_timeout = '60s';
-do $$ begin
+do $$ declare foundation_ready boolean:=false; begin
   if current_setting('webnovels.authoring_apply_verified',true) is distinct from 'true' then
     raise exception 'Authoring schema/backup review gate required';
   end if;
-  if not exists(select 1 from public.p0_migration_status where version='p0-20260921') then
-    raise exception 'P0 expansion required';
+  if to_regclass('public.p0_migration_status') is not null then
+    execute 'select exists(select 1 from public.p0_migration_status where version=''p0-20260921'')' into foundation_ready;
+  end if;
+  if not foundation_ready and to_regprocedure('launch_recovery.private_authoring_prerequisites()') is not null then
+    execute 'select launch_recovery.private_authoring_prerequisites()' into foundation_ready;
+  end if;
+  if not foundation_ready then
+    raise exception 'P0 expansion or reviewed private authoring prerequisites required';
   end if;
   if exists(select 1 from public.episodes where episode_number is null or episode_number<1) then
     raise exception 'Invalid legacy episode number: reconcile before migration';

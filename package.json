@@ -13,7 +13,7 @@
     "db:generate": "prisma generate",
     "test": "npm run test:release",
     "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
-    "test:launch": "node scripts/verify_launch_access.test.cjs && node scripts/verify_launch_runtime.test.mjs && node scripts/verify_maintenance_containment.test.mjs && node scripts/verify_launch_repairs.test.mjs && node scripts/verify_virtual_accounts.test.mjs && node scripts/verify_admin_console.test.mjs",
+    "test:launch": "node scripts/verify_launch_access.test.cjs && node scripts/verify_launch_runtime.test.mjs && node scripts/verify_maintenance_containment.test.mjs && node scripts/verify_launch_repairs.test.mjs && node scripts/verify_virtual_accounts.test.mjs && node scripts/verify_admin_console.test.mjs && node scripts/verify_author_workspace.test.mjs",
     "backup:launch-data": "node scripts/backup_launch_data.cjs",
     "backup:launch-postgres": "node scripts/backup_launch_postgres.cjs",
     "test:stage11": "node scripts/verify_stage11_xss.test.mjs && node scripts/verify_stage11_performance.test.mjs",

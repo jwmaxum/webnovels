@@ -92,7 +92,8 @@ test('account rollout validates real Auth and DB readiness while content routes 
  let r=await invoke('/api/v2/me');assert.equal(r.response.status,200);assert.equal((await r.response.json()).accountServiceOnly,true);
  assert.equal((await invoke('/api/v2/me',{ready:false})).response.status,503);
  assert.equal((await invoke('/api/v2/admin/virtual-accounts',{identity:author})).response.status,403);
- assert.equal((await invoke('/api/v2/creator/works')).response,null);
+ assert.equal((await invoke('/api/v2/creator/works')).response.status,403);
+ assert.equal((await invoke('/api/v2/creator/publications')).response,null);
  assert.equal((await invoke('/api/v2/me',{env:{P0_API_ENABLED:'true'}})).response,null);
  assert.equal((await invoke('/api/v2/accounts/health',{env:{ACCOUNT_API_DISABLED:'true'}})).response.status,503);
  const redirected=await invoke('/api/v2/accounts/health',{redirect:true});assert.equal(redirected.response.status,503);assert.equal(redirected.calls.length,1);

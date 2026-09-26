@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-24T23:50:00.449Z",
+  "checkedAt": "2026-09-26T06:46:32.450Z",
   "management": {
     "ok": true,
     "status": 201,
@@ -10,17 +10,16 @@
   "runtimeAcceptance": "not_assessed",
   "restoreAcceptance": "not_assessed",
   "blockers": [
-    "VERIFIED_AUTH_LINKS_REQUIRED",
     "AUTHORING_MIGRATIONS_INCOMPLETE",
     "P0_NOT_LOCKED",
     "LEGACY_BODY_SOURCE_CONFLICT",
     "PROVIDER_BACKUP_UNAVAILABLE"
   ],
   "manualBackupEvidence": {
-    "createdAt": "2026-09-24T23:32:36.561Z",
+    "createdAt": "2026-09-26T06:40:52.028Z",
     "projectRef": "ghwabesnydktumeyejnm",
-    "sha256": "988c1e288126be833b307ffc8c3ef03377d1f8aff3a7fd9eb3a587276274ef74",
-    "tableDataEntries": 78,
+    "sha256": "d8e7cb58f16ed311105f44eb5fde85ec17b93d6cbb6ecc12b61ccf63f9801d2b",
+    "tableDataEntries": 85,
     "archiveReadable": true,
     "hostedRestoreVerified": false,
     "evidenceFile": "artifacts/launch-native-backup.json",
@@ -58,16 +57,16 @@
   },
   "database": {
     "p0_marker": null,
-    "auth_users": 0,
+    "auth_users": 42,
     "legacy_drafts": 2,
-    "linked_admins": 0,
-    "linked_authors": 0,
-    "linked_readers": 0,
+    "linked_admins": 1,
+    "linked_authors": 30,
+    "linked_readers": 10,
     "storage_buckets": 0,
     "storage_objects": 0,
-    "authoring_marker": null,
+    "authoring_marker": "authoring.migrations",
     "legacy_revisions": 0,
-    "confirmed_auth_users": 0,
+    "confirmed_auth_users": 42,
     "legacy_body_conflicts": 78,
     "browser_writable_tables": 0,
     "sensitive_column_access": [
@@ -183,6 +182,23 @@
     "works_without_author_id": 0,
     "legacy_draft_owner_conflicts": 0
   },
+  "authoringVersions": [
+    {
+      "version": "authoring-001"
+    },
+    {
+      "version": "authoring-003"
+    },
+    {
+      "version": "authoring-004"
+    },
+    {
+      "version": "authoring-005"
+    },
+    {
+      "version": "authoring-006"
+    }
+  ],
   "providerBackups": {
     "status": 200,
     "count": 0,

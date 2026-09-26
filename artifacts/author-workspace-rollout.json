@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-09-26T06:36:37.409Z",
+  "snapshotSha256": "5556689dfa7c586a1c89ed649defaad82577a6c59d8616e6943c6e98c782fa4e",
+  "migrationSha256": "a96af1fe95cc20e8bb389daceb0f41b7313c39c218128afa8ef728d8cdd6b1fe",
+  "localProductionDataRehearsal": {
+    "ownedWorksRead": true,
+    "privateWorkCreateAndUpdate": true,
+    "idempotency": true,
+    "draftSaveReadAndHistory": true,
+    "staleWorkAndDraftRejected": true,
+    "crossAuthorDenied": true,
+    "readerDenied": true,
+    "browserRpcDenied": true,
+    "transactionRolledBack": true,
+    "publicTablesPreserved": 42,
+    "legacyDraftsPreserved": 2,
+    "publicationUnchanged": true,
+    "permissionDriftClosesReadiness": true
+  },
+  "productionApplied": true,
+  "browserAcceptance": false,
+  "hostedSupabaseRestore": false,
+  "productionState": [
+    {
+      "enabled": true,
+      "imported_drafts": 2,
+      "identity_evidence": 41,
+      "p0_marker": null
+    }
+  ],
+  "productionAppliedAt": "2026-09-26T06:44:52.708Z",
+  "productionTransaction": {
+    "checkedAt": "2026-09-26T06:44:55.646Z",
+    "privateCreateAndUpdate": true,
+    "draftSaveReadAndHistory": true,
+    "idempotency": true,
+    "staleVersionsRejected": true,
+    "crossAuthorAndReaderDenied": true,
+    "rolledBack": true,
+    "publicTablesPreserved": 42
+  }
+}

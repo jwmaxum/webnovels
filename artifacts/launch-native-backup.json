@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-09-25T03:13:50.213Z",
+  "createdAt": "2026-09-26T06:40:52.028Z",
   "projectRef": "ghwabesnydktumeyejnm",
   "tool": "pg_dump (PostgreSQL) 17.11",
   "requestedSchemas": [
@@ -15,10 +15,10 @@
     "public",
     "storage"
   ],
-  "bytes": 507411,
-  "sha256": "20140776743837ef92b63fed5a7a02dc403c516c51bd9b6dc2a79fe98f7ec0c1",
+  "bytes": 530668,
+  "sha256": "d8e7cb58f16ed311105f44eb5fde85ec17b93d6cbb6ecc12b61ccf63f9801d2b",
   "format": "PostgreSQL custom archive",
-  "tableDataEntries": 82,
+  "tableDataEntries": 85,
   "archiveReadable": true,
   "hostedRestoreVerified": false,
   "providerLoginReadOnly": true,

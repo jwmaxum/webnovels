@@ -1,12 +1,14 @@
 // Bounded account rollout with a separate, operator-enabled database readiness gate.
 // Content, publication and signup continue through the existing P0 gates.
 import {adminConsoleApi} from './admin-console-api.mjs';
+import {authorWorkspaceApi} from './author-workspace-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch}={}) {
   const url=new URL(request.url),path=url.pathname;
   const me=path==='/api/v2/me'&&env.P0_API_ENABLED!=='true';
-  if(!me&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console'].includes(path))return null;
+  const workspace=env.P0_API_ENABLED!=='true'&&/^\/api\/v2\/creator\/(works|drafts)(\/|$)/.test(path);
+  if(!me&&!workspace&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
@@ -35,9 +37,13 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
       return data;
     };
     if(await rpc('launch_accounts_ready')!==true)fail(503,'ACCOUNT_SERVICE_NOT_ACTIVATED');
+    const workspaceReady=async()=>{
+      if(env.AUTHOR_WORKSPACE_DISABLED==='true')return false;
+      try{return await rpc('launch_author_workspace_ready')===true;}catch{return false;}
+    };
     if(path==='/api/v2/accounts/health'){
       if(request.method!=='GET')fail(405,'METHOD_NOT_ALLOWED');
-      return reply({status:'ok',scope:'accounts'});
+      return reply({status:'ok',scope:'accounts',authorWorkspaceReady:await workspaceReady()});
     }
     const authorization=request.headers.get('authorization');
     if(!authorization)fail(401,'AUTH_REQUIRED');
@@ -50,8 +56,10 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
     const actor=await rpc('launch_account_actor',{p_user:user.id});
     if(me){
       if(request.method!=='GET')fail(405,'METHOD_NOT_ALLOWED');
-      return reply({...actor,accountServiceReady:true,accountServiceOnly:true});
+      return reply({...actor,accountServiceReady:true,accountServiceOnly:true,
+        authorWorkspaceReady:!!actor.author&&await workspaceReady()});
     }
+    if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));
     if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail}));
     if(!actor.admin?.is_active||actor.admin.role!=='SUPER_ADMIN')fail(403,'ADMIN_FORBIDDEN');
     if([...url.searchParams.keys()].some(k=>k!=='action'))fail(400,'INVALID_QUERY');

@@ -13,6 +13,8 @@
  */
 function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   window.CreatorDraftEditor?.checkpoint();
+  window.CreatorFiles?.reset();
+  window.CreatorPublications?.reset();
   // 관리자 메뉴 접근 시 로그인 검증
   const adminLoggedIn = !!window.WebNovelsAuth?.getActor()?.admin;
   if (viewId === 'view-admin-cms' && !adminLoggedIn) {

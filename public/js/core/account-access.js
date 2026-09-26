@@ -3,7 +3,10 @@
   window.showAccountAccessSummary=function(viewId){
     if(!['view-creator','view-mypage'].includes(viewId))return false;
     const root=document.getElementById(viewId),who=window.WebNovelsAuth?.getActor();if(!root)return false;
-    const limited=!!who?.accountServiceOnly;
+    const workspace=viewId==='view-creator'&&who?.author?.status==='APPROVED'&&who?.authorWorkspaceReady===true;
+    const limited=!!who?.accountServiceOnly&&!workspace;
+    root.classList.toggle('private-author-workspace',workspace);
+    const notice=document.getElementById('authorWorkspaceNotice');if(notice)notice.hidden=!workspace;
     root.classList.toggle('account-only',limited);
     root.querySelector('.account-access-summary')?.remove();
     if(!limited)return false;

@@ -12,6 +12,8 @@
  function assertOpen(turn,user){if(turn!==epoch||actor()?.userId!==user)throw Error('SESSION_CHANGED');}
  function button(label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.className='btn btn-outline btn-sm';b.onclick=safe(fn);return b;}
  async function open(workId){
+  if(actor()?.author?.status!=='APPROVED')throw Error('AUTHOR_REQUIRED');
+  if(window.WEBNOVELS_CONFIG?.authorFilesEnabled!==true)throw Error('AUTHOR_FILES_NOT_ACTIVATED');
   reset();const turn=epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
   const data=await window.WebNovelsAuth.api('/api/v2/creator/works/'+workId);assertOpen(turn,user);work={...data.work,userId:user};
   editorContext=window.CreatorDraftEditor.getFileContext();jobs=await DraftStore.fileJobs(user,String(workId));assertOpen(turn,user);

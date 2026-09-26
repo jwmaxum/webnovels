@@ -101,7 +101,8 @@
   function options(values,selected,blank=false) {return (blank?'<option value="">미설정 (공개 전 선택)</option>':'')+values.map(([v,t])=>`<option value="${v}" ${v===selected?'selected':''}>${t}</option>`).join('');}
   function detailHTML(work,episodes,tab) {
     const disabled=work.trashed_at||work.moderation_state!=='CLEAR';
-    const nav=[['episodes','회차 목록'],['settings','작품 설정'],['reactions','독자 반응']].map(([v,t])=>`<button type="button" class="btn ${v===tab?'btn-primary':'btn-outline'}" data-detail-tab="${v}">${t}</button>`).join('');
+    const workspace=actor()?.authorWorkspaceReady===true;
+    const nav=[['episodes','회차·원고'],['settings','작품 설정'],...(!workspace?[['reactions','독자 반응']]:[])].map(([v,t])=>`<button type="button" class="btn ${v===tab?'btn-primary':'btn-outline'}" data-detail-tab="${v}">${t}</button>`).join('');
     let body;
     if(tab==='settings')body=`<form id="cwSettings"><fieldset ${disabled?'disabled':''}>
       <label for="cwEditTitle">작품명</label><input id="cwEditTitle" class="form-control" name="title" required maxlength="200" value="${e(work.title)}">
@@ -111,17 +112,17 @@
       <label for="cwRating">이용등급</label><select id="cwRating" class="form-control" name="rating">${options([['ALL','전체 이용가'],['AGE_15','15세 이상'],['AGE_19','19세 이상']],work.rating_confirmed?work.rating:'',!work.rating_confirmed)}</select>
       <label for="cwAI">AI 사용 표기</label><select id="cwAI" class="form-control" name="ai_usage_type">${options([['NONE','사용 안 함'],['ASSISTED','보조 사용'],['GENERATED','AI 생성 포함']],work.ai_confirmed?work.ai_usage_type:'',!work.ai_confirmed)}</select>
       ${window.CreatorOperations?.active()?'':`<label for="cwSerial">연재 상태 (공개 여부와 별개)</label><select id="cwSerial" class="form-control" name="serial_state">${options([['ONGOING','연재 중'],['HIATUS','휴재'],['COMPLETED','완결']],work.serial_state)}</select>`}
-      <p>표지는 파일 관리에서 올릴 수 있습니다. 표지가 없으면 제목으로 기본 표지를 표시합니다.</p>
+      <p>${workspace?'표지 업로드는 준비 중입니다.':'표지는 파일 관리에서 올릴 수 있습니다.'} 표지가 없으면 제목으로 기본 표지를 표시합니다.</p>
       <button type="submit" class="btn btn-primary">설정 저장</button></fieldset></form>
       ${window.CreatorOperations?.active()?'<div id="cwSerialOperations"></div>':''}
       ${work.visibility==='PUBLIC'&&!disabled?'<button type="button" class="btn btn-outline" id="cwPrivate">비공개로 전환</button>':''}
-      <p>설정 저장은 공개 여부를 바꾸지 않습니다. 저장된 초안은 미리보기·게시에서 확인할 수 있습니다.</p>`;
+      <p>설정 저장은 공개 여부를 바꾸지 않습니다. 저장된 초안은 원고 작성·복구에서 확인할 수 있습니다.</p>`;
     else if(tab==='reactions')body=window.CreatorOperations?.active()?'<div id="cwReactions"></div>':'<p>댓글·독자 반응 관리 기능은 준비 중입니다.</p>';
     else body=`<h4>회차 ${episodes.length}개</h4>${window.CreatorOperations?.active()?'<div id="cwEpisodeOperations"></div>':episodes.length?`<ol class="cw-episodes">${episodes.map(ep=>`<li>${e(ep.episode_number)}화 · ${e(ep.title)} <span>${e(ep.status)}</span>${ep.scheduled_at?' · 예약 '+e(ep.scheduled_at):''}</li>`).join('')}</ol>`:'<p>아직 작성한 회차가 없습니다.</p>'}<button type="button" id="cwDrafts" class="btn btn-primary">원고 작성·복구</button>`;
     return `<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><header class="cw-card">${cover(work)}<div><h3>${e(work.title)}</h3><p>${status(work)}</p>
       ${work.moderation_state==='RESTRICTED'?`<p role="alert">운영 제한: ${e(work.moderation_reason)}</p>`:''}
       <p>최초 공개 전 확인: ${work.publication_missing?.length?e(work.publication_missing.join(', ')):'기본 정보 입력 완료 (게시 검증은 별도)'}</p></div></header>
-      <nav class="cw-toolbar" aria-label="작품 관리">${nav}<button type="button" class="btn btn-outline" id="cwFiles">파일·표지·내보내기</button><button type="button" class="btn btn-outline" id="cwPublications">공개·예약 회차</button></nav>${body}<p id="cwMessage" role="status"></p>
+      <nav class="cw-toolbar" aria-label="작품 관리">${nav}${workspace?'':'<button type="button" class="btn btn-outline" id="cwFiles">파일·표지·내보내기</button><button type="button" class="btn btn-outline" id="cwPublications">공개·예약 회차</button>'}</nav>${body}<p id="cwMessage" role="status"></p>
       <div class="cw-danger"><p>휴지통 이동·비공개 전환 시 공개가 중단되고 대기 중인 예약은 취소됩니다. 회차·원고·파일은 보존됩니다. 복구해도 비공개이며 예약은 자동 재개되지 않습니다.</p>
       <button type="button" class="btn btn-outline" id="cwTrash">${work.trashed_at?'비공개로 복구':'휴지통으로 이동'}</button></div>
       <button type="button" class="btn btn-ghost" id="cwReload">최신 내용 불러오기 (입력 초기화)</button>`;

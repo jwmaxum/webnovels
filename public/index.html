@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=113">
+  <link rel="stylesheet" href="/styles.css?v=114">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -611,7 +611,7 @@
             <button class="cdg-genre-pill" data-creator-tab="home">홈</button>
             <button class="cdg-genre-pill active" data-creator-tab="works"><i data-lucide="book-open" style="width:13px;height:13px;display:inline;"></i> 내 작품</button>
             <button class="cdg-genre-pill" data-creator-tab="help">설정·도움말</button>
-            <button class="cdg-genre-pill" data-creator-tab="new-ep"><i data-lucide="plus-circle" style="width:13px;height:13px;display:inline;"></i> 2. 회차등록</button>
+            <button class="cdg-genre-pill" data-creator-tab="new-ep"><i data-lucide="plus-circle" style="width:13px;height:13px;display:inline;"></i> 원고 작성·복구</button>
             <button class="cdg-genre-pill" data-creator-tab="status"><i data-lucide="sliders" style="width:13px;height:13px;display:inline;"></i> 3. 연재관리</button>
             <button class="cdg-genre-pill" data-creator-tab="stats"><i data-lucide="bar-chart-2" style="width:13px;height:13px;display:inline;"></i> 4. 독자통계</button>
             <button class="cdg-genre-pill" data-creator-tab="ad-rev" style="display:none"><i data-lucide="tv" style="width:13px;height:13px;display:inline;"></i> 5. 광고수익</button>
@@ -630,6 +630,7 @@
             </div>
           </div>
 
+          <p id="authorWorkspaceNotice" class="cms-notice" hidden>내 작품을 등록하고 작품 정보와 비공개 원고를 저장할 수 있습니다. 원고의 독자 공개·예약 발행과 파일 업로드는 준비 중입니다.</p>
           <!-- Tab 1: Works Management (작품관리) -->
           <div class="creator-tab-panel active" id="creatorTab-works">
             <div class="card glass-panel">
@@ -2368,15 +2369,15 @@
 
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=102"></script>
-  <script src="/js/core/ui-utils.js?v=102"></script>
-  <script src="/js/core/router.js?v=111"></script>
+  <script src="/js/core/ui-utils.js?v=114"></script>
+  <script src="/js/core/router.js?v=114"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader-content.js?v=107"></script>
   <script src="/js/reader/reader.js?v=113"></script>
   <script src="/js/reader/reader-hub.js?v=108"></script>
   <script src="/js/reader/continue-reading.js?v=108"></script>
-  <div class="modal" id="modalCreatorFiles" role="dialog" aria-modal="true" aria-labelledby="creatorFilesWorkTitle">
-    <div class="modal-content creator-files-modal">
+  <div class="modal-backdrop" id="modalCreatorFiles" role="dialog" aria-modal="true" aria-labelledby="creatorFilesWorkTitle" hidden>
+    <div class="modal-dialog creator-files-modal">
       <div class="modal-header"><h3 id="creatorFilesWorkTitle">작품 파일 관리</h3><button type="button" class="modal-close" aria-label="파일 관리 닫기">×</button></div>
       <div class="modal-body">
         <p id="creatorFilesMessage" role="status" aria-live="polite"></p>
@@ -2405,8 +2406,8 @@
       </div>
     </div>
   </div>
-  <div class="modal" id="modalCreatorPublication" role="dialog" aria-modal="true" aria-labelledby="publicationHeading">
-    <div class="modal-content creator-publication-modal">
+  <div class="modal-backdrop" id="modalCreatorPublication" role="dialog" aria-modal="true" aria-labelledby="publicationHeading" hidden>
+    <div class="modal-dialog creator-publication-modal">
       <div class="modal-header"><h3 id="publicationHeading">원고 미리보기·게시</h3><button type="button" class="modal-close" aria-label="게시 화면 닫기">×</button></div>
       <div class="modal-body">
         <p id="publicationMessage" role="status" aria-live="polite"></p>
@@ -2455,9 +2456,9 @@
   <script src="/js/creator/draft-diff.js?v=105"></script>
   <script src="/js/creator/creator-editor.js?v=106"></script>
   <script src="/js/creator/creator-publications.js?v=107"></script>
-  <script src="/js/creator/creator-files.js?v=106"></script>
-  <script src="/js/creator/creator.js?v=105"></script>
-  <script src="/js/creator/creator-works.js?v=106"></script>
+  <script src="/js/creator/creator-files.js?v=114"></script>
+  <script src="/js/creator/creator.js?v=114"></script>
+  <script src="/js/creator/creator-works.js?v=114"></script>
   <script src="/js/creator/creator-operations.js?v=108"></script>
   <script src="/js/admin/admin.js?v=102"></script>
   <script src="/js/admin/admin-console.js?v=113"></script>
@@ -2468,10 +2469,10 @@
   <script src="/supabase-admin.js?v=110"></script>
   <script src="/js/core/auth-session.js?v=111"></script>
   <script src="/js/admin/virtual-accounts.js?v=111"></script>
-  <script src="/js/core/account-access.js?v=111"></script>
+  <script src="/js/core/account-access.js?v=114"></script>
   <script src="/js/core/appeals.js?v=109"></script>
   <script src="/js/core/auth-ui.js"></script>
-  <script src="/js/core/service-status.js?v=111"></script>
+  <script src="/js/core/service-status.js?v=114"></script>
   <script src="/app.js?v=102"></script>
 </body>
 </html>

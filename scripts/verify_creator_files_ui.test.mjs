@@ -4,10 +4,10 @@ function setup(){
  const elements=new Map(),saved=new Map(),calls=[];let uid='u',id=0;
  function element(tag='div'){return {tag,children:[],value:'',textContent:'',disabled:false,checked:false,style:{},append(...items){this.children.push(...items);},replaceChildren(){this.children=[];this.textContent='';},setAttribute(){},click(){calls.push({download:this.download});},getContext:()=>({clearRect(){},fillRect(){},drawImage(bitmap){calls.push({bitmap});}})};}
  const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
- const c={fflate,TextDecoder,TextEncoder,btoa,Blob,URL,Uint8Array,crypto:{randomUUID:()=>String(++id)},setTimeout(){},
+ const c={WEBNOVELS_CONFIG:{authorFilesEnabled:true},fflate,TextDecoder,TextEncoder,btoa,Blob,URL,Uint8Array,crypto:{randomUUID:()=>String(++id)},setTimeout(){},
   document:{readyState:'complete',getElementById:get,createElement:element,createTextNode:text=>({text})},openModal(){},closeModal(){},confirm:()=>true,
   DraftStore:{saveFileJob:async j=>saved.set(j.key,structuredClone(j)),fileJobs:async(u,w)=>[...saved.values()].filter(j=>j.userId===u&&j.workId===w)},
-  WebNovelsAuth:{getActor:()=>uid?{userId:uid,author:{id:1}}:null,api:async(path,options)=>{calls.push({path,options});if(path.startsWith('/api/v2/creator/works/'))return {work:{id:'10',title:'작품',version:'1'}};if(path.includes('/import?'))return {draft:{id:'imported'}};return {files:[]};}},
+  WebNovelsAuth:{getActor:()=>uid?{userId:uid,author:{id:1,status:'APPROVED'}}:null,api:async(path,options)=>{calls.push({path,options});if(path.startsWith('/api/v2/creator/works/'))return {work:{id:'10',title:'작품',version:'1'}};if(path.includes('/import?'))return {draft:{id:'imported'}};return {files:[]};}},
   CreatorDraftEditor:{getFileContext:()=>({userId:uid,workId:'10',id:'d',seq:3}),replaceFromFile:async(s,e)=>calls.push({replace:s,expected:e})}};
  c.window=c;vm.createContext(c);code.forEach(s=>vm.runInContext(s,c));return {c,get,saved,calls,setUser:x=>uid=x};
 }

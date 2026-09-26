@@ -1590,6 +1590,7 @@ body {
 .modal-backdrop.active {
   display: flex;
 }
+.modal-backdrop[hidden] { display: none !important; }
 
 .modal-dialog {
   width: 90%;
@@ -5578,6 +5579,9 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .va-account form label {display:block;margin:.7rem 0;}
 .va-account form input,.va-account form textarea {display:block;width:100%;margin-top:.4rem;}
 .main-view.account-only > :not(.account-access-summary) {display:none!important;}
+.private-author-workspace #creatorTabsBar [data-creator-tab]:not([data-creator-tab="works"]):not([data-creator-tab="new-ep"]),
+.private-author-workspace #creatorAuthorDetails,
+.private-author-workspace #btnCreatorFiles,.private-author-workspace #btnOpenPublication {display:none!important;}
 .account-access-summary p {margin:1rem 0;}
 .account-access-summary button {margin-right:.75rem;}
 #adminOperationsShell {max-width:1600px;}

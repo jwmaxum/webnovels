@@ -26,7 +26,9 @@
           const accounts=await fetch('/api/v2/accounts/health',{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(8000)});
           const accountBody=accounts.ok?await accounts.json():null;
           if(accountBody?.status==='ok'&&accountBody.scope==='accounts')
-            message.textContent='등록된 계정으로 로그인할 수 있습니다. 신규 가입과 연재·독자 기능은 준비 중입니다.';
+            message.textContent=accountBody.authorWorkspaceReady
+              ? '작가는 내 작품 등록·수정과 비공개 원고 저장을 이용할 수 있습니다. 신규 가입·독자 열람은 준비 중입니다.'
+              : '등록된 계정으로 로그인할 수 있습니다. 신규 가입과 연재·독자 기능은 준비 중입니다.';
         }
       } catch {
         banner.hidden = false;

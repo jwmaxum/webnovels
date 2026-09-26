@@ -13,6 +13,7 @@
 
 // 작가센터 7대 탭 전환 함수
 window.switchCreatorTab = function(tabKey, shouldPushState = true) {
+  if (window.WebNovelsAuth?.getActor()?.authorWorkspaceReady && !['works','new-ep'].includes(tabKey)) tabKey='works';
   if (['ad-rev','sales-rev','settlements'].includes(tabKey)) {
     showToast('수익·정산 기능은 현재 사용할 수 없습니다.');
     tabKey = 'works';
@@ -55,7 +56,7 @@ window.switchCreatorTab = function(tabKey, shouldPushState = true) {
       try { window.history.pushState({ path: targetUrl }, '', targetUrl); } catch (e) {}
     }
   }
-  if (tabKey === 'works' && shouldPushState) window.CreatorWorks?.loadFromRoute();
+  if (tabKey === 'works') window.CreatorWorks?.loadFromRoute();
 };
 
 // 예약 발행 일시 입력창 토글

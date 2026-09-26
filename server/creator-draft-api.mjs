@@ -1,7 +1,7 @@
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const number = s => typeof s === 'string' && /^(0|[1-9]\d{0,18})$/.test(s) && BigInt(s) <= 9223372036854775807n;
-export async function creatorDraftApi({request,env,actor,db,readBody,fail}) {
-  if (env.AUTHOR_DRAFTS_ENABLED !== 'true' || env.AUTHOR_WORKS_ENABLED !== 'true') fail(503,'AUTHOR_DRAFTS_NOT_ACTIVATED');
+export async function creatorDraftApi({request,env,actor,db,readBody,fail,workspaceReady=false}) {
+  if (!workspaceReady && (env.AUTHOR_DRAFTS_ENABLED !== 'true' || env.AUTHOR_WORKS_ENABLED !== 'true')) fail(503,'AUTHOR_DRAFTS_NOT_ACTIVATED');
   const who=await actor();
   if (who.author?.status !== 'APPROVED') fail(403,'AUTHOR_REQUIRED');
   const url=new URL(request.url), match=url.pathname.match(/^\/api\/v2\/creator\/drafts(?:\/([^/]+)(?:\/(history))?)?$/);
