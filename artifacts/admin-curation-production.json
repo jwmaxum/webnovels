@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-09-26T06:06:31.909Z",
+  "origin": "https://webnovels-db4.pages.dev",
+  "commit": "bb288bb5a855045582db35a6cc64f1fb10499da8",
+  "gitPush": "completed",
+  "ci": [
+    {
+      "name": "WebNovels CI / Build & Test Workflow",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jwmaxum/webnovels/actions/runs/36222236125"
+    }
+  ],
+  "cloudflare": {
+    "name": "Cloudflare Pages",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/jwmaxum/webnovels/runs/108349886937",
+    "detailsUrl": "https://dash.cloudflare.com/?to=/7c88b2d2b3fe9baf32dc744ac0a631b3/pages/view/webnovels/e115fee1-a94b-431d-a3d2-635e2dcfcbc9"
+  },
+  "deploymentStatusCheckedAt": "2026-09-26T06:00:23.451Z",
+  "deploymentId": "e115fee1-a94b-431d-a3d2-635e2dcfcbc9",
+  "productionSqlApplied": true,
+  "productionDatabaseSaveVerified": true,
+  "productionDatabaseConflictVerified": true,
+  "databaseVerificationTransactionRolledBack": true,
+  "productionPublicTablesPreserved": 42,
+  "deployedAssetVerification": "pending: TLS connection reset before HTTP response",
+  "productionHttpSaveVerification": "not run: asset verification could not connect",
+  "failedPhase": "assets",
+  "networkErrorCode": "ECONNRESET",
+  "directConnectionRetried": true,
+  "tlsCertificateVerificationDisabled": false,
+  "verificationAuthSessionCreated": false,
+  "browserAcceptance": false,
+  "manualAcceptanceGuide": "docs/launch/admin-home-curation.md"
+}

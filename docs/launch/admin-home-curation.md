@@ -31,6 +31,22 @@
 - `node scripts/prepare_admin_console.mjs <백업 디렉터리> --curation`: 실제 백업을 격리 PGlite에 복원하여 저장·충돌 거절·롤백·public 행 보존을 검증한다. `--apply` 추가 시 검증 후 운영 SQL을 적용한다.
 - `scripts/verify_admin_console.test.mjs`: 권한/필드/Origin/버전, 원고 보존, 감사 불변성, 이전 경로 변경 감지, 저장·되돌리기·실패·충돌 UI, 홈 플래그 반영 검증.
 - 브라우저/localhost 인수는 실행하지 않는다. 로컬 격리 DB·UI VM과 실제 운영 HTTP/DB 검증을 구분한다.
-- 실행 결과: `artifacts/admin-curation-rollout.json`. 배포 및 실제 HTTP 확인은 후속 운영 기록에 남긴다.
+- 실행 결과: [운영 SQL·DB 검증](../../artifacts/admin-curation-rollout.json), [배포·HTTP 확인 상태](../../artifacts/admin-curation-production.json).
 
 운영 SQL 적용 후 실제 DB 트랜잭션에서 설정 변경·영속 값·감사 기록과 이전 버전의 409 충돌을 확인하고 롤백했다. 적용 전 백업과 public 42개 테이블의 전체 행을 대조해 원본이 보존되었음을 확인했다. 영구적인 홈 노출 설정 변경은 운영자가 저장할 때 이루어진다.
+
+## 배포 결과와 남은 확인
+
+- 코드 커밋: `bb288bb5a855045582db35a6cc64f1fb10499da8`, `main` push 완료.
+- 관리자 콘솔 테스트 10개와 전체 `npm run build` 통과. [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/36222236125) 성공.
+- [Cloudflare Pages 배포](https://dash.cloudflare.com/?to=/7c88b2d2b3fe9baf32dc744ac0a631b3/pages/view/webnovels/e115fee1-a94b-431d-a3d2-635e2dcfcbc9) 성공. 배포 ID `e115fee1-a94b-431d-a3d2-635e2dcfcbc9`, 성공 상태 확인 시각 2026-09-26 15:00 KST.
+- 배포 후 이 작업 환경에서 운영 도메인에 접속하면 TLS 협상 중 연결이 초기화되었다. 기본 로컬 프록시(`127.0.0.1:9`)를 요청 단위로 제외해도 같았으며, DNS의 두 IPv4 주소와 TLS 1.2에서도 HTTP 응답을 받지 못했다. 인증서 검증은 유지했다. 이 결과만으로 운영 사이트 장애라고 판정하지 않는다.
+- 따라서 **배포된 자산의 일치 여부와 운영 HTTP 저장·재조회는 확인 대기**다. 요청이 정적 자산 확인 단계에서 중단되어 관리자 검증 세션은 생성하지 않았다. 운영 DB 직접 저장 검증 완료와 구분한다. 브라우저/localhost 인수는 실행하지 않았다.
+
+운영 화면에서의 확인 절차:
+
+1. 최고 관리자 또는 `CURATION_WRITE` 권한 계정으로 [작품 CMS](https://webnovels-db4.pages.dev/admin/works)에 로그인한다. 이전 화면이 남아 있으면 강력 새로고침한다.
+2. 홈 노출 설정에 추천·인기·신작 체크박스와 저장·되돌리기가 표시되는지 확인한다. 단순 조회 권한 계정에는 조회 전용 문구가 표시된다.
+3. 실제로 노출을 바꿀 작품의 체크를 변경하고 저장한다. 저장 완료 표시 후 새로고침하여 선택이 유지되는지 확인한다.
+4. 공개 조건을 만족하는 작품인지, 인기·신작의 최대 표시 수가 4개인지 고려하여 홈을 확인한다. 변경 이력은 감사 기록에서 확인한다.
+5. 저장 실패 시 화면의 오류와 요청 상태를 확인한다. 409는 최신 목록을 불러온 후 다시 선택하고, 401은 재로그인하며, 403은 관리자 권한을 확인한다. 연결 오류일 때에는 저장 여부를 먼저 재조회한 뒤 다시 시도한다.
