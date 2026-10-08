@@ -24,8 +24,12 @@ function bindWebNovelsEvents() {
       const targetView = link.getAttribute('data-target');
       if (!targetView) return;
       e.preventDefault();
+      if (window.ReaderDiscovery?.active() && targetView === 'view-discover') {
+        if (link.dataset.sub === 'ranking') return;
+        return navigateTo('/discover');
+      }
       const href = link.getAttribute('href');
-      if (href && href.startsWith('#')) window.location.hash = href;
+      if (href && href.startsWith('#') && !window.ReaderDiscovery?.active()) window.location.hash = href;
       if (typeof switchWebNovelsView === 'function') {
         switchWebNovelsView(targetView, link);
       }
@@ -193,13 +197,14 @@ function bindWebNovelsEvents() {
 
   // Work Detail Buttons
   document.getElementById('btnWorkDetailBack')?.addEventListener('click', () => {
+    if (window.ReaderDiscovery?.active()) return window.history.back();
     if (typeof switchWebNovelsView === 'function') switchWebNovelsView(lastMainView || 'view-home');
   });
   document.getElementById('btnDetailReadFirst')?.addEventListener('click', () => {
-    if (typeof openReaderDirect === 'function' && activeWork) openReaderDirect(activeWork.id, 1);
+    if (typeof openReaderDirect === 'function' && activeWork) openReaderDirect(activeWork.id, activeWork.firstEpisodeNumber || [...(activeWork.episodes || [])].sort((a,b)=>a.episodeNumber-b.episodeNumber)[0]?.episodeNumber);
   });
   document.getElementById('btnStickyRead')?.addEventListener('click', () => {
-    if (typeof openReaderDirect === 'function' && activeWork) openReaderDirect(activeWork.id, 1);
+    if (typeof openReaderDirect === 'function' && activeWork) openReaderDirect(activeWork.id, activeWork.firstEpisodeNumber || [...(activeWork.episodes || [])].sort((a,b)=>a.episodeNumber-b.episodeNumber)[0]?.episodeNumber);
   });
   document.getElementById('btnDetailFavorite')?.addEventListener('click', () => {
     if (typeof toggleFavoriteWork === 'function' && activeWork) toggleFavoriteWork(activeWork.id);
@@ -213,32 +218,13 @@ function bindWebNovelsEvents() {
 
   // Reader Events
   document.getElementById('btnReaderBack')?.addEventListener('click', () => {
+    if (window.ReaderDiscovery?.active() && activeWork) return openWorkDetailDirect(activeWork.id);
     if (typeof switchWebNovelsView === 'function') switchWebNovelsView('view-work-detail');
   });
   document.getElementById('btnReaderSettings')?.addEventListener('click', () => {
     if (typeof openModal === 'function') openModal('modalReaderSettings');
   });
-  document.getElementById('btnPrevEp')?.addEventListener('click', () => {
-    const curEp = parseInt(activeEpisodeId, 10) || 1;
-    if (curEp <= 1) {
-      if (typeof showToast === 'function') showToast('첫 번째 회차입니다.');
-    } else {
-      if (typeof openReaderDirect === 'function' && activeWork) openReaderDirect(activeWork.id, curEp - 1);
-    }
-  });
-  document.getElementById('btnNextEp')?.addEventListener('click', () => {
-    const curEp = parseInt(activeEpisodeId, 10) || 1;
-    const nextEp = curEp + 1;
-    const work = activeWork || SAMPLE_WORKS[0];
-    const availableEpisodes = work?.episodes || [];
-    const maxEp = availableEpisodes.length > 0 ? Math.max(...availableEpisodes.map(e => e.episodeNumber)) : 6;
-
-    if (nextEp <= maxEp) {
-      if (typeof openReaderDirect === 'function' && activeWork) openReaderDirect(activeWork.id, nextEp);
-    } else {
-      if (typeof handleComingSoonEpisode === 'function') handleComingSoonEpisode(nextEp);
-    }
-  });
+  // Reader owns previous/next handlers and uses actual public episode neighbours.
 
   // Sub-Category Navigation Bar (웹소설 | 웹툰 | 장르 | 랭킹 | 신작 | 완결작)
   document.querySelectorAll('#subCategoryNav [data-subtab]').forEach(tab => {
@@ -246,6 +232,10 @@ function bindWebNovelsEvents() {
       document.querySelectorAll('#subCategoryNav [data-subtab]').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       const subtab = tab.dataset.subtab;
+      if (window.ReaderDiscovery?.active()) {
+        const routes = { novel:'/discover?type=NOVEL',webtoon:'/discover?type=WEBTOON',genre:'/discover',ranking:'/discover?sort=popular',new:'/discover?sort=new',completed:'/discover?status=COMPLETED' };
+        return navigateTo(routes[subtab] || '/discover');
+      }
 
       if (currentActiveView !== 'view-home' && typeof switchWebNovelsView === 'function') {
         switchWebNovelsView('view-home');
@@ -321,6 +311,7 @@ function bindWebNovelsEvents() {
  */
 window.openRankingFromNav = function(event) {
   if (event) event.preventDefault();
+  if (window.ReaderDiscovery?.active()) return navigateTo('/discover?sort=popular');
   if (typeof switchWebNovelsView === 'function') switchWebNovelsView('view-home');
   setTimeout(() => {
     const rankingEl = document.getElementById('curatedRankingSection') || document.getElementById('homeRankingSection');
@@ -429,7 +420,7 @@ async function initWebNovelsApp() {
   if (window.WebNovelsAdmin) {
     try {
       window.WebNovelsAdmin.init();
-      const remoteWorks = await window.WebNovelsAdmin.fetchWorksFromSupabase();
+      const remoteWorks = window.ReaderCatalog?.active() ? null : await window.WebNovelsAdmin.fetchWorksFromSupabase();
       if (Array.isArray(remoteWorks)) {
         console.log('⚡ [App Init] Supabase DB 실시간 30개 작품 로드 성공:', remoteWorks.length);
         SAMPLE_WORKS.length = 0;

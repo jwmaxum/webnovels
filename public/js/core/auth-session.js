@@ -36,6 +36,9 @@
     window.AdminOperations?.reset();
     window.WebNovelsAppeals?.reset();
     window.ReaderHub?.reset();
+    window.ReaderSession?.reset();
+    window.ReaderLibrary?.reset();
+    window.ContinueReading?.reset();
     if(window.WEBNOVELS_CONFIG?.readerServiceEnabled)window.ReaderPreferencesManager?.reset();
     keys.forEach(k => localStorage.removeItem(k));
     if (typeof isAdminLoggedIn !== 'undefined') isAdminLoggedIn = false;
@@ -78,9 +81,14 @@
   async function api(path, options = {}) {
     if (!/^\/api\/v2\//.test(path) || path.includes('..')) throw error('INVALID_REQUEST',400);
     const epoch = generation;
-    const send = async () => fetch(path, { ...options, signal: options.signal || globalThis.AbortSignal?.timeout?.(15000), credentials: 'omit', headers: {
-      'Content-Type': 'application/json', ...options.headers, Authorization: 'Bearer ' + await token()
-    }});
+    const send = async () => {
+      const bearer = await token();
+      // Account changes during SDK token lookup must stop a write before dispatch.
+      if (epoch !== generation) throw error('INVALID_SESSION',401);
+      return fetch(path, { ...options, signal: options.signal || globalThis.AbortSignal?.timeout?.(15000), credentials: 'omit', headers: {
+        'Content-Type': 'application/json', ...options.headers, Authorization: 'Bearer ' + bearer
+      }});
+    };
     let response = await send();
     // One auth refresh only. Never retry network failures or writes with unknown outcomes.
     if (response.status === 401) {

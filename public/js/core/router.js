@@ -46,7 +46,9 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   }
   currentActiveView = viewId;
   window.currentActiveView = currentActiveView;
-  if ((viewId === 'view-home' || viewId === 'view-discover') && window.WEBNOVELS_CONFIG?.authorPublishEnabled)
+  window.ReaderSession?.leave(viewId);
+  window.ReaderDiscovery?.leave(viewId);
+  if (!window.ReaderDiscovery?.active() && (viewId === 'view-home' || viewId === 'view-discover') && window.WEBNOVELS_CONFIG?.authorPublishEnabled)
     window.refreshReaderCatalog?.().catch(() => {});
 
   document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
@@ -103,6 +105,10 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   }
 
   // 데스크톱 사이드바 활성 탭 동기화
+  if (window.ReaderDiscovery?.active()) {
+    if (viewId === 'view-home') window.ReaderDiscovery.home();
+    if (viewId === 'view-discover' && shouldPushState) window.ReaderDiscovery.discover();
+  }
   document.querySelectorAll('.sidebar-nav-item, .cdg-sidebar-item').forEach(item => {
     const target = item.getAttribute('data-side-target') || item.getAttribute('data-target');
     if (target === viewId) {
@@ -123,15 +129,17 @@ window.switchWebNovelsView = switchWebNovelsView;
  * 2. 계층적 Semantic URL 라우터 해석기 (resolveRoute)
  */
 function resolveRoute(pathname, isInitial = false) {
-  const rawPath = (pathname || window.location.pathname || '/').toLowerCase();
-  const hash = (window.location.hash || '').toLowerCase();
-  const path = rawPath.replace(/\/$/, '') || '/';
+  const route = new URL(pathname || window.location.href || '/', window.location.origin);
+  const rawPath = route.pathname.toLowerCase();
+  const hash = rawPath === '/' ? (window.location.hash || '').toLowerCase() : '';
+  const legacyPath = /^#(?:home|discover|library|author|creator|admin)$/.test(hash) ? '/' + hash.slice(1) : rawPath;
+  const path = legacyPath.replace(/\/$/, '') || '/';
   const parts = path.split('/').filter(Boolean);
 
   console.log(`🧭 [SPA Semantic Router] Resolving route: "${path}" (initial: ${isInitial})`);
 
   // 1. 홈 경로 (/ 또는 /home)
-  if (parts.length === 0 || parts[0] === 'home' || hash === '#home') {
+  if (parts.length === 0 || parts[0] === 'home') {
     switchWebNovelsView('view-home', null, false);
     return;
   }
@@ -139,6 +147,7 @@ function resolveRoute(pathname, isInitial = false) {
   // 2. 탐색 경로 (/discover)
   if (parts[0] === 'discover' || hash === '#discover') {
     switchWebNovelsView('view-discover', null, false);
+    if (window.ReaderDiscovery?.active()) window.ReaderDiscovery.discover(route.search || window.location.search);
     return;
   }
 
@@ -223,7 +232,7 @@ window.resolveRoute = resolveRoute;
  * 3. 프로그래밍 방식 URL 이동 (navigateTo)
  */
 function navigateTo(path, pushState = true) {
-  if (pushState && window.location.pathname !== path) {
+  if (pushState && window.location.pathname + window.location.search !== path) {
     try {
       window.history.pushState({ path }, '', path);
     } catch (e) {}
@@ -236,10 +245,10 @@ window.navigateTo = navigateTo;
  * 4. 라우터 리스너 초기화 (initRouteHandler)
  */
 function initRouteHandler() {
-  resolveRoute(window.location.pathname, true);
+  resolveRoute(window.location.pathname + window.location.search, true);
 
   window.addEventListener('popstate', () => {
-    resolveRoute(window.location.pathname, false);
+    resolveRoute(window.location.pathname + window.location.search, false);
   });
 }
 window.initRouteHandler = initRouteHandler;
@@ -268,6 +277,7 @@ window.openLibraryTabDirect = openLibraryTabDirect;
  * 6. 장르 탐색 뷰 바로 열기 (openGenreDiscover)
  */
 function openGenreDiscover(genre) {
+  if (window.ReaderDiscovery?.active()) return navigateTo('/discover?' + new URLSearchParams({ genre }));
   switchWebNovelsView('view-discover');
   setTimeout(() => {
     const pills = document.querySelectorAll('.filter-pills .pill');
@@ -288,6 +298,7 @@ window.openGenreDiscover = openGenreDiscover;
  * 7. 기타 사이드바 / 회차 연동 헬퍼
  */
 window.openNovelFilterHome = function() {
+  if (window.ReaderDiscovery?.active()) return navigateTo('/discover?type=NOVEL');
   switchWebNovelsView('view-discover');
   setTimeout(() => {
     const pills = document.querySelectorAll('.filter-pills .pill');
@@ -297,6 +308,11 @@ window.openNovelFilterHome = function() {
 };
 
 window.scrollToSection = function(sectionId) {
+  if (window.ReaderDiscovery?.active()) {
+    const routes = { trendingWorksSection: '/discover?sort=popular', webtoonsSection: '/discover?type=WEBTOON',
+      newWorksSection: '/discover?sort=new', completedWorksSection: '/discover?status=COMPLETED', todayFreeSection: '/discover' };
+    if (routes[sectionId]) return navigateTo(routes[sectionId]);
+  }
   if (currentActiveView !== 'view-home') {
     switchWebNovelsView('view-home');
   }
@@ -320,6 +336,7 @@ window.openLibraryTab = function(tabName) {
 };
 
 window.openTopContinueReading = function() {
+  if (window.ReaderHub?.active()) return window.ContinueReading?.open();
   let history = [];
   try {
     history = JSON.parse(localStorage.getItem('webnovels_reading_history') || '[]');
@@ -331,9 +348,9 @@ window.openTopContinueReading = function() {
   }
 };
 
-window.openEpisodeDirect = function(workId, epNum) {
+window.openEpisodeDirect = function(workId, epNum, shouldPushState = true) {
   if (typeof window.openReaderDirect === 'function') {
-    window.openReaderDirect(workId, epNum);
+    window.openReaderDirect(workId, epNum, shouldPushState);
   } else if (typeof openWorkDetailDirect === 'function') {
     openWorkDetailDirect(workId);
   }

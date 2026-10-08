@@ -979,6 +979,7 @@ window.updateSelectedEpisodesCount = function() {
 };
 
 function renderDiscoverWorks(genreFilter = 'ALL') {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.discover();
   const container = document.getElementById('discoverWorksGrid');
   if (!container) return;
 
@@ -1006,6 +1007,7 @@ function renderDiscoverWorks(genreFilter = 'ALL') {
 }
 
 function renderSearchResults(query = '') {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.search(query);
   const container = document.getElementById('searchResults');
   if (!container) return;
 

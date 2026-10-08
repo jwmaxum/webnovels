@@ -155,6 +155,7 @@ function renderCdgHeroSlider(heroWorks) {
 
 // 4. Genre Recommendation Renderer
 function renderGenreRecommendations(selectedGenre = '전체') {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.genre(selectedGenre);
   const container = document.getElementById('genreWorksGrid');
   if (!container) return;
 
@@ -190,6 +191,7 @@ window.applyHomeCuration = function(work) {
   renderHomeWorks().catch(()=>{});
 };
 async function renderHomeWorks() {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.home();
   try {
     if (!getPublishedWorks() || getPublishedWorks().length === 0) {
       ['trendingWorksGrid', 'newWorksGrid', 'webtoonsGrid', 'completedWorksGrid', 'todayFreeGrid', 'genreWorksGrid', 'goldenBestWorksGrid'].forEach(id => {
@@ -346,6 +348,7 @@ function scheduleDiscoverRender() {
 }
 
 window.setDiscoverGenreFilter = function(genre, buttonEl) {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.filter('genre', genre);
   discoverFilterState.genre = genre;
   document.querySelectorAll('#discoverGenreFilters .pill').forEach(btn => btn.classList.remove('active'));
   if (buttonEl) buttonEl.classList.add('active');
@@ -353,6 +356,7 @@ window.setDiscoverGenreFilter = function(genre, buttonEl) {
 };
 
 window.setDiscoverStatus = function(status, buttonEl) {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.filter('status', status);
   discoverFilterState.status = status;
   document.querySelectorAll('#filterStatusGroup .filter-chip').forEach(btn => btn.classList.remove('active'));
   if (buttonEl) buttonEl.classList.add('active');
@@ -360,6 +364,7 @@ window.setDiscoverStatus = function(status, buttonEl) {
 };
 
 window.setDiscoverEpisodeRange = function(range, buttonEl) {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.filter('epRange', range);
   discoverFilterState.epRange = range;
   document.querySelectorAll('#filterEpRangeGroup .filter-chip').forEach(btn => btn.classList.remove('active'));
   if (buttonEl) buttonEl.classList.add('active');
@@ -367,6 +372,7 @@ window.setDiscoverEpisodeRange = function(range, buttonEl) {
 };
 
 window.setDiscoverRating = function(rating, buttonEl) {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.filter('rating', rating);
   discoverFilterState.rating = rating;
   document.querySelectorAll('#filterRatingGroup .filter-chip').forEach(btn => btn.classList.remove('active'));
   if (buttonEl) buttonEl.classList.add('active');
@@ -374,11 +380,13 @@ window.setDiscoverRating = function(rating, buttonEl) {
 };
 
 window.setDiscoverSortOrder = function(sortOrder) {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.filter('sort', sortOrder);
   discoverFilterState.sortBy = sortOrder;
   scheduleDiscoverRender();
 };
 
 window.toggleDiscoverTag = function(tag) {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.toggleTag(tag);
   if (discoverFilterState.tags.has(tag)) {
     discoverFilterState.tags.delete(tag);
   } else {
@@ -398,6 +406,7 @@ window.toggleDiscoverTag = function(tag) {
 };
 
 window.resetDiscoverFilters = function() {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.reset();
   discoverFilterState.genre = 'ALL';
   discoverFilterState.status = 'ALL';
   discoverFilterState.epRange = 'ALL';
@@ -444,6 +453,7 @@ async function renderGoldenBest() {
 // Discover Works View Renderer (다차원 필터링 연동)
 // ----------------------------------------------------
 function renderDiscoverWorks(explicitGenre = null) {
+  if (window.ReaderDiscovery?.active()) return explicitGenre ? window.ReaderDiscovery.filter('genre', explicitGenre) : window.ReaderDiscovery.discover();
   const container = document.getElementById('discoverWorksGrid');
   if (!container) return;
 
@@ -570,6 +580,7 @@ function renderDiscoverWorks(explicitGenre = null) {
 // Global Search Results Renderer
 // ----------------------------------------------------
 function renderSearchResults(query = '') {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.search(query);
   const container = document.getElementById('searchResults');
   if (!container) return;
 
@@ -632,20 +643,54 @@ function normalizeSearchText(text) {
 
 // --- 3. 내 서재(Library) & 관심작품/구독작가/독서기록 ---
 
-async function saveReadingProgress(workId, epNum, progress = 0) {
+async function saveReadingProgress(workId, epNum, progress, position, session = window.ReaderSession?.current) {
+  if (!Number.isInteger(progress) || progress < 0 || progress > 100) return;
+  if (session && (!window.ReaderSession.valid(session) || String(session.workId) !== String(workId) ||
+      Number(session.episodeNumber) !== Number(epNum))) return;
+  const status=text=>{
+    if(session&&!window.ReaderSession.valid(session))return;
+    const element=document.getElementById('readerProgressStatus');
+    if(element){element.textContent=text;element.setAttribute('role','status');element.setAttribute('aria-live','polite');}
+  };
+  if(session?.positionBlocked)return;
   if (window.ReaderHub?.active()) {
-    const episode=activeWork?.episodes?.find(e=>Number(e.episodeNumber)===Number(epNum));
+    const episode=session?.episode || activeWork?.episodes?.find(e=>Number(e.episodeNumber)===Number(epNum));
     if(!episode||!window.WebNovelsAuth?.getActor()?.reader)return;
-    try { await window.ReaderHub.change('progress',{workId,episodeId:episode.id},{progress}); }
-    catch(error){ console.warn('독서 이력 저장 실패',error); }
+    if(!session)return;
+    session.pendingProgress=position&&window.ReaderCatalog?.active()?{progress,position}:{progress};
+    if(session.progressFlight)return session.progressFlight;
+    session.progressFlight=(async()=>{
+      while(session.pendingProgress&&window.ReaderSession.valid(session)){
+        const payload=session.pendingProgress;session.pendingProgress=null;
+        status('읽은 위치를 저장하는 중입니다.');
+        try {
+          await window.ReaderHub.change('progress',{workId,episodeId:episode.id},payload);
+          status('읽은 위치를 저장했습니다.');
+        }catch(error){
+          if(window.ReaderSession.valid(session)){
+            session.pendingProgress=null;
+            if((error?.code||error?.message)==='POSITION_VERSION_CHANGED'){
+              session.positionBlocked=true;
+              status('공개본이 수정되어 위치 저장을 멈췄습니다. 회차를 다시 열어주세요. 기존 독서 기록은 유지됩니다.');
+            }else status('읽은 위치를 저장하지 못했습니다. 연결을 확인한 뒤 다시 스크롤하면 재시도합니다.');
+          }
+        }
+      }
+    })().finally(()=>{session.progressFlight=null;});
+    await session.progressFlight;
     return;
   }
   const user = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
   if (!user) return;
   const key = user.username || user.email || user.id;
   const result = await window.WebNovelsAdmin?.recordReadingProgressInDB(key, workId, epNum, progress);
-  if (!result?.success) return;
-  try { syncUserActivityToStorage(await window.WebNovelsAdmin.fetchReaderActivity(key)); } catch (error) { console.warn('독서 이력 조회 실패', error); }
+  if(session&&!window.ReaderSession.valid(session))return;
+  if(!result?.success){status('읽은 위치를 저장하지 못했습니다. 연결을 확인한 뒤 다시 스크롤하면 재시도합니다.');return;}
+  status('읽은 위치를 저장했습니다.');
+  try {
+    const activity=await window.WebNovelsAdmin.fetchReaderActivity(key);
+    if(!session||window.ReaderSession.valid(session))syncUserActivityToStorage(activity);
+  } catch (error) { console.warn('독서 이력 조회 실패', error); }
 }
 
 async function toggleFavoriteWork(workId) {
@@ -791,6 +836,7 @@ window.openAuthorWorksDirect = function(authorName) {
 };
 
 async function renderLibraryContent(skipRemote = false) {
+  if(window.ReaderCatalog?.active())return window.ReaderLibrary.render();
   const appealTab=document.querySelector('[data-library-tab="appeals"]');
   if(appealTab)appealTab.hidden=!(window.WebNovelsAppeals?.active()&&window.WebNovelsAuth?.getActor()?.reader);
   const continueContainer = document.getElementById('libraryContinueList');
@@ -875,7 +921,8 @@ async function renderLibraryContent(skipRemote = false) {
         if (!work) return null;
         const totalEps = work.episodes?.length || 0;
         const readEpNum = Number(item.episodeNumber) || 1;
-        const pct = Math.min(100, Math.round((readEpNum / totalEps) * 100));
+        if(!work.episodes?.some(ep=>Number(ep.episodeNumber)===readEpNum))return null;
+        const pct = Math.max(0, Math.min(100, Math.round(Number(item.progress) || 0)));
         const cover = escapeHtml(getWorkCover(work));
         return { work, totalEps, readEpNum, pct, cover };
       }).filter(Boolean);
@@ -1055,6 +1102,7 @@ async function renderLibraryContent(skipRemote = false) {
 // - 개별 회차 클릭 시 뷰어로 이동
 // ============================================================
 window.openWorkDetailDirect = function(workId, shouldPushState = true, didRefresh = false) {
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.detail(workId, shouldPushState);
   const targetId = String(workId);
   const work = getPublishedWorks().find(w => String(w.id) === targetId);
   if(!work&&window.ReaderHub?.active()&&!didRefresh) {
@@ -1210,6 +1258,12 @@ window.selectParagraphComment = function(paragraphIndex, quoteText, contentVersi
 
 let readerCatalogFlight = null;
 async function refreshReaderCatalog(force = false) {
+  if (window.ReaderDiscovery?.active()) {
+    if (currentActiveView === 'view-home') return window.ReaderDiscovery.home();
+    if (currentActiveView === 'view-discover') return window.ReaderDiscovery.discover();
+    if (currentActiveView === 'view-work-detail' && activeWork) return window.ReaderDiscovery.detail(activeWork.id, false);
+    return;
+  }
   if (!window.WEBNOVELS_CONFIG?.authorPublishEnabled || !window.WebNovelsAdmin?.fetchWorksFromSupabase) return;
   if (readerCatalogFlight) return readerCatalogFlight;
   if (!force && Date.now() - (refreshReaderCatalog.lastAt || 0) < 30000) return;
@@ -1240,26 +1294,26 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.openReaderDirect = async function(workId, epNumber, shouldPushState = true) {
-  if (window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
+  const session=window.ReaderSession?.begin(workId,epNumber);
+  const valid=()=>!session||window.ReaderSession.valid(session);
+  const discovery=window.ReaderCatalog?.active();
+  let chapter;
+  if(discovery) {
+    try {chapter=await window.ReaderCatalog.reading(workId,epNumber);}
+    catch(error){if(valid())showToast(error?.status===404?'공개된 회차를 찾을 수 없습니다.':'공개 회차를 확인하지 못했습니다. 다시 시도해주세요.');return;}
+  } else if (window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
     try { await refreshReaderCatalog(true); }
-    catch { return showToast('공개 회차 목록을 갱신하지 못했습니다. 다시 시도해주세요.'); }
+    catch { if(valid())showToast('공개 회차 목록을 갱신하지 못했습니다. 다시 시도해주세요.');return; }
   }
+  if(!valid())return;
   const targetWorkId = String(workId);
-  const work = getPublishedWorks().find(w => String(w.id) === targetWorkId);
+  const work = discovery?chapter?.work:getPublishedWorks().find(w => String(w.id) === targetWorkId);
   if (!work) return showToast('작품을 찾을 수 없습니다.');
-  activeWork = work;
 
   if (!work.episodes) work.episodes = [];
 
-  const epNum = Number(epNumber);
-
-  // 7회차 이상일 경우 연재예정 안내
-  if (epNum >= 7 && !work.episodes.find(e => Number(e.episodeNumber) === epNum)) {
-    handleComingSoonEpisode(epNum);
-    return;
-  }
-
-  const ep = work.episodes.find(e => Number(e.episodeNumber) === epNum);
+  const epNum = Number(discovery?chapter?.episode?.episodeNumber:epNumber);
+  const ep = discovery?chapter?.episode:work.episodes.find(e => Number(e.episodeNumber) === epNum);
   if (!ep) return showToast('공개된 회차를 찾을 수 없습니다.');
   // 유료·성인 권한은 서버에서만 판정한다. 레거시 브라우저 해금·성인인증 캐시는 사용하지 않는다.
   const genres = Array.isArray(work.genre) ? work.genre : [work.genre];
@@ -1272,19 +1326,12 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     return showToast('이 회차의 열람 기능은 현재 사용할 수 없습니다.');
   }
 
-  activeEpisodeId = String(epNum);
-  window._currentReadingWorkId = work.id;
-  window._currentReadingEpNum = epNum;
-
-  document.getElementById('readerWorkTitle').textContent = work.title;
-  document.getElementById('readerEpTitle').textContent = ep.title;
-  document.getElementById('readerHeading').textContent = `${ep.title} (${ep.episodeNumber}화)`;
-
   const authorCommentEl = document.getElementById('readerAuthorComment');
 
   // 3. 온디맨드 보안 회차 본문 로드 (episode_contents / episode_panels)
   let loadedText = null;
   let loadedPanels = [];
+  let versionId=null;
 
   if (window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
     try {
@@ -1295,15 +1342,18 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
         if (!raw.ok) throw Error('READER_CONTENT_UNAVAILABLE');
         response = await raw.json();
       }
+      if(!valid())return;
       loadedText = response.episode?.content;
       loadedPanels = response.episode?.image_urls || [];
       ep.authorComment = response.episode?.author_comment ?? ep.authorComment;
+      versionId=response.versionId||response.episode?.versionId||null;
     } catch (error) {
       console.warn('[Secure Content Load]', error);
     }
   } else if (window.WebNovelsAdmin?.fetchEpisodeContentSecure) {
     try {
       const contentRes = await window.WebNovelsAdmin.fetchEpisodeContentSecure(ep.id, work.id, epNum);
+      if(!valid())return;
       if (contentRes) {
         if (contentRes.textContent) loadedText = contentRes.textContent;
         if (contentRes.imageUrls && contentRes.imageUrls.length > 0) loadedPanels = contentRes.imageUrls;
@@ -1313,16 +1363,33 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     }
   }
 
+  if(!valid())return;
   if (!loadedText && !loadedPanels.length) {
     showToast('본문을 불러오지 못했습니다. 접근 권한 또는 연결 상태를 확인해 주세요.');
     return;
   }
 
-  // 실시간 읽기 내역 저장 및 조회수 카운트
-  saveReadingProgress(work.id, epNum);
-  if (!window.ReaderHub?.active() && window.WebNovelsAdmin?.recordReaderEventInDB) {
-    window.WebNovelsAdmin.recordReaderEventInDB(work.id, ep.id || epNum, 'OPEN', 0, `${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`);
+  let savedPosition=null,positionUnavailable=false,positionChanged=false;
+  if(discovery&&window.WebNovelsAuth?.getActor()?.reader){
+    try {
+      const activity=await window.ReaderHub.activity();
+      if(!valid())return;
+      const saved=activity.readingHistory?.find(item=>String(item.workId)===String(work.id)&&Number(item.episodeNumber)===epNum);
+      savedPosition=saved?.position||null;positionChanged=saved?.positionChanged===true;
+    }catch{positionUnavailable=true;}
   }
+  if(!valid())return;
+  activeWork=work;
+  // Keep the current chapter addressable by legacy comment controls without loading the full catalog.
+  if(!work.episodes.some(item=>String(item.id)===String(ep.id)))work.episodes.push(ep);
+  activeEpisodeId=String(epNum);
+  window._currentReadingWorkId=work.id;window._currentReadingEpNum=epNum;
+  window._currentContentVersionId=versionId;
+  if(session){session.workId=String(work.id);session.episodeNumber=epNum;session.episode=ep;session.versionId=versionId;}
+  document.getElementById('readerWorkTitle').textContent=work.title;
+  document.getElementById('readerEpTitle').textContent=ep.title;
+  const heading=document.getElementById('readerHeading');
+  heading.textContent=`${ep.title} (${epNum}화)`;heading.setAttribute('tabindex','-1');
 
   // 4. 웹툰 vs 웹소설 분기 렌더링
   const textBodyEl = document.getElementById('readerBody');
@@ -1332,18 +1399,23 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     if (textBodyEl) textBodyEl.style.display = 'none';
     if (webtoonViewerEl) {
       webtoonViewerEl.style.display = 'block';
-      const images = loadedPanels;
-      webtoonViewerEl.innerHTML = images.map(imgSrc => `
-        <div class="webtoon-cut" style="margin: 0 auto; max-width: 720px; text-align: center;">
-          <img src="${imgSrc}" alt="${escapeHtml(work.title)} ${escapeHtml(ep.title)}" style="width: 100%; height: auto; display: block; margin-bottom: 2px; border-radius: 4px;" loading="lazy">
-        </div>
-      `).join('');
+      webtoonViewerEl.replaceChildren();
+      for(const imgSrc of loadedPanels){
+        let parsed;try{parsed=new URL(imgSrc,window.location.origin);}catch{continue;}
+        if(parsed.protocol!=='https:'&&!(parsed.origin===window.location.origin&&parsed.protocol==='http:'))continue;
+        const wrapper=document.createElement('div'),img=document.createElement('img');
+        wrapper.className='webtoon-cut';wrapper.style.cssText='margin:0 auto;max-width:720px;text-align:center';
+        img.src=parsed.href;img.alt=`${work.title} ${ep.title}`;img.loading='lazy';
+        img.style.cssText='width:100%;height:auto;display:block;margin-bottom:2px';
+        wrapper.append(img);webtoonViewerEl.append(wrapper);
+      }
+      if(authorCommentEl)authorCommentEl.textContent=ep.authorComment?`작가의 말: ${ep.authorComment}`:'';
     }
   } else {
     if (webtoonViewerEl) webtoonViewerEl.style.display = 'none';
     if (textBodyEl) {
       textBodyEl.style.display = 'block';
-      const contentVersion = `${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`;
+      const contentVersion = versionId||`${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`;
       window.ReaderContent.render(textBodyEl, authorCommentEl, {
         content: loadedText || '', authorComment: ep.authorComment || '', version: contentVersion
       }, (index, paragraph, version) => selectParagraphComment(index, paragraph, version));
@@ -1353,12 +1425,20 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   // 5. 이전 화 / 다음 화 버튼 동작 바인딩
   const btnPrev = document.getElementById('btnPrevEp');
   const btnNext = document.getElementById('btnNextEp');
+  const ordered=Array.from(new Map(work.episodes.map(item=>[Number(item.episodeNumber),item])).values())
+    .filter(item=>Number.isSafeInteger(Number(item.episodeNumber))&&Number(item.episodeNumber)>0)
+    .sort((a,b)=>Number(a.episodeNumber)-Number(b.episodeNumber));
+  const index=ordered.findIndex(item=>Number(item.episodeNumber)===epNum);
+  const previous=discovery?chapter.previous:ordered[index-1],next=discovery?chapter.next:ordered[index+1];
   if (btnPrev) {
-    btnPrev.disabled = epNum <= 1;
-    btnPrev.onclick = () => openReaderDirect(work.id, epNum - 1);
+    btnPrev.disabled=!previous;
+    btnPrev.setAttribute('aria-label',previous?`${previous.episodeNumber}화로 이동`:'이전 공개 회차 없음');
+    btnPrev.onclick=()=>{if(valid()&&previous)window.openReaderDirect(work.id,previous.episodeNumber);};
   }
   if (btnNext) {
-    btnNext.onclick = () => openReaderDirect(work.id, epNum + 1);
+    btnNext.disabled=!next;
+    btnNext.setAttribute('aria-label',next?`${next.episodeNumber}화로 이동`:'다음 공개 회차 없음');
+    btnNext.onclick=()=>{if(valid()&&next)window.openReaderDirect(work.id,next.episodeNumber);};
   }
 
   // 5. 회차별 독자 댓글 및 대댓글 렌더링 (실제 DB 연동)
@@ -1367,30 +1447,50 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   // 6. 추천 작품 렌더링
   renderReaderRecommendations(work.id);
 
-  // 7. 실시간 독서 스크롤 진행률 추적 (DB 실시간 동기화)
-  if (window._readerScrollCleanup) window._readerScrollCleanup();
+  switchWebNovelsView('view-reader',null,false);
+  if(!valid())return;
+  window.ReaderPreferencesManager?.apply();
+  window.scrollTo({top:0,behavior:'instant'});
+  heading.focus?.({preventScroll:true});
+  const restored=window.ReaderPosition?.restore(textBodyEl,savedPosition,versionId);
+  const progressStatus=document.getElementById('readerProgressStatus');
+  if(progressStatus){
+    progressStatus.setAttribute('role','status');progressStatus.setAttribute('aria-live','polite');
+    progressStatus.textContent=restored==='RESTORED'?'저장한 위치에서 이어봅니다.':
+      restored==='VERSION_CHANGED'||positionChanged?'공개본이 수정되어 처음부터 표시합니다. 기존 독서 기록은 유지됩니다.':
+      restored==='UNAVAILABLE'||positionUnavailable?'저장 위치를 확인하지 못해 처음부터 표시합니다. 위치를 다시 불러오려면 회차를 다시 열어주세요.':
+      window.WebNovelsAuth?.getActor()?.reader?'스크롤하면 읽은 위치를 저장합니다.':'독자 로그인 후 읽은 위치를 저장할 수 있습니다.';
+  }
+  if(restored==='VERSION_CHANGED'||positionChanged)showToast('공개본이 수정되어 처음부터 표시합니다. 이전 독서 기록은 유지됩니다.');
+  else if(restored==='UNAVAILABLE'||positionUnavailable)showToast('저장 위치를 확인하지 못해 처음부터 표시합니다.');
+  if(shouldPushState){
+    const path=`/read/${encodeURIComponent(work.id)}/${epNum}`;
+    if(window.location.pathname!==path)window.history.pushState({path},'',path);
+  }
+
+  // Save only after reader movement; opening/restoring never writes a fabricated zero.
+  window._readerScrollCleanup?.();
   let scrollTimeout = null;
+  let lastTop=window.scrollY;
+  const isWebtoon=work.contentType==='WEBTOON'||loadedPanels.length>0;
   const onReaderScroll = () => {
+    if(!valid()||currentActiveView!=='view-reader')return;
+    if(window.scrollY===lastTop)return;
+    lastTop=window.scrollY;
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
-      const container = document.getElementById('view-reader');
-      if (!container || container.classList.contains('hidden') || container.style.display === 'none') return;
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight <= 0) return;
-      const currentScroll = window.scrollY;
-      const pct = Math.min(100, Math.max(10, Math.round((currentScroll / totalHeight) * 100)));
-      saveReadingProgress(work.id, epNum, pct);
+      if(!valid()||currentActiveView!=='view-reader')return;
+      const measured=window.ReaderPosition?.measure(isWebtoon?webtoonViewerEl:textBodyEl,versionId,isWebtoon);
+      if(!measured)return;
+      const pct=measured.progress;
+      saveReadingProgress(work.id,epNum,pct,measured.position,session);
       if (!window.ReaderHub?.active() && window.WebNovelsAdmin?.recordReaderEventInDB) {
         window.WebNovelsAdmin.recordReaderEventInDB(work.id, ep.id || epNum, pct >= 90 ? 'COMPLETE' : 'PROGRESS', pct, `${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`);
       }
     }, 500);
   };
   window.addEventListener('scroll', onReaderScroll, { passive: true });
-  window._readerScrollCleanup = () => window.removeEventListener('scroll', onReaderScroll);
-
-  switchWebNovelsView('view-reader');
-  window.ReaderPreferencesManager?.apply();
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  window._readerScrollCleanup=()=>{clearTimeout(scrollTimeout);window.removeEventListener('scroll',onReaderScroll);};
   if (window.lucide) window.lucide.createIcons();
 };
 
@@ -1403,10 +1503,13 @@ function renderReaderComments(workId, epNum) {
 
 // 독자 댓글 등록 (하위 호환)
 window.submitReaderComment = function() {
-  const workId = window._currentReadingWorkId || 1;
-  const epNum = window._currentReadingEpNum || 1;
+  const reading=window.ReaderSession?.current;
+  const workId=window._currentReadingWorkId,epNum=window._currentReadingEpNum;
+  if(!workId||!epNum||!reading||String(reading.workId)!==String(workId)||reading.episodeNumber!==Number(epNum))
+    return showToast('댓글을 남길 공개 회차를 먼저 열어주세요.');
   const episode = activeWork?.episodes?.find(item => Number(item.episodeNumber) === Number(epNum));
-  handleReaderCommentSubmit(workId, window.ReaderHub?.active() ? episode?.id : epNum);
+  if(!episode)return;
+  handleReaderCommentSubmit(workId, window.ReaderHub?.active() ? episode.id : epNum);
 };
 
 // 댓글 공감/좋아요 토글
@@ -1423,9 +1526,28 @@ window.toggleCommentLike = function(commentKey, commentId) {
 };
 
 // 뷰어 하단 추천 작품 렌더링
-function renderReaderRecommendations(currentWorkId) {
+async function renderReaderRecommendations(currentWorkId) {
   const container = document.getElementById('readerRecommendGrid');
   if (!container) return;
+  if(window.ReaderCatalog?.active()){
+    const session=window.ReaderSession?.current;
+    const valid=()=>session&&window.ReaderSession.valid(session)&&String(session.workId)===String(currentWorkId);
+    if(!valid())return;
+    container.textContent='편집 추천을 불러오는 중입니다.';
+    try{
+      const result=await window.ReaderCatalog.home();if(!valid())return;
+      const works=result.sections.recommended.filter(work=>String(work.id)!==String(currentWorkId)).slice(0,4);
+      container.innerHTML=works.map(work=>renderCdgWorkCardHtml(work)).join('');
+      if(!works.length)container.textContent='다른 편집 추천 작품을 준비 중입니다.';
+      window.lucide?.createIcons?.({root:container});
+    }catch{
+      if(!valid())return;
+      container.textContent='편집 추천을 불러오지 못했습니다. ';
+      const retry=document.createElement('button');retry.type='button';retry.className='btn btn-outline';retry.textContent='다시 시도';
+      retry.onclick=()=>{if(valid())renderReaderRecommendations(currentWorkId);};container.append(retry);
+    }
+    return;
+  }
 
   const others = getPublishedWorks().filter(w => Number(w.id) !== Number(currentWorkId)).slice(0, 4);
   container.innerHTML = others.map(w => renderCdgWorkCardHtml(w)).join('');
@@ -2037,6 +2159,10 @@ window.filterParagraphComments = function(paragraphIndex) {
 };
 
 window.loadEpisodeComments = async function(workId, episodeId) {
+  const reading=window.ReaderSession?.current;
+  if(reading&&(!reading.episode||String(reading.workId)!==String(workId)||String(reading.episode.id)!==String(episodeId)))return;
+  const ticket=window.ReaderSession?.commentTicket();
+  const valid=()=>!ticket||window.ReaderSession.commentValid(ticket);
   const container = document.getElementById('readerCommentsList');
   if (!container) return;
 
@@ -2054,11 +2180,13 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     let comments = [];
     if (window.ReaderHub?.active()) {
       const result=await window.ReaderHub.api('comments',{workId,episodeId});
+      if(!valid())return;
       comments=result.comments||[];
-      window._currentContentVersionId=result.versionId||null;
+      window._currentContentVersionId=window.ReaderSession?.current?.versionId||result.versionId||null;
     } else if (window.WebNovelsAdmin?.fetchCommentsByEpisode) {
       comments = await window.WebNovelsAdmin.fetchCommentsByEpisode(workId, episodeId);
     }
+    if(!valid())return;
 
     comments = Array.isArray(comments) ? comments.filter(c =>
       safeId(c?.id) && (!c.parent_id || safeId(c.parent_id))) : [];
@@ -2071,6 +2199,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
         pEl.querySelector('.paragraph-badge')?.remove();
         const raw=new TextEncoder().encode(pEl.textContent);
         const hash=await crypto.subtle.digest('SHA-256',raw);
+        if(!valid())return;
         pHashMap[pEl.getAttribute('data-paragraph-index')]=Array.from(new Uint8Array(hash))
           .map(b=>b.toString(16).padStart(2,'0')).join('');
       }
@@ -2239,10 +2368,12 @@ window.loadEpisodeComments = async function(workId, episodeId) {
       });
     }
 
+    if(!valid())return;
     container.innerHTML = html;
     const countEl = document.getElementById('readerCommentCount');
     if (countEl) countEl.textContent = `(${comments.length})`;
   } catch (err) {
+    if(!valid())return;
     console.warn('[Comments Load Error]', err);
     container.innerHTML = `<div class="text-danger p-3">댓글을 불러오지 못했습니다.</div>`;
   }
@@ -2250,25 +2381,32 @@ window.loadEpisodeComments = async function(workId, episodeId) {
 
 window.handleReaderCommentSubmit = async function(workId, episodeId) {
   if (window.ReaderHub?.active()) {
+    const reading=window.ReaderSession?.current;
+    const valid=()=>reading&&window.ReaderSession.valid(reading)&&String(reading.workId)===String(workId)&&String(reading.episode?.id)===String(episodeId);
+    if(!valid())return;
     const input=document.getElementById('readerCommentInput');
     if(!input?.value.trim())return showToast('댓글 내용을 입력해주세요.');
     if(!window.WebNovelsAuth?.getActor()?.reader)return showToast('독자 로그인이 필요합니다.');
+    const original=input.value;
     const data={content:input.value.trim(),isSpoiler:!!document.getElementById('readerCommentSpoiler')?.checked};
     const paragraph=window._paragraphComment;
     if(paragraph) {
       if(!window._currentContentVersionId)return showToast('본문 버전을 확인한 뒤 다시 시도해주세요.');
       const raw=new TextEncoder().encode(paragraph.paragraphText);
       const hash=await crypto.subtle.digest('SHA-256',raw);
+      if(!valid())return;
       data.anchorIndex=paragraph.paragraphIndex;
       data.anchorHash=Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
       data.versionId=window._currentContentVersionId;
     }
     try {
       await window.ReaderHub.change('comment',{workId,episodeId},data);
-      input.value='';window._paragraphComment=null;
+      if(!valid())return;
+      if(input.value===original)input.value='';
+      if(window._paragraphComment===paragraph)window._paragraphComment=null;
       await loadEpisodeComments(workId,episodeId);
-      showToast('댓글을 등록했습니다.');
-    } catch {showToast('댓글을 저장하지 못했습니다. 정책과 본문 버전을 확인해주세요.');}
+      if(valid())showToast('댓글을 등록했습니다.');
+    } catch {if(valid())showToast('댓글을 저장하지 못했습니다. 정책과 본문 버전을 확인해주세요.');}
     return;
   }
 
@@ -2346,13 +2484,18 @@ window.handleReaderCommentSubmit = async function(workId, episodeId) {
 
 window.handleReaderReplySubmit = async function(workId, episodeId, parentId) {
   if (window.ReaderHub?.active()) {
+    const reading=window.ReaderSession?.current;
+    const valid=()=>reading&&window.ReaderSession.valid(reading)&&String(reading.workId)===String(workId)&&String(reading.episode?.id)===String(episodeId);
+    if(!valid())return;
     const input=document.getElementById(`replyText-${parentId}`);
     if(!input?.value.trim())return showToast('답글 내용을 입력해주세요.');
+    const original=input.value;
     try {
       await window.ReaderHub.change('comment',{workId,episodeId},{content:input.value.trim(),parentId});
-      input.value='';await loadEpisodeComments(workId,episodeId);
-      showToast('답글을 등록했습니다.');
-    } catch {showToast('답글을 저장하지 못했습니다.');}
+      if(!valid())return;
+      if(input.value===original)input.value='';await loadEpisodeComments(workId,episodeId);
+      if(valid())showToast('답글을 등록했습니다.');
+    } catch {if(valid())showToast('답글을 저장하지 못했습니다.');}
     return;
   }
   const savedUser = JSON.parse(localStorage.getItem('webnovels_user') || 'null');
@@ -2385,12 +2528,15 @@ window.handleLikeComment = async function(commentId) {
   const workId=window._currentReadingWorkId;
   const episode=activeWork?.episodes?.find(e=>Number(e.episodeNumber)===Number(window._currentReadingEpNum));
   if(!workId||!episode)return;
+  const reading=window.ReaderSession?.current;
+  if(!reading)return;
   try {
     const result=await window.ReaderHub.change('like',{workId,episodeId:episode.id},{commentId});
+    if(!window.ReaderSession.valid(reading))return;
     const count=document.getElementById('likeCount-'+commentId);
     if(count)count.textContent=String(result.likes);
     showToast(result.liked?'댓글에 공감했습니다.':'공감을 취소했습니다.');
-  } catch {showToast('댓글 공감에 실패했습니다.');}
+  } catch {if(window.ReaderSession.valid(reading))showToast('댓글 공감에 실패했습니다.');}
 };
 
 

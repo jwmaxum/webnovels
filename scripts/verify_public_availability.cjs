@@ -17,7 +17,8 @@ const server = app.listen(serve ? 3987 : 0, '127.0.0.1', async () => {
     assert.equal(config.status, 200);
     vm.runInNewContext(await config.text(), context);
     const publicConfig = context.window.WEBNOVELS_CONFIG;
-    assert.deepEqual(Object.keys(publicConfig).sort(), ['supabaseAnonKey', 'supabaseUrl']);
+    assert.deepEqual(Object.keys(publicConfig).sort(), ['readerDiscoveryEnabled', 'supabaseAnonKey', 'supabaseUrl']);
+    assert.equal(publicConfig.readerDiscoveryEnabled, false);
     assert.ok(publicConfig.supabaseAnonKey.startsWith('sb_publishable_'));
     const override = await fetch(base + '/api/public-config.js');
     assert.equal(override.status, 503);

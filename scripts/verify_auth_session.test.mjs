@@ -89,6 +89,18 @@ test('network failure does not retry a mutation with unknown outcome',async()=>{
   const s=setup();let requests=0;s.context.fetch=async()=>{requests++;throw new TypeError('network offline');};
   await assert.rejects(s.api.complete('author','작가이름'));assert.equal(requests,1);
 });
+
+test('account changes during token lookup prevent mutation dispatch',async()=>{
+  const s=setup();await s.api.login('writer@example.test','password');
+  const before=s.calls.filter(c=>c[0]==='fetch').length;
+  let finish;s.auth.getSession=()=>new Promise(resolve=>{finish=resolve;});
+  const pending=s.api.api('/api/v2/reader/hub?action=progress&workId=10&episodeId=100',{
+    method:'POST',body:JSON.stringify({progress:70})});
+  await Promise.resolve();await s.api.logout();
+  finish({data:{session:{access_token:'other.account.token'}}});
+  await assert.rejects(pending,e=>e.code==='INVALID_SESSION');
+  assert.equal(s.calls.filter(c=>c[0]==='fetch').length,before);
+});
 test('bad credentials, provider outage and confirmation failure remain distinguishable',async()=>{
   for(const [provider,expected] of [
     [{status:400,code:'invalid_credentials'},'INVALID_CREDENTIALS'],

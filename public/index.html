@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=117">
+  <link rel="stylesheet" href="/styles.css?v=118">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -202,6 +202,7 @@
 
           <!-- 1. HERO / Featured Works Carousel -->
           <div class="cdg-hero-container" id="heroFeaturedSection">
+            <p id="homeRecommendationNote" class="text-muted small"></p>
             <div class="cdg-hero-slider" id="cdgHeroSlider">
               <!-- Dynamic Hero Slides -->
             </div>
@@ -210,9 +211,10 @@
         <!-- 2. 🔥 지금 가장 많이 읽는 작품 (Top 4 Ranking) -->
         <section class="cdg-section" id="trendingWorksSection">
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">🔥 지금 가장 많이 읽는 작품</h2>
+            <h2 class="cdg-section-title" id="homePopularHeading">🔥 지금 가장 많이 읽는 작품</h2>
             <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">더보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
           </div>
+          <p id="homeRankingNote" class="text-muted small" aria-live="polite"></p>
           <div class="cdg-scroll-row" id="trendingWorksGrid">
             <!-- Dynamic 1~4 Rank Cards -->
           </div>
@@ -316,6 +318,18 @@
             <button class="btn btn-outline" id="btnDiscoverSearch"><i data-lucide="search"></i> 작품/작가 검색</button>
           </div>
 
+          <form id="discoverySearchForm" class="discovery-search" hidden onsubmit="ReaderDiscovery.submit(event)">
+            <label for="discoverQuery">작품명·작가명 검색</label>
+            <input id="discoverQuery" type="search" maxlength="100" autocomplete="off" placeholder="작품이나 작가를 입력하세요">
+            <button type="submit" class="btn btn-primary">검색</button>
+            <label for="discoverType">작품 종류</label>
+            <select id="discoverType" onchange="ReaderDiscovery.filter('type', this.value)">
+              <option value="NOVEL">웹소설</option><option value="WEBTOON">웹툰 (준비 중)</option>
+            </select>
+          </form>
+          <p id="discoverQueryStatus" class="sr-only" role="status" aria-live="polite"></p>
+          <p id="discoveryRankingNote" class="text-muted small"></p>
+
           <!-- Genre Filter Pills -->
           <div class="filter-pills mb-4" id="discoverGenreFilters">
             <button type="button" class="pill active" onclick="setDiscoverGenreFilter('ALL', this)">전체</button>
@@ -376,7 +390,8 @@
                 <div class="filter-group filter-group-sort">
                   <span class="filter-label">정렬 기준</span>
                   <select id="selectDiscoverSort" class="filter-sort-select" onchange="setDiscoverSortOrder(this.value)">
-                    <option value="latest">최신순</option>
+                    <option value="latest">최신 공개순</option>
+                    <option value="new" id="discoveryNewSort" hidden>첫 공개순 (신작)</option>
                     <option value="popular">인기순 (추천순)</option>
                     <option value="views">누적 조회순</option>
                     <option value="episodes">회차 많은순</option>
@@ -415,6 +430,7 @@
           <div class="works-grid" id="discoverWorksGrid">
             <!-- Discover Works List -->
           </div>
+          <nav id="discoverPager" class="discovery-pager" aria-label="검색 결과 페이지"></nav>
         </div>
       </section>
 
@@ -478,9 +494,12 @@
           <!-- Episode List (design.md Section 24) -->
           <div class="episodes-section mt-8">
             <h3 class="mb-4"><i data-lucide="list"></i> 회차 목록</h3>
+            <p id="detailDates" class="text-muted small"></p>
+            <div id="detailExternalLinks" class="discovery-links" aria-label="다른 플랫폼 연재 링크"></div>
             <div class="episode-list" id="detailEpisodeList">
               <!-- Dynamic Episode Rows -->
             </div>
+            <div id="detailEpisodePager" class="discovery-pager" aria-live="polite"></div>
           </div>
         </div>
 
@@ -510,6 +529,7 @@
         <div class="reader-container" id="readerContainer">
           <div class="reader-paper" id="readerPaper">
             <h2 class="ep-heading" id="readerHeading">제 1 화</h2>
+            <p id="readerProgressStatus" class="text-muted small" role="status" aria-live="polite"></p>
 
             <!-- 1. Web Novel Text Content -->
             <div class="ep-content" id="readerBody">
@@ -1626,7 +1646,7 @@
             <button data-search-term="천마">천마</button>
           </div>
           <div class="search-meta-row">
-            <span>인기 검색어: 대적자, 서울 마왕, 황제</span>
+            <span id="searchSuggestionNote">작품명·작가명으로 검색하세요.</span>
             <select id="searchSortSelect" aria-label="검색 결과 정렬">
               <option value="popular">인기순</option>
               <option value="title">제목순</option>
@@ -2373,12 +2393,15 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=102"></script>
   <script src="/js/core/ui-utils.js?v=114"></script>
-  <script src="/js/core/router.js?v=115"></script>
+  <script src="/js/core/router.js?v=116"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader-content.js?v=107"></script>
-  <script src="/js/reader/reader.js?v=113"></script>
-  <script src="/js/reader/reader-hub.js?v=108"></script>
-  <script src="/js/reader/continue-reading.js?v=108"></script>
+  <script src="/js/reader/reader-catalog.js?v=116"></script>
+  <script src="/js/reader/reader-discovery.js?v=116"></script>
+  <script src="/js/reader/reader-position.js?v=116"></script>
+  <script src="/js/reader/reader.js?v=116"></script>
+  <script src="/js/reader/reader-hub.js?v=116"></script>
+  <script src="/js/reader/continue-reading.js?v=116"></script>
   <div class="modal-backdrop" id="modalCreatorFiles" role="dialog" aria-modal="true" aria-labelledby="creatorFilesWorkTitle" hidden>
     <div class="modal-dialog creator-files-modal">
       <div class="modal-header"><h3 id="creatorFilesWorkTitle">작품 파일 관리</h3><button type="button" class="modal-close" aria-label="파일 관리 닫기">×</button></div>
@@ -2471,19 +2494,19 @@
   <script src="/js/creator/creator-works.js?v=117"></script>
   <script src="/js/creator/creator-distribution.js?v=115"></script>
   <script src="/js/creator/creator-operations.js?v=108"></script>
-  <script src="/js/admin/admin.js?v=102"></script>
+  <script src="/js/admin/admin.js?v=116"></script>
   <script src="/js/admin/admin-console.js?v=113"></script>
   <script src="/js/admin/admin-operations.js?v=113"></script>
   <!-- Supabase Extension & Bootstrap Entry -->
   <script src="/supabase-public-config.js?v=1"></script>
   <script src="/api/public-config.js"></script>
-  <script src="/supabase-admin.js?v=110"></script>
-  <script src="/js/core/auth-session.js?v=115"></script>
+  <script src="/supabase-admin.js?v=116"></script>
+  <script src="/js/core/auth-session.js?v=116"></script>
   <script src="/js/admin/virtual-accounts.js?v=111"></script>
   <script src="/js/core/account-access.js?v=114"></script>
   <script src="/js/core/appeals.js?v=109"></script>
   <script src="/js/core/auth-ui.js"></script>
   <script src="/js/core/service-status.js?v=114"></script>
-  <script src="/app.js?v=102"></script>
+  <script src="/app.js?v=116"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 // Stage 8 service-only operations. The actor comes from the verified Auth session.
+import { discoveryEnabled, stage16Catalog, validReadingPosition } from './stage16-api.mjs';
 const DECIMAL = /^[1-9]\d{0,18}$/;
 const validId = value => DECIMAL.test(value || '') && BigInt(value) <= 9223372036854775807n;
 const READER_ACTIONS = new Set(['activity','preferences','profile','favorite','subscribe','progress','comments','comment','like']);
@@ -13,6 +14,7 @@ export async function stage8Api({request,env,actor,db,readBody,fail}) {
     if (request.method!=='GET') fail(405,'METHOD_NOT_ALLOWED');
     if (env.AUTHOR_PUBLISH_ENABLED!=='true' || env.READER_SERVICE_ENABLED!=='true')
       fail(503,'READER_SERVICE_NOT_ACTIVATED');
+    if (url.searchParams.has('action')) return stage16Catalog({url,env,db,fail});
     if ([...url.searchParams.keys()].length) fail(400,'INVALID_QUERY');
     const catalog=await db('rpc/stage8_catalog',{});
     if(!Array.isArray(catalog?.works)||!Array.isArray(catalog?.episodes))fail(503,'CATALOG_UNAVAILABLE');
@@ -70,6 +72,11 @@ export async function stage8Api({request,env,actor,db,readBody,fail}) {
     }
     if (action==='progress' && (!Number.isInteger(data.progress)||data.progress<0||data.progress>100))
       fail(400,'INVALID_PROGRESS');
+    if (action==='progress') {
+      const allowed=discoveryEnabled(env)?['workId','episodeId','progress','position']:['workId','episodeId','progress'];
+      if(Object.keys(data).some(key=>!allowed.includes(key)))fail(400,'INVALID_FIELD');
+      if('position' in data&&!validReadingPosition(data.position))fail(400,'INVALID_POSITION');
+    }
     if (action==='comment') {
       if (typeof data.content!=='string'||!data.content.trim()||data.content.length>2000||
           (data.parentId&&!/^[0-9a-f-]{36}$/i.test(data.parentId))||
@@ -110,7 +117,8 @@ export async function stage8Api({request,env,actor,db,readBody,fail}) {
     if (['favorite','subscribe'].includes(action) &&
       (typeof data.enabled!=='boolean'||Object.keys(data).some(k=>!['workId','enabled'].includes(k))))
       fail(400,'INVALID_FIELD');
-    const result=await db('rpc/stage8_reader',{},{
+    const rpc=discoveryEnabled(env)&&['activity','progress'].includes(action)?'rpc/stage16_reader':'rpc/stage8_reader';
+    const result=await db(rpc,{},{
       method:'POST',body:{p_user:who.userId,p_action:action,p_data:data}
     });
     if (result?.error) fail([400,403,404,409].includes(result.status)?result.status:503,result.error);

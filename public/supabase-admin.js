@@ -149,6 +149,10 @@ async function fetchEpisodeSummaryStats() {
 
 // [Fetch Works with Authors & Episode Metadata]
 async function fetchWorksFromSupabase() {
+  if (window.ReaderCatalog?.active()) {
+    // Legacy consumers receive a bounded summary, never all works and episodes.
+    return (await window.ReaderCatalog.list({ limit: 24 })).works;
+  }
   try {
     let works, authors=[], episodes;
     if (window.WEBNOVELS_CONFIG?.readerServiceEnabled) {
