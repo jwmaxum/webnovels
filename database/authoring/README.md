@@ -30,3 +30,5 @@
 9단계 추가: [010_admin_operations.sql](010_admin_operations.sql). 관리자 사건·작품 제한·권한 변경 이력과 제한적 서버 전용 운영 RPC를 추가한다. [관리자 운영 계약](../../docs/launch/admin-operations-contract.md)을 확인하고 실제 legacy 신고·검수·감사 테이블 및 009 적용 상태를 검토한 뒤 실행한다. 운영 DB에는 미적용이며 `ADMIN_OPERATIONS_ENABLED`는 기본 비활성이다. 로컬 검증은 `npm run test:admin-operations`다.
 
 10단계 진행 중: [011_reader_profile_cutover.sql](011_reader_profile_cutover.sql). 검증된 Auth UUID의 활성 독자 닉네임만 서버 전용 RPC로 수정한다. 실제 `readers`/`auth.users` 열·제약과 010 적용을 감사하고 백업한 뒤 검토 세션 게이트로 실행한다. [전환 감사](../../docs/launch/stage10-cutover-audit.md)의 직접 접근·Storage 잔여 경로가 닫히기 전에는 전환 완료나 플래그 활성화로 해석하지 않는다. 실제 DB에는 미적용이다.
+
+14단계 첫 스프린트: [012_creator_distribution.sql](012_creator_distribution.sql). 기존 작품의 비독점 연재/독점 상담 희망·선택 외부 링크·권리 확인 진술과 변경 이력을 추가한다. 실제 선행 조건은 검토 적용된 **005**와 Auth/작품 매핑이다. 번호에 맞추어 미적용 002/007~011을 일괄 실행하지 않는다. [연재 방식 계약](../../docs/launch/creator-distribution-contract.md)의 백업·권한·인수 조건을 확인하며 `AUTHOR_DISTRIBUTION_ENABLED`는 기본 비활성이다. `npm run test:stage14`는 합성 데이터만 사용한다. 운영 DB에는 미적용이다.

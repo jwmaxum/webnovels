@@ -1,0 +1,232 @@
+{
+  "dateKst": "2026-10-08",
+  "sourceBaselineCommitShort": "090fe02",
+  "scope": "Stage 14 proposal revision and Sprint 1 additional author distribution settings; local implementation only",
+  "status": "LOCAL_VERIFIED_PRODUCTION_PENDING",
+  "diffReview": {
+    "status": "PASS",
+    "trackedWhitespaceCheck": "git diff --check passed",
+    "newFilesWhitespaceCheck": "passed",
+    "changedPlanLocalLinks": 31,
+    "brokenLocalLinks": 0,
+    "scope": "Author metadata API/SQL/UI and scoped tests; no dependency, legacy schema replacement or unrelated service mutation"
+  },
+  "releaseRegression": {
+    "manifest": "package.json scripts.test:release",
+    "execution": "Registered commands run sequentially with bundled Node and installed project CLI; npm is not on PATH",
+    "groupsPassed": 16,
+    "groups": [
+      {
+        "group": "test:data",
+        "status": "PASS",
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:p0",
+        "status": "PASS",
+        "tests": 30,
+        "passed": 30,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:auth",
+        "status": "PASS",
+        "tests": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:naming",
+        "status": "PASS",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:authoring-schema",
+        "status": "PASS",
+        "tests": 22,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:creator-works",
+        "status": "PASS",
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:stage14",
+        "status": "PASS",
+        "tests": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:drafts",
+        "status": "PASS",
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:files",
+        "status": "PASS",
+        "tests": 24,
+        "passed": 24,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:publication",
+        "status": "PASS",
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:operations",
+        "status": "PASS",
+        "tests": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:admin-operations",
+        "status": "PASS",
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:stage11",
+        "status": "PASS",
+        "tests": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:stage13",
+        "status": "PASS",
+        "tests": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:launch",
+        "status": "PASS",
+        "tests": 33,
+        "passed": 33,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "group": "test:cloudflare-bundle",
+        "status": "PASS",
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "tests": 230,
+    "passed": 230,
+    "failed": 0,
+    "skipped": 0,
+    "dataContractCheck": "PASS",
+    "cloudflareFunctionsBundles": 3,
+    "cloudflareBundleCheck": "PASS",
+    "summaryTimestampUtc": "2026-10-08T07:27:50.2939885Z"
+  },
+  "finalScopedRecheck": {
+    "reason": "Added preservation guard for unsaved distribution fields before parent work mutations",
+    "files": [
+      "scripts/verify_creator_distribution_api.test.mjs",
+      "scripts/verify_creator_distribution_ui.test.mjs",
+      "scripts/verify_creator_work_ui.test.mjs"
+    ],
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "coverage": {
+    "scope": [
+      "server/creator-distribution-api.mjs",
+      "public/js/creator/creator-distribution.js"
+    ],
+    "method": "Node experimental test coverage; named VM source for browser module",
+    "linePercent": 100,
+    "branchPercent": 95.52,
+    "functionPercent": 100,
+    "wholeRepositoryCoverage": false,
+    "sqlCoverage": "Functional checks in synthetic PGlite, not a numeric coverage claim"
+  },
+  "build": {
+    "status": "PASS",
+    "commands": [
+      "node node_modules/prisma/build/index.js generate",
+      "node node_modules/typescript/bin/tsc"
+    ],
+    "cloudflareBundling": "PASS"
+  },
+  "types": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "note": "No lint script or linter in package.json; syntax exercised by tests and bundling, not claimed as lint"
+  },
+  "security": {
+    "status": "PASS_LOCAL_REVIEW",
+    "checks": [
+      "Verified actor and owner; same-origin writes; closed fields and exact HTTPS platform hosts",
+      "No direct table permissions; service-only RPC; DB account/owner/lifecycle/version validation",
+      "Atomic append-only RPC history and rollback on event write failure",
+      "Static-only innerHTML template, text/attribute URL rendering, no URL fetch or secret/owner inference",
+      "Account/work navigation and revoked author ignore late results; failures preserve input"
+    ],
+    "realEnvironmentAcceptance": false
+  },
+  "preservation": {
+    "additiveSchema": true,
+    "workEpisodeAuthorIdsRetained": true,
+    "draftAndPublicationContractsUnchanged": true,
+    "existingRecordsTested": "Synthetic works, episodes, work_state, author mappings and Storage rows",
+    "migrationReapply": "PASS",
+    "historyFailureRollback": "PASS",
+    "competingVersionCheck": "PASS in serialized PGlite; real multi-client Supabase acceptance pending",
+    "previousSchemaVerificationTimestampRestored": true
+  },
+  "operatingActions": {
+    "realDatabaseApplied": false,
+    "deployed": false,
+    "featureFlagsChanged": false,
+    "localhostStarted": false,
+    "browserAcceptance": false,
+    "accountsOrTransactionsChanged": false
+  },
+  "activation": {
+    "exampleFlag": "AUTHOR_DISTRIBUTION_ENABLED=false",
+    "migration": "database/authoring/012_creator_distribution.sql",
+    "prerequisite": "Reviewed authoring-005 and existing verified Auth/work ownership mappings; no batch reapplication of 002 or 007-011",
+    "contract": "docs/launch/creator-distribution-contract.md"
+  },
+  "nextDevelopment": "Stage 15 maximum-wait autosave and first-publication checklist; real activation remains gated by backup/schema/permission acceptance"
+}

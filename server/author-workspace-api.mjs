@@ -16,7 +16,7 @@ export async function authorWorkspaceApi({request,env,actor,rpc,fail,ready}) {
     if(!body||typeof body!=='object'||Array.isArray(body))fail(400,'INVALID_JSON');return body;
   };
   const db=async (route,query,{body}={})=>{
-    if(!['rpc/creator_works','rpc/creator_drafts'].includes(route))fail(403,'RPC_NOT_ALLOWED');
+    if(!['rpc/creator_works','rpc/creator_drafts','rpc/creator_work_distribution'].includes(route))fail(403,'RPC_NOT_ALLOWED');
     return rpc(route.slice(4),body);
   };
   const handler=new URL(request.url).pathname.startsWith('/api/v2/creator/works')?creatorWorkApi:creatorDraftApi;

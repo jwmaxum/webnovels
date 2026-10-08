@@ -1,0 +1,39 @@
+{
+  "dateKst": "2026-10-08",
+  "sourceCommitShort": "090fe02",
+  "scope": "service source review and development planning; existing local regression",
+  "serviceCodeChanged": false,
+  "typeCheck": {
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "result": "PASS",
+    "exitCode": 0
+  },
+  "releaseRegression": {
+    "manifest": "package.json scripts.test:release",
+    "execution": "Registered commands executed sequentially with bundled Node and project dependencies; npm executable unavailable",
+    "groupsPassed": 15,
+    "nodeTestRunnerSummaries": 43,
+    "tests": 218,
+    "passed": 218,
+    "failed": 0,
+    "skipped": 0,
+    "dataContractCheck": "PASS",
+    "cloudflareFunctionsBundles": 3,
+    "cloudflareBundleCheck": "PASS",
+    "exitCode": 0,
+    "localLog": "scratch/service-audit-20261008/regression.log"
+  },
+  "productionReadOnlyProbe": {
+    "paths": ["/api/v2/health", "/api/v2/accounts/health", "/api/v2/catalog"],
+    "result": "HTTP responses unavailable from this environment; current production state not confirmed"
+  },
+  "notPerformed": [
+    "localhost or browser acceptance",
+    "real database or Storage audit",
+    "SQL application",
+    "deployment or feature flag changes",
+    "account mutations",
+    "provider transactions"
+  ],
+  "preservation": "Original service source and prior verification timestamp preserved; no draft, account mapping, revenue or content changes"
+}

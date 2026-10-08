@@ -4,6 +4,8 @@
 
 **2026-09-26 갱신:** [비공개 작가 작업실](author-workspace-rollout.md)용으로 authoring 001/003/004/005/006과 launch 007/008을 적용했다. 기존 Auth 연결 41건을 유지하며 근거를 이관했고 원고 2건을 보존했다. 아래 표는 전체 콘텐츠 전환 순서이므로 실행 전에 현재 적용 버전을 다시 대조한다. P0 001/002, private Storage 002, authoring 007~011과 전체 공개본 전환은 아직 남아 있다.
 
+**2026-10-08 추가 설정:** [14단계 연재 방식 계약](creator-distribution-contract.md)과 `authoring/012_creator_distribution.sql`은 로컬 개발 산출물이며 실제 적용되지 않았다. 012는 검토된 005/현재 Auth 매핑을 선행 조건으로 하므로 전체 공개 전환 SQL과 별도 검토한다. 적용/백업/권한 인수 전 `AUTHOR_DISTRIBUTION_ENABLED`를 활성화하지 않는다.
+
 **최신 복구:** 소유자 20건·본문 102건 운영 정합화, Auth 가입 오류 수정, 네이티브 백업 완료. 본문 78건과 실제 Auth 연결/격리 Supabase 복원은 남아 있다. [503 복구 기록](503-recovery-plan.md)의 준비물·실행 순서를 먼저 확인한다.
 
 **최신:** PAT 갱신으로 401이 해결되어 실제 관리 SQL이 HTTP 201을 반환한다. 이후 확인된 데이터/계정/백업 문제와 실행 순서는 [토큰 갱신 후 점검](token-renewal-followup.md)을 먼저 읽는다. Cloudflare 설정은 사용자가 직접 변경한다. 아래 토큰 재발급 절차는 향후 401이 다시 발생할 때 사용한다.

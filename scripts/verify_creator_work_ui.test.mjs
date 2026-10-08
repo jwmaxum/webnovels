@@ -54,6 +54,16 @@ test('late list response after account change cannot populate private UI',async(
   const pending=s.ui.loadFromRoute();s.setActor(null);s.ui.reset();resolve({works:[work],nextCursor:null});await pending;
   assert.match(s.root.innerHTML,/작가 로그인/);assert.doesNotMatch(s.root.innerHTML,/data-work-id/);
 });
+test('distribution panel mounts only with the server capability and resets with work navigation',async()=>{
+  const s=setup({path:'/creator/works/30/settings',responses:[{work,episodes:[],distributionEnabled:true},{work,episodes:[],distributionEnabled:false}]});
+  const mounts=[];let resets=0,dirty=true;s.context.CreatorDistribution={mount:(root,value)=>mounts.push({root,id:value.id}),reset:()=>{resets++;},hasUnsavedChanges:()=>dirty};
+  await s.ui.loadFromRoute();assert.match(s.root.innerHTML,/cwDistributionPanel/);assert.equal(mounts.length,1);assert.equal(mounts[0].id,'30');
+  const form=s.root.querySelector('#cwSettings');form.values=[['title','제목'],['description','소개'],['genre','판타지'],['tags',''],['rating','ALL'],['ai_usage_type','NONE']];
+  const html=s.root.innerHTML;await form.onsubmit({preventDefault(){}});assert.equal(s.root.innerHTML,html);assert.equal(s.calls.length,1);
+  assert.match(s.node('cwMessage').textContent,/저장하지 않은 변경/);dirty=false;
+  await s.ui.loadFromRoute();assert.doesNotMatch(s.root.innerHTML,/cwDistributionPanel/);assert.equal(mounts.length,1);
+  s.ui.reset();assert.equal(resets,3);
+});
 test('saved metadata is also escaped in the existing reader catalog card',async()=>{
   const source=await readFile(new URL('../public/js/reader/reader.js',import.meta.url),'utf8');
   const ast=ts.createSourceFile('reader.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);

@@ -5539,6 +5539,12 @@ body.portal-fullscreen-mode .main-content-wrapper {
 #cwSettings fieldset { border:0; padding:0; margin:0; min-width:0; }
 #cwSettings label,#cwCreateForm label { display:block; margin:16px 0 6px; }
 #cwSettings .form-control { width:100%; box-sizing:border-box; }
+.cw-distribution { margin-top:24px; padding:16px; border:1px solid var(--border-color,#555); border-radius:8px; overflow-wrap:anywhere; }
+.cw-distribution fieldset { border:0; padding:0; margin:0; min-width:0; }
+.cw-distribution label { display:block; margin:16px 0 6px; }
+.cw-distribution .form-control { width:100%; box-sizing:border-box; }
+.cw-distribution button { white-space:normal; }
+#cwDistributionForm[hidden] { display:none; }
 .cw-danger { margin-top:24px; padding:16px; border:1px solid var(--border-color,#555); border-radius:8px; }
 .cw-notice,#cwMessage { overflow-wrap:anywhere; }
 .cw-episodes { padding-left:24px; }

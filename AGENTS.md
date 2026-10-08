@@ -2,6 +2,11 @@
 
 작업 시작 시 해당 단계의 `improveN.md`와 관련 계약 문서를 읽는다.
 
+## 단계별 Git 반영
+
+- 각 단계의 수정과 변경 범위에 맞는 검증을 마치면 해당 작업 변경을 커밋하고 `git push`한다.
+- 완료 보고에는 커밋 ID와 push 결과, 서비스가 가능하도록 다음 개발단계를 포함한다.
+
 ## Author / Creator 호환 계약 — 6단계부터 필수
 
 - 상세 기준: [명칭·호환 계약](docs/launch/author-creator-contract.md). `Author`와 `Creator`는 별도 사용자/권한이 아니다.

@@ -1,5 +1,7 @@
 # 서비스 오픈을 위한 순차 개발 계획
 
+2026-10-08 후속: [웹소설·웹툰 서비스 점검](docs/launch/service-audit-2026-10-08.md), [14~21단계 개발계획](docs/launch/development-roadmap-2026-10-08.md), [다음 14단계](improve14.md). 아래 1~13단계 기록을 보존하며 최신 제한 기능 운영 적용과 전체 콘텐츠 출시의 남은 조건을 구분해 이어간다.
+
 후속 단계 공통 선행 규칙: [AGENTS.md](AGENTS.md), [Author / Creator 명칭·호환 계약](docs/launch/author-creator-contract.md). 6단계부터 착수 전 `npm run test:naming`으로 기존 별칭 연결을 확인한다.
 
 작성일: 2026-09-23

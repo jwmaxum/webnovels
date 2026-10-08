@@ -1,3 +1,4 @@
+import {creatorDistributionApi} from './creator-distribution-api.mjs';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decimal = (value, zero = false) => typeof value === 'string' && (zero ? /^(0|[1-9]\d{0,18})$/ : /^[1-9]\d{0,18}$/).test(value) && BigInt(value) <= 9223372036854775807n;
 export async function creatorWorkApi({ request, env, actor, db, readBody, fail, workspaceReady = false }) {
@@ -5,10 +6,11 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
   const who = await actor();
   if (!who.author || who.author.status !== 'APPROVED') fail(403, 'AUTHOR_REQUIRED');
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\/api\/v2\/creator\/works(?:\/([0-9]+)(?:\/(trash|restore))?)?$/);
+  const match = url.pathname.match(/^\/api\/v2\/creator\/works(?:\/([0-9]+)(?:\/(trash|restore|distribution))?)?$/);
   if (!match) fail(404, 'NOT_FOUND');
   const id = match[1] || null;
   if (id && !decimal(id)) fail(400, 'INVALID_ID');
+  if (match[2] === 'distribution') return creatorDistributionApi({request,env,who,id,db,readBody,fail});
   if ([...url.searchParams.keys()].some(k => !['filter','after'].includes(k))) fail(400, 'FIELD_NOT_ALLOWED');
   const filter = url.searchParams.get('filter') || 'all', after = url.searchParams.get('after') || '0';
   if (!['all','draft','public','trash'].includes(filter) || !decimal(after,true)) fail(400, 'INVALID_FILTER');
@@ -41,5 +43,5 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
   }});
   if (result?.error) fail([400,403,404,409,503].includes(result.status) ? result.status : 503, result.error);
   if (!result || typeof result !== 'object') fail(503, 'DATABASE_UNAVAILABLE');
-  return result;
+  return action === 'get' ? {...result, distributionEnabled:env.AUTHOR_DISTRIBUTION_ENABLED === 'true'} : result;
 }
