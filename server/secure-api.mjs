@@ -6,6 +6,7 @@ import { creatorPublicationApi } from './creator-publication-api.mjs';
 import { stage8Api } from './stage8-api.mjs';
 import { stage9Api } from './stage9-api.mjs';
 import { stage9AppealApi } from './stage9-appeal-api.mjs';
+import { adminWorkflowApi } from './admin-workflow-api.mjs';
 import { accountApi } from './account-api.mjs';
 import { discoveryEnabled, publicContent } from './stage16-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
@@ -151,6 +152,8 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
           path === '/api/v2/creator/operations') {
         return reply(await stage8Api({request,env,actor,db,readBody,fail}));
       }
+      if (path === '/api/v2/admin/workflow')
+        return reply(await adminWorkflowApi({request,env,actor,db,readBody,fail}));
       if (path === '/api/v2/admin/operations')
         return reply(await stage9Api({request,env,actor,db,readBody,fail}));
       if (path === '/api/v2/appeals')

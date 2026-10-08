@@ -14,6 +14,7 @@ export async function stage9Api({request,env,actor,db,readBody,fail}){
   if(env.ADMIN_OPERATIONS_ENABLED!=='true')fail(503,'ADMIN_OPERATIONS_NOT_ACTIVATED');
   const url=new URL(request.url),action=url.searchParams.get('action')||'dashboard';
   if(!READS.has(action)&&!WRITES.has(action))fail(400,'INVALID_ACTION');
+  if(env.ADMIN_WORKFLOW_ENABLED==='true'&&WRITES.has(action))fail(409,'ADMIN_WORKFLOW_REQUIRED');
   if(action==='role-update'&&env.ADMIN_ROLE_CHANGES_ENABLED!=='true')fail(503,'ADMIN_ROLE_CHANGES_NOT_ACTIVATED');
   if(READS.has(action)?request.method!=='GET':request.method!=='POST')fail(405,'METHOD_NOT_ALLOWED');
   const who=await actor();

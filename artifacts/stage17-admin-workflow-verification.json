@@ -1,0 +1,571 @@
+{
+  "stage": 17,
+  "checkedAt": "2026-10-08T23:35:19.463Z",
+  "reviewDate": "2026-10-09",
+  "reviewTimezone": "Asia/Seoul",
+  "status": "LOCAL_VERIFICATION_PASS_REAL_ENVIRONMENT_PENDING",
+  "scope": "Administrator case assignment, priority, due date, evidence and reference links; idempotent actions and notices; separate appeal followup; account recovery guidance and current permission checks; scheduled editorial placement; unified audit; scoped exceptional draft read.",
+  "release": {
+    "execution": "All package.json test:release groups and build:compile/TypeScript noEmit through bundled Node and local CLIs; final scoped API/DB/VM recheck after review-target fingerprints and account-only mode gate repair.",
+    "fullRunTests": 336,
+    "finalDistinctTests": 336,
+    "stage17Tests": 23,
+    "failed": 0,
+    "skipped": 0,
+    "groups": [
+      {
+        "group": "test:data",
+        "status": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_data_contracts.cjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:p0",
+        "status": 0,
+        "tests": 33,
+        "passed": 33,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_secure_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_cloudflare_routes.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_providers.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:auth",
+        "status": 0,
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_auth_session.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_auth_onboarding.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:naming",
+        "status": 0,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_author_creator_contract.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:authoring-schema",
+        "status": 0,
+        "tests": 22,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_authoring_schema.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:creator-works",
+        "status": 0,
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_creator_work_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_work_ui.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_works.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:stage14",
+        "status": 0,
+        "tests": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_creator_distribution_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_distribution_db.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_distribution_ui.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:stage15",
+        "status": 0,
+        "tests": 25,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node --test scripts/verify_stage15_autosave.test.mjs scripts/verify_stage15_readiness.test.mjs scripts/verify_stage15_publication_flow.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:stage16",
+        "status": 0,
+        "tests": 54,
+        "passed": 54,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node --test scripts/verify_stage16_api.test.mjs scripts/verify_stage16_db.test.mjs scripts/verify_stage16_discovery.test.mjs scripts/verify_stage16_reader_ui.test.mjs scripts/verify_stage16_routes.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:stage17",
+        "status": 0,
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node --test scripts/verify_stage17_api.test.mjs scripts/verify_stage17_db.test.mjs scripts/verify_stage17_ui.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:drafts",
+        "status": 0,
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_draft_engine.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_draft_store.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_draft_ui.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_draft_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_drafts_db.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:files",
+        "status": 0,
+        "tests": 24,
+        "passed": 24,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_file_codec.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_file_import_queue.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_files_ui.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_file_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_files_db.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:publication",
+        "status": 0,
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_reader_content.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_publications_ui.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_publication_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_publication_scheduler.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_creator_publications_db.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:operations",
+        "status": 0,
+        "tests": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_stage8_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_stage8_reader_ui.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_stage8_db.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:admin-operations",
+        "status": 0,
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_stage9_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_stage9_appeal_api.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_stage9_ui.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_stage9_db.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:stage11",
+        "status": 0,
+        "tests": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_stage11_xss.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_stage11_performance.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:stage13",
+        "status": 0,
+        "tests": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_stage13_disabled.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:launch",
+        "status": 0,
+        "tests": 33,
+        "passed": 33,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "node scripts/verify_launch_access.test.cjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_launch_runtime.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_maintenance_containment.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_launch_repairs.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_virtual_accounts.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_admin_console.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_author_workspace.test.mjs",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_author_dashboard.test.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "test:cloudflare-bundle",
+        "status": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "esbuild \"functions/api/[[path]].js\" \"functions/api/public-config.js\" \"functions/api/v2/[[path]].js\" --bundle --platform=browser --format=esm --target=es2022 --outbase=functions --outdir=scratch/step11-cloudflare-bundle",
+            "status": 0
+          },
+          {
+            "command": "node scripts/verify_cloudflare_bundle.mjs",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "build:compile",
+        "status": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "commands": [
+          {
+            "command": "prisma generate",
+            "status": 0
+          },
+          {
+            "command": "tsc",
+            "status": 0
+          }
+        ]
+      },
+      {
+        "group": "types",
+        "status": 0
+      }
+    ],
+    "finalScoped": {
+      "command": "node --experimental-test-coverage --test-coverage-include=**/server/admin-workflow-api.mjs --test-coverage-include=**/public/js/admin/admin-workflow.js --test scripts/verify_stage17_api.test.mjs scripts/verify_stage17_db.test.mjs scripts/verify_stage17_ui.test.mjs",
+      "status": 0,
+      "tests": 23,
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "coverage": {
+    "scope": [
+      "server/admin-workflow-api.mjs",
+      "public/js/admin/admin-workflow.js"
+    ],
+    "linePercent": 98.86,
+    "branchPercent": 72.28,
+    "functionPercent": 73.85,
+    "wholeProject": false,
+    "sqlCoveredBy": "PGlite behavioral assertions; no SQL coverage percentage claimed"
+  },
+  "checks": {
+    "syntax": [
+      {
+        "file": "functions/api/public-config.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/admin/admin-operations.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/core/appeals.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/reader/reader-catalog.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/reader/reader-discovery.js",
+        "status": 0
+      },
+      {
+        "file": "public/supabase-public-config.js",
+        "status": 0
+      },
+      {
+        "file": "scripts/verify_admin_console.test.mjs",
+        "status": 0
+      },
+      {
+        "file": "scripts/verify_cloudflare_routes.test.mjs",
+        "status": 0
+      },
+      {
+        "file": "server/account-api.mjs",
+        "status": 0
+      },
+      {
+        "file": "server/admin-console-api.mjs",
+        "status": 0
+      },
+      {
+        "file": "server/secure-api.mjs",
+        "status": 0
+      },
+      {
+        "file": "server/stage16-api.mjs",
+        "status": 0
+      },
+      {
+        "file": "server/stage9-api.mjs",
+        "status": 0
+      },
+      {
+        "file": "server/stage9-appeal-api.mjs",
+        "status": 0
+      },
+      {
+        "file": "public/js/admin/admin-workflow.js",
+        "status": 0
+      },
+      {
+        "file": "scripts/fixtures/stage17-db.mjs",
+        "status": 0
+      },
+      {
+        "file": "scripts/verify_stage17_api.test.mjs",
+        "status": 0
+      },
+      {
+        "file": "scripts/verify_stage17_db.test.mjs",
+        "status": 0
+      },
+      {
+        "file": "scripts/verify_stage17_ui.test.mjs",
+        "status": 0
+      },
+      {
+        "file": "server/admin-workflow-api.mjs",
+        "status": 0
+      }
+    ],
+    "secretAndConflictScan": {
+      "files": 33,
+      "findings": []
+    },
+    "diffStatus": 0,
+    "lint": "NOT_CONFIGURED"
+  },
+  "lint": "NOT_CONFIGURED",
+  "migration": "database/authoring/014_admin_workflow.sql",
+  "newFeatureFlag": {
+    "name": "ADMIN_WORKFLOW_ENABLED",
+    "default": false,
+    "changedInLiveEnvironment": false
+  },
+  "preservation": {
+    "newPackages": 0,
+    "originalCaseRowsPreserved": true,
+    "manuscriptAndRevisionContractsPreserved": true,
+    "secretFilesPrintedOrCommitted": false,
+    "unrelatedSchemaArtifactTimestampRestored": true
+  },
+  "realEnvironment": {
+    "databaseApplied": false,
+    "featureFlagsActivated": false,
+    "browserOrLocalhostTested": false,
+    "emailSent": false,
+    "deploymentVerified": false,
+    "multiConnectionLockAcceptance": false,
+    "reason": "Project rules require explicit browser/localhost request. Synthetic PostgreSQL and DOM doubles do not establish real database, Auth, email, hosting or device acceptance."
+  },
+  "nextStep": "Stage 18: webtoon upload manifest, image processing, protected publication and vertical reader, plus pending real administrator acceptance."
+}

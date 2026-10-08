@@ -13,13 +13,14 @@ test('Pages .js config URL returns only public fields, not SPA HTML or bindings'
   const source = await response.text(); assert.ok(!source.includes(env.SUPABASE_SECRET_KEY));
   const context = { window: {} }; vm.runInNewContext(source, context);
   assert.deepEqual(Object.keys(context.window.WEBNOVELS_CONFIG).sort(),
-    ['adminOperationsEnabled','adminRoleChangesEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','readerDiscoveryEnabled','readerServiceEnabled','supabaseAnonKey','supabaseUrl']);
+    ['adminOperationsEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','readerDiscoveryEnabled','readerServiceEnabled','supabaseAnonKey','supabaseUrl']);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorPublishEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorFilesEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.readerServiceEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.readerDiscoveryEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorOperationsEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.adminOperationsEnabled,false);
+  assert.equal(context.window.WEBNOVELS_CONFIG.adminWorkflowEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.adminRoleChangesEnabled,false);
 });
 test('wrongly configured secret key cannot be served as public key', async () => {

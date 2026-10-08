@@ -1,5 +1,6 @@
 // Additive public discovery. No client identity, private distribution rows, or manuscript text in cards.
 import { DISTRIBUTION_HOSTS, normalizeExternalLinks } from './creator-distribution-api.mjs';
+import { adminWorkflowEnabled } from './admin-workflow-api.mjs';
 
 const BIGINT = /^[1-9]\d{0,18}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -143,6 +144,17 @@ export async function stage16Catalog({url,env,db,fail}) {
     for(const key of ['recommended','popular','new','completed']) {
       if(!Array.isArray(result.sections[key])||result.sections[key].length>8)fail(503,'CATALOG_UNAVAILABLE');
       sections[key]=result.sections[key].map(work=>projectWork(work,fail));
+    }
+    if(adminWorkflowEnabled(env)) {
+      const editorial=await db('rpc/stage17_editorial',{}, {method:'POST',body:{}});
+      if(!Array.isArray(editorial?.placements)||editorial.placements.length>16)fail(503,'CURATION_UNAVAILABLE');
+      sections.recommended=[];sections.spotlight=[];
+      const used=new Set();
+      for(const item of editorial.placements) {
+        if(!['HOME_RECOMMENDED','HOME_SPOTLIGHT'].includes(item.slot)||!Number.isInteger(item.position)||item.position<1||item.position>8||used.has(item.slot+item.position))fail(503,'CURATION_UNAVAILABLE');
+        used.add(item.slot+item.position);
+        sections[item.slot==='HOME_RECOMMENDED'?'recommended':'spotlight'].push(projectWork(item.work,fail));
+      }
     }
     return {sections,ranking:rank(result.ranking,fail)};
   }

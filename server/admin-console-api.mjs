@@ -1,10 +1,12 @@
 // Server-authenticated operational inventory; monetary records are read-only.
+import {adminWorkflowEnabled} from './admin-workflow-api.mjs';
 const READS=new Set(['dashboard','works','episodes','accounts','cases','settlements','roles','audit']);
 const PERMISSIONS=new Set(['OPERATIONS_READ','ACCOUNTS_READ','CONTENT_METADATA_READ','CASE_READ','CASE_RESOLVE',
   'CONTENT_REVIEW','COMMENT_REPORT','CONTENT_MODERATE','CURATION_WRITE','AUDIT_READ','ACCOUNT_MODERATE','SETTLEMENTS_READ']);
-export async function adminConsoleApi({request,user,actor,remote,rpc,fail}) {
+export async function adminConsoleApi({request,user,actor,remote,rpc,fail,env={}}) {
   if(!actor.admin?.is_active)fail(403,'ADMIN_FORBIDDEN');
   const url=new URL(request.url),action=url.searchParams.get('action')||'dashboard';
+  if(action==='curation-update'&&adminWorkflowEnabled(env))fail(409,'ADMIN_WORKFLOW_REQUIRED');
   let data={};
   if(READS.has(action)){
     if(request.method!=='GET')fail(405,'METHOD_NOT_ALLOWED');

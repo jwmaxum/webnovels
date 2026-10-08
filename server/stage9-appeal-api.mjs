@@ -17,9 +17,9 @@ export async function stage9AppealApi({request,env,actor,db,readBody,fail}){
       typeof data.reason!=='string'||data.reason.trim().length<3||data.reason.length>500)
       fail(400,'INVALID_APPEAL');
   }
-  const result=await db('rpc/stage9_appeal',{}, {method:'POST',body:{
-    p_user:who.userId,p_action:action,p_data:data
-  }});
+  const workflow=env.ADMIN_WORKFLOW_ENABLED==='true'&&action==='my';
+  const result=await db(workflow?'rpc/stage17_my_appeals':'rpc/stage9_appeal',{}, {method:'POST',body:workflow?
+    {p_user:who.userId}:{p_user:who.userId,p_action:action,p_data:data}});
   if(result?.error)fail([400,403,404,409].includes(result.status)?result.status:503,result.error);
   return result;
 }

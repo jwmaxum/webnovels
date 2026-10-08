@@ -10,8 +10,8 @@
     subadmins:'roles',security:'audit',analytics:'dashboard',revenue:'settlements',system:'settings'};
   const retired=new Set(['admgmt','fanmeeting','goods','events']);
   const menu=[['dashboard','운영 대시보드','서비스 운영'],['works','작품 CMS','콘텐츠'],['episodes','회차 CMS','콘텐츠'],
-    ['cases','신고·콘텐츠 검수','콘텐츠'],['appeals','이의제기','콘텐츠'],['accounts','작가·독자 관리','회원·수익'],
-    ['virtual-accounts','가상 계정 관리','회원·수익'],['settlements','작가 정산','회원·수익'],
+    ['curation','기간별 편집 추천','콘텐츠'],['cases','신고·콘텐츠 검수','사건 처리'],['appeals','이의제기','사건 처리'],['accounts','작가·독자 지원','회원·수익'],
+    ['virtual-accounts','가상 계정 시험 도구','회원·수익'],['settlements','작가 정산','회원·수익'],
     ['roles','서브관리자·권한','시스템'],['audit','감사·처리 기록','시스템'],['settings','서비스 운영 설정','시스템']];
   const sources=[['CONTENT_REVIEW','콘텐츠 검수','CONTENT_REVIEW'],
     ['COMMENT_REPORT','작품 댓글 신고','COMMENT_REPORT'],['REPORT','기존 신고','COMMENT_REPORT']];
@@ -24,6 +24,7 @@
   const own=()=>actor()?.admin;
   const can=permission=>own()?.role==='SUPER_ADMIN'||own()?.permissions?.includes(permission);
   const canRead=key=>key==='virtual-accounts'?own()?.role==='SUPER_ADMIN':
+    key==='curation'?(window.AdminWorkflow?.active()&&can('CURATION_WRITE')):
     key==='dashboard'?(can('OPERATIONS_READ')||can('DASHBOARD')):
     key==='cases'?(can('CASE_READ')||can('CONTENT_REVIEW')||can('COMMENT_REPORT')):
     key==='appeals'?can('CASE_READ'):
@@ -77,6 +78,11 @@
       }
       if(!canRead(page)){root().replaceChildren();message('이 화면을 볼 권한이 없습니다.');return;}
       if(page==='virtual-accounts'){await window.VirtualAccounts.render(root());return;}
+      if(window.AdminWorkflow?.active()&&['cases','appeals','accounts','works','curation','audit'].includes(page)){
+        if(page==='cases'&&!availableSources().some(([key])=>key===source))source=availableSources()[0]?.[0];
+        if(page==='accounts'&&kind==='reader'&&!can('ACCOUNTS_READ')&&!can('USER_MGMT'))kind='author';
+        await window.AdminWorkflow.render(root(),page,{source,accountKind:kind,isCurrent:()=>seq===turn&&actor()?.userId===user});return;
+      }
       if(!window.WEBNOVELS_CONFIG?.adminOperationsEnabled||['roles','settlements','settings','episodes'].includes(page)){
         await window.AdminConsole.render(root(),page,{accountKind:page==='accounts'?kind:undefined,
           isCurrent:()=>seq===turn&&actor()?.userId===user});return;
@@ -204,6 +210,7 @@
     if(!active())return legacySwitch(tab,shouldPushState);
     window.VirtualAccounts?.reset();
     window.AdminConsole?.reset();
+    window.AdminWorkflow?.reset();
     page=retired.has(tab)?'retired':routes[tab]||tab;
     if(!menu.some(([key])=>key===page)&&page!=='retired')page='retired';
     if(tab==='dashboard'&&!canRead('dashboard'))page=menu.find(([key])=>canRead(key))?.[0]||'retired';
@@ -219,6 +226,7 @@
   window.switchAdminSubTab=(tab,shouldPush)=>navigate(tab,shouldPush);
   window.loadAdminDashboard=()=>active()?navigate(location.pathname.split('/')[2]||'dashboard',false):legacyDashboard?.();
   window.AdminOperations=Object.freeze({active,api,navigate,refresh:render,reset(){turn++;window.VirtualAccounts?.reset();window.AdminConsole?.reset();
+    window.AdminWorkflow?.reset();
     if(root())root().replaceChildren();document.getElementById('adminOperationsNav')?.replaceChildren();
     const identity=document.getElementById('adminConsoleIdentity');if(identity)identity.textContent='';if(shell())shell().hidden=true;}});
 })();

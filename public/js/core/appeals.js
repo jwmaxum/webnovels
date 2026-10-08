@@ -34,7 +34,7 @@
       add(root,'h4','내 신청');
       if(!mine.appeals?.length)add(root,'p','신청 내역이 없습니다.');
       for(const item of mine.appeals||[])
-        add(root,'p',`${item.source} · ${item.status} · ${item.reason}${item.resolution_reason?' · 처리 사유: '+item.resolution_reason:''}`);
+        add(root,'p',`${item.source} · ${item.status} · ${item.reason}${item.resolution_reason?' · 처리 사유: '+item.resolution_reason:''}${item.followup?' · 후속 조치: '+item.followup.decision+' · '+item.followup.reason:''}`);
     }catch(error){if(versions.get(root)===seq&&actor()?.userId===user){root.replaceChildren();add(root,'p','이의제기를 불러오지 못했습니다. '+(error?.code||error?.message||''));}}
   }
   function reset(){for(const root of roots){versions.set(root,(versions.get(root)||0)+1);root.replaceChildren();}roots.clear();}

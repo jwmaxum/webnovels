@@ -136,12 +136,14 @@
     configure();
     const request = ++homeRequest;
     const genreAtStart = genreRequest;
-    const grids = ['trendingWorksGrid','newWorksGrid','completedWorksGrid','todayFreeGrid','genreWorksGrid'];
+    const grids = ['trendingWorksGrid','newWorksGrid','completedWorksGrid','todayFreeGrid','genreWorksGrid','editorialSpotlightGrid'];
     try {
       const result = await window.ReaderCatalog.home(); if (request !== homeRequest) return;
       const hero = $('cdgHeroSlider');
       if (typeof cdgHeroInterval !== 'undefined' && cdgHeroInterval) { clearInterval(cdgHeroInterval); cdgHeroInterval = null; }
       cards(hero, result.sections.recommended); hero?.classList.add('discovery-recommendations');
+      if($('editorialSpotlightSection'))$('editorialSpotlightSection').hidden=!result.sections.spotlight?.length;
+      cards($('editorialSpotlightGrid'),result.sections.spotlight||[]);
       cards($('trendingWorksGrid'), result.sections.popular, true);
       cards($('newWorksGrid'), result.sections.new); cards($('completedWorksGrid'), result.sections.completed);
       cards($('todayFreeGrid'), result.sections.new);

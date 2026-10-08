@@ -16,6 +16,7 @@ export function onRequestGet({ env }) {
     readerDiscoveryEnabled: env.READER_DISCOVERY_ENABLED === 'true',
     authorOperationsEnabled: env.AUTHOR_OPERATIONS_ENABLED === 'true',
     adminOperationsEnabled: env.ADMIN_OPERATIONS_ENABLED === 'true',
+    adminWorkflowEnabled: env.ADMIN_WORKFLOW_ENABLED === 'true' && env.ADMIN_OPERATIONS_ENABLED === 'true' && env.P0_API_ENABLED === 'true',
     adminRoleChangesEnabled: env.ADMIN_ROLE_CHANGES_ENABLED === 'true' };
   return new Response('window.WEBNOVELS_CONFIG = Object.freeze(' + JSON.stringify(config).replace(/</g, '\\u003c') + ');', { headers });
 }

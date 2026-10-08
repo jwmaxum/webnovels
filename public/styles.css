@@ -5679,4 +5679,13 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .cdg-hero-slider.discovery-recommendations {display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;height:auto;min-height:0;padding:20px 0;overflow:visible;}
 .discovery-recommendations .cdg-card-cover {aspect-ratio:2/3;max-height:300px;}
 .sr-only {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.workflow-card {margin-block:16px;overflow-wrap:anywhere;}
+.workflow-form {display:grid;gap:12px;border-top:1px solid var(--border-color,#555);padding-block:16px;}
+.workflow-field {display:grid;gap:6px;max-width:100%;margin-block:8px;}
+.workflow-field input,.workflow-field select,.workflow-field textarea {min-height:44px;max-width:100%;box-sizing:border-box;}
+.workflow-field textarea {min-height:90px;resize:vertical;}
+.workflow-field input[type="checkbox"] {justify-self:start;min-height:24px;width:24px;}
+.workflow-card pre {white-space:pre-wrap;overflow-wrap:anywhere;max-height:60vh;overflow:auto;}
+.workflow-card :focus-visible,.workflow-field :focus-visible {outline:3px solid #c5a7ff;outline-offset:3px;}
+.workflow-draft {padding:16px;border:1px solid var(--border-color,#555);}
 @media (prefers-reduced-motion:reduce) { .discovery-card,.discovery-episode {transition:none;animation:none;} html {scroll-behavior:auto;} }

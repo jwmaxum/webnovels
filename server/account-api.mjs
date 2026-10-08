@@ -63,7 +63,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
     }
     if(dashboard)return reply(await authorDashboardApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
     if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));
-    if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail}));
+    if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail,env}));
     if(!actor.admin?.is_active||actor.admin.role!=='SUPER_ADMIN')fail(403,'ADMIN_FORBIDDEN');
     if([...url.searchParams.keys()].some(k=>k!=='action'))fail(400,'INVALID_QUERY');
     const action=url.searchParams.get('action')||'list';
