@@ -2,6 +2,8 @@
 
 기록일: 2026-09-23. **로컬 구현·검증 완료 / 실제 DB·Storage·Images·브라우저 인수 대기**.
 
+2026-10-08 보완: [15단계 첫 연재 계약](creator-first-serial-contract.md)에서 작품 체크리스트와 기존 파일 기능을 연결하고 runtime allowlist에 `authorFilesEnabled`를 추가했다. 서버 환경값이 정확히 `true`일 때만 화면에 전달하며 실제 플래그/DB/Storage 활성화는 수행하지 않았다.
+
 [명칭 호환](author-creator-contract.md), [5단계 원고 보존 계약](creator-drafts-contract.md)을 따른다. 작가 신원은 `actor.author`, UI/경로는 `CreatorFiles`, `CreatorDraftEditor`, `/api/v2/creator/files`다.
 
 ## 사용 흐름

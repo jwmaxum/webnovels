@@ -3,10 +3,10 @@
   'use strict';
   const $=id=>document.getElementById(id), fields={title:'newEpTitle',content:'newEpContent',authorComment:'newEpAuthorComment'};
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let timer,remoteTimer,composing=false,epoch=0,selected=null,works=[];
+  let timer,remoteTimer,maxTimer,deadlineContext=null,dirtySince=null,composing=false,epoch=0,selected=null,works=[];
   const actor=()=>window.WebNovelsAuth?.getActor(), toast=m=>window.showToast?.(m);
   function error(e) {
-    const message=e.code==='AUTHOR_DRAFTS_NOT_ACTIVATED'?'서버 원고 저장 기능이 아직 활성화되지 않았습니다.':e.code==='DRAFT_CONFLICT'?'다른 곳에서 수정한 원고가 있습니다. 양쪽 내용을 비교해주세요.':'저장 또는 불러오기에 실패했습니다. 원고를 다운로드하고 다시 시도해주세요.';
+    const message=(e.code||e.message)==='DRAFT_COMPOSING'?'한글 입력을 마친 뒤 저장·미리보기를 다시 실행해주세요.':e.code==='AUTHOR_DRAFTS_NOT_ACTIVATED'?'서버 원고 저장 기능이 아직 활성화되지 않았습니다.':e.code==='DRAFT_CONFLICT'?'다른 곳에서 수정한 원고가 있습니다. 양쪽 내용을 비교해주세요.':'저장 또는 불러오기에 실패했습니다. 원고를 다운로드하고 다시 시도해주세요.';
     toast(message);if($('creatorDraftError'))$('creatorDraftError').textContent=message;
   }
   const safe=fn=>(...args)=>Promise.resolve().then(()=>fn(...args)).catch(error);
@@ -23,10 +23,35 @@
     $('creatorDraftStatus').textContent=c.conflict?'충돌 · 양쪽 사본 보존':c.error?'저장 실패 · 다운로드 가능':c.localSeq<c.seq?'기기에 저장 중…':c.serverSeq<c.seq?'기기 저장 완료 · 서버 미동기화':'기기·서버 저장 완료';
     $('draftConflict').hidden=!c.conflict;
     $('draftIdentity').textContent=`원고 ${c.id} · 서버 버전 ${c.revision}${c.lifecycle!=='ACTIVE'?' · 보관 원고 (읽기 전용)':''}`;
+    const checklist=$('creatorDraftChecklist');
+    if(checklist)checklist.innerHTML=window.CreatorReadiness?.render(window.CreatorReadiness.draftItems(c))||'';
   }
   const engine=new DraftEngine({store:DraftStore,api,uuid:()=>crypto.randomUUID(),onChange:status});
-  function stop(){clearTimeout(timer);clearTimeout(remoteTimer);}
-  function schedule(c=engine.current){if(!c||composing)return;stop();timer=setTimeout(safe(()=>engine.flush(c)),700);remoteTimer=setTimeout(safe(async()=>{await engine.sync(c);if(engine.current===c&&c.seq>c.serverSeq&&!c.conflict)schedule(c);}),2500);}
+  function stop(preserveDeadline=false){clearTimeout(timer);clearTimeout(remoteTimer);clearTimeout(maxTimer);if(!preserveDeadline){deadlineContext=null;dirtySince=null;}}
+  const dirty=c=>!!c&&(c.seq>c.serverSeq||!!c.pending);
+  const active=c=>c===engine.current&&c?.userId===actor()?.userId&&!!actor()?.author&&c.lifecycle==='ACTIVE';
+  const eligible=c=>active(c)&&!c.conflict;
+  async function requestSave(c){
+    if(!eligible(c))return;
+    if(composing)throw Error('DRAFT_COMPOSING');
+    stop(true);
+    // Waiting on an existing request must not acknowledge newer typing or extend its deadline.
+    if(!c.syncing){deadlineContext=null;dirtySince=null;}
+    await engine.sync(c);
+    if(eligible(c)&&dirty(c))schedule(c);
+  }
+  function schedule(c=engine.current){
+    if(!active(c)||!dirty(c))return;
+    if(deadlineContext!==c){deadlineContext=c;dirtySince=Date.now();}
+    stop(true);
+    if(composing||document.hidden)return;
+    const fail=e=>{if(active(c)){stop();error(e);}};
+    const sync=()=>requestSave(c).catch(fail);
+    timer=setTimeout(()=>{if(active(c))engine.flush(c).catch(fail);},700);
+    if(c.conflict)return; // Keep local typing safe while server writes await explicit resolution.
+    remoteTimer=setTimeout(sync,2500);
+    maxTimer=setTimeout(sync,Math.max(0,30000-(Date.now()-dirtySince)));
+  }
   function input(){if(engine.current){engine.edit(data());counts();schedule();}}
   async function loadWorks(){
     const user=actor()?.userId;if(!user||!actor()?.author)throw Error('AUTHOR_REQUIRED');
@@ -36,7 +61,7 @@
   }
   async function openWork(workId,id=null,{fresh=false,record=null,localOnly=false}={}) {
     const turn=++epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
-    stop();await engine.checkpoint();selected=null;window.closeModal?.('modalDraftDiff');
+    stop();composing=false;await engine.checkpoint();selected=null;window.closeModal?.('modalDraftDiff');
     if(!works.some(w=>w.id===String(workId)))await loadWorks();
     const work=works.find(w=>w.id===String(workId));if(!work)throw Error('WORK_NOT_FOUND');
     if(turn!==epoch||user!==actor()?.userId)return;
@@ -48,7 +73,7 @@
     window.switchCreatorTab?.('new-ep',false);$('newEpWorkSelect').value=String(workId);
     form(c.snapshot,c.lifecycle!=='ACTIVE'||work.moderation_state!=='CLEAR'||!!work.trashed_at);
     history.replaceState(null,'','/creator/episodes?work='+workId+'&draft='+c.id);status(c);
-    $('creatorDraftError').textContent='';if(record)schedule(c);await listCopies(c);$('newEpTitle')?.focus();
+    $('creatorDraftError').textContent='';if(record||c.seq>0)schedule(c);await listCopies(c);$('newEpTitle')?.focus();
   }
   async function listCopies(c=engine.current) {
     if(!c)return;const turn=epoch;
@@ -57,13 +82,19 @@
     const box=$('draftCopies');box.replaceChildren();
     if($('draftCopyDetails'))$('draftCopyDetails').open=local.some(r=>r.branch!==c.branch&&r.seq>r.serverSeq);
     function button(label,fn){const b=document.createElement('button');b.type='button';b.className='btn btn-outline btn-sm';b.textContent=label;b.onclick=safe(fn);box.append(b);}
-    for(const row of local.filter(r=>r.branch!==c.branch))button('기기 사본 복구: '+(row.snapshot.title||'무제')+' · '+row.id.slice(0,8),async()=>{
+    for(const row of local.filter(r=>r.branch!==c.branch)){
+      if(row.lifecycle==='PUBLISHED')button('보관 사본을 새 원고로 복사: '+(row.snapshot.title||'무제'),async()=>{
+        if(!window.confirm('보관 원고를 유지하고 새 원고에 내용을 복사합니다. 계속할까요?'))return;
+        await openWork(row.workId,null,{fresh:true,record:{...row,lifecycle:'ACTIVE',pending:null}});
+      });
+      button('기기 사본 복구: '+(row.snapshot.title||'무제')+' · '+row.id.slice(0,8),async()=>{
       if(!window.confirm('현재 원고를 먼저 백업한 뒤 이 사본을 복구합니다. 계속할까요?'))return;
       if(row.id===engine.current?.id){await engine.recover(row);form(engine.current.snapshot);status(engine.current);schedule();}
       else {
         await openWork(row.workId,row.id,{record:row,localOnly:true});
       }
-    });
+      });
+    }
     try {
       const result=await api('list',{workId:c.workId,userId:c.userId});if(turn!==epoch||actor()?.userId!==c.userId)return;
       for(const row of result.drafts)button('서버 원고: '+(row.title||'무제')+' · '+row.lifecycle,()=>openWork(c.workId,row.id));
@@ -79,15 +110,24 @@
       await openWork(c.workId,imported.id,{record:imported,localOnly});
     });
   }
-  async function save(){const c=engine.current;if(!c)throw Error('작품을 선택해주세요.');await engine.flush(c);await engine.sync(c);if(c.seq>c.serverSeq)schedule(c);}
+  async function save(){const c=engine.current;if(!c)throw Error('작품을 선택해주세요.');if(composing)throw Error('DRAFT_COMPOSING');await engine.flush(c);await requestSave(c);}
   async function preparePublication(){
-    const c=engine.current,user=actor()?.userId;
+    const c=engine.current,user=actor()?.userId,turn=epoch;
+    if(composing)throw Error('DRAFT_COMPOSING');
     if(!c||!user||c.userId!==user||c.lifecycle!=='ACTIVE'||c.conflict)throw Error('PUBLISH_DRAFT_UNAVAILABLE');
     stop();await engine.flush(c);
-    for(let attempt=0;attempt<3&&c.serverSeq<c.seq;attempt++)await engine.sync(c);
-    if(c!==engine.current||actor()?.userId!==user||c.serverSeq!==c.seq||c.pending||c.conflict||c.revision==='0')
+    for(let attempt=0;attempt<3&&c.serverSeq<c.seq;attempt++){
+      if(composing)throw Error('DRAFT_COMPOSING');
+      if(turn!==epoch||!eligible(c))throw Error('PUBLISH_SAVE_REQUIRED');
+      await engine.sync(c);
+    }
+    if(composing)throw Error('DRAFT_COMPOSING');
+    if(turn!==epoch||c!==engine.current||actor()?.userId!==user||c.serverSeq!==c.seq||c.pending||c.conflict||c.revision==='0')
       throw Error('PUBLISH_SAVE_REQUIRED');
+    const seq=c.seq,revision=c.revision;
     const remote=(await api('get',{workId:c.workId,id:c.id,userId:user})).draft;
+    if(turn!==epoch||c!==engine.current||actor()?.userId!==user||c.seq!==seq||c.revision!==revision||composing)
+      throw Error('PUBLISH_SAVE_REQUIRED');
     if(remote.revision!==c.revision||remote.lifecycle!=='ACTIVE'||
        ['title','content','authorComment'].some(k=>remote[k]!==c.snapshot[k]))
       throw Error('PUBLISH_REVISION_CONFLICT');
@@ -97,7 +137,27 @@
   async function markPublished(expected){
     const c=engine.current;
     if(!c||c.id!==expected.id||c.workId!==expected.workId||c.userId!==expected.userId)return;
-    c.lifecycle='PUBLISHED';stop();await engine.flush(c);form(c.snapshot,true);status(c);
+    c.lifecycle='PUBLISHED';stop();form(c.snapshot,true);
+    try{if(c.seq!==expected.seq){await DraftStore.backup(c,c.snapshot,'after-publish-edits');if(engine.current===c&&actor()?.userId===c.userId)toast('게시 요청 이후의 수정은 기기 사본으로 보존했습니다. 보관 사본을 새 원고로 복사할 수 있습니다.');}}
+    finally{await engine.flush(c);if(engine.current===c&&actor()?.userId===c.userId)status(c);}
+  }
+  async function refreshPublicationState(expected){
+    const c=engine.current,turn=epoch;
+    if(!c||c.id!==expected.id||c.workId!==expected.workId||c.userId!==expected.userId)return;
+    if(composing)throw Error('DRAFT_COMPOSING');
+    const remote=(await api('get',{workId:c.workId,id:c.id,userId:c.userId})).draft;
+    const unchanged=()=>turn===epoch&&engine.current===c&&actor()?.userId===c.userId&&!composing;
+    if(!unchanged())throw Error('PUBLISH_SAVE_REQUIRED');
+    if(remote.lifecycle==='PUBLISHED')return markPublished(expected);
+    if(!['ACTIVE','TRASHED'].includes(remote.lifecycle))throw Error('PUBLISH_DRAFT_UNAVAILABLE');
+    if(remote.lifecycle==='ACTIVE'&&remote.revision!==c.revision){
+      await DraftStore.backup(c,remote,'publication-state-server');
+      if(!unchanged())throw Error('PUBLISH_SAVE_REQUIRED');
+      c.lifecycle='ACTIVE';c.conflict=remote;engine.edit(c.snapshot);
+    }else c.lifecycle=remote.lifecycle;
+    const work=works.find(w=>w.id===c.workId);
+    form(c.snapshot,c.lifecycle!=='ACTIVE'||work?.moderation_state!=='CLEAR'||!!work?.trashed_at);
+    await engine.flush(c);if(unchanged()){status(c);schedule(c);}
   }
   function download(c=engine.current){if(!c)return;const blob=new Blob([JSON.stringify({workId:c.workId,draftId:c.id,revision:c.revision,...c.snapshot},null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='원고-'+c.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   async function exportLegacy(){
@@ -130,10 +190,10 @@
     window.openModal?.('modalDraftDiff');
   }
   async function beforeAccountChange(){stop();await engine.checkpoint();if(engine.current&&engine.current.seq>engine.current.serverSeq)toast('서버 미동기 원고는 이 기기에 보존됩니다. 같은 계정으로 로그인해 기기 사본을 복구해주세요.');}
-  function onAuthLost(){stop();epoch++;const c=engine.detach();works=[];selected=null;form({},true);
+  function onAuthLost(){stop();composing=false;epoch++;const c=engine.detach();works=[];selected=null;form({},true);
     window.CreatorFiles?.reset();
     window.CreatorPublications?.reset();
-    for(const id of ['newEpWorkSelect','draftCopies','diffVersionList','diffSectionsContainer','diffPreviewHeader','draftIdentity','creatorDraftError'])if($(id))$(id).replaceChildren();
+    for(const id of ['newEpWorkSelect','draftCopies','diffVersionList','diffSectionsContainer','diffPreviewHeader','draftIdentity','creatorDraftError','creatorDraftChecklist'])if($(id))$(id).replaceChildren();
     if($('draftConflict'))$('draftConflict').hidden=true;if($('creatorDraftStatus'))$('creatorDraftStatus').textContent='로그인 후 원고를 복구할 수 있습니다.';
     window.closeModal?.('modalDraftDiff');
     if(c){toast('세션이 종료되어 원고 화면을 닫았습니다. 원고는 같은 계정의 기기 사본으로 보존합니다.');engine.flush(c).catch(()=>{download(c);toast('기기 저장 실패로 원고 백업 다운로드를 요청했습니다. 다운로드를 확인해주세요.');});}
@@ -145,31 +205,32 @@
       if(e.status===404||saved.some(r=>r.id===id))localOnly=true;else throw e;
     }
     await openWork(params.get('work'),id,{localOnly});
-  }else if(engine.current){$('newEpWorkSelect').value=engine.current.workId;form(engine.current.snapshot);status(engine.current);}else form({},true);}
+  }else if(engine.current){$('newEpWorkSelect').value=engine.current.workId;form(engine.current.snapshot);status(engine.current);schedule();}else form({},true);}
   function initialize(){
-    form({},true);for(const id of Object.values(fields)){$(id)?.addEventListener('input',input);$(id)?.addEventListener('compositionstart',()=>{composing=true;stop();});$(id)?.addEventListener('compositionend',()=>{composing=false;input();});}
+    form({},true);for(const id of Object.values(fields)){$(id)?.addEventListener('input',input);$(id)?.addEventListener('compositionstart',()=>{composing=true;stop(true);});$(id)?.addEventListener('compositionend',()=>{composing=false;input();});}
     $('newEpWorkSelect')?.addEventListener('change',safe(async()=>{const id=$('newEpWorkSelect').value;if(!id){$('newEpWorkSelect').value=engine.current?.workId||'';return;}try{await openWork(id);}catch(e){$('newEpWorkSelect').value=engine.current?.workId||id;throw e;}}));
     const bind=(id,fn)=>$(id)?.addEventListener('click',safe(fn));
     bind('btnDraftDownload',()=>download());bind('btnLegacyDraftExport',exportLegacy);bind('btnDraftNew',()=>openWork(engine.current?.workId||$('newEpWorkSelect').value,null,{fresh:true}));
     bind('btnDraftRefresh',()=>listCopies());bind('btnSaveDraftVersion',async()=>{const c=engine.current;if(c)await DraftStore.backup(c,c.snapshot,'manual');});
+    bind('btnDraftSettings',async()=>{const c=engine.current;if(!c)return;stop();composing=false;await engine.checkpoint();window.navigateTo?.('/creator/works/'+c.workId+'/settings');});
     bind('btnRestoreDraftVersion',openDiffModal);bind('btnConfirmRestoreRevision',async()=>{if(selected){await engine.replace(selected);form(engine.current.snapshot);schedule();window.closeModal?.('modalDraftDiff');}});
     bind('btnFormatIndent',()=>transform('indent'));bind('btnFormatDialogue',()=>transform('dialogue'));bind('btnFormatClean',()=>transform('clean'));
     bind('btnDraftUndo',async()=>{if(engine.current?.undo){await engine.replace(engine.current.undo,'before-undo');form(engine.current.snapshot);schedule();}});
     bind('btnConflictCompare',openDiffModal);for(const [id,keep]of [['btnConflictLocal',true],['btnConflictRemote',false]])bind(id,async()=>{await engine.resolve(keep);form(engine.current.snapshot);status(engine.current);});
     bind('btnDraftFocus',()=>{$('creatorTab-new-ep').classList.toggle('draft-focus');$('newEpContent').focus();});
-    document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'&&engine.current){e.preventDefault();safe(save)();}if(e.key==='Escape')$('creatorTab-new-ep')?.classList.remove('draft-focus');});
-    document.addEventListener('visibilitychange',()=>{if(document.hidden)safe(()=>engine.checkpoint())();});
-    window.addEventListener('online',safe(async()=>{for(const c of engine.contexts.values())await engine.sync(c);}));
+    document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'&&engine.current){e.preventDefault();if(!e.isComposing)safe(save)();}if(e.key==='Escape')$('creatorTab-new-ep')?.classList.remove('draft-focus');});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden){stop(true);safe(()=>engine.checkpoint())();}else schedule();});
+    window.addEventListener('online',safe(async()=>{if(composing)return;const user=actor()?.userId;for(const c of engine.contexts.values()){if(actor()?.userId!==user||composing)return;if(c.userId!==user)continue;if(c===engine.current)await requestSave(c);else await engine.sync(c);}}));
     window.addEventListener('beforeunload',e=>{if([...engine.contexts.values()].some(c=>c.seq>c.localSeq)){e.preventDefault();e.returnValue='';}});
     window.visualViewport?.addEventListener('resize',()=>{document.documentElement.style.setProperty('--draft-viewport',window.visualViewport.height+'px');if(document.activeElement===$('newEpContent'))$('newEpContent').scrollIntoView({block:'nearest'});});
   }
   window.CreatorDraftEditor={openWork:safe(openWork),enter:safe(enter),save:safe(save),syncServer:safe(save),download,openDiffModal:safe(openDiffModal),beforeAccountChange,onAuthLost,
-    preparePublication,markPublished,startNext:workId=>openWork(workId,null,{fresh:true}),
+    preparePublication,markPublished,refreshPublicationState,startNext:workId=>openWork(workId,null,{fresh:true}),
     getFileContext:()=>engine.current?JSON.parse(JSON.stringify({userId:engine.current.userId,workId:engine.current.workId,id:engine.current.id,seq:engine.current.seq,snapshot:engine.current.snapshot})):null,
     replaceFromFile:async(snapshot,expected)=>{
-      const c=engine.current;if(!c||c.id!==expected.id||c.seq!==expected.seq||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('EDIT_CHANGED_DURING_IMPORT');
+      const c=engine.current;if(composing)throw Error('DRAFT_COMPOSING');if(!c||c.id!==expected.id||c.seq!==expected.seq||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('EDIT_CHANGED_DURING_IMPORT');
       stop();await engine.replace(snapshot,'before-file-import');if(engine.current!==c)throw Error('SESSION_CHANGED');form(c.snapshot);schedule(c);
     },
-    checkpoint:()=>{epoch++;engine.cancelLoads();selected=null;window.closeModal?.('modalDraftDiff');return safe(()=>engine.checkpoint())();},clearCurrentDraft:async()=>{throw Error('발행된 원고도 보존합니다. 새 원고를 시작해주세요.');}};
+    checkpoint:()=>{stop();composing=false;epoch++;engine.cancelLoads();selected=null;window.closeModal?.('modalDraftDiff');return safe(()=>engine.checkpoint())();},clearCurrentDraft:async()=>{throw Error('발행된 원고도 보존합니다. 새 원고를 시작해주세요.');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })();

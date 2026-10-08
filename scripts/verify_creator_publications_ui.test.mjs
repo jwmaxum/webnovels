@@ -16,7 +16,7 @@ test('preview confirms a saved owner revision; lost publish response retries exa
   const calls=[],ctx={userId:'user-1',workId:'10',id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
     revision:'2',episodeId:null,seq:3,snapshot:{title:'원고',content:'본문\n\n다음',authorComment:'말'}};
   let failOnce=true,marked=false,refreshed=false;
-  const window={WebNovelsAuth:{getActor:()=>({userId:'user-1',author:{id:'1'}}),
+  const window={WEBNOVELS_CONFIG:{authorPublishEnabled:true},WebNovelsAuth:{getActor:()=>({userId:'user-1',author:{id:'1',status:'APPROVED'}}),
     api:async(path,options)=>{calls.push({path,options});
       if(path.startsWith('/api/v2/creator/works/'))return {work:{id:'10',title:'작품',description:'소개',rating:'ALL',ai_usage_type:'NONE',publication_missing:[]},episodes:[]};
       if(path.includes('/suggest'))return {episodeNumber:4};

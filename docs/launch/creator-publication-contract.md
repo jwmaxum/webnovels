@@ -2,6 +2,8 @@
 
 기록일: 2026-09-23. **로컬 구현·합성 DB 검증 진행 / 실제 Supabase·Cloudflare Cron·브라우저 인수 대기**.
 
+2026-10-08 보완: [15단계 첫 연재 계약](creator-first-serial-contract.md)에 공개 준비 체크리스트, 재접속 시 이전 요청의 정확한 결과 재확인, 확정 후 기기/목록 실패 안내와 중복 호출 차단을 기록한다. 체크리스트는 서버 게시 권한을 대체하지 않는다.
+
 [명칭 계약](author-creator-contract.md), [작품](creator-works-contract.md), [원고](creator-drafts-contract.md), [파일](creator-files-contract.md) 계약을 따른다. 작가 신원은 서버가 검증한 `actor.author`이고 UI/API 이름은 기존 Creator 계열을 유지한다. 이 문서는 이전 분석 문서의 제안을 7단계의 실제 코드·제한으로 구체화한다.
 
 ## 게시 흐름

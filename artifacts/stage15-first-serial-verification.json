@@ -1,0 +1,291 @@
+{
+  "stage": 15,
+  "checkedAt": "2026-10-08T22:32:08.316Z",
+  "reviewDate": "2026-10-09",
+  "reviewTimezone": "Asia/Seoul",
+  "status": "LOCAL_VERIFICATION_PASS_REAL_ENVIRONMENT_PENDING",
+  "scope": "Existing author studio first-webnovel flow; no new packages, schema, DB application, feature activation, deployment or browser acceptance.",
+  "release": {
+    "execution": "package.json test:release groups executed with bundled Node and local esbuild; full 17-group run followed by scoped final recheck",
+    "initialFullRunTests": 250,
+    "finalDistinctTests": 256,
+    "failed": 0,
+    "skipped": 0,
+    "groups": [
+      {
+        "group": "test:data",
+        "command": "node scripts/verify_data_contracts.cjs",
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:p0",
+        "command": "node scripts/verify_secure_api.test.mjs && node scripts/verify_cloudflare_routes.test.mjs && node scripts/verify_providers.test.mjs",
+        "tests": 31,
+        "passed": 31,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:auth",
+        "command": "node scripts/verify_auth_session.test.mjs && node scripts/verify_auth_onboarding.test.mjs",
+        "tests": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:naming",
+        "command": "node scripts/verify_author_creator_contract.test.mjs",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:authoring-schema",
+        "command": "node scripts/verify_authoring_schema.test.mjs",
+        "tests": 22,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:creator-works",
+        "command": "node scripts/verify_creator_work_api.test.mjs && node scripts/verify_creator_work_ui.test.mjs && node scripts/verify_creator_works.test.mjs",
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:stage14",
+        "command": "node scripts/verify_creator_distribution_api.test.mjs && node scripts/verify_creator_distribution_db.test.mjs && node scripts/verify_creator_distribution_ui.test.mjs",
+        "tests": 11,
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:stage15",
+        "command": "node --test scripts/verify_stage15_autosave.test.mjs scripts/verify_stage15_readiness.test.mjs scripts/verify_stage15_publication_flow.test.mjs",
+        "tests": 25,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS",
+        "note": "Initial release run had 19 cases. Final 36-case affected rerun includes all 25 stage15 cases and existing draft/work/publication UI cases after final fixes for cancelled schedules, IME races and local persistence during conflicts."
+      },
+      {
+        "group": "test:drafts",
+        "command": "node scripts/verify_draft_engine.test.mjs && node scripts/verify_draft_store.test.mjs && node scripts/verify_draft_ui.test.mjs && node scripts/verify_creator_draft_api.test.mjs && node scripts/verify_creator_drafts_db.test.mjs",
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:files",
+        "command": "node scripts/verify_file_codec.test.mjs && node scripts/verify_file_import_queue.test.mjs && node scripts/verify_creator_files_ui.test.mjs && node scripts/verify_creator_file_api.test.mjs && node scripts/verify_creator_files_db.test.mjs",
+        "tests": 24,
+        "passed": 24,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:publication",
+        "command": "node scripts/verify_reader_content.test.mjs && node scripts/verify_creator_publications_ui.test.mjs && node scripts/verify_creator_publication_api.test.mjs && node scripts/verify_publication_scheduler.test.mjs && node scripts/verify_creator_publications_db.test.mjs",
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:operations",
+        "command": "node scripts/verify_stage8_api.test.mjs && node scripts/verify_stage8_reader_ui.test.mjs && node scripts/verify_stage8_db.test.mjs",
+        "tests": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:admin-operations",
+        "command": "node scripts/verify_stage9_api.test.mjs && node scripts/verify_stage9_appeal_api.test.mjs && node scripts/verify_stage9_ui.test.mjs && node scripts/verify_stage9_db.test.mjs",
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:stage11",
+        "command": "node scripts/verify_stage11_xss.test.mjs && node scripts/verify_stage11_performance.test.mjs",
+        "tests": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:stage13",
+        "command": "node scripts/verify_stage13_disabled.test.mjs",
+        "tests": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:launch",
+        "command": "node scripts/verify_launch_access.test.cjs && node scripts/verify_launch_runtime.test.mjs && node scripts/verify_maintenance_containment.test.mjs && node scripts/verify_launch_repairs.test.mjs && node scripts/verify_virtual_accounts.test.mjs && node scripts/verify_admin_console.test.mjs && node scripts/verify_author_workspace.test.mjs && node scripts/verify_author_dashboard.test.mjs",
+        "tests": 33,
+        "passed": 33,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      },
+      {
+        "group": "test:cloudflare-bundle",
+        "command": "esbuild \"functions/api/[[path]].js\" \"functions/api/public-config.js\" \"functions/api/v2/[[path]].js\" --bundle --platform=browser --format=esm --target=es2022 --outbase=functions --outdir=scratch/step11-cloudflare-bundle && node scripts/verify_cloudflare_bundle.mjs",
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "status": "PASS"
+      }
+    ]
+  },
+  "finalAffectedRun": {
+    "command": "node --experimental-test-coverage --test-coverage-include=\"**/public/js/creator/creator-*.js\" --test scripts/verify_stage15_autosave.test.mjs scripts/verify_stage15_readiness.test.mjs scripts/verify_stage15_publication_flow.test.mjs scripts/verify_draft_ui.test.mjs scripts/verify_creator_work_ui.test.mjs scripts/verify_creator_publications_ui.test.mjs",
+    "tests": 36,
+    "passed": 36,
+    "failed": 0
+  },
+  "build": {
+    "status": "PASS",
+    "commands": [
+      "node node_modules/prisma/build/index.js generate",
+      "node node_modules/typescript/bin/tsc"
+    ],
+    "cloudflareBundles": 3
+  },
+  "types": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "errors": 0
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "note": "No lint script is configured; node --check run on changed JavaScript.",
+    "syntax": [
+      {
+        "path": "functions/api/public-config.js",
+        "status": 0
+      },
+      {
+        "path": "public/js/creator/creator-editor.js",
+        "status": 0
+      },
+      {
+        "path": "public/js/creator/creator-publications.js",
+        "status": 0
+      },
+      {
+        "path": "public/js/creator/creator-works.js",
+        "status": 0
+      },
+      {
+        "path": "public/js/creator/creator-readiness.js",
+        "status": 0
+      }
+    ]
+  },
+  "coverage": {
+    "scope": "Stage15 VM scripts with named paths: creator-editor.js, creator-publications.js, creator-readiness.js; not whole-project/browser coverage",
+    "line": 85.27,
+    "branch": 75.06,
+    "function": 69.8,
+    "modules": [
+      {
+        "path": "creator-editor.js",
+        "line": 78.81,
+        "branch": 68.82,
+        "function": 64.37
+      },
+      {
+        "path": "creator-publications.js",
+        "line": 87.5,
+        "branch": 72.09,
+        "function": 65.79
+      },
+      {
+        "path": "creator-readiness.js",
+        "line": 100,
+        "branch": 89.22,
+        "function": 95.83
+      }
+    ]
+  },
+  "security": {
+    "status": "PASS_FOR_CHANGED_SCOPE",
+    "credentialPatternHits": 0,
+    "envLocalIgnored": true,
+    "envLocalTracked": false,
+    "note": "Runtime allowlist tested; escaped metadata/choice HTML; existing server authorization/revision/idempotency contracts unchanged. Not a full penetration test."
+  },
+  "diff": {
+    "status": "PASS",
+    "unrelatedSchemaTimestampRestored": true
+  },
+  "sourceHashes": [
+    {
+      "path": "functions/api/public-config.js",
+      "sha256": "d0ea10f7e33010a494675fa5901194b5bf70cfd965d26dfa45e1c6b04e1cb857"
+    },
+    {
+      "path": "public/js/creator/creator-editor.js",
+      "sha256": "dce181cdf3c7aeb19c0d3931cf79b87bee84a99fa078bdd9d2261f54f3edab90"
+    },
+    {
+      "path": "public/js/creator/creator-publications.js",
+      "sha256": "2ea5cb1fbd5f9160d647e92a6cdd3a67d2e138267822976b0bd66e41919f702c"
+    },
+    {
+      "path": "public/js/creator/creator-works.js",
+      "sha256": "c1a30000fa38e860bc5719be8a85d17cfee6909c8c7da4489e4fca5c80732c41"
+    },
+    {
+      "path": "public/js/creator/creator-readiness.js",
+      "sha256": "102f28578c2c7e8e4107dd4f9d6201b9eb005ef571673575feea3692c4aa5502"
+    },
+    {
+      "path": "public/index.html",
+      "sha256": "cd8a3d5be5695480af579fc52762c90d429fb0069a6033b3211422fc819d9798"
+    },
+    {
+      "path": "public/styles.css",
+      "sha256": "538ad6dd12e37762aabcf206f2d57c2af281e84e2cd5a616bd1a3f8812d50fad"
+    }
+  ],
+  "notPerformed": [
+    "Real Supabase DB/RLS/PostgREST/Storage application",
+    "Feature flag activation",
+    "Localhost/browser/device acceptance",
+    "Deployment/Cloudflare Cron acceptance",
+    "Author A to reader B real-environment flow and multi-device recovery"
+  ],
+  "nextStage": 16
+}

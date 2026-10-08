@@ -11,6 +11,7 @@ export function onRequestGet({ env }) {
     return new Response('/* Runtime override unavailable; keep public deployment settings. */', { status: 503, headers });
   }
   const config = { supabaseUrl: url, supabaseAnonKey: key, authorPublishEnabled: env.AUTHOR_PUBLISH_ENABLED === 'true',
+    authorFilesEnabled: env.AUTHOR_FILES_ENABLED === 'true',
     readerServiceEnabled: env.READER_SERVICE_ENABLED === 'true',
     authorOperationsEnabled: env.AUTHOR_OPERATIONS_ENABLED === 'true',
     adminOperationsEnabled: env.ADMIN_OPERATIONS_ENABLED === 'true',

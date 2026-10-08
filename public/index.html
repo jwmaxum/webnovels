@@ -38,7 +38,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=116">
+  <link rel="stylesheet" href="/styles.css?v=117">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -703,7 +703,7 @@
                   </div>
                   <div class="creator-word-progress" aria-hidden="true"><span id="creatorWordProgress"></span></div>
                   <textarea id="newEpContent" rows="16" class="form-input creator-editor-textarea" placeholder="원고를 입력해주세요." maxlength="200000"></textarea>
-                  <p class="creator-editor-help">입력을 잠시 멈추면 이 기기에 저장하고 서버에 동기화를 요청합니다. 저장 상태를 확인해주세요. Ctrl/Cmd+S로 바로 저장할 수 있습니다.</p>
+                  <p class="creator-editor-help">입력을 잠시 멈추면 기기 저장과 서버 동기화를 요청합니다. 계속 입력해도 최대 30초 대기로 요청하며 한글 조합·진행 중 저장이 끝날 때까지 기다립니다. 중단된 탭·오프라인에서는 저장 상태를 확인해주세요. Ctrl/Cmd+S로 바로 저장할 수 있습니다.</p>
                 </div>
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">작가의 말</label>
@@ -712,6 +712,8 @@
 
                 <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">초안 저장</button>
                 <button type="button" class="btn btn-outline" id="btnOpenPublication">미리보기·게시</button>
+                <button type="button" class="btn btn-outline" id="btnDraftSettings">작품 정보·연재 방식 설정</button>
+                <div id="creatorDraftChecklist" aria-label="원고 준비 상태"></div>
                 <p class="text-muted small">초안 저장은 비공개입니다. 게시 전 저장 버전·작품 정보·권리를 다시 확인합니다.</p>
               </form>
             </div>
@@ -2412,8 +2414,13 @@
       <div class="modal-header"><h3 id="publicationHeading">원고 미리보기·게시</h3><button type="button" class="modal-close" aria-label="게시 화면 닫기">×</button></div>
       <div class="modal-body">
         <p id="publicationMessage" role="status" aria-live="polite"></p>
+        <section id="publicationRetryPanel" hidden aria-label="이전 게시 요청 확인">
+          <p id="publicationRetrySummary"></p>
+          <button type="button" id="publicationRetry" class="btn btn-primary">이전 게시 요청 결과 확인</button>
+        </section>
         <section id="publicationDraftPanel">
           <p id="publicationSummary"></p>
+          <div id="publicationChecklist" aria-label="공개 준비 체크리스트"></div>
           <div class="creator-editor-actions">
             <button type="button" id="publicationDesktop" class="btn btn-outline">PC 폭</button>
             <button type="button" id="publicationMobile" class="btn btn-outline">모바일 폭</button>
@@ -2455,12 +2462,13 @@
   <script src="/js/creator/draft-engine.js?v=105"></script>
   <script src="/js/creator/draft-store.js?v=106"></script>
   <script src="/js/creator/draft-diff.js?v=105"></script>
-  <script src="/js/creator/creator-editor.js?v=106"></script>
-  <script src="/js/creator/creator-publications.js?v=107"></script>
+  <script src="/js/creator/creator-readiness.js?v=117"></script>
+  <script src="/js/creator/creator-editor.js?v=117"></script>
+  <script src="/js/creator/creator-publications.js?v=117"></script>
   <script src="/js/creator/creator-files.js?v=114"></script>
   <script src="/js/creator/creator-dashboard.js?v=115"></script>
   <script src="/js/creator/creator.js?v=115"></script>
-  <script src="/js/creator/creator-works.js?v=115"></script>
+  <script src="/js/creator/creator-works.js?v=117"></script>
   <script src="/js/creator/creator-distribution.js?v=115"></script>
   <script src="/js/creator/creator-operations.js?v=108"></script>
   <script src="/js/admin/admin.js?v=102"></script>

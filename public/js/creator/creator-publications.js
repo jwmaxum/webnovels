@@ -13,7 +13,9 @@
     PUBLISH_SAVE_REQUIRED:'서버 저장이 확인되지 않았습니다. 원고 상태를 확인하고 다시 시도하세요.',
     PUBLISH_REVISION_CONFLICT:'미리보기와 서버 원고가 달라졌습니다. 다시 확인하세요.',
     RIGHTS_CONFIRMATION_REQUIRED:'게시 권리와 작품 정보를 확인해주세요.',
-    INVALID_SCHEDULE:'예약 시각과 시간대를 확인해주세요.'
+    INVALID_SCHEDULE:'예약 시각과 시간대를 확인해주세요.',
+    DRAFT_COMPOSING:'한글 입력을 마친 뒤 미리보기를 다시 열어주세요.',
+    PUBLICATION_IN_PROGRESS:'게시 결과를 확인하는 중입니다. 결과 확인 후 다른 작품을 열어주세요.'
   }[e?.code || e?.message] || '게시 상태를 확인하지 못했습니다. 같은 요청으로 다시 확인하세요.');
   const message = text => { if ($('publicationMessage')) $('publicationMessage').textContent = text; };
   const api = (path, options) => window.WebNovelsAuth.api(
@@ -23,6 +25,26 @@
     ...(key ? {headers:{'Idempotency-Key':key}} : {}),body:JSON.stringify(data)});
   function assertOpen(turn,user) {
     if (turn !== epoch || actor()?.userId !== user || work?.userId !== user) throw Error('SESSION_CHANGED');
+  }
+  function checklist(){
+    if(!context||!work)return [];
+    const items=window.CreatorReadiness?.publicationItems(work,context,$('publicationRights').checked)||[];
+    if($('publicationChecklist'))$('publicationChecklist').innerHTML=window.CreatorReadiness?.render(items)||'';
+    return items;
+  }
+  function showResult(publication,text){
+    lastResult=publication;$('publicationDraftPanel').hidden=true;$('publicationRetryPanel').hidden=true;
+    $('publicationResult').hidden=false;$('publicationResultText').textContent=text;
+    $('publicationRead').hidden=publication.status!=='PUBLISHED';$('publicationCopy').hidden=publication.status!=='PUBLISHED';
+  }
+  function resultText(publication){
+    if(publication.status==='PUBLISHED')return `${publication.episodeNumber}화가 공개됐습니다. 독자 화면에서 확인하세요.`;
+    if(publication.status==='SCHEDULED')return `${publication.episodeNumber}화가 ${new Date(publication.dueAt).toLocaleString('ko-KR',{timeZone:publication.displayTimezone})} ${publication.displayTimezone}에 예약됐습니다.`;
+    return `${publication.episodeNumber}화 · ${{CANCELLED:'예약이 취소되었습니다. 원고 상태를 확인해 이어서 작성할 수 있습니다.',FAILED:'예약 실행이 실패했습니다. 아래 목록에서 사유를 확인해주세요.',SUPERSEDED:'이 버전 이후에 다른 버전이 반영되었습니다.',RUNNING:'예약 발행 처리 중입니다.'}[publication.status]||'게시 상태를 다시 확인해주세요.'}`;
+  }
+  async function reconcileDraft(publication,expected){
+    if(publication.status==='CANCELLED')await window.CreatorDraftEditor.refreshPublicationState(expected);
+    else if(['PUBLISHED','SCHEDULED','FAILED','SUPERSEDED','RUNNING'].includes(publication.status))await window.CreatorDraftEditor.markPublished(expected);
   }
   function utcValue(local,zone) {
     if (!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(local)) throw Error('INVALID_SCHEDULE');
@@ -74,8 +96,13 @@
         }catch(e){if(e.status===409)await loadList(turn,user).catch(()=>{});message(errorText(e));}};
         const cancel=document.createElement('button');cancel.type='button';cancel.className='btn btn-outline btn-sm';cancel.textContent='예약 취소';
         cancel.onclick=async()=>{try {
-          await post('/cancel/'+row.episodeId,{generation:row.generation});
-          await loadList(turn,user);message('예약을 취소했습니다. 원고는 비공개로 보존됩니다.');
+          const cancelled=await post('/cancel/'+row.episodeId,{generation:row.generation});assertOpen(turn,user);
+          let notice='';
+          try{await reconcileDraft(cancelled.publication,{userId:user,workId:work.id,id:row.draftId});}
+          catch{notice=' 기기 원고 상태 확인에 실패했습니다. 원고를 보관하고 다시 확인해주세요.';}
+          assertOpen(turn,user);
+          try{await loadList(turn,user);}catch{notice+=' 회차 목록 갱신에 실패했습니다.';}
+          assertOpen(turn,user);message('예약 취소가 확정됐습니다. 원고는 보존됩니다.'+notice);
         }catch(e){if(e.status===409)await loadList(turn,user).catch(()=>{});message(errorText(e));}};
         box.append(due,zone,change,cancel);
       }
@@ -85,10 +112,13 @@
     return rows;
   }
   async function open(workId) {
+    if(busy)throw Error('PUBLICATION_IN_PROGRESS');
+    if(window.WEBNOVELS_CONFIG?.authorPublishEnabled!==true||actor()?.author?.status!=='APPROVED'||actor()?.authorWorkspaceReady===true)throw Error('AUTHOR_PUBLISH_NOT_ACTIVATED');
     const turn=++epoch,user=actor()?.userId;
     if(!user||!actor()?.author)throw Error('AUTHOR_REQUIRED');
     work=null;context=null;lastResult=null;message('작품과 원고를 확인하는 중입니다.');
-    $('publicationResult').hidden=true;$('publicationDraftPanel').hidden=true;
+    $('publicationResult').hidden=true;$('publicationDraftPanel').hidden=true;$('publicationRetryPanel').hidden=true;
+    $('publicationRights').checked=false;
     window.openModal('modalCreatorPublication');
     const result=await window.WebNovelsAuth.api('/api/v2/creator/works/'+workId);
     if(turn!==epoch||actor()?.userId!==user)throw Error('SESSION_CHANGED');
@@ -96,17 +126,22 @@
     $('publicationHeading').textContent=work.title+' · 미리보기·게시';
     const rows=await loadList(turn,user);
     const current=window.CreatorDraftEditor?.getFileContext();
-    if(current?.id) {
+    if(current?.id&&current.workId===String(workId)&&current.userId===user) {
       const storage=pendingKey(user,current.id);
       const pending=JSON.parse(sessionStorage.getItem(storage)||'null');
       const confirmed=pending&&rows.find(row=>row.draftId===current.id&&
         row.revision===pending.data.revision&&row.episodeNumber===pending.data.episodeNumber);
       if(confirmed) {
         sessionStorage.removeItem(storage);
-        lastResult=confirmed;$('publicationResult').hidden=false;
-        $('publicationResultText').textContent='이전 게시 요청의 결과를 확인했습니다: '+confirmed.status;
-        $('publicationRead').hidden=confirmed.status!=='PUBLISHED';
-        $('publicationCopy').hidden=confirmed.status!=='PUBLISHED';
+        showResult(confirmed,resultText(confirmed));
+        let notice='';try{await reconcileDraft(confirmed,{...current,seq:-1});}catch{notice=' 기기 원고 상태를 확인하지 못했습니다. 원고를 다운로드하고 다시 확인해주세요.';}
+        assertOpen(turn,user);message('게시 결과를 확인했습니다. 다음 회차는 새 원고로 시작할 수 있습니다.'+notice);return;
+      }
+      if(pending){
+        context={...current,seq:-1,revision:pending.data.revision,episodeNumber:pending.data.episodeNumber};
+        $('publicationRetryPanel').hidden=false;
+        $('publicationRetrySummary').textContent=`이전 요청: ${pending.data.episodeNumber}화 · 서버 버전 ${pending.data.revision}. 당시의 권리 확인과 정확한 요청으로 결과를 재확인합니다. 현재 편집 내용은 새로 게시하지 않습니다.`;
+        message('응답을 확인하지 못한 게시 요청이 있습니다. 기존 요청의 결과를 먼저 확인해주세요.');return;
       }
     }
     if(current?.workId!==String(workId)||current.userId!==user){
@@ -135,18 +170,20 @@
     $('publicationNowLabel').textContent=context.episodeId?'즉시 재게시 (기존 접근 정책 유지)':'즉시 무료 게시';
     $('publicationScheduledLabel').textContent=context.episodeId?'예약 재게시 (기존 접근 정책 유지)':'예약 무료 게시';
     $('publicationRights').checked=false;
+    checklist();
     message('미리보기는 이 계정의 저장된 초안 버전입니다. 공개 전 내용을 확인하세요.');
   }
   async function publish() {
-    if(busy||!work||!context)return;
+    if(busy||!work||!context||lastResult)return;
     const turn=epoch;
-    busy=true;$('publicationCommit').disabled=true;
+    busy=true;$('publicationCommit').disabled=true;$('publicationRetry').disabled=true;
     try {
       const user=actor()?.userId;if(user!==work.userId)throw Error('SESSION_CHANGED');
       const storage=pendingKey(user,context.id);
       let pending=JSON.parse(sessionStorage.getItem(storage)||'null');
       if(!pending) {
         if(!$('publicationRights').checked)throw Error('RIGHTS_CONFIRMATION_REQUIRED');
+        if(checklist().some(x=>x.state==='blocked'||x.state==='pending'))throw Error('PUBLICATION_NOT_READY');
         const current=await window.CreatorDraftEditor.preparePublication();
         assertOpen(turn,user);
         if(current.id!==context.id||current.revision!==context.revision||current.seq!==context.seq)
@@ -163,34 +200,35 @@
       const result=await post('/publish/'+context.id,pending.data,pending.key);
       assertOpen(turn,user);
       sessionStorage.removeItem(storage);
-      lastResult=result.publication;
-      try { await window.CreatorDraftEditor.markPublished(context); }
-      catch { message('게시는 확정됐지만 기기 상태 저장에 실패했습니다. 서버 결과를 확인하세요.'); }
-      $('publicationDraftPanel').hidden=true;$('publicationResult').hidden=false;
-      $('publicationResultText').textContent=lastResult.status==='SCHEDULED'
-        ? `${lastResult.episodeNumber}화가 ${new Date(lastResult.dueAt).toLocaleString('ko-KR',{timeZone:lastResult.displayTimezone})} ${lastResult.displayTimezone}에 예약됐습니다.`
-        : `${lastResult.episodeNumber}화가 공개됐습니다. 독자 화면에서 확인하세요.`;
-      $('publicationRead').hidden=lastResult.status!=='PUBLISHED';
-      $('publicationCopy').hidden=lastResult.status!=='PUBLISHED';
-      await loadList(epoch,user);
-      if(lastResult.status==='PUBLISHED')try { await window.refreshReaderCatalog?.(true); }
-        catch { message('공개는 확정됐지만 목록 갱신에 실패했습니다. 독자 화면을 다시 열어주세요.'); }
-      message('게시 결과를 확인했습니다.');
-    } finally {if(turn===epoch){busy=false;$('publicationCommit').disabled=false;}}
+      const publication=result.publication,notices=[];
+      try { await reconcileDraft(publication,context); }
+      catch { notices.push('기기 상태 저장에 실패했습니다. 기기 원고를 다운로드해 보관해주세요.'); }
+      assertOpen(turn,user);
+      showResult(publication,resultText(publication));
+      try{await loadList(turn,user);}catch{notices.push('회차 목록 갱신에 실패했습니다. 게시 결과는 확정됐습니다.');}
+      assertOpen(turn,user);
+      if(publication.status==='PUBLISHED')try { await window.refreshReaderCatalog?.(true); }
+        catch { notices.push('독자 목록 갱신에 실패했습니다. 독자 화면을 다시 열어주세요.'); }
+      assertOpen(turn,user);message('게시 결과를 확인했습니다.'+(notices.length?' '+notices.join(' '):''));
+    } finally {if(turn===epoch){busy=false;$('publicationCommit').disabled=false;$('publicationRetry').disabled=false;}}
   }
   function reset(){epoch++;work=null;context=null;lastResult=null;busy=false;
-    for(const id of ['publicationList','publicationPreviewBody','publicationPreviewComment','publicationSummary','publicationMessage'])$(id)?.replaceChildren();
+    for(const id of ['publicationList','publicationPreviewBody','publicationPreviewComment','publicationSummary','publicationMessage','publicationChecklist','publicationRetrySummary'])$(id)?.replaceChildren();
+    $('publicationDraftPanel').hidden=true;$('publicationResult').hidden=true;$('publicationRetryPanel').hidden=true;
     window.closeModal?.('modalCreatorPublication');
   }
   function init(){
-    $('btnOpenPublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext();if(c)open(c.workId).catch(e=>message(errorText(e)));};
+    $('btnOpenPublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(c)return open(c.workId).catch(e=>{if(actor()?.userId===user&&e.message!=='SESSION_CHANGED')message(errorText(e));});};
     $('publicationDesktop').onclick=()=>$('publicationPreview').classList.remove('is-mobile');
     $('publicationMobile').onclick=()=>$('publicationPreview').classList.add('is-mobile');
     for(const input of document.querySelectorAll('input[name="publicationMode"]'))input.onchange=()=>{
       $('publicationScheduleFields').hidden=input.value!=='SCHEDULED';
       $('publicationCommit').textContent=input.value==='SCHEDULED'?'선택한 버전 예약':'선택한 버전 게시';
     };
-    $('publicationCommit').onclick=()=>publish().catch(e=>message(errorText(e)));
+    const submit=()=>{const turn=epoch;return publish().catch(e=>{if(turn===epoch)message(errorText(e));});};
+    $('publicationCommit').onclick=submit;
+    $('publicationRetry').onclick=submit;
+    $('publicationRights').onchange=checklist;
     $('publicationRead').onclick=()=>{if(lastResult){window.closeModal('modalCreatorPublication');window.openReaderDirect(work.id,lastResult.episodeNumber);}};
     $('publicationCopy').onclick=()=>{if(lastResult)navigator.clipboard.writeText(location.origin+'/read/'+work.id+'/'+lastResult.episodeNumber)
       .then(()=>message('독자 링크를 복사했습니다.')).catch(()=>message('링크 복사에 실패했습니다.'));};

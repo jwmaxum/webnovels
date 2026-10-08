@@ -5,6 +5,7 @@ import {randomUUID} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
 const source=await readFile(new URL('../public/js/creator/creator-works.js',import.meta.url),'utf8');
+const readiness=await readFile(new URL('../public/js/creator/creator-readiness.js',import.meta.url),'utf8');
 const work={id:'30',title:'제목',description:'',genre:[],tags:[],rating:'ALL',ai_usage_type:'NONE',visibility:'PRIVATE',serial_state:'ONGOING',moderation_state:'CLEAR',version:'1',publication_missing:['소개'],episode_count:0};
 function setup({storage=new Map(),path='/creator/works',responses=[]}={}){
   const children=new Map(),calls=[];let actor={userId:'user-a',author:{id:1}};
@@ -16,7 +17,7 @@ function setup({storage=new Map(),path='/creator/works',responses=[]}={}){
     document:{getElementById:id=>id==='creatorWorksContainer'?root:id==='creatorWorksCount'?count:node(id)},
     WebNovelsAuth:{getActor:()=>actor,api:async(path,options)=>{calls.push({path,options});const response=responses.shift();if(response instanceof Error)throw response;return response||{works:[],nextCursor:null};}},
     FormData:class{constructor(form){return form.values||[];}},confirm:()=>true,navigateTo:()=>{}};
-  context.window=context;vm.createContext(context);vm.runInContext(source,context);
+  context.window=context;vm.createContext(context);vm.runInContext(readiness,context);vm.runInContext(source,context);
   return {ui:context.CreatorWorks,context,root,count,storage,calls,node,responses,setActor:v=>{actor=v;}};
 }
 test('empty list differs from unavailable; retry restores real list and cursor appends',async()=>{
@@ -47,7 +48,7 @@ test('detail URL uses server ID; conflict keeps form content and requires explic
   const form=s.root.querySelector('#cwSettings');form.values=[['title','내 수정'],['description','유지할 소개'],['genre','판타지'],['tags','성장, 성장'],['rating',''],['ai_usage_type',''],['serial_state','HIATUS']];
   const html=s.root.innerHTML;await form.onsubmit({preventDefault(){}});
   assert.equal(s.root.innerHTML,html);assert.match(s.node('cwMessage').textContent,/입력 내용은 유지/);
-  const data=JSON.parse(s.calls[1].options.body);assert.equal(data.version,'1');assert.equal(data.description,'유지할 소개');assert.deepEqual(data.tags,['성장']);assert.ok(!('rating'in data));
+  const data=JSON.parse(s.calls[1].options.body);assert.equal(data.version,'1');assert.equal(data.description,'유지할 소개');assert.deepEqual(data.tags,['growth']);assert.ok(!('rating'in data));
 });
 test('late list response after account change cannot populate private UI',async()=>{
   const s=setup();let resolve;s.context.WebNovelsAuth.api=()=>new Promise(r=>{resolve=r;});
