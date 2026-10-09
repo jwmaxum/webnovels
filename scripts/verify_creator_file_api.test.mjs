@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {creatorFileApi} from '../server/creator-file-api.mjs';
+import test from 'node:test';import assert from 'node:assert/strict';import {creatorFileApi} from '../server/creator-file-api.mjs';import {hwpx} from './fixtures/hwpx-fixtures.mjs';
 const uid='11111111-1111-4111-8111-111111111111',key='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',draft='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const env={AUTHOR_FILES_ENABLED:'true',AUTHOR_DRAFTS_ENABLED:'true',AUTHOR_WORKS_ENABLED:'true'};
 const payload={filename:'1.txt',bytes:Buffer.from('한글').toString('base64'),draftId:draft,title:'제목',content:'한글',order:0,batchId:key};
@@ -20,6 +20,15 @@ function setup({denied=false,failedUpload=false,committed=false}={}){
 test('import validates owner before upload and commits only after durable storage acknowledgement',async()=>{
  const s=setup();assert.equal((await s.run()).draft.id,draft);assert.deepEqual(s.calls.map(c=>c.rpc||'storage'),['authorize','get','prepare','storage','commit']);assert.equal(s.calls[1].body.p_user_id,uid);
  const failure=setup({failedUpload:true});await assert.rejects(failure.run(),e=>e.code==='STORAGE_UPLOAD_FAILED');assert.ok(!failure.calls.some(c=>c.rpc==='commit'));
+});
+test('HWPX server checks the bounded private package and retains immutable original bytes after ownership',async()=>{
+ const bytes=hwpx(),body={...payload,filename:'한글.hwpx',bytes:Buffer.from(bytes).toString('base64')},s=setup();await s.run('import',{body});
+ assert.deepEqual(s.calls.map(c=>c.rpc||'storage'),['authorize','get','prepare','storage','commit']);assert.deepEqual(Buffer.from(s.calls.find(c=>c.storage).body),Buffer.from(bytes));assert.equal(s.calls.find(c=>c.rpc==='prepare').body.p_data.size,bytes.length);
+ await s.run('import',{body});assert.equal(s.objects.size,1);
+ for(const original of [Buffer.from('HWP'),hwpx({overrides:{mimetype:'application/zip'}}),hwpx({overrides:{'Scripts/sourceScripts':'active'}}),hwpx({overrides:{'META-INF/manifest.xml':'<encryption-data/>'}})]){
+  const invalid=setup();await assert.rejects(invalid.run('import',{body:{...body,bytes:Buffer.from(original).toString('base64')}}),e=>e.status===400&&e.code.startsWith('HWPX_'));assert.ok(!invalid.calls.some(c=>c.rpc==='prepare'||c.storage));
+ }
+ const denied=setup({denied:true});await assert.rejects(denied.run('import',{body}),e=>e.status===404);assert.ok(!denied.calls.some(c=>c.storage));
 });
 test('unknown upload response retry checks identical immutable bytes; committed request skips storage',async()=>{
  const s=setup();await s.run();await s.run();assert.ok(s.calls.some(c=>c.storage&&c.method===undefined));

@@ -211,3 +211,23 @@ env/초기 scratch 없는 새 소스 복사에서 전체 build 520/520·Function
 TypeScript 컴파일, 별도 tsc --noEmit·구문/비밀/충돌/diff를 통과했다. lint는 미구성이다.
 [검증 산출물](../../artifacts/stage26-verification.json)에 Node VM/DOM 대역과 실제 private
 파일 준비를 구분했고 hosted/브라우저 인수와 운영 SQL·기능 플래그 변경은 포함하지 않았다.
+
+2026-10-09 27단계: [HWPX 계약](creator-hwpx-import-contract.md),
+[운영 읽기 전용 감사](../../artifacts/stage27-launch-readiness.json),
+[기존 백업 원고 후보 집계](../../artifacts/stage27-original-recovery.json).
+11:24 UTC 감사에서 Auth 42·연결 작가 30·본문 충돌 78·Storage 0·미적용 12개·health 503을
+확인했다. 검증된 23단계 백업의 누락 소설 36화와 연결된 초안/버전/복구 이력은 0건이다.
+실제 원본·결정 파일·별도 hosted 대상은 확보되지 않아 출시 NO_GO를 유지한다.
+기존 CreatorFiles/CreatorDraftEditor/server import에 HWPX 평문 변환·누락 확인·원본 바이트
+보존을 추가했다. 구역 spine·secCnt·namespace·ZIP/CRC/해제 한도와 Unicode 암호화 표시를
+검사한다. 새 초안이 기본이며 원본 회차를 자동 대체/공개하지 않는다.
+운영 SQL/원고·플래그 변경과 실제 한컴 파일·hosted/브라우저 인수는 미실행이다.
+28단계는 실제 원고/권리·원래 회차 연결과 별도 대상의 native/Auth/Storage·역할 인수를
+확보한 후 새 snapshot 기반 무료 서비스 전환을 검증한다.
+
+27단계 검증: 전용 HWPX 합성 14/14, 변경 범위 변환/UI/API/초안 DB 37/37, 라인 90.56%·
+분기 77.30%·함수 80.00%. 동일 clean 소스 복사에서 전체 회귀 537/537·Functions 번들과
+Prisma/TypeScript 컴파일을 통과했다. 20분 부모 프로세스 한도 뒤 계속 실행된 release 체인의
+종료 코드 0을 확인하고 동일 복사본에서 build:compile을 실행한 이력도 기록했다. 별도 타입·
+구문·비밀/충돌·diff를 통과했고 lint는 미구성이다. [검증 기록](../../artifacts/stage27-verification.json)의
+합성/VM/PGlite 결과를 실제 한컴 파일·브라우저/hosted 인수로 취급하지 않는다.

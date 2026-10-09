@@ -47,6 +47,15 @@ test('file import preparation is private; commit and lost-response retry produce
   assert.equal((await call('read',{id:prepared.original.id,user:other})).status,404);
  }finally{await db.close();}
 });
+test('HWPX import uses the existing draft revision/source contract without replacing published episodes',async()=>{
+ const {db,call}=await setup();try{
+  const before=(await db.query('select id,work_id,content from episodes order by id')).rows;
+  const prepared=await call('prepare',{data:{...payload,filename:'원고.hwpx',content:'복구 원고 😀\n\n끝'}});const done=await call('commit');assert.equal(done.result.draft.revision,'1');assert.equal(done.result.draft.id,draft);
+  assert.deepEqual((await db.query('select id,work_id,content from episodes order by id')).rows,before);assert.equal((await db.query('select episode_id from authoring.drafts where id=$1',[draft])).rows[0].episode_id,null);
+  assert.equal((await db.query('select content from authoring.draft_revisions where draft_id=$1 and revision=1',[draft])).rows[0].content,'복구 원고 😀\n\n끝');
+  assert.equal((await db.query('select count(*)::int n from authoring.revision_files')).rows[0].n,1);assert.equal((await call('read',{id:prepared.original.id,user:other})).status,404);assert.deepEqual(await call('commit'),done);
+ }finally{await db.close();}
+});
 test('cover reference changes atomically only on confirmed upload; conflict preserves previous cover and drafts',async()=>{
  const {db,call}=await setup();try{
   const cover={kind:'COVER',filename:'private-name.png',sha256:'a'.repeat(64),size:100,derivativeSha:'b'.repeat(64),derivativeSize:90,version:'1'};

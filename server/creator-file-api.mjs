@@ -1,4 +1,6 @@
 import '../public/js/creator/file-image.js';
+import '../public/js/creator/file-codec.js';
+import * as fflate from 'fflate';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decimal=x=>typeof x==='string'&&/^[1-9]\d{0,18}$/.test(x)&&BigInt(x)<=9223372036854775807n;
 const sha=async bytes=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
@@ -53,8 +55,11 @@ export async function creatorFileApi({request,env,actor,db,fetchImpl,base,servic
  const payload={kind:action==='import'?'IMPORT':'COVER',filename:body.filename,sha256:await sha(original),size:original.length};
  if(action==='import'){
   if(!UUID.test(body.draftId||'')||!UUID.test(body.batchId||'')||typeof body.title!=='string'||body.title.length>200||typeof body.content!=='string'||body.content.length>200000||!Number.isInteger(body.order)||body.order<0||body.order>99)fail(400,'INVALID_FIELD');
-  if(!/\.(txt|docx)$/i.test(body.filename))fail(400,'FILE_TYPE_UNSUPPORTED');
+  if(!/\.(txt|docx|hwpx)$/i.test(body.filename))fail(400,'FILE_TYPE_UNSUPPORTED');
   if(/\.docx$/i.test(body.filename)&&!(original[0]===80&&original[1]===75&&original[2]===3&&original[3]===4))fail(400,'DOCX_SIGNATURE_INVALID');
+  if(/\.hwpx$/i.test(body.filename)){
+    try{globalThis.CreatorFileCodec.unpack(original,'HWPX',fflate);}catch(error){fail(400,/^(?:HWPX_[A-Z_]+|FILE_TOO_LARGE)$/.test(error.message)?error.message:'HWPX_ARCHIVE_INVALID');}
+  }
   Object.assign(payload,{draftId:body.draftId,title:body.title,content:body.content,order:body.order,batchId:body.batchId});
  }else{
   if(!decimal(body.version))fail(400,'INVALID_VERSION');

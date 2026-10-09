@@ -1,0 +1,130 @@
+{
+  "stage": 27,
+  "verifiedAt": "2026-10-09T12:31:07.503Z",
+  "scope": "HWPX plain-text manuscript import through existing CreatorFiles/draft/immutable private original storage contract",
+  "build": {
+    "status": "PASS",
+    "command": "npm run test:release && npm run build:compile",
+    "execution": "existing npm run test:release child chain followed by npm run build:compile in the same clean source copy",
+    "initialBuildAttempt": {
+      "status": "TIME_LIMIT",
+      "completedTests": 206,
+      "childChainContinued": true
+    },
+    "tests": 537,
+    "passed": 537,
+    "failed": 0,
+    "skipped": 0,
+    "prismaAndTypeScriptCompile": true,
+    "functionsBundle": true,
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "noInitialScratch": true,
+    "reusedLockedDependencies": true
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "exitCode": 0
+  },
+  "scopedTests": {
+    "status": "PASS",
+    "tests": 37,
+    "passed": 37,
+    "stage27FormatTests": 14,
+    "kind": "synthetic ZIP/XML, Node VM/DOM, API/Storage mocks and PGlite; not browser/hosted or actual Hancom file acceptance"
+  },
+  "coverage": {
+    "scope": [
+      "public/js/creator/file-codec.js",
+      "public/js/creator/creator-files.js",
+      "server/creator-file-api.mjs"
+    ],
+    "lines": 90.56,
+    "branches": 77.3,
+    "functions": 80,
+    "minimumLineTarget": 80
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 9
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0,
+    "reviewIssuesResolved": [
+      "known primary paragraph namespace required",
+      "Unicode prefix encryption marker detection",
+      "multiple container rootfiles with exactly one HWPX package",
+      "bounded ZIP output/CRC and unsafe path aliases",
+      "no remote resource/Preview fallback",
+      "existing ownership, immutable byte hash and request/draft identity preserved"
+    ]
+  },
+  "testedCodeSha256": {
+    "public/js/creator/creator-files.js": "b6c7d8008c2c39f49fbd4957b006bc6d78629919a29ed2a4572ef85ce59987b0",
+    "public/js/creator/file-codec.js": "5a4567e5159f3b0aab858e0c2a843f8b911c4bb7d02f4fbb5644675b9825ff66",
+    "scripts/verify_creator_file_api.test.mjs": "82c4ff54fb0ba7bf7630cd0ab3579ea4c7ca30996fbb67d72e3920006d51f0c0",
+    "scripts/verify_creator_files_db.test.mjs": "7fa98861827ef34c851310f8f0bc5bbdde7149568e82181f118684b084618b57",
+    "scripts/verify_creator_files_ui.test.mjs": "efe969cb6931483ac82a57f67cbe86bc1e2e3685f6d6a79bf0b2a71740983d7a",
+    "server/creator-file-api.mjs": "73e52a25266529300f452450cbebc457467b0b670b6a988d26a662edd6d133f0",
+    "scripts/audit_stage27_launch.cjs": "ccd2680b83fb3e02a7ee3102d839ac62bb9ff7de4bd5193ca4a5dadb86269ef0",
+    "scripts/fixtures/hwpx-fixtures.mjs": "42d0977c6777c63d3a4338d552301a437694070d671a1e53ae8faa3bc4c9148d",
+    "scripts/verify_stage27_hwpx.test.mjs": "02e377f8df7735888cc2b9ca5ba6f27f2544292bf12948086f0dea7f8eaf9d12",
+    "package.json": "b44c0ef0ddfed94adcb6235064f1944870f0ee2e1db966d9a221959a16ab1db8",
+    "public/index.html": "6cc5b84d253b4f77c13c2a00d91e8a7d1b596913f89bed4373ed02ac4a8dbef0"
+  },
+  "actualSourceAccess": {
+    "managementReadOnlyVerified": true,
+    "accessibleProjects": 1,
+    "nonProductionCandidates": 0,
+    "approvedDecisionFiles": 0,
+    "designatedLocalEnvironmentReadWithoutSecretOutput": true
+  },
+  "originalRecovery": {
+    "format": "webnovels-stage27-original-recovery-summary-v1",
+    "checkedAt": "2026-10-09T11:26:54.450Z",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "scope": "existing verified stage23 snapshot; explicit episode/work/author or legacy work/episode-number relationships only",
+    "missingOriginalNovels": 36,
+    "linked_drafts": 0,
+    "nonempty_revisions": 0,
+    "matching_legacy_drafts": 0,
+    "nonempty_drafts": 0,
+    "versions": 0,
+    "matching_body_history": 0,
+    "productionChanged": false,
+    "sourceScope": "Existing SHA-verified stage23 logical snapshot only; not a new production snapshot or an exhaustive search of all historical backups/disks",
+    "scopeLimit": "Explicit episode/work/author links; matching legacy work/episode-number/author links; no title, pen-name or localStorage identity inference",
+    "originalsProvided": 0,
+    "approvedDecisionFiles": 0,
+    "sourceCandidatesRecovered": 0,
+    "automaticEpisodeReplacement": false,
+    "productionManuscriptsWritten": false,
+    "productionMigrationApplied": false,
+    "flagsChanged": false,
+    "hostedRestoreAccepted": false,
+    "browserAcceptanceExecuted": false,
+    "releaseDecision": "NO_GO"
+  },
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "actualHancomFileAccepted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ]
+}

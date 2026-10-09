@@ -1,17 +1,27 @@
-import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';import * as fflate from 'fflate';
+import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';import * as fflate from 'fflate';import {DOMParser} from '@xmldom/xmldom';import {hwpx,paragraph} from './fixtures/hwpx-fixtures.mjs';import {resolve} from 'node:path';
 const code=await Promise.all(['file-codec.js','file-import-queue.js','creator-files.js'].map(p=>readFile('public/js/creator/'+p,'utf8')));
 function setup(){
  const elements=new Map(),saved=new Map(),calls=[];let uid='u',id=0;
  function element(tag='div'){return {tag,children:[],value:'',textContent:'',disabled:false,checked:false,style:{},append(...items){this.children.push(...items);},replaceChildren(){this.children=[];this.textContent='';},setAttribute(){},click(){calls.push({download:this.download});},getContext:()=>({clearRect(){},fillRect(){},drawImage(bitmap){calls.push({bitmap});}})};}
  const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
- const c={WEBNOVELS_CONFIG:{authorFilesEnabled:true},fflate,TextDecoder,TextEncoder,btoa,Blob,URL,Uint8Array,crypto:{randomUUID:()=>String(++id)},setTimeout(){},
+ const c={WEBNOVELS_CONFIG:{authorFilesEnabled:true},fflate,DOMParser,TextDecoder,TextEncoder,btoa,Blob,URL,Uint8Array,crypto:{randomUUID:()=>String(++id)},setTimeout(){},
   document:{readyState:'complete',getElementById:get,createElement:element,createTextNode:text=>({text})},openModal(){},closeModal(){},confirm:()=>true,
   DraftStore:{saveFileJob:async j=>saved.set(j.key,structuredClone(j)),fileJobs:async(u,w)=>[...saved.values()].filter(j=>j.userId===u&&j.workId===w)},
   WebNovelsAuth:{getActor:()=>uid?{userId:uid,author:{id:1,status:'APPROVED'}}:null,api:async(path,options)=>{calls.push({path,options});if(path.startsWith('/api/v2/creator/works/'))return {work:{id:'10',title:'작품',version:'1'}};if(path.includes('/import?'))return {draft:{id:'imported'}};return {files:[]};}},
   CreatorDraftEditor:{getFileContext:()=>({userId:uid,workId:'10',id:'d',seq:3}),replaceFromFile:async(s,e)=>calls.push({replace:s,expected:e})}};
- c.window=c;vm.createContext(c);code.forEach(s=>vm.runInContext(s,c));return {c,get,saved,calls,setUser:x=>uid=x};
+ c.window=c;vm.createContext(c);code.forEach((s,i)=>vm.runInContext(s,c,{filename:resolve('public/js/creator/'+['file-codec.js','file-import-queue.js','creator-files.js'][i])}));return {c,get,saved,calls,setUser:x=>uid=x};
 }
 const file=(name,content)=>({name,size:new TextEncoder().encode(content).length,arrayBuffer:async()=>new TextEncoder().encode(content).buffer});
+test('HWPX import requires preview confirmation, keeps exact original bytes and defaults to a new draft',async()=>{
+ const s=setup(),bytes=hwpx({sections:[paragraph('한글 😀')+'<hp:p><hp:run><hp:tbl>'+paragraph('제외')+'</hp:tbl></hp:run></hp:p>']});await s.c.CreatorFiles.open('10');
+ await s.get('creatorFileInput').onchange({target:{files:[{name:'원고.hwpx',size:bytes.length,arrayBuffer:async()=>bytes.buffer}]}});
+ const job=[...s.saved.values()][0];assert.equal(job.preview,'한글 😀\n');assert.ok(job.warnings.includes('TABLE_IGNORED'));assert.equal(job.confirmed,false);assert.deepEqual(Buffer.from(job.payload.bytes,'base64'),Buffer.from(bytes));
+ await s.get('creatorImportRun').onclick();assert.ok(!s.calls.some(c=>c.path?.includes('/import?')));
+ const row=s.get('creatorImportList').children[0],check=row.children.find(n=>n.tag==='label').children[0];assert.ok(row.children.some(n=>n.textContent?.includes('표 내용 제외')));check.checked=true;await check.onchange();await s.get('creatorImportRun').onclick();
+ assert.ok(!s.calls.some(c=>c.replace));assert.equal(s.calls.filter(c=>c.path?.includes('/import?')).length,1);
+ const imported=JSON.parse(s.calls.find(c=>c.path?.includes('/import?')).options.body);assert.equal(imported.draftId,job.draftId);assert.equal(imported.content,job.preview);
+ await s.get('creatorFileInput').onchange({target:{files:[file('binary.hwp','HWP')]}});assert.equal([...s.saved.values()].at(-1).state,'ERROR');assert.match(s.get('creatorImportList').children.at(-1).children[0].textContent,/HWP 파일은/);
+});
 test('files sort numerically, preview before upload, require confirmation and preserve request identities',async()=>{
  const s=setup();await s.c.CreatorFiles.open('10');await s.get('creatorFileInput').onchange({target:{files:[file('10.txt','열'),file('2.txt','둘')]}});
  assert.deepEqual([...s.saved.values()].map(j=>j.filename),['2.txt','10.txt']);assert.ok(!s.calls.some(c=>c.path?.includes('/import?')));
