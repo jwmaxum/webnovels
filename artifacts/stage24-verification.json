@@ -1,0 +1,140 @@
+{
+  "stage": 24,
+  "verifiedAt": "2026-10-09T08:41:16.562Z",
+  "scope": "verified legacy free novel import preparation/rehearsal and hosted restore-target read-only preflight",
+  "build": {
+    "status": "PASS",
+    "command": "npm run build",
+    "tests": 485,
+    "passed": 485,
+    "failed": 0,
+    "skipped": 0,
+    "prismaAndTypeScriptCompile": true,
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "reusedLockedDependencies": true
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "exitCode": 0
+  },
+  "scopedTests": {
+    "status": "PASS",
+    "tests": 14,
+    "passed": 14,
+    "kind": "synthetic migrated PostgreSQL, read-only transport doubles and local file evidence"
+  },
+  "coverage": {
+    "scope": [
+      "scripts/lib/legacy-publication-import.mjs",
+      "scripts/lib/restore-target.mjs"
+    ],
+    "lines": 100,
+    "branches": 92.99,
+    "functions": 100
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 7
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0
+  },
+  "testedCodeSha256": {
+    "scripts/audit_restore_target.mjs": "f2522cfd83aba832c8d7d86777f475ca9ca254d860531f1176ae1136b53b12f1",
+    "scripts/audit_stage24_launch.cjs": "ff2d82988b463b18f82217aa4a1068d6d901e4ff49f89fb013f43eda271c5ca3",
+    "scripts/lib/legacy-publication-import.mjs": "033952900a4fc82ccd4721097e80ed80e965709af7ec00686353516bbd1c2dbe",
+    "scripts/lib/restore-target.mjs": "21dabfa50141fd41704eced103794ff21e91bce10e973f856896bd3dbcf3e2f2",
+    "scripts/prepare_legacy_publications.mjs": "2cd71128aaa46f44e00e76608b5dd8f22f3772e19704680eae5be7d7548d3174",
+    "scripts/verify_stage24_import.test.mjs": "23c8bb30fc01c1859587ff676542f63d1bb22f9702cc8f0e5296a94efa28737d",
+    "scripts/verify_stage24_target.test.mjs": "5c9a7bbd69c850b388d66001007cc62c3536b5cb4f8f7af07511b7176db348c0",
+    "database/launch/005_import_verified_legacy_novels.sql": "708c98b74e87e452998706150a9c3e459d1d25da20a7683791303c2e654f6da1",
+    "package.json": "4a448b1fcfd741f6eb033dd20ca847ab7a4ae2dee744a8cd08c9d1846283da5c",
+    ".env.example": "c2aa2271ab4f4624f75e2d24cb4bd62cf034b617cd688a6ce9e43eac69ec9a1f"
+  },
+  "actualSourceAccess": {
+    "managementReadOnlyVerified": true,
+    "accessibleProjects": 1,
+    "nonProductionCandidates": 0,
+    "designatedLocalEnvironmentReadWithoutSecretOutput": true
+  },
+  "actualSnapshotPreparation": {
+    "format": "webnovels-legacy-import-summary-v1",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "packetSha256": "e2ebe72fe6f86d5d991dc0521b0c18ce583a453075c3275b019a2d87ed64b264",
+    "scope": "NOVEL_FREE",
+    "episodes": 180,
+    "eligibleNovelEpisodes": 0,
+    "existingHeads": 0,
+    "reasonCounts": {
+      "ALIGNED_NONEMPTY_BODY_REQUIRED": 78,
+      "GENERAL_RATING_REQUIRED": 42,
+      "NOVEL_IMAGE_REVIEW_REQUIRED": 78,
+      "NOVEL_ONLY": 60,
+      "P0_SECURE_SOURCE_REQUIRED": 180,
+      "PUBLISHED_FREE_EPISODE_REQUIRED": 90
+    },
+    "prerequisites": {
+      "p0Expanded": false,
+      "publicationMigrationApplied": false,
+      "bodyConflicts": 78
+    },
+    "approved": 0,
+    "held": 0,
+    "pending": 180,
+    "productionApplied": false,
+    "flagsChanged": false,
+    "hostedRestoreAccepted": false,
+    "freeCutoverAccepted": false,
+    "source": "verified stage 23 production logical snapshot, 2026-10-09T07:17 UTC",
+    "tables": 105,
+    "rows": 1381,
+    "sourceRowsRestoredInIsolatedPGlite": true,
+    "approvedImportSQLGenerated": false
+  },
+  "actualTarget": {
+    "format": "webnovels-restore-target-v1",
+    "checkedAt": "2026-10-09T08:20:35.768Z",
+    "sourceRef": "ghwabesnydktumeyejnm",
+    "targetRef": null,
+    "kind": "HOSTED_READ_ONLY_PREFLIGHT",
+    "status": "BLOCKED",
+    "accessible": false,
+    "emptyTargetVerified": false,
+    "restoreExecuted": false,
+    "restoreAllowed": false,
+    "hostedRestoreAccepted": false,
+    "flagsChanged": false,
+    "blockers": [
+      "ISOLATED_TARGET_NOT_CONFIGURED"
+    ]
+  },
+  "actualPendingRehearsal": {
+    "exitCode": 2,
+    "approved": 0,
+    "pending": 180,
+    "packetMatches": true,
+    "sqlGenerated": false
+  },
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ]
+}

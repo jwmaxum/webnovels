@@ -1,0 +1,17 @@
+{
+  "format": "webnovels-restore-target-v1",
+  "checkedAt": "2026-10-09T08:20:35.768Z",
+  "sourceRef": "ghwabesnydktumeyejnm",
+  "targetRef": null,
+  "kind": "HOSTED_READ_ONLY_PREFLIGHT",
+  "status": "BLOCKED",
+  "accessible": false,
+  "emptyTargetVerified": false,
+  "restoreExecuted": false,
+  "restoreAllowed": false,
+  "hostedRestoreAccepted": false,
+  "flagsChanged": false,
+  "blockers": [
+    "ISOLATED_TARGET_NOT_CONFIGURED"
+  ]
+}

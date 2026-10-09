@@ -150,3 +150,22 @@ Supabase native 복원·역할/Storage 인수 후 승인된 무료 전환을 진
 authoring 007~015/017/018 미적용·P0 잠금 미완료·health 503으로 NO_GO를 유지한다.
 실제 SQL/플래그를 변경하지 않았고 실제 복원/권한/기기 인수·28일 실험을 합성 검증으로 대체하지 않았다.
 23단계에서 원본 충돌 보존/정합화·격리 DB+Storage 복원과 역할별 인수·승인된 무료 전환을 먼저 진행한다.
+
+2026-10-09 24단계 후속: [무료 공개본 이관 계약](legacy-free-cutover-contract.md),
+[실제 재감사](../../artifacts/stage24-launch-readiness.json),
+[백업 기준 검토 집계](../../artifacts/stage24-legacy-import.json),
+[격리 대상 점검](../../artifacts/stage24-restore-target.json).
+지정한 `.env.local`의 관리 인증으로 접근 가능한 프로젝트 1개(운영)만 확인했다.
+별도 target ref와 확정 검토 파일이 없어 프로젝트 생성/복원/운영 SQL/플래그 변경은 수행하지 않았다.
+07:17 UTC의 23단계 검증 백업(105테이블/1,381행)에서 180회차 private 이관 packet을 만들었다.
+이 자료는 현재 운영을 새로 백업한 결과와 구분한다. 승인 0·PENDING 180·기존 head 0·
+이관 가능 0이며 원문 충돌 78·P0 보호 본문/008 미적용이 남아 있다.
+08:20 UTC 실제 읽기 감사는 Auth 42·연결 작가 30·충돌 78·Storage 객체 0·health 503을
+재확인했다. 최초 공개 시각/전체 원본 CAS·성장 BASELINE·불변 private 이력·복원 target 점검을
+구현했으나 무료 전환 판정은 NO_GO다. 25단계는 실제 원본/권리/등급/AI 승인과 별도 hosted
+복원·역할/Storage 인수 후 검토한 마이그레이션·첫 공개본 이관·잠금/출시 전환을 진행한다.
+
+[24단계 검증 기록](../../artifacts/stage24-verification.json): 전용 14/14, 새 helper 라인/
+함수 100%·분기 92.99%, 초기 scratch/로컬 env 없는 소스 복사에서 전체 build 485/485와
+Functions 번들·Prisma·TypeScript 컴파일, 별도 타입/구문·비밀/diff 검사를 통과했다.
+lint는 미구성이며 실제 브라우저/hosted 복원/운영 SQL 인수 결과는 포함하지 않는다.

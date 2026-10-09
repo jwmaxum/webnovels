@@ -1,0 +1,29 @@
+{
+  "format": "webnovels-legacy-import-summary-v1",
+  "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+  "packetSha256": "e2ebe72fe6f86d5d991dc0521b0c18ce583a453075c3275b019a2d87ed64b264",
+  "scope": "NOVEL_FREE",
+  "episodes": 180,
+  "eligibleNovelEpisodes": 0,
+  "existingHeads": 0,
+  "reasonCounts": {
+    "ALIGNED_NONEMPTY_BODY_REQUIRED": 78,
+    "GENERAL_RATING_REQUIRED": 42,
+    "NOVEL_IMAGE_REVIEW_REQUIRED": 78,
+    "NOVEL_ONLY": 60,
+    "P0_SECURE_SOURCE_REQUIRED": 180,
+    "PUBLISHED_FREE_EPISODE_REQUIRED": 90
+  },
+  "prerequisites": {
+    "p0Expanded": false,
+    "publicationMigrationApplied": false,
+    "bodyConflicts": 78
+  },
+  "approved": 0,
+  "held": 0,
+  "pending": 180,
+  "productionApplied": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "freeCutoverAccepted": false
+}

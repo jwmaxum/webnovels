@@ -194,3 +194,11 @@ ID 구간 sitemap index/분할을 추가했다. [실제 감사](../../artifacts/
 78건의 원본/권리자 결정과 별도 hosted 대상은 아직 없으므로 무료 전환은 대기다.
 24단계는 [원본 검토·복원 계약](content-review-restore-contract.md)의 실제 근거를 완성하고
 hosted native 복원·역할/Storage 인수·무료 게시 전환을 진행한다.
+
+2026-10-09 [24단계](../../improve24.md): 검증된 기존 무료 NOVEL의 첫 공개본 이관 준비/
+리허설과 격리 Supabase target의 읽기 전용 점검을 추가했다. 원문/소유자 전체 CAS·최초
+공개 시각·불변 private 이력·성장 BASELINE으로 원본과 성장 지표를 보존한다.
+실제 180회차 packet은 승인/이관 가능 0이며 78건 원문 충돌·P0/008 미적용이 남았다.
+관리 인증은 유효하지만 접근 가능한 별도 프로젝트와 승인 자료가 없어 실제 전환은 NO_GO다.
+25단계는 [무료 공개본 계약](legacy-free-cutover-contract.md)에 따라 원본/권리/등급/AI 확인,
+별도 hosted DB/Auth/Storage 복원 및 역할 인수, 검토 SQL·공개본 이관·잠금/출시를 진행한다.
