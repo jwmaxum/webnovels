@@ -1,0 +1,144 @@
+{
+  "stage": 26,
+  "verifiedAt": "2026-10-09T10:30:46.013Z",
+  "scope": "private offline original-content review workbench; minimal account-safe projection, exact source hashes, partial decisions and immutable evidence staging",
+  "build": {
+    "status": "PASS",
+    "command": "npm run build",
+    "tests": 520,
+    "passed": 520,
+    "failed": 0,
+    "skipped": 0,
+    "prismaAndTypeScriptCompile": true,
+    "functionsBundle": true,
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "noInitialScratch": true,
+    "reusedLockedDependencies": true
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "exitCode": 0
+  },
+  "scopedTests": {
+    "status": "PASS",
+    "tests": 18,
+    "passed": 18,
+    "kind": "synthetic packets, private local file/byte fixtures and Node VM/DOM harness; not browser/hosted acceptance"
+  },
+  "coverage": {
+    "scope": [
+      "scripts/lib/content-review-session.cjs",
+      "scripts/lib/content-review-workbench.mjs",
+      "scripts/ui/content-review-workbench.js"
+    ],
+    "lines": 100,
+    "branches": 92.88,
+    "functions": 100
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 6
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0,
+    "reviewIssuesResolved": [
+      "Auth/private row projection excluded",
+      "script breakout and text-only rendering",
+      "Windows CRLF/CSP hash normalization",
+      "canonical staged evidence path and descriptor binding",
+      "stale source/session hashes",
+      "no remote images or network/storage API"
+    ]
+  },
+  "testedCodeSha256": {
+    "scripts/audit_stage26_launch.cjs": "eb1c0f40cef128c3c91662853e7fea439cc9b02fb1f019fe0416bc9cab5b5ba5",
+    "scripts/content_review_workbench.mjs": "ad858fa0277942d09ca7a393005a426f12d977cd28d924d7bb73457a90184ae4",
+    "scripts/lib/content-review-session.cjs": "5a7cfce3c306c318f3445ad7e0692df42fd8d59fa9600bc838a0749c7ad4954b",
+    "scripts/lib/content-review-workbench.mjs": "6b1ff03937c6eec045ba1e0e821024adb6a432eeae09852f25d201d763f32d71",
+    "scripts/ui/content-review-workbench.js": "e9b6706ec1deb55595aa6894b8a58f49ba504c3c85032c5f3e02cc334001240e",
+    "scripts/verify_stage26_workbench.test.mjs": "17ba191685c691d811bfc4ad4a42f59625865cb11de7881aafcf436f098c1dfe",
+    "package.json": "27160359eda49460507fdaa55d78bc6cb048300c27f4aa3f16ae42699ac3d5b3"
+  },
+  "actualSourceAccess": {
+    "managementReadOnlyVerified": true,
+    "accessibleProjects": 1,
+    "nonProductionCandidates": 0,
+    "approvedDecisionFiles": 0,
+    "designatedLocalEnvironmentReadWithoutSecretOutput": true
+  },
+  "actualSnapshotPreparation": {
+    "format": "webnovels-content-workbench-summary-v1",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "packetSha256": "b3661fe4ea93ea947e81cd1c6c96342ee4c9cb8c31771a4a37d18287235a0497",
+    "workbenchSha256": "901134449a88b6425ad198d4742642bc6bea955949b98c35da2ba3c6a5366739",
+    "conflicts": 78,
+    "byType": {
+      "NOVEL": 36,
+      "WEBTOON": 42
+    },
+    "sourceRecoveryRequired": 36,
+    "evidenceRequired": 42,
+    "initialPending": 78,
+    "productionChanged": false,
+    "hostedRestoreAccepted": false,
+    "freeCutoverAccepted": false,
+    "checkedAt": "2026-10-09T10:20:10.524Z",
+    "privateFilesVerified": true,
+    "logicalSnapshotTables": 105,
+    "logicalSnapshotRows": 1381,
+    "originalSourceFilesPreserved": true,
+    "sourceFilesVerified": 8,
+    "actualReviewerDecisionsProvided": false,
+    "finalization": {
+      "format": "webnovels-content-workbench-finalization-v1",
+      "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+      "packetSha256": "b3661fe4ea93ea947e81cd1c6c96342ee4c9cb8c31771a4a37d18287235a0497",
+      "conflicts": 78,
+      "byType": {
+        "NOVEL": 36,
+        "WEBTOON": 42
+      },
+      "seededAlternateBodies": 78,
+      "verifiedOwnerMappings": 78,
+      "approved": 0,
+      "held": 0,
+      "pending": 78,
+      "unresolved": 78,
+      "productionChanged": false,
+      "hostedRestoreAccepted": false,
+      "freeCutoverAccepted": false,
+      "status": "FILE_VALIDATED_UNRESOLVED",
+      "sessionSha256": "a155240859bea523c4d73079703bc47e50bc1cf54d1b07ed1662f1ca5ba8c5d0",
+      "decisionsSha256": "45025e1aa383f02ed68e96996904ab02b45f6c3c2ba850bdafa732ec3948a685",
+      "evidenceBytesVerified": true,
+      "rightsAuthenticityConfirmed": false
+    },
+    "actualDatabaseApplied": false,
+    "flagsChanged": false,
+    "browserAcceptanceExecuted": false,
+    "releaseDecision": "NO_GO"
+  },
+  "actualEvidenceFilesProvided": 0,
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ]
+}

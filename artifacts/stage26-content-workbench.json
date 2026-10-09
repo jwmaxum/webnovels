@@ -1,0 +1,52 @@
+{
+  "format": "webnovels-content-workbench-summary-v1",
+  "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+  "packetSha256": "b3661fe4ea93ea947e81cd1c6c96342ee4c9cb8c31771a4a37d18287235a0497",
+  "workbenchSha256": "901134449a88b6425ad198d4742642bc6bea955949b98c35da2ba3c6a5366739",
+  "conflicts": 78,
+  "byType": {
+    "NOVEL": 36,
+    "WEBTOON": 42
+  },
+  "sourceRecoveryRequired": 36,
+  "evidenceRequired": 42,
+  "initialPending": 78,
+  "productionChanged": false,
+  "hostedRestoreAccepted": false,
+  "freeCutoverAccepted": false,
+  "checkedAt": "2026-10-09T10:20:10.524Z",
+  "privateFilesVerified": true,
+  "logicalSnapshotTables": 105,
+  "logicalSnapshotRows": 1381,
+  "originalSourceFilesPreserved": true,
+  "sourceFilesVerified": 8,
+  "actualReviewerDecisionsProvided": false,
+  "finalization": {
+    "format": "webnovels-content-workbench-finalization-v1",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "packetSha256": "b3661fe4ea93ea947e81cd1c6c96342ee4c9cb8c31771a4a37d18287235a0497",
+    "conflicts": 78,
+    "byType": {
+      "NOVEL": 36,
+      "WEBTOON": 42
+    },
+    "seededAlternateBodies": 78,
+    "verifiedOwnerMappings": 78,
+    "approved": 0,
+    "held": 0,
+    "pending": 78,
+    "unresolved": 78,
+    "productionChanged": false,
+    "hostedRestoreAccepted": false,
+    "freeCutoverAccepted": false,
+    "status": "FILE_VALIDATED_UNRESOLVED",
+    "sessionSha256": "a155240859bea523c4d73079703bc47e50bc1cf54d1b07ed1662f1ca5ba8c5d0",
+    "decisionsSha256": "45025e1aa383f02ed68e96996904ab02b45f6c3c2ba850bdafa732ec3948a685",
+    "evidenceBytesVerified": true,
+    "rightsAuthenticityConfirmed": false
+  },
+  "actualDatabaseApplied": false,
+  "flagsChanged": false,
+  "browserAcceptanceExecuted": false,
+  "releaseDecision": "NO_GO"
+}

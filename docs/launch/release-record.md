@@ -193,3 +193,21 @@ Prisma/TypeScript 컴파일을 통과했다. 별도 tsc --noEmit·변경 JS 구�
 통과했고 lint는 미구성이다. 실제 hosted 복원·운영 SQL·브라우저 인수를 성공으로 기록하지 않는다.
 후속으로 테스트 시계를 고정해 실제 날짜가 14일 검증 창을 벗어나도 append 회귀가 유효하도록
 수정했다. 서비스/도구 코드는 전체 build 이후 동일하며 변경한 테스트는 최종 전용 17/17로 재검증했다.
+
+2026-10-09 26단계 후속: [워크벤치 계약](content-review-workbench-contract.md),
+[실제 읽기 전용 감사](../../artifacts/stage26-launch-readiness.json),
+[private 검토 파일 준비/보존 집계](../../artifacts/stage26-content-workbench.json).
+10:17 UTC 실제 감사는 Auth 42·연결 작가 30·충돌 78·Storage 객체 0·미적용 12개·health 503을
+확인했다. 접근 가능한 프로젝트는 운영 1개이며 격리 설정·확정 검토 파일은 없다.
+23단계의 검증된 기존 백업을 재사용해 78건의 offline 검토 파일과 PENDING 전체 결정
+산출물을 준비했다. 사람의 검토 입력 0이며 현재 운영의 새 백업이나 승인 자료로 간주하지 않는다.
+계정 상세 제외·문자열 ID/원고 그대로 보존·seed/빈 소설 선택 거절·불변 근거 staging·
+부분 세션/기존 결정 검증을 구현했다. SQL·플래그·hosted/브라우저 인수는 수행하지 않았다.
+27단계에는 실제 원본 복구/권리·이미지/등급/AI 자료와 별도 대상의 복원·역할/Storage 인수를
+확보하고 새 snapshot의 정합화·무료 공개본/잠금/베타 전환을 진행한다.
+
+26단계 로컬 검증: 전용 18/18, 새 core/helper/UI 라인/함수 100%·분기 92.88%.
+env/초기 scratch 없는 새 소스 복사에서 전체 build 520/520·Functions 번들·Prisma/
+TypeScript 컴파일, 별도 tsc --noEmit·구문/비밀/충돌/diff를 통과했다. lint는 미구성이다.
+[검증 산출물](../../artifacts/stage26-verification.json)에 Node VM/DOM 대역과 실제 private
+파일 준비를 구분했고 hosted/브라우저 인수와 운영 SQL·기능 플래그 변경은 포함하지 않았다.

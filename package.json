@@ -12,7 +12,7 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "test": "npm run test:release",
-    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:stage18 && npm run test:stage19 && npm run test:stage20 && npm run test:stage21 && npm run test:stage22 && npm run test:stage23 && npm run test:stage24 && npm run test:stage25 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
+    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:stage18 && npm run test:stage19 && npm run test:stage20 && npm run test:stage21 && npm run test:stage22 && npm run test:stage23 && npm run test:stage24 && npm run test:stage25 && npm run test:stage26 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
     "test:launch": "node scripts/verify_launch_access.test.cjs && node scripts/verify_launch_runtime.test.mjs && node scripts/verify_maintenance_containment.test.mjs && node scripts/verify_launch_repairs.test.mjs && node scripts/verify_virtual_accounts.test.mjs && node scripts/verify_admin_console.test.mjs && node scripts/verify_author_workspace.test.mjs && node scripts/verify_author_dashboard.test.mjs",
     "backup:launch-data": "node scripts/backup_launch_data.cjs",
     "backup:launch-postgres": "node scripts/backup_launch_postgres.cjs",
@@ -61,7 +61,10 @@
     "prepare:legacy-publications": "node scripts/prepare_legacy_publications.mjs",
     "test:stage25": "node --test --test-concurrency=1 scripts/verify_stage25_cutover.test.mjs",
     "audit:stage25": "node scripts/audit_stage25_launch.cjs",
-    "prepare:free-cutover": "node scripts/prepare_cutover_package.mjs"
+    "prepare:free-cutover": "node scripts/prepare_cutover_package.mjs",
+    "test:stage26": "node --test --test-concurrency=1 scripts/verify_stage26_workbench.test.mjs",
+    "review:content-workbench": "node scripts/content_review_workbench.mjs",
+    "audit:stage26": "node scripts/audit_stage26_launch.cjs"
   },
   "keywords": [],
   "author": "",

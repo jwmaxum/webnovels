@@ -101,3 +101,10 @@ snapshot, [pg_restore](https://www.postgresql.org/docs/current/app-pgrestore.htm
 [Supabase 백업](https://supabase.com/docs/guides/platform/backups)의 Storage 바이트 제외와
 [격리 복원 절차](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)를 확인했다.
 기존 PGlite/Zod/native 도구를 확장했으며 새 의존성은 추가하지 않았다.
+
+## 26단계 검토 보조
+
+[비공개 워크벤치](content-review-workbench-contract.md)는 packet의 계정 상세를 투영에서
+제외하고 두 원본/차단 사유를 제공한다. 내려받은 부분 세션을 전체 template에 병합하고
+기존 결정·근거 바이트 검증을 재사용한다. 원본 승인이나 정합화 SQL 계약을 완화하지 않으며
+HOLD/PENDING·원본이 없는 소설은 계속 미해결이다. 결과 결정 파일은 새 이름으로 기록한다.

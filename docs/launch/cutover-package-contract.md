@@ -72,3 +72,11 @@ read-only beta 평가는 마지막에 수행하므로 잠금/권한 인수의 �
 격리 대상과 원본 승인 파일이 없으므로 hosted 완료 기록은 0개이고 무료 출시 NO_GO를 유지한다.
 26단계에는 새 후보 패키지·실제 별도 프로젝트·원본/권리 승인·단계별 새 백업과 hosted 인수를
 확보한 뒤 검토된 무료 전환을 진행한다.
+
+## 26단계 원본 결정 입력 보조
+
+[워크벤치](content-review-workbench-contract.md)의 finalization 결과는 기존 CONTENT
+decisions schema다. 패키지에는 `review-.../final-.../decisions-reviewed.json`의 정확한
+backup-root 상대 경로를 제공한다. private evidence 경로도 같은 backup root를 기준으로
+유지한다. PENDING/HOLD 잔여·권리/등급/AI·hosted 인수 게이트와 단계별 새 snapshot 요건은
+그대로이며, 화면/파일 검증 성공으로 CONTENT 실행 완료나 BETA GO를 기록하지 않는다.

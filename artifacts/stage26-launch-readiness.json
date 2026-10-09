@@ -1,0 +1,206 @@
+{
+  "checkedAt": "2026-10-09T10:17:02.351Z",
+  "kind": "HOSTED_READ_ONLY_AGGREGATES",
+  "management": {
+    "ok": true,
+    "code": "MANAGEMENT_SQL_ACCESS_OK",
+    "status": 201
+  },
+  "versions": [
+    "authoring-001",
+    "authoring-003",
+    "authoring-004",
+    "authoring-005",
+    "authoring-006"
+  ],
+  "security": [],
+  "database": {
+    "p0_marker": null,
+    "auth_users": 42,
+    "legacy_drafts": 2,
+    "linked_admins": 1,
+    "linked_authors": 30,
+    "linked_readers": 10,
+    "storage_buckets": 0,
+    "storage_objects": 0,
+    "authoring_marker": "authoring.migrations",
+    "legacy_revisions": 0,
+    "confirmed_auth_users": 42,
+    "legacy_body_conflicts": 78,
+    "browser_writable_tables": 0,
+    "sensitive_column_access": [
+      {
+        "role": "authenticated",
+        "table": "authors",
+        "column": "password_hash",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "authors",
+        "column": "password_hash",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "authors",
+        "column": "email",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "authors",
+        "column": "email",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "readers",
+        "column": "password_hash",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "readers",
+        "column": "password_hash",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "readers",
+        "column": "email",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "readers",
+        "column": "email",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "admin_users",
+        "column": "email",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "admin_users",
+        "column": "email",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "admin_users",
+        "column": "password_hash",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "admin_users",
+        "column": "password_hash",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "system_config",
+        "column": "toss_secret_key",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "system_config",
+        "column": "toss_secret_key",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "episodes",
+        "column": "content",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "episodes",
+        "column": "content",
+        "can_select": false
+      },
+      {
+        "role": "authenticated",
+        "table": "episode_contents",
+        "column": "text_content",
+        "can_select": false
+      },
+      {
+        "role": "anon",
+        "table": "episode_contents",
+        "column": "text_content",
+        "can_select": false
+      }
+    ],
+    "works_without_author_id": 0,
+    "legacy_draft_owner_conflicts": 0
+  },
+  "integrity": {
+    "works": 30,
+    "episodes": 180,
+    "orphan_works": 0,
+    "work_ratings": [
+      {
+        "count": 30,
+        "rating": "ALL"
+      }
+    ],
+    "work_statuses": [
+      {
+        "count": 30,
+        "status": "PUBLISHED"
+      }
+    ],
+    "orphan_episodes": 0,
+    "episode_statuses": [
+      {
+        "count": 180,
+        "status": "PUBLISHED"
+      }
+    ],
+    "episode_number_gaps": 0,
+    "invalid_episode_numbers": 0,
+    "duplicate_admin_auth_groups": 0,
+    "duplicate_author_auth_groups": 0,
+    "duplicate_reader_auth_groups": 0,
+    "duplicate_episode_number_groups": 0
+  },
+  "runtime": {
+    "origin": "https://webnovels-db4.pages.dev",
+    "healthStatus": 503,
+    "healthCode": "SECURE_API_NOT_ACTIVATED"
+  },
+  "decision": "NO_GO",
+  "missingMigrations": [
+    "authoring-002",
+    "authoring-007",
+    "authoring-008",
+    "authoring-009",
+    "authoring-010",
+    "authoring-011",
+    "authoring-012",
+    "authoring-013",
+    "authoring-014",
+    "authoring-015",
+    "authoring-017",
+    "authoring-018"
+  ],
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ],
+  "actualSqlAppliedByThisAudit": false,
+  "flagsChanged": false,
+  "actualGrowthExperimentStarted": false,
+  "hostedRestoreAccepted": false
+}
