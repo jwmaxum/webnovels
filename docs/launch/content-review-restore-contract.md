@@ -108,3 +108,7 @@ snapshot, [pg_restore](https://www.postgresql.org/docs/current/app-pgrestore.htm
 제외하고 두 원본/차단 사유를 제공한다. 내려받은 부분 세션을 전체 template에 병합하고
 기존 결정·근거 바이트 검증을 재사용한다. 원본 승인이나 정합화 SQL 계약을 완화하지 않으며
 HOLD/PENDING·원본이 없는 소설은 계속 미해결이다. 결과 결정 파일은 새 이름으로 기록한다.
+
+## 30단계 제출 원고 연결
+
+[제출 원고 증거 계약](recovery-evidence-package-contract.md)은 기존 두 본문 선택과 별도 schema다. 접수 당시 제출 revision과 파일 lineage·최신 검토/근거를 고정해 후보 계획을 검증한다. 이 계획을 USE_EPISODES/USE_EPISODE_CONTENTS 결정이나 기존 SQL004의 원고 교체로 우회하지 않는다. 실제 트랜잭션 복구 후보·새 hosted snapshot 인수는 후속31/32단계 범위다.

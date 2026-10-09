@@ -1,0 +1,231 @@
+{
+  "stage": 30,
+  "verifiedAt": "2026-10-09T16:13:46.448Z",
+  "scope": "Offline fixed-submission recovery evidence packet and isolated all-row preserving candidate plan; future development document",
+  "verification": {
+    "status": "PASS",
+    "localBuild": "npm run build:compile",
+    "fullReleaseBuild": "PENDING_REMOTE_CI_AFTER_PUSH",
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "noInitialScratch": true,
+    "reusedLockedDependencies": true,
+    "runtime": "v24.19.0",
+    "functionsBundle": true,
+    "commands": [
+      {
+        "name": "test:naming",
+        "exit": 0,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:auth",
+        "exit": 0,
+        "tests": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:files",
+        "exit": 0,
+        "tests": 28,
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage23",
+        "exit": 0,
+        "tests": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage24",
+        "exit": 0,
+        "tests": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage26",
+        "exit": 0,
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage29",
+        "exit": 0,
+        "tests": 20,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage30",
+        "exit": 0,
+        "tests": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:cloudflare-bundle",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "build:compile",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typecheck",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "stage30-coverage",
+        "exit": 0,
+        "tests": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "postCopyReview": "Packet serialized-size boundary and edited-submission bigint tests synchronized before stage30 tests; final code SHA matches tested source copy"
+  },
+  "tests": {
+    "status": "PASS",
+    "relatedTests": 124,
+    "passed": 124,
+    "stage30Tests": 13,
+    "coverageTests": 13,
+    "kind": "Synthetic PostgreSQL/PGlite, local file bytes and API/VM mocks; not hosted/browser/actual original acceptance"
+  },
+  "coverage": {
+    "scope": [
+      "scripts/lib/recovery-evidence.mjs",
+      "scripts/prepare_recovery_evidence.mjs"
+    ],
+    "lines": 100,
+    "branches": 94.41,
+    "functions": 95.12,
+    "minimumLineTarget": 80
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 6
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0,
+    "reviewIssuesResolved": [
+      "Fixed submission and separate imported lineage after valid editing",
+      "Current Auth/owner/SUPER and latest review with whole receipt/audit reason/work/time binding",
+      "Bigint strings through actual SQL query",
+      "Actual evidence byte SHA/size and link/path bounds",
+      "Serialized packet size matches persisted file cap",
+      "Source snapshot/helper/seed/target and every original row rechecked",
+      "Private new outputs only; no environment imports/network/apply/publication"
+    ]
+  },
+  "testedCodeSha256": {
+    "package.json": "617f7b0b199ac91f3dd9671f0bf213acfbde7f990d32f07f3b9a313f31b5251b",
+    "scripts/fixtures/stage29-db.mjs": "fe87a64ce32a546d350163aca7d5d39ce9546e852b1ac24bdf09a22d92f0a415",
+    "scripts/audit_stage30_launch.cjs": "774f22f9a90cd2ba8a856248d036fff932e832c5c3bb5fb1699bc2d917605013",
+    "scripts/fixtures/stage30-evidence.mjs": "2fb16128bba18a049f353c1ddf4353335170ba504fe2c5e59b5b6e8159e2e1e4",
+    "scripts/lib/recovery-evidence.mjs": "fe92f3bcf2d3db599bf46496282e8ff253a26dbbf157b8d2301550045b3efd2b",
+    "scripts/prepare_recovery_evidence.mjs": "7944a140f1d163efe90ab86014196b106d3fdb7fd44cb2310e2dd4e8acf40e68",
+    "scripts/verify_stage30_evidence.test.mjs": "89f83e7094bae1c65a475ac56d976c43e7796d956fad7a53a7a22253e6ac9114"
+  },
+  "actualSourceAccess": {
+    "managementReadOnlyVerified": true,
+    "accessibleProjects": 1,
+    "nonProductionCandidates": 0,
+    "approvedDecisionFiles": 0,
+    "designatedLocalEnvironmentReadWithoutSecretOutput": true
+  },
+  "actualEvidencePackage": {
+    "format": "webnovels-recovery-evidence-summary-v1",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "packetSha256": "02bd87f6253775f2d5902ecfe31fbf657dcd5b9acee3a655f458a5604a74cf2d",
+    "requests": 0,
+    "readyForEvidence": 0,
+    "blockedRequests": 0,
+    "missingPrerequisites": [
+      "TABLE:public.secure_episode_contents",
+      "TABLE:authoring.file_jobs",
+      "TABLE:authoring.recovery_requests",
+      "TABLE:authoring.recovery_review_events",
+      "TABLE:authoring.recovery_source_access",
+      "TABLE:authoring.recovery_review_receipts",
+      "TABLE:authoring.workflow_events",
+      "MIGRATION:authoring-002",
+      "MIGRATION:authoring-007",
+      "MIGRATION:authoring-014",
+      "MIGRATION:authoring-019",
+      "MIGRATION:authoring-020"
+    ],
+    "selected": 0,
+    "held": 0,
+    "pending": 0,
+    "unresolved": 0,
+    "status": "SOURCE_PREREQUISITES_MISSING",
+    "productionChanged": false,
+    "hostedRestoreAccepted": false,
+    "rightsAuthenticated": false,
+    "freeCutoverAccepted": false,
+    "source": "Previously verified real logical backup captured before SQL019/020; not a fresh apply snapshot",
+    "preparePackageCreated": true,
+    "checkRegenerationMatched": true,
+    "cliCheckExit": 2,
+    "actualOriginalManuscriptAccepted": false,
+    "actualEvidenceFilesAccepted": 0
+  },
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "fullSchemaRestore": false,
+  "bodyReplacementExecuted": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "actualOriginalManuscriptAccepted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ],
+  "nextStage": 31,
+  "futureDevelopmentDocument": "docs/launch/future-development-plan-2026-10-10.md"
+}

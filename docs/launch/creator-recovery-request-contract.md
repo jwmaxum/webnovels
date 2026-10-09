@@ -64,3 +64,7 @@ Node VM/DOM·API 대역·PGlite 합성 PostgreSQL에서 권한/타입/lineage, r
 29단계에서 운영자 검토·새 snapshot 정합화와 검토된 무료 전환으로 연결한다.
 
 2026-10-10: 29단계는 별도 불변 검토 이력과 작가용 파생 상태를 추가한다. 접수 PENDING은 유지한다. [검토 계약](admin-recovery-review-contract.md).
+
+## 30단계 제출본 증거 고정
+
+[복구 증거 패키지](recovery-evidence-package-contract.md)는 요청의 고정 revision을 후보 전문으로 사용하고 source_revision은 원본 파일 가져오기 계보로 보존한다. 이후 수정한 현재 초안으로 제출본을 대체하거나 원본 파일 바이트를 재생성하지 않는다. 실제 회차 복구 트랜잭션은 후속31단계에서 원본 보관/전체 행 CAS/rollback과 함께 개발한다.

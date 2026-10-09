@@ -117,3 +117,7 @@ SOURCE/SQL/기록을 모두 다시 검증하며 단계 자료 연결은 실제 �
 필요하다. 워크벤치가 만든 파일은 운영 SQL·P0 잠금·hosted 인수를 대신하지 않는다.
 
 2026-10-10: 29단계 SQL020은 reviewed 014+019 이후 적용 후보이다. 이번 단계에서 운영 적용/플래그 활성화는 실행하지 않는다. 기존 P0/무료 전환 prerequisite 목록을 적용 완료로 바꾸지 않는다. [검토 계약](admin-recovery-review-contract.md).
+
+## L. 30단계 제출 원고 증거와 후속 복원
+
+[증거 패키지](recovery-evidence-package-contract.md)는 verified logical snapshot의 데이터만 PGlite에 복원하고 저장소019/020의 읽기 helper 둘만 설치한다. 함수/트리거/RLS나 hosted 인수는 포함하지 않는다. 019/020 미적용 snapshot은 전제 미충족으로 차단하며 기존25단계 allowlist를 임의로 확장하지 않는다. 운영 SQL/원고/플래그는 변경하지 않았다. [향후 개발계획](future-development-plan-2026-10-10.md)의31단계 복구 트랜잭션 후보와32단계 실제 복원 인수 이후 새 snapshot 기반 무료 전환 게이트를 검증한다.

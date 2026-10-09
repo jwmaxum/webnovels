@@ -72,3 +72,7 @@ ADMIN_RECOVERY_REVIEW_ENABLED 기본false. admin workflow/operations/P0 및 auth
 ACL/Auth/Storage 인수를 대신하지 않는다. Node VM·다운로드 대역도 실제 파일·브라우저·기기 인수가 아니다.
 
 Storage 인증 다운로드 경로는 [Supabase 공식 문서](https://supabase.com/docs/guides/storage/serving/downloads)를 참조했다.
+
+## 30단계 복구 후보 계획
+
+[증거 패키지](recovery-evidence-package-contract.md)는 최신 READY와 현재 SUPER_ADMIN/Auth, 감사·열람·receipt의 전체 payload/result 및 원고/대상 context를 새 snapshot에서 대조한다. 실제 원본·권리·등급·AI/이미지 바이트 근거가 필요하다. 관리자 체크박스나 계획 검증은 권리자 인증·본문 교체·hosted 복원·공개 승인 완료가 아니다.

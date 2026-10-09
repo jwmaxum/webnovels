@@ -253,3 +253,9 @@ env/초기 scratch 없는 소스 복사에서 Prisma/TypeScript 컴파일·별�
 29단계 검증: 관련 회귀 209/209, 전용 20/20, 새 관리자 UI/API 라인 100.00%·분기 93.81%·함수 97.62%.
 env/초기 scratch 없는 소스 복사에서 Prisma/TypeScript 컴파일·타입·6개 Functions 번들·JS 구문·비밀/충돌·diff를 통과했다. lint는 미구성이며 전체 release는 push 이후 CI에서 확인한다.
 [검증 기록](../../artifacts/stage29-verification.json)은 합성/대역과 운영 적용을 구분한다. 운영 읽기 전용 감사는 Auth42·연결 작가30·본문 충돌78·Storage0·미적용 기본12개·health503을 확인했다. 추가019/020도 미적용이고 승인/격리 대상이 없어 NO_GO다.
+
+2026-10-10 30단계: [제출 원고 증거 패키지](recovery-evidence-package-contract.md)와 [향후 개발계획](future-development-plan-2026-10-10.md)을 추가했다. offline prepare/check/rehearse는 고정 제출본·최신 검토·현재 권한·감사·실제 근거 바이트를 연결하고 전체 원본 행을 보존하는 private 후보 계획만 생성한다. 실제 운영 원고/SQL/플래그 변경·hosted/브라우저 인수는 수행하지 않았다. 실제 입력과019/020 미적용으로 서비스 NO_GO를 유지한다.
+
+30단계 검증: 관련 회귀 124/124, 전용 13/13, 도구 라인 100.00%·분기 94.41%·함수 95.12%.
+env/초기 scratch 없는 소스 복사에서 컴파일·타입·Functions 번들·구문·비밀/충돌·diff를 통과했다. lint는 미구성이며 전체 release는 push 후 CI에서 확인한다.
+[검증 기록](../../artifacts/stage30-verification.json)은 합성 검증과 실제 인수를 구분한다. 기존 실제 백업의 패키지 prepare/check는 전제 누락12·요청/선택0·종료2이며 원본 승인/복원 완료가 아니다. 실제 운영 SQL/원고/플래그·hosted/브라우저 인수는 변경/실행하지 않았고 NO_GO다.
