@@ -13,7 +13,7 @@ test('Pages .js config URL returns only public fields, not SPA HTML or bindings'
   const source = await response.text(); assert.ok(!source.includes(env.SUPABASE_SECRET_KEY));
   const context = { window: {} }; vm.runInNewContext(source, context);
   assert.deepEqual(Object.keys(context.window.WEBNOVELS_CONFIG).sort(),
-    ['adminOperationsEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','growthMeasurementEnabled','growthServiceEnabled','readerDiscoveryEnabled','readerServiceEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
+    ['adminOperationsEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','authorRecoveryEnabled','growthMeasurementEnabled','growthServiceEnabled','readerDiscoveryEnabled','readerServiceEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
   assert.equal(context.window.WEBNOVELS_CONFIG.webtoonServiceEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorPublishEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorFilesEnabled,false);
@@ -34,6 +34,11 @@ test('file runtime flag requires exact true and never serializes private environ
     const response=onRequest({request:new Request('https://app.test/api/public-config.js'),env}),source=await response.text(),context={window:{}};
     vm.runInNewContext(source,context);assert.equal(context.window.WEBNOVELS_CONFIG.authorFilesEnabled,expected);assert.ok(!source.includes(env.PRIVATE_TEST_BINDING));
   }
+});
+test('recovery runtime is separately opt-in and requires every protected file/draft prerequisite',async()=>{
+ const flags=['P0_API_ENABLED','AUTHOR_WORKS_ENABLED','AUTHOR_DRAFTS_ENABLED','AUTHOR_FILES_ENABLED','AUTHOR_RECOVERY_ENABLED'];
+ const enabled={NEXT_PUBLIC_SUPABASE_URL:'https://example.supabase.co',NEXT_PUBLIC_SUPABASE_ANON_KEY:'sb_publishable_example',...Object.fromEntries(flags.map(k=>[k,'true']))};
+ for(const disabled of [null,...flags]){const env=disabled?{...enabled,[disabled]:'false'}:enabled,context={window:{}};vm.runInNewContext(await onRequest({request:new Request('https://app.test/api/public-config.js'),env}).text(),context);assert.equal(context.window.WEBNOVELS_CONFIG.authorRecoveryEnabled,!disabled);}
 });
 test('reader discovery runtime flag is opt-in and exposes only its public boolean', async () => {
   for (const [flag, expected] of [[undefined, false], ['true', true], ['false', false], ['TRUE', false], [' true ', false], [true, false], [1, false]]) {

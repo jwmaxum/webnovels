@@ -61,3 +61,8 @@
 5. 롤백은 플래그를 내려 서버 저장을 닫고 기기 백업 경로를 유지한다. 새 DB 테이블, 이력, receipt, 기존 IndexedDB 원본을 삭제하거나 예전 무조건 upsert로 되돌리지 않는다.
 
 다음은 6단계 파일 가져오기·표지·내보내기 로컬 개발이다. 2~5단계의 실환경 인수와 서비스 오픈 승인은 아직 완료되지 않았다.
+
+28단계는 [비공개 원래 회차 복구 검토 요청](creator-recovery-request-contract.md)을 추가했다.
+기존 draft save/begin-edit/publish와 episode_id 계약은 유지한다. 저장된 revision과 가져온
+원본의 과거 revision_files lineage를 명시적으로 연결한 불변 PENDING 요청만 보존한다.
+이 요청은 권리·복구·공개 승인이 아니며 운영 SQL/플래그는 적용하지 않았다.

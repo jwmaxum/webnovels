@@ -61,7 +61,7 @@
     $('newEpWorkSelect').innerHTML='<option value="">작품을 선택해주세요</option>'+all.filter(w=>!w.trashed_at).map(w=>`<option value="${esc(w.id)}">${esc(w.title)}</option>`).join('');
   }
   async function openWork(workId,id=null,{fresh=false,record=null,localOnly=false}={}) {
-    const turn=++epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
+    window.CreatorRecovery?.reset();const turn=++epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
     stop();composing=false;await engine.checkpoint();selected=null;window.closeModal?.('modalDraftDiff');
     if(!works.some(w=>w.id===String(workId)))await loadWorks();
     const work=works.find(w=>w.id===String(workId));if(!work)throw Error('WORK_NOT_FOUND');
@@ -235,6 +235,6 @@
       const c=engine.current;if(composing)throw Error('DRAFT_COMPOSING');if(!c||c.id!==expected.id||c.seq!==expected.seq||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('EDIT_CHANGED_DURING_IMPORT');
       if(c.snapshot.webtoon)throw Error('WEBTOON_IMAGE_EDITOR_REQUIRED');stop();await engine.replace(snapshot,'before-file-import');if(engine.current!==c)throw Error('SESSION_CHANGED');form(c.snapshot);schedule(c);
     },
-    checkpoint:()=>{window.CreatorWebtoon?.reset();stop();composing=false;epoch++;engine.cancelLoads();selected=null;window.closeModal?.('modalDraftDiff');return safe(()=>engine.checkpoint())();},clearCurrentDraft:async()=>{throw Error('발행된 원고도 보존합니다. 새 원고를 시작해주세요.');}};
+    checkpoint:()=>{window.CreatorRecovery?.reset();window.CreatorWebtoon?.reset();stop();composing=false;epoch++;engine.cancelLoads();selected=null;window.closeModal?.('modalDraftDiff');return safe(()=>engine.checkpoint())();},clearCurrentDraft:async()=>{throw Error('발행된 원고도 보존합니다. 새 원고를 시작해주세요.');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize);else initialize();
 })();

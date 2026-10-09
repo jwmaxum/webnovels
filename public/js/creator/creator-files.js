@@ -17,7 +17,7 @@
   if(window.WEBNOVELS_CONFIG?.authorFilesEnabled!==true)throw Error('AUTHOR_FILES_NOT_ACTIVATED');
   reset();const turn=epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
   const data=await window.WebNovelsAuth.api('/api/v2/creator/works/'+workId);assertOpen(turn,user);work={...data.work,userId:user};
-  editorContext=window.CreatorDraftEditor.getFileContext();jobs=await DraftStore.fileJobs(user,String(workId));assertOpen(turn,user);
+  editorContext=window.CreatorDraftEditor.getFileContext();jobs=(await DraftStore.fileJobs(user,String(workId))).filter(j=>j.kind==='import'||j.kind==='cover');assertOpen(turn,user);
   $('creatorFilesWorkTitle').textContent=work.title;$('creatorFilesMessage').textContent='';cover=null;$('creatorCoverCanvas').getContext('2d').clearRect(0,0,600,900);
   render();window.openModal('modalCreatorFiles');await listOriginals();
  }
@@ -59,11 +59,14 @@
     row.append(button('이 파일 저장·재시도',()=>queue.run([job])));row.append(button('취소',()=>queue.cancel(job)));
    }
    if(job.result?.draft)row.append(button('저장된 원고 열기',async()=>{window.closeModal('modalCreatorFiles');await window.CreatorDraftEditor.openWork(job.workId,job.result.draft.id);}));
+   if(job.result?.draft&&window.CreatorRecovery&&window.WEBNOVELS_CONFIG?.authorRecoveryEnabled===true)row.append(button("원래 회차 복구 검토",()=>reviewRecovery(job.workId,job.result.draft.id)));
    if(job.state==='COMMITTED'&&job.kind==='cover')row.append(button('새 표지 확인',listOriginals));list.append(row);
   }
  }
+ async function reviewRecovery(workId,draftId){const user=actor()?.userId;window.closeModal('modalCreatorFiles');await window.CreatorDraftEditor.openWork(workId,draftId);if(actor()?.userId!==user)throw Error('SESSION_CHANGED');await window.CreatorRecovery.open(workId,draftId);}
  async function listOriginals(){
   const turn=epoch,user=work.userId,result=await api('',{workId:work.id});assertOpen(turn,user);const list=$('creatorOriginalFiles');list.replaceChildren();
+  for(const file of result.files.filter(f=>f.state==="COMMITTED"&&f.draftId))if(window.CreatorRecovery&&window.WEBNOVELS_CONFIG?.authorRecoveryEnabled===true)list.append(button("원래 회차 복구 검토: "+(file.filename||"원고"),()=>reviewRecovery(work.id,file.draftId)));
   for(const file of result.files.filter(f=>f.state==='COMMITTED'))for(const id of [file.fileId,file.derivativeId].filter(Boolean))list.append(button((id===file.fileId?'원본 다운로드: ':'표지 미리보기: ')+(file.filename||'파일'),async()=>{
     const signed=await api('read',{workId:work.id,id});assertOpen(turn,user);const a=document.createElement('a');a.href=signed.url;a.target='_blank';a.rel='noopener';a.textContent='60초 동안 유효한 파일 링크 열기';list.append(a);
   }));
@@ -91,7 +94,7 @@
   if(!manifest.items.length)list.textContent='저장된 회차와 원고가 없습니다.';
  }
  function exportCurrent(){const c=window.CreatorDraftEditor.getFileContext();if(!c||c.userId!==actor()?.userId)throw Error('원고를 먼저 열어주세요.');download(c.snapshot.content,CreatorFileCodec.safeName(c.snapshot.title||'원고')+'.txt','text/plain;charset=utf-8');}
- function reset(){epoch++;coverSelection++;queue.stop();work=null;jobs=[];editorContext=null;cover?.bitmap?.close();cover=null;for(const id of ['creatorImportList','creatorOriginalFiles','creatorExportItems','creatorFilesMessage','creatorFilesWorkTitle'])$(id)?.replaceChildren();if($('creatorFileInput'))$('creatorFileInput').value='';if($('creatorCoverInput'))$('creatorCoverInput').value='';$('creatorCoverCanvas')?.getContext('2d').clearRect(0,0,600,900);window.closeModal?.('modalCreatorFiles');}
+ function reset(){window.CreatorRecovery?.reset();epoch++;coverSelection++;queue.stop();work=null;jobs=[];editorContext=null;cover?.bitmap?.close();cover=null;for(const id of ['creatorImportList','creatorOriginalFiles','creatorExportItems','creatorFilesMessage','creatorFilesWorkTitle'])$(id)?.replaceChildren();if($('creatorFileInput'))$('creatorFileInput').value='';if($('creatorCoverInput'))$('creatorCoverInput').value='';$('creatorCoverCanvas')?.getContext('2d').clearRect(0,0,600,900);window.closeModal?.('modalCreatorFiles');}
  function init(){
   $('creatorFileInput').onchange=safe(e=>addFiles(e.target.files));$('creatorCoverInput').onchange=safe(e=>selectCover(e.target.files[0]));
   const zone=$('creatorFileDrop');zone.ondragover=e=>e.preventDefault();zone.ondrop=safe(e=>{e.preventDefault();return addFiles(e.dataTransfer.files);});

@@ -231,3 +231,19 @@ Prisma/TypeScript 컴파일을 통과했다. 20분 부모 프로세스 한도 �
 종료 코드 0을 확인하고 동일 복사본에서 build:compile을 실행한 이력도 기록했다. 별도 타입·
 구문·비밀/충돌·diff를 통과했고 lint는 미구성이다. [검증 기록](../../artifacts/stage27-verification.json)의
 합성/VM/PGlite 결과를 실제 한컴 파일·브라우저/hosted 인수로 취급하지 않는다.
+
+2026-10-09 28단계: [비공개 복구 검토 계약](creator-recovery-request-contract.md)과
+[운영 읽기 전용 감사](../../artifacts/stage28-launch-readiness.json)를 추가했다.
+원본 파일과 초안의 과거 연결 revision, 현재 저장 revision 및 작가가 명시한 대상 회차를
+service-only 불변 요청/receipt로 고정한다. 기존 episode_id·본문/공개 head·권리/예약/성장
+상태를 변경하지 않는다. 동일 키는 이후 수정에도 최초 결과를 반환한다. 인증/소유권 오류로
+과거 미확정 요청을 새 키로 바꾸지 않으며 계정/원고 전환의 늦은 응답을 격리한다.
+실제 원본/승인 자료·격리 대상 부재와 기존 충돌 78건·미적용 12개·health 503으로 출시 NO_GO다.
+019와 AUTHOR_RECOVERY_ENABLED는 준비한 선택 기능이며 운영 SQL/플래그는 적용하지 않았다.
+29단계는 실제 원고와 권리·회차 관계 검토 및 별도 hosted 복원·역할/Storage 인수 후 새
+snapshot 기반 무료 서비스 전환을 진행한다. 검증 결과는 stage28-verification.json에 기록한다.
+
+28단계 로컬 검증: 관련 회귀 149/149, 전용 21/21, 새 UI/원고 API 라인 100.00%·분기 91.58%·함수 97.22%.
+env/초기 scratch 없는 소스 복사에서 Prisma/TypeScript 컴파일·별도 타입·6개 Functions 번들,
+변경 JS 구문·비밀/충돌·diff를 통과했다. lint는 미구성이며 전체 release build는 push 이후 CI에서 확인한다.
+[검증 기록](../../artifacts/stage28-verification.json)은 합성/대역과 운영 적용을 구분한다.

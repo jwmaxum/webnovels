@@ -2402,8 +2402,8 @@
 
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=102"></script>
-  <script src="/js/core/ui-utils.js?v=120"></script>
-  <script src="/js/core/role-modules.js?v=121"></script>
+  <script src="/js/core/ui-utils.js?v=122"></script>
+  <script src="/js/core/role-modules.js?v=122"></script>
   <script src="/js/core/router.js?v=120"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader-content.js?v=107"></script>
@@ -2445,6 +2445,29 @@
       </div>
     </div>
   </div>
+  <div class="modal-backdrop" id="modalCreatorRecovery" role="dialog" aria-modal="true" aria-labelledby="recoveryHeading" hidden>
+    <div class="modal-dialog creator-files-modal">
+      <div class="modal-header"><h3 id="recoveryHeading">원래 회차 복구 검토</h3><button type="button" class="modal-close" onclick="CreatorRecovery.reset()" aria-label="복구 검토 닫기">×</button></div>
+      <div class="modal-body">
+        <p>저장된 원고와 원본 파일을 원래 회차의 비공개 검토 자료로 제출합니다. 원본·기존 본문·공개 상태는 보존됩니다. 권리 승인과 복구·공개는 별도 검토 후 진행합니다.</p>
+        <p id="recoveryMessage" role="status" aria-live="polite"></p>
+        <div id="recoveryForm" hidden>
+          <p id="recoverySummary"></p>
+          <label for="recoveryFile">원본 파일</label><select id="recoveryFile" class="form-control"></select>
+          <label for="recoveryEpisode">원래 회차</label><select id="recoveryEpisode" class="form-control"></select>
+          <button id="recoveryMore" type="button" class="btn btn-outline" hidden>회차 더 불러오기</button>
+          <label for="recoveryNote">원본과 수정 내용 설명 (선택)</label><textarea id="recoveryNote" class="form-control" rows="3" maxlength="2000"></textarea>
+          <label><input id="recoveryConfirmed" type="checkbox"> 선택한 원본·저장 버전·대상 회차를 확인했습니다. 이는 권리·복구 승인이나 공개가 아닌 검토 요청임을 확인합니다.</label>
+          <button id="recoverySubmit" type="button" class="btn btn-primary">비공개 검토 요청 제출</button>
+        </div>
+        <div id="recoveryPending" hidden><p id="recoveryPendingText"></p><button id="recoveryRetry" type="button" class="btn btn-outline">동일 요청 결과 확인</button></div>
+        <div id="recoveryResult" hidden><p id="recoveryResultText"></p></div>
+        <button id="recoveryReload" type="button" class="btn btn-outline">저장본과 요청 다시 확인</button>
+        <div id="recoveryHistory" aria-label="최근 복구 검토 요청"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="modalCreatorPublication" role="dialog" aria-modal="true" aria-labelledby="publicationHeading" hidden>
     <div class="modal-dialog creator-publication-modal">
       <div class="modal-header"><h3 id="publicationHeading">원고 미리보기·게시</h3><button type="button" class="modal-close" aria-label="게시 화면 닫기">×</button></div>

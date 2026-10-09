@@ -1,0 +1,210 @@
+{
+  "stage": 28,
+  "verifiedAt": "2026-10-09T13:26:40.416Z",
+  "scope": "Private immutable original-episode recovery review requests through existing CreatorFiles/draft ownership, revision and original-file lineage contracts",
+  "verification": {
+    "status": "PASS",
+    "localBuild": "npm run build:compile",
+    "fullReleaseBuild": "PENDING_REMOTE_CI_AFTER_PUSH",
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "noInitialScratch": true,
+    "reusedLockedDependencies": true,
+    "runtime": "v24.19.0",
+    "functionsBundle": true,
+    "commands": [
+      {
+        "name": "test:naming",
+        "exit": 0,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:auth",
+        "exit": 0,
+        "tests": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:creator-works",
+        "exit": 0,
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:drafts",
+        "exit": 0,
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:files",
+        "exit": 0,
+        "tests": 28,
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:publication",
+        "exit": 0,
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage28",
+        "exit": 0,
+        "tests": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:cloudflare-bundle",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "build:compile",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "runtime-ui",
+        "exit": 0,
+        "tests": 25,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typecheck",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "tests": {
+    "status": "PASS",
+    "relatedTests": 149,
+    "passed": 149,
+    "stage28Tests": 21,
+    "coverageTests": 19,
+    "kind": "API mocks, Node VM/DOM and synthetic PGlite PostgreSQL; not browser/device/hosted or actual original manuscript acceptance"
+  },
+  "coverage": {
+    "scope": [
+      "public/js/creator/creator-recovery.js",
+      "server/creator-draft-api.mjs"
+    ],
+    "lines": 100,
+    "branches": 91.58,
+    "functions": 97.22,
+    "minimumLineTarget": 80
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 14
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0,
+    "reviewIssuesResolved": [
+      "historical import lineage remains valid after draft edits",
+      "account/ownership errors do not retire an ambiguous request identity",
+      "duplicate submit preflight is locked",
+      "late results persist only in original account journal",
+      "explicit source/episode choice and target snapshot CAS",
+      "private immutable service-only table/RPC",
+      "independent feature opt-in with existing prerequisites"
+    ]
+  },
+  "testedCodeSha256": {
+    "functions/api/public-config.js": "d14464f1a047836ce98b9b0615a68269b18f3b77c7f52d410f4427a194aa6aae",
+    "package.json": "6587195dae3d4d5f8ea07567d09fb69ade0f1e9ba6d43d7109b6c443f1eaa2df",
+    "public/index.html": "6c2962227979c1e5b891cae79887df1c060c1f51b4d2e69d8e372eed324f3028",
+    "public/js/core/role-modules.js": "27da7cc08db5db1ee653056e5d71175840eeb598e015c0101bb56987bdff4a65",
+    "public/js/core/ui-utils.js": "44fc9bdf67edb8e8169ba92e1111bea6dbf8efd0753a892c2df306e3168573cb",
+    "public/js/creator/creator-editor.js": "8a5cf5f93945573a12541a951b122f68e3a4384010506ec4de4c61976fc77094",
+    "public/js/creator/creator-files.js": "e62308c72c49a08b0d2457605c8ecc340edcca9c704607ec879d72a7fcb11a50",
+    "scripts/verify_cloudflare_routes.test.mjs": "07c98234d561381a68b34447136660fb9f3a0bbfe21e1cfb786930676e29c3a6",
+    "scripts/verify_creator_files_ui.test.mjs": "0c86efae197bab88748cbda40f05c8742cbdc15a498cc8dae8bdea4c4036117c",
+    "server/creator-draft-api.mjs": "068e2f399474c7c2238d597631f6433af947e3379b5363000f0916d9829d862e",
+    "database/authoring/019_creator_recovery_requests.sql": "c93525e3c4d564f899097ccbd988ebc2ddbe9da7414a49950b28f96358c13ecf",
+    "public/js/creator/creator-recovery.js": "d4c88938907ef3da27e47ff2986000053bbe1a0251c574b35c8fb2b1a77c45c9",
+    "scripts/audit_stage28_launch.cjs": "1c86ef8ced12e90ddbf39ed72683a047e37d201a4fc38c58dc22594d66f29d22",
+    "scripts/fixtures/stage28-authoring.mjs": "8e67bd0e357d0059fcfe93bb63b50f0629dd8869291980e27963745097e8f563",
+    "scripts/verify_stage28_api.test.mjs": "073ee52d524dbd2e56b0ad505beb317689fea286ee59645e6de0b91ee51f44d0",
+    "scripts/verify_stage28_db.test.mjs": "50590919e79fe84ff4b00f78b38e987eae26617b868e87787d11659d13bf412a",
+    "scripts/verify_stage28_ui.test.mjs": "8cedbbf1d300f4ed3e6f2a0c680565f1aee08a724592a7ceba70b5fd911aa0e5"
+  },
+  "actualSourceAccess": {
+    "managementReadOnlyVerified": true,
+    "accessibleProjects": 1,
+    "nonProductionCandidates": 0,
+    "approvedDecisionFiles": 0,
+    "designatedLocalEnvironmentReadWithoutSecretOutput": true
+  },
+  "optionalFeaturePrerequisites": {
+    "migration": "authoring-019",
+    "applied": false,
+    "flag": "AUTHOR_RECOVERY_ENABLED",
+    "flagsChanged": false,
+    "requires": [
+      "P0_API_ENABLED",
+      "AUTHOR_WORKS_ENABLED",
+      "AUTHOR_DRAFTS_ENABLED",
+      "AUTHOR_FILES_ENABLED"
+    ]
+  },
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "actualOriginalManuscriptAccepted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ],
+  "postTestFormatting": {
+    "change": "Removed trailing blank lines only; compared exact source excluding trailing whitespace against tested clean copy",
+    "hashes": {
+      "scripts/verify_stage28_db.test.mjs": "8f9656acf4319023d4c713995679c248f2b8b3f8facea8889fb337df8f195624",
+      "scripts/verify_stage28_ui.test.mjs": "ff92789a1b8c412d01b64283a078e4353c63a977254679b98753f14c9ea22ab2"
+    }
+  }
+}

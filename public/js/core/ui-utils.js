@@ -21,7 +21,7 @@ function focusModal(modal) {
 
 // 모달 열기
 function openModal(id) {
-  const creatorFlags = { modalCreatorFiles: 'authorFilesEnabled', modalCreatorPublication: 'authorPublishEnabled' };
+  const creatorFlags = { modalCreatorFiles: 'authorFilesEnabled', modalCreatorPublication: 'authorPublishEnabled', modalCreatorRecovery:'authorRecoveryEnabled' };
   if (creatorFlags[id] && (window.WebNovelsAuth?.getActor()?.author?.status !== 'APPROVED' ||
       window.WEBNOVELS_CONFIG?.[creatorFlags[id]] !== true || !/^\/(creator|author)(\/|$)/.test(window.location.pathname))) return;
   const m = document.getElementById(id);

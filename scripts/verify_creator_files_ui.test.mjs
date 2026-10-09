@@ -4,7 +4,7 @@ function setup(){
  const elements=new Map(),saved=new Map(),calls=[];let uid='u',id=0;
  function element(tag='div'){return {tag,children:[],value:'',textContent:'',disabled:false,checked:false,style:{},append(...items){this.children.push(...items);},replaceChildren(){this.children=[];this.textContent='';},setAttribute(){},click(){calls.push({download:this.download});},getContext:()=>({clearRect(){},fillRect(){},drawImage(bitmap){calls.push({bitmap});}})};}
  const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
- const c={WEBNOVELS_CONFIG:{authorFilesEnabled:true},fflate,DOMParser,TextDecoder,TextEncoder,btoa,Blob,URL,Uint8Array,crypto:{randomUUID:()=>String(++id)},setTimeout(){},
+ const c={WEBNOVELS_CONFIG:{authorFilesEnabled:true,authorRecoveryEnabled:true},fflate,DOMParser,TextDecoder,TextEncoder,btoa,Blob,URL,Uint8Array,crypto:{randomUUID:()=>String(++id)},setTimeout(){},
   document:{readyState:'complete',getElementById:get,createElement:element,createTextNode:text=>({text})},openModal(){},closeModal(){},confirm:()=>true,
   DraftStore:{saveFileJob:async j=>saved.set(j.key,structuredClone(j)),fileJobs:async(u,w)=>[...saved.values()].filter(j=>j.userId===u&&j.workId===w)},
   WebNovelsAuth:{getActor:()=>uid?{userId:uid,author:{id:1,status:'APPROVED'}}:null,api:async(path,options)=>{calls.push({path,options});if(path.startsWith('/api/v2/creator/works/'))return {work:{id:'10',title:'작품',version:'1'}};if(path.includes('/import?'))return {draft:{id:'imported'}};return {files:[]};}},
@@ -52,4 +52,13 @@ test('late cover decoding cannot replace the latest selection or survive account
  const two=s.get('creatorCoverInput').onchange({target:{files:[file('2.png','x')]}});await new Promise(setImmediate);
  let closed=0;const older={width:600,height:900,close(){closed++;}},latest={width:600,height:900,close(){closed++;}};
  pending[1](latest);await two;pending[0](older);await one;assert.equal(s.calls.filter(x=>x.bitmap).length,1);assert.equal(s.calls.find(x=>x.bitmap).bitmap,latest);assert.equal(closed,1);s.c.CreatorFiles.reset();assert.equal(closed,2);
+});
+test('recovery receipts do not enter the upload queue and stored original/draft buttons open the same saved draft',async()=>{
+ const s=setup();s.saved.set('recovery',{key:'recovery',userId:'u',workId:'10',kind:'recovery',state:'PENDING',body:{expectedRevision:'1'}});
+ s.saved.set('original',{key:'original',userId:'u',workId:'10',kind:'import',state:'COMMITTED',locked:true,filename:'원고.hwpx',result:{draft:{id:'saved-draft'}}});
+ s.c.CreatorRecovery={open:async(w,d)=>s.calls.push({recovery:[w,d]}),reset(){}};s.c.CreatorDraftEditor.openWork=async(w,d)=>s.calls.push({opened:[w,d]});
+ const api=s.c.WebNovelsAuth.api;s.c.WebNovelsAuth.api=async(path,init)=>path.includes('/files?')?{files:[{state:'COMMITTED',fileId:'file',draftId:'saved-draft',filename:'원고.hwpx'}]}:api(path,init);
+ await s.c.CreatorFiles.open('10');assert.equal(s.get('creatorImportList').children.length,1);await s.get('creatorImportRun').onclick();assert.ok(!s.calls.some(x=>x.path?.includes('/import?')));
+ const button=s.get('creatorImportList').children[0].children.find(x=>x.textContent==='원래 회차 복구 검토');await button.onclick();assert.deepEqual(s.calls.find(x=>x.opened).opened,['10','saved-draft']);assert.deepEqual(s.calls.find(x=>x.recovery).recovery,['10','saved-draft']);
+ await s.get('creatorOriginalFiles').children.find(x=>x.textContent.startsWith('원래 회차 복구 검토:')).onclick();assert.equal(s.calls.filter(x=>x.recovery).length,2);assert.equal(s.saved.get('recovery').state,'PENDING');
 });

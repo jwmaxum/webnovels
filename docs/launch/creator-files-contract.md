@@ -75,3 +75,9 @@ IndexedDB 버전 3은 기존 v1/v2 저장소를 그대로 두고 `fileImports`�
 실제 DB·Storage 업로드, 60초 후 서명 URL의 실제 거절, Images 인코더의 메타데이터 제거 결과, 브라우저 파일 선택/드래그/크롭/다운로드, IndexedDB v2→v3 및 모바일 메모리 검증은 미실행이다. localhost/브라우저 시험은 프로젝트 규칙상 명시 요청이 필요하므로 이번에는 수행하지 않았다.
 
 운영 적용 전 2~5단계의 스키마/백업/매핑/실환경 인수를 마치고 private Storage 002와 authoring-006 뒤에 007을 검토 적용한다. IMAGES binding과 Supabase private Storage 접근을 스테이징에서 확인한다. `AUTHOR_FILES_ENABLED=false`를 기본 유지한다. 활성화에는 P0, AUTHOR_WORKS, AUTHOR_DRAFTS 플래그와 보안 마이그레이션도 필요하다. 롤백은 파일 플래그를 내려 신규 작업을 닫되 DB/원본/작업 journal을 보존한다. 배포·운영 DB 변경은 수행하지 않았다.
+
+28단계는 [원래 회차 복구 검토 요청](creator-recovery-request-contract.md)을 저장 원고/서버 원본
+목록에 연결했다. 원본과 현재 저장 revision을 구분하고 회차를 작가가 직접 선택한다.
+fileImports의 recovery 메타데이터 journal은 import/cover 업로드 queue에서 제외한다.
+AUTHOR_RECOVERY_ENABLED는 기본 비활성이고 reviewed 019 및 기존 protected prerequisites가
+필요하다. 파일 업로드 플래그만으로 새 복구 검토 기능을 활성화하지 않는다.

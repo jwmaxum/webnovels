@@ -1,6 +1,7 @@
 import {webtoonEnabled} from '../../server/webtoon-api.mjs';
 import {SECURITY_HEADERS} from '../../server/security-headers.mjs';
 import {growthEnabled,measurementEnabled} from '../../server/growth-api.mjs';
+import {recoveryEnabled} from '../../server/creator-draft-api.mjs';
 // Cloudflare Pages runtime bindings; never serialize context.env.
 export function onRequestGet({ env }) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL;
@@ -15,6 +16,7 @@ export function onRequestGet({ env }) {
   }
   const config = { growthMeasurementEnabled:measurementEnabled(env), growthServiceEnabled:growthEnabled(env), webtoonServiceEnabled:webtoonEnabled(env), supabaseUrl: url, supabaseAnonKey: key, authorPublishEnabled: env.AUTHOR_PUBLISH_ENABLED === 'true',
     authorFilesEnabled: env.AUTHOR_FILES_ENABLED === 'true',
+    authorRecoveryEnabled: recoveryEnabled(env),
     readerServiceEnabled: env.READER_SERVICE_ENABLED === 'true',
     readerDiscoveryEnabled: env.READER_DISCOVERY_ENABLED === 'true',
     authorOperationsEnabled: env.AUTHOR_OPERATIONS_ENABLED === 'true',

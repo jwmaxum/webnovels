@@ -7,8 +7,8 @@
       '/js/creator/file-image.js?v=106', '/js/creator/file-import-queue.js?v=106',
       '/js/creator/draft-engine.js?v=105', '/js/creator/draft-store.js?v=106',
       '/js/creator/draft-diff.js?v=105', '/js/creator/creator-readiness.js?v=117',
-      '/js/creator/creator-webtoon.js?v=118', '/js/creator/creator-editor.js?v=117',
-      '/js/creator/creator-publications.js?v=117', '/js/creator/creator-files.js?v=114',
+      '/js/creator/creator-webtoon.js?v=118', '/js/creator/creator-editor.js?v=122',
+      '/js/creator/creator-publications.js?v=117', '/js/creator/creator-recovery.js?v=122', '/js/creator/creator-files.js?v=122',
       '/js/creator/creator-dashboard.js?v=121', '/js/creator/creator.js?v=115',
       '/js/creator/creator-works.js?v=117', '/js/creator/creator-distribution.js?v=115',
       '/js/creator/creator-operations.js?v=108'
