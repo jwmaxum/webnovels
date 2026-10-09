@@ -145,6 +145,7 @@
       if($('editorialSpotlightSection'))$('editorialSpotlightSection').hidden=!result.sections.spotlight?.length;
       cards($('editorialSpotlightGrid'),result.sections.spotlight||[]);
       cards($('trendingWorksGrid'), result.sections.popular, true);
+      window.GrowthStudio?.home();
       cards($('newWorksGrid'), result.sections.new); cards($('completedWorksGrid'), result.sections.completed);
       cards($('todayFreeGrid'), result.sections.new);
       if (genreAtStart === genreRequest) cards($('genreWorksGrid'), result.sections.recommended);
@@ -215,6 +216,7 @@
     if (push && window.location.pathname !== '/works/' + id) window.history.pushState({}, '', '/works/' + encodeURIComponent(id));
     activeWork = null; status($('detailEpisodeList'), '작품 정보를 불러오는 중입니다.');
     $('detailEpisodePager')?.replaceChildren(); $('detailExternalLinks')?.replaceChildren();
+    if($('detailShareLink')){$('detailShareLink').hidden=true;$('detailShareLink').removeAttribute('href');}
     ['detailTitle','detailAuthor','detailGenreBadge','detailRatingBadge','detailAiBadge','detailDescription','detailDates'].forEach(key => { if ($(key)) $(key).textContent = ''; });
     if ($('detailCoverImg')) $('detailCoverImg').removeAttribute('src');
     for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) $(key).disabled = true;
@@ -230,6 +232,7 @@
       for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) { $(key).disabled = !work.firstEpisodeNumber; $(key).textContent = work.firstEpisodeNumber ? `첫 공개 회차 읽기 (${work.firstEpisodeNumber}화)` : '공개 회차 없음'; }
       window.updateFavoriteButtons?.(work.id); window.updateSubscribeButtons?.(work);
       distribution(work); meta(work);
+      if($('detailShareLink')&&window.WEBNOVELS_CONFIG?.growthServiceEnabled===true){$('detailShareLink').href='/share/'+work.id;$('detailShareLink').hidden=false;}
       $('detailTitle')?.setAttribute('tabindex', '-1'); $('detailTitle')?.focus({ preventScroll: true });
       await loadEpisodes(String(id), request);
     } catch (error) {
@@ -256,7 +259,7 @@
   function leave(view) {
     if (view !== 'view-work-detail') { ++detailRequest; detailId = null; episodeBusy = false; resetMeta(); }
     if (view !== 'view-discover') ++listRequest;
-    if (view !== 'view-home') { ++homeRequest; ++genreRequest; }
+    if (view !== 'view-home') { ++homeRequest; ++genreRequest; window.GrowthStudio?.leaveHome(); }
   }
   window.ReaderDiscovery = Object.freeze({ active, home, discover, detail, genre, search, filter, toggleTag, leave, parse, values, path,
     reset: () => window.navigateTo('/discover'), submit: event => { event?.preventDefault(); filter('q', $('discoverQuery')?.value.trim() || ''); } });

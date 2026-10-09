@@ -34,3 +34,5 @@
 14단계 첫 스프린트: [012_creator_distribution.sql](012_creator_distribution.sql). 기존 작품의 비독점 연재/독점 상담 희망·선택 외부 링크·권리 확인 진술과 변경 이력을 추가한다. 실제 선행 조건은 검토 적용된 **005**와 Auth/작품 매핑이다. 번호에 맞추어 미적용 002/007~011을 일괄 실행하지 않는다. [연재 방식 계약](../../docs/launch/creator-distribution-contract.md)의 백업·권한·인수 조건을 확인하며 `AUTHOR_DISTRIBUTION_ENABLED`는 기본 비활성이다. `npm run test:stage14`는 합성 데이터만 사용한다. 운영 DB에는 미적용이다.
 
 20단계 로컬 준비: [016_paid_episodes.sql](016_paid_episodes.sql). 검토된 014와 백업 gate 후 TEST 전용 commerce 주문·원장·권리 이력을 추가한다. 가격/정책 seed와 LIVE·실제 지급·기존 원장/권리 이관은 없다. [시험 계약](../../docs/launch/paid-episode-sandbox-contract.md)에 따라 합성 PGlite에서만 검증했으며 실제 DB에는 미적용이다. `npm run test:stage20`, `npm run verify:monetization-sandbox`는 운영 활성화 근거가 아니다.
+
+21단계 로컬 준비: [017_growth_experiments.sql](017_growth_experiments.sql). 검토된 **015**와 backup/review gate 후 private 추천 설정·동의·정책·KST 평가 snapshot·DRY_RUN outbox·새 공개 공급 기록을 추가한다. 016 결제 SQL은 선행 조건이 아니다. 정책 seed·실제 등급 변경·알림 발송은 없다. [성장 계약](../../docs/launch/growth-experiments-contract.md)에 따라 `npm run test:stage21`은 합성 DB/HTTP/DOM VM/Cron 검증만 실행한다. 실제 DB에는 미적용이며 GROWTH_SERVICE_ENABLED는 기본 false다.

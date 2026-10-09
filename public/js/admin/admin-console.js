@@ -108,7 +108,7 @@
           const card=el(cards,'article',null,'cms-metric');el(card,'span',label);el(card,'strong',result[key]??'확인 필요');
         }
         notice(root,`원본 본문 확인이 필요한 회차: ${result.emptyOriginals??'확인 필요'}개. 등록 건수는 공개 가능 건수와 다릅니다.`);
-        el(root,'h3','서비스 준비 상태');settings(root);return;
+        el(root,'h3','서비스 준비 상태');settings(root);window.GrowthStudio?.admin(root);return;
       }
       const items=result.items||[];
       if(page==='works'){

@@ -122,3 +122,8 @@
 2026-10-09 17단계 후속: [관리자 업무 계약](admin-workflow-contract.md), [로컬 검증 근거](../../artifacts/stage17-admin-workflow-verification.json). `014_admin_workflow.sql`과 관리자 API/UI를 추가했지만 실제 DB에 적용하거나 `ADMIN_WORKFLOW_ENABLED`를 활성화하지 않았다. Git 반영은 운영 배포 확인·실제 메일/기기/브라우저 인수·출시 승인을 의미하지 않는다. 기존 출시 차단 조건을 유지한다.
 
 구형 브라우저 광고 이벤트·해금·후원·정산 경로를 비활성화하고 관련 독자/작가 진입점 일부를 숨겼다. 독자 화면의 성인 작품·비무료 회차도 제외했다. 이는 로컬 코드 변경이며 기존 운영 배포에 적용되지 않았다. 실제 DB 정책과 콘텐츠/파일 직접 접근은 확인하지 못했다. 출시 판정은 **NO GO**로 유지한다. [차단 이슈와 완료 증거](open-issues-after-stage13.md)를 우선순위별로 관리한다.
+
+2026-10-09 21단계 후속: [성장 계약](growth-experiments-contract.md), [검증 근거](../../artifacts/stage21-growth-verification.json).
+017 private growth·동의/규칙 추천·KST 성장 후보/관찰·공유 검색을 준비했다. SQL과 플래그는 실제 환경에
+적용하지 않았고 정책 seed·실제 등급 변경·알림 발송·성장 성공 판정은 없다. 로컬 검증·Git push와 실제 성장/출시 GO를
+구분하며 19단계 무료 출시 차단과 실환경 인수 조건을 유지한다. 22단계에서 전환/복원/역할 인수·첫 열람 계측·실제 표본을 우선한다.

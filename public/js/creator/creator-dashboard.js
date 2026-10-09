@@ -26,6 +26,7 @@
       state.root.querySelector('#adRefresh').onclick=home;
       state.root.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>window.switchCreatorTab(b.dataset.go));
       state.root.querySelectorAll('[data-work]').forEach(b=>b.onclick=()=>window.CreatorWorks.navigate('/creator/works/'+b.dataset.work));
+      window.GrowthStudio?.creator(state.root,data.recentWorks);
     }catch(e){failed(state,e,home);}
   }
   async function earnings(month='',page=0){

@@ -1,5 +1,6 @@
 import {webtoonEnabled} from '../../server/webtoon-api.mjs';
 import {SECURITY_HEADERS} from '../../server/security-headers.mjs';
+import {growthEnabled} from '../../server/growth-api.mjs';
 // Cloudflare Pages runtime bindings; never serialize context.env.
 export function onRequestGet({ env }) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL;
@@ -12,7 +13,7 @@ export function onRequestGet({ env }) {
   if (!validKey || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url || '')) {
     return new Response('/* Runtime override unavailable; keep public deployment settings. */', { status: 503, headers });
   }
-  const config = { webtoonServiceEnabled:webtoonEnabled(env), supabaseUrl: url, supabaseAnonKey: key, authorPublishEnabled: env.AUTHOR_PUBLISH_ENABLED === 'true',
+  const config = { growthServiceEnabled:growthEnabled(env), webtoonServiceEnabled:webtoonEnabled(env), supabaseUrl: url, supabaseAnonKey: key, authorPublishEnabled: env.AUTHOR_PUBLISH_ENABLED === 'true',
     authorFilesEnabled: env.AUTHOR_FILES_ENABLED === 'true',
     readerServiceEnabled: env.READER_SERVICE_ENABLED === 'true',
     readerDiscoveryEnabled: env.READER_DISCOVERY_ENABLED === 'true',

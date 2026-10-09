@@ -8,6 +8,7 @@ crons = ["* * * * *"]
 [vars]
 AUTHOR_PUBLISH_ENABLED = "false"
 WEBTOON_SERVICE_ENABLED = "false"
+GROWTH_SERVICE_ENABLED = "false"
 
 # Set SUPABASE_URL and SUPABASE_SECRET_KEY as deployment secrets/vars.
 # Enable only after the reviewed 008 (and 015 for webtoons) migration and staging acceptance.

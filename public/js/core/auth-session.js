@@ -37,6 +37,7 @@
     window.AdminOperations?.reset();
     window.WebNovelsAppeals?.reset();
     window.ReaderHub?.reset();
+    window.GrowthStudio?.reset();
     window.ReaderSession?.reset();
     window.ReaderLibrary?.reset();
     window.ContinueReading?.reset();

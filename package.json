@@ -12,7 +12,7 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "test": "npm run test:release",
-    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:stage18 && npm run test:stage19 && npm run test:stage20 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
+    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:stage18 && npm run test:stage19 && npm run test:stage20 && npm run test:stage21 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
     "test:launch": "node scripts/verify_launch_access.test.cjs && node scripts/verify_launch_runtime.test.mjs && node scripts/verify_maintenance_containment.test.mjs && node scripts/verify_launch_repairs.test.mjs && node scripts/verify_virtual_accounts.test.mjs && node scripts/verify_admin_console.test.mjs && node scripts/verify_author_workspace.test.mjs && node scripts/verify_author_dashboard.test.mjs",
     "backup:launch-data": "node scripts/backup_launch_data.cjs",
     "backup:launch-postgres": "node scripts/backup_launch_postgres.cjs",
@@ -29,7 +29,7 @@
     "audit:launch": "node scripts/audit_launch_readiness.cjs",
     "release:status": "node scripts/release_status.cjs",
     "test:p0": "node scripts/verify_secure_api.test.mjs && node scripts/verify_cloudflare_routes.test.mjs && node scripts/verify_providers.test.mjs",
-    "test:cloudflare-bundle": "esbuild \"functions/api/[[path]].js\" \"functions/api/public-config.js\" \"functions/api/v2/[[path]].js\" --bundle --platform=browser --format=esm --target=es2022 --outbase=functions --outdir=scratch/step11-cloudflare-bundle && node scripts/verify_cloudflare_bundle.mjs",
+    "test:cloudflare-bundle": "esbuild \"functions/api/[[path]].js\" \"functions/api/public-config.js\" \"functions/api/v2/[[path]].js\" \"functions/sitemap.xml.js\" \"functions/share/[id].js\" --bundle --platform=browser --format=esm --target=es2022 --outbase=functions --outdir=scratch/step11-cloudflare-bundle && node scripts/verify_cloudflare_bundle.mjs",
     "audit:p0-schema": "node scripts/p0_schema_audit.cjs",
     "test:authoring-schema": "node scripts/verify_authoring_schema.test.mjs",
     "test:auth": "node scripts/verify_auth_session.test.mjs && node scripts/verify_auth_onboarding.test.mjs",
@@ -47,7 +47,8 @@
     "audit:dependencies": "node scripts/audit_dependency_versions.cjs",
     "check:beta": "node scripts/check_beta_readiness.mjs",
     "verify:recovery": "node scripts/verify_recovery_bundle.mjs",
-    "verify:monetization-sandbox": "node scripts/verify_monetization_sandbox.mjs"
+    "verify:monetization-sandbox": "node scripts/verify_monetization_sandbox.mjs",
+    "test:stage21": "node --test --test-concurrency=1 scripts/verify_stage21_api.test.mjs scripts/verify_stage21_db.test.mjs scripts/verify_stage21_ui.test.mjs"
   },
   "keywords": [],
   "author": "",

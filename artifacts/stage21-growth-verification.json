@@ -1,0 +1,92 @@
+{
+  "stage": 21,
+  "checkedAt": "2026-10-09T06:12:08.495Z",
+  "baseCommit": "ab23cb8e1132eca9ad9989e295e8c1182328c2b1",
+  "status": "LOCAL_VERIFIED_LIVE_ACCEPTANCE_PENDING",
+  "runtime": "v24.19.0",
+  "dependenciesAdded": 0,
+  "verification": {
+    "scopedTests": {
+      "passed": 26,
+      "failed": 0,
+      "environment": "PGlite + synthetic HTTP + DOM VM + mocked Cron"
+    },
+    "coverage": {
+      "scope": [
+        "server/growth-api.mjs",
+        "server/growth-seo.mjs",
+        "public/js/reader/growth-studio.js",
+        "scheduler/worker.mjs"
+      ],
+      "linePercent": 99.27,
+      "branchPercent": 84.59,
+      "functionPercent": 96.49
+    },
+    "typescript": {
+      "errors": 0,
+      "command": "tsc --noEmit"
+    },
+    "build": {
+      "status": "PASS",
+      "command": "npm run build",
+      "isolatedSourceCopy": true,
+      "noLocalEnv": true,
+      "reusedLockedDependencies": true,
+      "exit": 0,
+      "tests": 437,
+      "passed": 437,
+      "failed": 0,
+      "skipped": 0,
+      "prismaGenerate": "PASS",
+      "typescriptCompile": "PASS"
+    },
+    "lint": {
+      "status": "NOT_CONFIGURED",
+      "substitute": "Node syntax checks"
+    },
+    "pagesBundle": {
+      "entries": 5,
+      "status": "PASS"
+    },
+    "syntax": {
+      "status": "PASS",
+      "files": 20
+    },
+    "security": {
+      "status": "PASS",
+      "scannedFiles": 32,
+      "findings": 0
+    },
+    "diff": {
+      "status": "PASS",
+      "unintendedChanges": 0
+    }
+  },
+  "liveAcceptance": {
+    "actualSqlApplied": false,
+    "migration": "database/authoring/017_growth_experiments.sql",
+    "prerequisite": "reviewed authoring-015 and backup gate; 016 not required",
+    "newFlagsActivated": false,
+    "browserOrLocalhostRun": false,
+    "realExperimentRun": false,
+    "realPromotion": false,
+    "notificationsSent": false,
+    "verdict": "NO_GO_EXISTING_FREE_LAUNCH_AND_GROWTH_ACCEPTANCE_PENDING"
+  },
+  "limitations": [
+    "Progress events are authenticated proxies, not verified dwell/completion or fraud-proof reads.",
+    "Provided cards are server responses, not viewport impressions or attributed first reads.",
+    "Metrics recheck current visibility/consent/Auth/favorite rows, not reconstructed historical state.",
+    "Policies are hypotheses; immutable dry-run outbox cannot send or promote.",
+    "Retention uses exact mature KST return days; fewer than 5 readers/authors is suppressed.",
+    "Sitemap fails closed above 1000 public works until partitioning is implemented.",
+    "Synthetic PGlite does not prove actual PostgreSQL concurrency, PostgREST grants, Cron, crawler or user acceptance."
+  ],
+  "nextStage": 22,
+  "nextScope": [
+    "Resolve existing free launch DB/RLS/Storage/restore/role acceptance blockers.",
+    "Add consented referral/first-read/viewport tracking and partition sitemap.",
+    "Collect actual 28-day growth/control/supply/genre evidence and costs before KEEP/CHANGE/STOP.",
+    "Map tiers and review CAS/outbox delivery separately before any real promotion."
+  ]
+}

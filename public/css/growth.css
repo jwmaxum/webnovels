@@ -1,0 +1,9 @@
+.growth-controls { display:grid; gap:1rem; max-width:48rem; margin:1rem 0 2rem; }
+.growth-controls label { display:grid; gap:.4rem; }
+.growth-controls input:not([type="checkbox"]), .growth-controls select { width:100%; min-height:44px; padding:.6rem; border:1px solid var(--border-color,#888); border-radius:.5rem; color:inherit; background:var(--bg-card,#fff); }
+.growth-controls input[type="checkbox"] { width:1.2rem; height:1.2rem; }
+#growthHome .works-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; }
+#growthHome .work-card { display:block; padding:1rem; border:1px solid var(--border-color,#888); border-radius:.75rem; }
+#growthHome .work-card h3 { font-size:1rem; white-space:normal; }
+#growthHome small { display:block; margin-top:.75rem; }
+#growthHome a:focus-visible, .growth-controls :focus-visible { outline:3px solid var(--primary-color,#7559db); outline-offset:3px; }

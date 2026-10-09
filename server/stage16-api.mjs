@@ -49,7 +49,7 @@ function publicDistribution(value) {
   catch { links=[]; }
   return {mode:'NON_EXCLUSIVE',externalLinks:links.map(url=>({label:DISTRIBUTION_HOSTS[new URL(url).hostname],url}))};
 }
-function projectWork(work, fail, detail=false, webtoon=false) {
+export function projectWork(work, fail, detail=false, webtoon=false) {
   if (!visibleWork(work,webtoon)) fail(503,'CATALOG_UNAVAILABLE');
   const result=pick(work,fields);
   result.ranking_readers=Number.isSafeInteger(work.ranking_readers)&&work.ranking_readers>=5?work.ranking_readers:null;
