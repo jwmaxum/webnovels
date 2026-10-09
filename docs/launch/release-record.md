@@ -1,5 +1,9 @@
 # 12단계 출시 기록 — 2026-09-24
 
+## 19단계 CI 실패 후속 — 2026-10-09
+
+코드 push는 성공했지만 98569ddd88ffa3a6583156238c39286fc8b5aa97의 [GitHub Actions](https://github.com/jwmaxum/webnovels/actions/runs/37881750928)와 Pages 빌드는 실패했다. CI에서는 19단계 fixture의 scratch/stage19 미생성으로 6개 ENOENT를 확인했다. 이를 수정하고 Node 24/Actions v7/Ubuntu 24.04로 빌드 환경을 맞춘다. 이전 로컬 387건 기록을 이 후보의 원격 성공 증거로 사용하지 않는다. 새 소스 사본의 후속 로컬 build 387건·번들/컴파일과 별도 타입 검사는 통과했다. [CI 복구 검증](../../artifacts/stage19-ci-repair-verification.json). 실제 후속 후보와 결과는 Git commit/check 상태에서 확인하며 공개 출시 NO GO를 유지한다.
+
 ## 19단계 품질 코드·읽기 감사 — 2026-10-09 최신
 
 **공개 출시 판정: NO GO.** [19단계 계약](stage19-quality-contract.md)·[검증 근거](../../artifacts/stage19-quality-verification.json). 단계 코드는 Git에 반영하지만 해당 커밋의 원격 CI/Pages 배포·실기기·베타를 확인한 결과로 표시하지 않는다. 후보 전체 SHA는 반영된 Git 커밋으로 고정하고 그 SHA의 원격 증거를 후속 수집한다.

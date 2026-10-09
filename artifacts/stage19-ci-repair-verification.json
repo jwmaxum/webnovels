@@ -1,0 +1,60 @@
+{
+  "stage": 19,
+  "followup": "CI clean checkout and build runtime repair",
+  "checkedAt": "2026-10-09T04:17:40.976Z",
+  "baseCommit": "98569ddd88ffa3a6583156238c39286fc8b5aa97",
+  "failedRun": {
+    "id": "37881750928",
+    "url": "https://github.com/jwmaxum/webnovels/actions/runs/37881750928",
+    "job": "113662772170",
+    "error": "ENOENT: mkdtemp scratch/stage19 parent missing",
+    "failedTests": 6,
+    "installSucceeded": true,
+    "buildRuntime": "Node 20.20.2",
+    "additionalIssue": "Supabase JS 2.112.3 requires Node >=22; Actions v4 runtime and ubuntu-latest warnings"
+  },
+  "changes": [
+    "Both file fixtures create their scratch/stage19 parent before mkdtemp",
+    "Shared .node-version 24 for CI and Pages source configuration",
+    "Matching package and lock root engines Node >=24",
+    "actions/checkout@v7 and actions/setup-node@v7; explicit ubuntu-24.04"
+  ],
+  "verification": {
+    "runtime": "v24.19.0",
+    "cleanTrackedSourceCopy": true,
+    "noInitialScratch": true,
+    "noLocalEnv": true,
+    "reusedLockedDependencies": true,
+    "commands": [
+      {
+        "name": "test:stage19",
+        "exit": 0,
+        "tests": 25,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "build",
+        "exit": 0,
+        "tests": 387,
+        "passed": 387,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "fullBuild": "PASS: npm run build; 387 tests, three Functions bundles, Prisma generate and tsc",
+    "types": "PASS: tsc --noEmit",
+    "syntax": "PASS: both changed test files",
+    "lint": "NOT_CONFIGURED",
+    "security": "No secrets found in changed files; .env.local and scratch remain ignored",
+    "diff": "PASS",
+    "limitation": "Local Windows validation reused locked node_modules; actual fresh Linux npm ci and remote CI/Pages are checked after push, not assumed from local results."
+  },
+  "remoteStatus": "To be checked on the pushed commit; initial 98569dd failed CI is retained above",
+  "launchDecision": "NO_GO",
+  "databaseWrites": false,
+  "flagsActivated": false,
+  "hostedRestoreAccepted": false,
+  "next": "Complete stage19 real DB/Storage cutover, isolated hosted restoration and device/beta acceptance before stage20."
+}

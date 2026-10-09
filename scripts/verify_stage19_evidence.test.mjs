@@ -59,6 +59,7 @@ test('strict evidence schema rejects secret fields, unsafe proof paths and crede
   }
 });
 test('evidence bytes bind the declared hash and symlink or path escape proof is rejected',async()=>{
+  await mkdir(path.resolve('scratch/stage19'),{recursive:true});
   const root=await mkdtemp(path.resolve('scratch/stage19/evidence-test-'));
   await mkdir(path.join(root,'scratch/launch/evidence'),{recursive:true});
   const bytes=Buffer.from('safe acceptance log'),file='scratch/launch/evidence/test.txt';

@@ -11,6 +11,7 @@ const state={schemaVersion:1,schemaSha256:'a'.repeat(64),securitySha256:'b'.repe
   tables:[{name:'public.works',rows:'1',sha256:'c'.repeat(64)}],buckets:[{id:'authoring-originals',public:false}],
   references:[{bucket:'authoring-originals',object:'work/source',sha256:hash('original bytes')}]};
 async function bundle({archive=Buffer.from('PGDMP synthetic test'),stateValue=state,manifest=null}={}){
+  await mkdir(path.resolve('scratch/stage19'),{recursive:true});
   const directory=await mkdtemp(path.resolve('scratch/stage19/recovery-test-'));await mkdir(path.join(directory,'objects'));
   const source=Buffer.from('original bytes');await writeFile(path.join(directory,'objects/source.bin'),source);
   await writeFile(path.join(directory,'database.dump'),archive);const stateBytes=Buffer.from(JSON.stringify(stateValue));await writeFile(path.join(directory,'state.json'),stateBytes);

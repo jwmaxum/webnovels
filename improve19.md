@@ -27,3 +27,13 @@
 [상세 검증 근거](artifacts/stage19-quality-verification.json), [실행 계약](docs/launch/stage19-quality-contract.md). 실제 읽기 감사에서 Auth 42/작가 연결 30, authoring 006까지·본문 충돌 78·Storage 0·P0 marker 부재, 운영 health 503/관련 플래그 false를 확인했다. DB 쓰기·기능 활성화·실제 복원·브라우저/기기·베타 인수는 미실행이다.
 
 19단계 전체 출시 인수는 미완료이며 **NO GO**다. 다음 개발은 운영 DB/Storage 전환과 격리 복원, 동일 후보 CI/배포 실패 차단, 실제 계정·메일·Cron·PC/모바일·XSS 인수와 제한 베타를 우선한다. 무료 서비스의 실제 출시 조건을 통과하면 20단계 단일 수익모델·거래 원장·정산을 진행한다.
+
+## CI 실패 후속 수정 — 2026-10-09
+
+Git push 자체는 성공했으나 후보 98569ddd88ffa3a6583156238c39286fc8b5aa97의 [CI 실행 37881750928](https://github.com/jwmaxum/webnovels/actions/runs/37881750928)이 실패했다. 실제 오류는 19단계 파일 테스트가 mkdtemp 전에 scratch/stage19 부모 디렉터리를 생성하지 않아 새 checkout에서 ENOENT가 발생한 것이다(6건). 이전 로컬 결과는 작업 중 생성된 디렉터리 덕분에 통과했으며 원격 CI 성공 근거가 아니다. 두 테스트 fixture가 필요한 부모 디렉터리를 직접 생성하도록 수정했다.
+
+별도로 CI는 Node 20을 사용해 Supabase JS 2.112.3의 Node >=22 요구와 맞지 않았다. .node-version의 Node 24를 CI/Pages 공통 기준으로 지정하고 package/lock의 engines를 일치시켰다. Actions checkout/setup-node는 Node 24 기반 v7로 갱신하고 Ubuntu 24.04를 명시해 ubuntu-latest 이동 안내의 영향을 줄였다. 실제 수정 후보의 CI/Pages 상태는 push 후 확인하며 출시 인수/기능 활성화와 구분한다.
+
+[Actions checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [Node 20 제거 안내](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/), [Pages build image/.node-version](https://developers.cloudflare.com/pages/configuration/build-image/)를 확인했다.
+
+후속 로컬 검증: 기존 scratch/.env.local이 없는 소스 사본에서 먼저 test:stage19 25/25, 이어 npm run build 387/387·Functions 번들·Prisma/TypeScript 컴파일 통과. 로컬 잠금 의존성을 재사용했으며 실제 Linux npm ci/원격 실행은 push 후 별도 확인한다. tsc --noEmit·변경 테스트 구문·비밀·diff 검사 통과. [CI 복구 근거](artifacts/stage19-ci-repair-verification.json).
