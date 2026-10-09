@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
+import scope from './lib/launch-backup-scope.cjs';
 const q = v => '"' + v.replaceAll('"', '""') + '"';
 const lit = v => "'" + v.replaceAll("'", "''") + "'";
 const sha = v => crypto.createHash('sha256').update(v).digest('hex');
@@ -28,8 +29,18 @@ export async function restoreSnapshot(snapshot) {
       }
     }
     // Restore referenced keys in managed schemas too (e.g. auth.users.id).
-    const constraints = (snapshot.constraints || []).filter(c => c.schema === 'public' || ['p','u'].includes(c.type));
-    for (const c of [...constraints.filter(c => c.type !== 'f'), ...constraints.filter(c => c.type === 'f')])
+    const constraints = (snapshot.constraints || []).filter(c => scope.applicationSchemas.includes(c.schema) || ['p','u'].includes(c.type));
+    for (const c of constraints.filter(c => c.type !== 'f'))
+      await db.exec(`alter table ${q(c.schema)}.${q(c.table)} add constraint ${q(c.name)} ${c.definition}`);
+    // Composite referenced keys can be standalone unique indexes rather than constraints.
+    let uniqueIndexes=0;
+    for(const i of snapshot.indexes || []) {
+      if(!scope.applicationSchemas.includes(i.schemaname)||!/^CREATE UNIQUE INDEX /.test(i.indexdef))continue;
+      if(!(await db.query('select to_regclass($1) present',[`${q(i.schemaname)}.${q(i.indexname)}`])).rows[0].present) {
+        await db.exec(i.indexdef);uniqueIndexes++;
+      }
+    }
+    for (const c of constraints.filter(c => c.type === 'f'))
       await db.exec(`alter table ${q(c.schema)}.${q(c.table)} add constraint ${q(c.name)} ${c.definition}`);
     const verified = [];
     for (const t of snapshot.tables) {
@@ -38,7 +49,8 @@ export async function restoreSnapshot(snapshot) {
         throw Object.assign(Error(`RESTORE_ROW_MISMATCH:${t.schema}.${t.name}`), { expectedRows: t.rows, actualRows: rows });
       verified.push({ schema: t.schema, name: t.name, rows: rows.length, sha256: fingerprint(rows) });
     }
-    return { db, verified, publicConstraints: constraints.filter(c=>c.schema==='public').length };
+    return { db, verified, publicConstraints: constraints.filter(c=>c.schema==='public').length,
+      applicationConstraints: constraints.filter(c=>scope.applicationSchemas.includes(c.schema)).length,uniqueIndexes };
   } catch (error) { await db.close(); throw error; }
 }
 
@@ -50,17 +62,19 @@ async function main() {
   const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json')));
   if (sha(bytes) !== manifest.snapshotSha256) throw Error('BACKUP_CHECKSUM_MISMATCH');
   const snapshot = JSON.parse(bytes);
-  const { db, verified, publicConstraints } = await restoreSnapshot(snapshot);
+  const { db, verified, publicConstraints, applicationConstraints, uniqueIndexes } = await restoreSnapshot(snapshot);
   await db.close();
   const report = { verifiedAt: new Date().toISOString(), snapshotSha256: sha(bytes),
     engine: 'PGlite isolated in-memory PostgreSQL', source: 'actual production rows',
     tablesVerified: verified.length, rowsVerified: verified.reduce((n,t) => n+t.rows,0),
     publicConstraintsVerified: publicConstraints, allRowsMatch: true,
+    applicationConstraintsVerified: applicationConstraints,
+    standaloneUniqueIndexesVerified: uniqueIndexes,
     fullSchemaRestore: false, hostedSupabaseRestore: false,
     limitations: ['Generated values restored as ordinary values; defaults, triggers, roles, ACLs, RLS, sequences, views and RPC behavior not restored or accepted.'],
     tables: verified };
   fs.writeFileSync(path.join(directory, 'data-restore-verification.json'), JSON.stringify(report,null,2)+'\n');
-  fs.writeFileSync('artifacts/launch-data-restore.json', JSON.stringify(report,null,2)+'\n');
+  fs.writeFileSync(scope.reportFile('data-restore',process.argv.slice(3)), JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({ ...report, tables: undefined },null,2));
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href)

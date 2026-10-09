@@ -1,0 +1,19 @@
+{
+  "format": "webnovels-content-review-summary-v1",
+  "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+  "packetSha256": "b3661fe4ea93ea947e81cd1c6c96342ee4c9cb8c31771a4a37d18287235a0497",
+  "conflicts": 78,
+  "byType": {
+    "NOVEL": 36,
+    "WEBTOON": 42
+  },
+  "seededAlternateBodies": 78,
+  "verifiedOwnerMappings": 78,
+  "approved": 0,
+  "held": 0,
+  "pending": 78,
+  "unresolved": 78,
+  "productionChanged": false,
+  "hostedRestoreAccepted": false,
+  "freeCutoverAccepted": false
+}

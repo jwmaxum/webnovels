@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { loadEnv, connection, managementToken } = require('./lib/launch-access.cjs');
+const scope = require('./lib/launch-backup-scope.cjs');
 const quote = value => '"' + value.replaceAll('"', '""') + '"';
 const literal = value => "'" + value.replaceAll("'", "''") + "'";
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
@@ -18,14 +19,12 @@ async function query(sql) {
 }
 
 async function main() {
+  const reportOutput = scope.reportFile('data-backup');
   const { ref } = connection(loadEnv());
   const directory = path.resolve('scratch/launch/backups', new Date().toISOString().replace(/[:.]/g, '-'));
   fs.mkdirSync(directory, { recursive: true });
-  const tables = await query(`select n.nspname schema,c.relname name,c.relkind kind
-    from pg_class c join pg_namespace n on n.oid=c.relnamespace
-    where n.nspname in ('public','auth','storage','authoring','launch_recovery') and c.relkind in ('r','p')
-    and not c.relispartition order by 1,2`);
-  if (!tables.length || tables.some(t => t.kind !== 'r')) throw Error('UNSUPPORTED_TABLE_LAYOUT');
+  const tables = await query(scope.inventorySql);
+  scope.inventoryKeys(tables);
   const selects = tables.map(t => {
     const qualified = `${quote(t.schema)}.${quote(t.name)}`;
     return `select ${literal(t.schema)} schema,${literal(t.name)} name,count(*)::text row_count,
@@ -36,50 +35,51 @@ async function main() {
   // Each row is a JSON string to preserve bigint/numeric values in JavaScript.
   const sql = `select jsonb_build_object(
     'format','webnovels-logical-data-v1','captured_at',clock_timestamp(),'database_version',version(),
+    'requested_schemas',jsonb_build_array(${scope.schemaSql}),
     'tables',(select jsonb_agg(to_jsonb(t)) from (${selects.join(' union all ')}) t),
     'columns',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,'name',a.attname,
       'type',format_type(a.atttypid,a.atttypmod),'ordinal',a.attnum,'not_null',a.attnotnull,
       'identity',a.attidentity,'generated',a.attgenerated,'default',pg_get_expr(d.adbin,d.adrelid)))
       from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace
       left join pg_attrdef d on d.adrelid=c.oid and d.adnum=a.attnum
-      where n.nspname in ('public','auth','storage','authoring','launch_recovery') and c.relkind='r' and a.attnum>0 and not a.attisdropped),
+      where n.nspname in (${scope.schemaSql}) and c.relkind='r' and a.attnum>0 and not a.attisdropped),
     'enums',(select jsonb_agg(to_jsonb(t)) from (select n.nspname schema,t.typname name,
       array_agg(e.enumlabel order by e.enumsortorder) labels from pg_enum e join pg_type t on t.oid=e.enumtypid
-      join pg_namespace n on n.oid=t.typnamespace where n.nspname in ('public','auth','storage','authoring','launch_recovery') group by 1,2) t),
+      join pg_namespace n on n.oid=t.typnamespace where n.nspname in (${scope.schemaSql}) group by 1,2) t),
     'constraints',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,'name',co.conname,
       'type',co.contype,'definition',pg_get_constraintdef(co.oid))) from pg_constraint co
       join pg_class c on c.oid=co.conrelid join pg_namespace n on n.oid=c.relnamespace
-      where n.nspname in ('public','auth','storage','authoring','launch_recovery')),
-    'indexes',(select jsonb_agg(to_jsonb(i)) from pg_indexes i where schemaname in ('public','auth','storage','authoring','launch_recovery')),
-    'sequences',(select jsonb_agg(to_jsonb(s)) from pg_sequences s where schemaname in ('public','auth','storage','authoring','launch_recovery')),
-    'policies',(select jsonb_agg(to_jsonb(p)) from pg_policies p where schemaname in ('public','auth','storage','authoring','launch_recovery')),
-    'views',(select jsonb_agg(to_jsonb(v)) from pg_views v where schemaname in ('public','auth','storage','authoring','launch_recovery')),
+      where n.nspname in (${scope.schemaSql})),
+    'indexes',(select jsonb_agg(to_jsonb(i)) from pg_indexes i where schemaname in (${scope.schemaSql})),
+    'sequences',(select jsonb_agg(to_jsonb(s)) from pg_sequences s where schemaname in (${scope.schemaSql})),
+    'policies',(select jsonb_agg(to_jsonb(p)) from pg_policies p where schemaname in (${scope.schemaSql})),
+    'views',(select jsonb_agg(to_jsonb(v)) from pg_views v where schemaname in (${scope.schemaSql})),
     'functions',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'signature',p.oid::regprocedure::text,
       'definition',pg_get_functiondef(p.oid),'acl',p.proacl)) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-      where n.nspname in ('public','auth','storage','authoring','launch_recovery') and p.prokind='f'),
+      where n.nspname in (${scope.schemaSql}) and p.prokind='f'),
     'triggers',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,'definition',pg_get_triggerdef(t.oid)))
       from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace
-      where n.nspname in ('public','auth','storage','authoring','launch_recovery') and not t.tgisinternal),
+      where n.nspname in (${scope.schemaSql}) and not t.tgisinternal),
     'relation_security',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'name',c.relname,'kind',c.relkind,
       'owner',pg_get_userbyid(c.relowner),'acl',c.relacl,'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity))
-      from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','auth','storage','authoring','launch_recovery')),
+      from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in (${scope.schemaSql})),
     'column_acl',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,'column',a.attname,'acl',a.attacl))
       from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace
-      where n.nspname in ('public','auth','storage','authoring','launch_recovery') and a.attacl is not null)
+      where n.nspname in (${scope.schemaSql}) and a.attacl is not null)
     ) snapshot`;
   const snapshot = (await query(sql))[0]?.snapshot;
   if (!snapshot || snapshot.tables.length !== tables.length || snapshot.tables.some(t => t.rows.length !== Number(t.row_count)))
     throw Error('BACKUP_INCOMPLETE');
-  const inventoryAfter = await query(`select n.nspname schema,c.relname name,c.relkind kind from pg_class c
-    join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','auth','storage','authoring','launch_recovery')
-    and c.relkind in ('r','p') and not c.relispartition order by 1,2`);
-  if (JSON.stringify(tables) !== JSON.stringify(inventoryAfter)) throw Error('SCHEMA_CHANGED_DURING_BACKUP');
+  scope.assertInventory(tables,snapshot.tables.map(t=>({...t,kind:'r'})));
+  scope.assertInventory(tables,await query(scope.inventorySql));
   const bytes = Buffer.from(JSON.stringify(snapshot));
   fs.writeFileSync(path.join(directory, 'snapshot.json'), bytes, { flag: 'wx', mode: 0o600 });
   const report = {
     capturedAt: snapshot.captured_at, projectRef: ref, format: snapshot.format,
     snapshotSha256: hash(bytes), bytes: bytes.length,
     tableCount: tables.length,
+    requestedSchemas: scope.schemas,
+    absentSchemas: scope.schemas.filter(s=>!tables.some(t=>t.schema===s)),
     schemas: [...new Set(tables.map(t => t.schema))],
     rowCounts: Object.fromEntries(snapshot.tables.map(t => [`${t.schema}.${t.name}`, Number(t.row_count)])),
     fullPostgresBackup: false, providerRestoreVerified: false,
@@ -89,7 +89,7 @@ async function main() {
   };
   fs.writeFileSync(path.join(directory, 'manifest.json'), JSON.stringify(report, null, 2), { flag: 'wx', mode: 0o600 });
   fs.mkdirSync('artifacts', { recursive: true });
-  fs.writeFileSync('artifacts/launch-data-backup.json', JSON.stringify(report, null, 2) + '\n');
+  fs.writeFileSync(reportOutput, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({ directory, ...report }, null, 2));
 }
 if (require.main === module) main().catch(error => { console.error(/^BACKUP_|^UNSUPPORTED_|^SCHEMA_/.test(error.message) ? error.message : 'BACKUP_FAILED_DETAILS_WITHHELD'); process.exitCode = 1; });

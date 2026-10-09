@@ -3,10 +3,14 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {spawnSync}=require('node:child_process');
 const {loadEnv,connection,managementToken}=require('./lib/launch-access.cjs');
+const {query}=require('./backup_launch_data.cjs');
+const scope=require('./lib/launch-backup-scope.cjs');
 async function main(){
+ const reportOutput=scope.reportFile('native-backup');
  const env=loadEnv(),{ref}=connection(env),headers={Authorization:'Bearer '+managementToken(env),'Content-Type':'application/json'};
  const binary=path.resolve(env.PG_DUMP_PATH||'scratch/tools/postgresql-17/pgsql/bin/pg_dump.exe');
  if(!fs.existsSync(binary))throw Error('NATIVE_BACKUP_PG_DUMP_REQUIRED');
+ const tables=await query(scope.inventorySql);scope.inventoryKeys(tables);
  const p=await fetch(`https://api.supabase.com/v1/projects/${ref}/config/database/pooler`,{headers,redirect:'error',signal:AbortSignal.timeout(20000)});
  if(!p.ok)throw Error('NATIVE_BACKUP_POOLER_HTTP_'+p.status);
  const configs=await p.json(),pool=configs.find(c=>c.database_type==='PRIMARY')||configs[0];
@@ -33,7 +37,7 @@ async function main(){
  const output=path.join(directory,'application-auth-storage.dump');
  // The temporary login is NOINHERIT; explicitly assume its existing read-only membership.
  const args=['--no-password','--role=supabase_read_only_user','--format=custom','--file',output,
-  '--schema=public','--schema=auth','--schema=storage','--schema=authoring','--schema=launch_recovery'];
+  '--strict-names',...scope.nativeSchemaArgs(tables)];
  let result=spawnSync(binary,args,{env:childEnv,encoding:'utf8',windowsHide:true,timeout:180000});
  // The pooler can briefly cache the prior temporary password. Reuse the same credential,
  // never mint another credential in this retry and never retry a non-auth dump failure.
@@ -47,10 +51,12 @@ async function main(){
  if(result.status!==0)throw Error('NATIVE_BACKUP_PG_DUMP_FAILED_PRIVATE_LOG:'+directory);
  const list=spawnSync(path.join(path.dirname(binary),'pg_restore.exe'),['--list',output],{encoding:'utf8',windowsHide:true,timeout:30000});
  if(list.status!==0)throw Error('NATIVE_BACKUP_ARCHIVE_UNREADABLE');
+ scope.assertInventory(tables,await query(scope.inventorySql));
+ scope.assertArchiveInventory(tables,list.stdout);
  fs.writeFileSync(path.join(directory,'archive-toc.txt'),list.stdout,{mode:0o600});
  const bytes=fs.readFileSync(output),report={createdAt:new Date().toISOString(),projectRef:ref,
   tool:spawnSync(binary,['--version'],{encoding:'utf8',windowsHide:true}).stdout.trim(),
-  requestedSchemas:['public','auth','storage','authoring','launch_recovery'],
+  requestedSchemas:scope.schemas,absentSchemas:scope.schemas.filter(s=>!tables.some(t=>t.schema===s)),
   schemas:[...new Set(list.stdout.split('\n').map(line=>line.match(/ TABLE DATA (\S+) /)?.[1]).filter(Boolean))].sort(),bytes:bytes.length,
   sha256:crypto.createHash('sha256').update(bytes).digest('hex'),format:'PostgreSQL custom archive',
   tableDataEntries:list.stdout.split('\n').filter(line=>/ TABLE DATA /.test(line)).length,
@@ -58,7 +64,7 @@ async function main(){
   tlsMode:'verify-full',certificateUrl,certificateSha256:crypto.createHash('sha256').update(certificate).digest('hex'),
   limitations:['Cluster roles and provider-managed internals/configuration are not included.','Storage file bytes and external assets are separate.','Off-device copy and hosted Supabase restoration not yet verified.']};
  fs.writeFileSync(path.join(directory,'manifest.json'),JSON.stringify(report,null,2)+'\n');
- fs.writeFileSync('artifacts/launch-native-backup.json',JSON.stringify(report,null,2)+'\n');
+ fs.writeFileSync(reportOutput,JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({directory,...report},null,2));
 }
 main().catch(e=>{console.error(e.message.startsWith('NATIVE_BACKUP_')?e.message:'NATIVE_BACKUP_FAILED_DETAILS_WITHHELD');process.exitCode=1});

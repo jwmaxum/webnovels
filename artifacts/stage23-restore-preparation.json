@@ -1,0 +1,38 @@
+{
+  "format": "webnovels-restore-preparation-v1",
+  "sourceProjectRef": "ghwabesnydktumeyejnm",
+  "targetProjectRef": null,
+  "logicalSnapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+  "nativeArchiveSha256": "cf1f6309216fa3a0641fc62fe2c659c25552a4aaa239973780c16993090795cc",
+  "requestedSchemas": [
+    "public",
+    "auth",
+    "storage",
+    "authoring",
+    "launch_recovery",
+    "commerce",
+    "growth"
+  ],
+  "tables": 105,
+  "independentSnapshotTimes": true,
+  "combinedConsistentSnapshotConfirmed": false,
+  "targetConfigured": false,
+  "targetOwnershipVerified": false,
+  "restoreExecuted": false,
+  "hostedRestoreAccepted": false,
+  "pending": [
+    "CONFIRM_ISOLATED_PROJECT_OWNERSHIP_AND_COST",
+    "REVIEW_MANAGED_SCHEMA_AND_CLUSTER_ROLE_RESTORE",
+    "OFF_DEVICE_ENCRYPTED_BACKUP",
+    "RESTORE_NATIVE_ARCHIVE_IN_ISOLATED_PROJECT",
+    "VERIFY_ROWS_ACL_RLS_RPC_AUTH_STORAGE",
+    "VERIFY_EXTERNAL_IMAGE_BYTES_AND_RIGHTS",
+    "ROLE_AND_FREE_RUNTIME_ACCEPTANCE"
+  ],
+  "limitations": [
+    "Logical and native backups are independent consistent DB captures; equal table inventory does not prove equal row state.",
+    "Native pg_dump excludes cluster roles, provider configuration and Storage/external file bytes.",
+    "Supplied manifests and archive checks do not authenticate hosted restore or project ownership."
+  ],
+  "preparedAt": "2026-10-09T07:29:27.904Z"
+}

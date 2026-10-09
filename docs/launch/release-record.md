@@ -1,5 +1,20 @@
 # 12단계 출시 기록 — 2026-09-24
 
+## 23단계 원본 검토·복원 준비 — 2026-10-09
+
+[23단계 계약](content-review-restore-contract.md)·[계획](../../improve23.md).
+[검증 근거](../../artifacts/stage23-verification.json): 새 범위 12개와 전체 build 471/471,
+Prisma/TypeScript compile·별도 타입 검사·구문/보안/diff가 통과했다. 핵심 모듈 커버리지는
+줄/함수 100%·분기 93.92%다. lint는 미설정이며 합성 SQL 검증과 실제 hosted 인수를 구분한다.
+공통 백업 범위에 commerce/growth를 포함하고 private FK·고유 인덱스 로컬 복원을 보완했다.
+새 실제 논리/native 백업은 각각 105테이블이며 논리 1,381행 전부 일치·서비스 제약 216개를
+검증했다. 두 백업은 독립 시점이고 Storage 원본 바이트/hosted 복원 인수는 미완료다.
+78건 원본 검토 packet과 해시 기반 승인/CAS·불변 이력·보류 보존 리허설 도구를 구현했다.
+실제 선택 승인 0/PENDING 78이며 임의 원본 선택·유형 변경·SQL/플래그 활성화는 없다.
+[실제 감사](../../artifacts/stage23-launch-readiness.json)는 78 충돌·미적용 마이그레이션·P0 미잠금·
+health 503을 확인했다. 공개 출시 NO_GO를 유지한다. 24단계에 권리자/원본 확인과 별도
+Supabase native 복원·역할/Storage 인수 후 승인된 무료 전환을 진행한다.
+
 ## 19단계 CI 실패 후속 — 2026-10-09
 
 코드 push는 성공했지만 98569ddd88ffa3a6583156238c39286fc8b5aa97의 [GitHub Actions](https://github.com/jwmaxum/webnovels/actions/runs/37881750928)와 Pages 빌드는 실패했다. CI에서는 19단계 fixture의 scratch/stage19 미생성으로 6개 ENOENT를 확인했다. 이를 수정하고 Node 24/Actions v7/Ubuntu 24.04로 빌드 환경을 맞춘다. 이전 로컬 387건 기록을 이 후보의 원격 성공 증거로 사용하지 않는다. 새 소스 사본의 후속 로컬 build 387건·번들/컴파일과 별도 타입 검사는 통과했다. [CI 복구 검증](../../artifacts/stage19-ci-repair-verification.json). 실제 후속 후보와 결과는 Git commit/check 상태에서 확인하며 공개 출시 NO GO를 유지한다.

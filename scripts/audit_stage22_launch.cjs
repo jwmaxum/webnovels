@@ -17,7 +17,7 @@ function assess({database={},integrity={},versions=[],security=[],runtime={},man
  return {decision:'NO_GO',missingMigrations:missing,blockers,actualSqlAppliedByThisAudit:false,flagsChanged:false,
   actualGrowthExperimentStarted:false,hostedRestoreAccepted:false};
 }
-async function audit(){
+async function audit(output='artifacts/stage22-launch-readiness.json'){
  const env=loadEnv(),management=await managementProbe(env),report={checkedAt:new Date().toISOString(),kind:'HOSTED_READ_ONLY_AGGREGATES',management:{ok:management.ok,code:management.code,status:management.status},versions:[],security:[]};
  if(management.ok){
   const {ref}=connection(env),headers={Authorization:'Bearer '+managementToken(env),'Content-Type':'application/json'};
@@ -35,10 +35,10 @@ async function audit(){
  try{const r=await fetch(new URL('/api/v2/health',url),{signal:AbortSignal.timeout(20000),redirect:'error'});report.runtime.healthStatus=r.status;
   const body=await r.json();const code=body.error||body.status;if(/^[A-Za-z0-9_]+$/.test(code||''))report.runtime.healthCode=code;}catch{}
  Object.assign(report,assess(report));
- fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync('artifacts/stage22-launch-readiness.json',JSON.stringify(report,null,2)+'\n');
+ fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({checkedAt:report.checkedAt,decision:report.decision,authUsers:report.database?.auth_users,
   linkedAuthors:report.database?.linked_authors,bodyConflicts:report.database?.legacy_body_conflicts,storageObjects:report.database?.storage_objects,
   missingMigrations:report.missingMigrations,runtime:report.runtime,blockers:report.blockers},null,2));process.exitCode=2;
 }
-module.exports={assess};
+module.exports={assess,audit};
 if(require.main===module)audit().catch(e=>{console.error(/^[A-Z_0-9]+$/.test(e.message)?e.message:'STAGE22_AUDIT_FAILED_DETAILS_WITHHELD');process.exitCode=2;});

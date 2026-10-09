@@ -1,0 +1,129 @@
+{
+  "stage": 23,
+  "verifiedAt": "2026-10-09T07:45:39.525Z",
+  "scope": "content review, CAS rehearsal, backup scope and isolated restore preparation",
+  "build": {
+    "status": "PASS",
+    "command": "npm run build",
+    "tests": 471,
+    "passed": 471,
+    "failed": 0,
+    "skipped": 0,
+    "prismaAndTypeScriptCompile": true,
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "reusedLockedDependencies": true
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "exitCode": 0
+  },
+  "scopedTests": {
+    "status": "PASS",
+    "tests": 12,
+    "passed": 12,
+    "command": "npm run test:stage23",
+    "kind": "synthetic PostgreSQL and local file verification"
+  },
+  "coverage": {
+    "scope": [
+      "scripts/lib/launch-backup-scope.cjs",
+      "scripts/lib/launch-content-review.mjs",
+      "scripts/lib/launch-restore-plan.mjs"
+    ],
+    "lines": 100,
+    "branches": 93.92,
+    "functions": 100
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 12
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0
+  },
+  "testedCodeSha256": {
+    "scripts/audit_stage22_launch.cjs": "2e6ff2f433963702d31db24421919036e875afd24d724fcbf650673bb6130f91",
+    "scripts/backup_launch_data.cjs": "19e1a0f53f5debc78758f169467d35968ede4cb5491345b544a2cdfdd9b353a4",
+    "scripts/backup_launch_postgres.cjs": "4042184f204e8100acc59fba3051b74a1ace6d4c5438675812730c0966f1a37a",
+    "scripts/verify_launch_backup.mjs": "fb4a42058df03d53da34e4fa46374d3df67b26856039ad48261f50724c4e9da9",
+    "scripts/audit_stage23_launch.cjs": "b4ab0b04d36d3c9920b8dc5e515fc656ab84b07bbe3ca6c6fa9b7465afec3bb8",
+    "scripts/lib/launch-backup-scope.cjs": "8a5291718ff63547d47ad5e994b805d290f187e291b73e186b224d9b7ea0aba1",
+    "scripts/lib/launch-content-review.mjs": "15470b8a04480dcff277c21b2a0cda370f01cd18b1d9bd7537e55a42ab1b4a34",
+    "scripts/lib/launch-restore-plan.mjs": "51e19eea867102ae754bc342d52fa92fbebe88cd5819c7756f7c6fce7975ca55",
+    "scripts/prepare_launch_restore.mjs": "9c74018925b812709e0239c5fc3782e6be662068995eae610fc58dade35860f3",
+    "scripts/review_launch_content.mjs": "83d33c4f7c520ded648c8c88c955a29b78051684c1818a14b29cc80709e35c3f",
+    "scripts/verify_stage23_backup.test.mjs": "5ec63fd55e3a4793557d79b337728a77e55ccc4d77bd6d7a3b7703750946e7fb",
+    "scripts/verify_stage23_review.test.mjs": "2fa11dcea2db95e5ec88ab448a2577ab13516b746ca5a9c93f55f4d24e9b903e",
+    "database/launch/004_reviewed_content_selection.sql": "4f341bf220c5c1d70eafa3d6af54367d1d527c3fd46a8bd55f27a218a4327317",
+    "package.json": "9d30da38cdfc3e5d097a91d94112a7b12b68bc510b3dd4219ed74d9cc7c08a5a"
+  },
+  "actualBackup": {
+    "logical": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "native": "cf1f6309216fa3a0641fc62fe2c659c25552a4aaa239973780c16993090795cc",
+    "tables": 105,
+    "independentSnapshotTimes": true,
+    "combinedConsistentSnapshotConfirmed": false,
+    "temporaryReadOnlyProviderLogin": true
+  },
+  "actualLocalRestore": {
+    "verifiedAt": "2026-10-09T07:19:58.329Z",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "engine": "PGlite isolated in-memory PostgreSQL",
+    "source": "actual production rows",
+    "tablesVerified": 105,
+    "rowsVerified": 1381,
+    "publicConstraintsVerified": 99,
+    "allRowsMatch": true,
+    "applicationConstraintsVerified": 216,
+    "standaloneUniqueIndexesVerified": 7,
+    "fullSchemaRestore": false,
+    "hostedSupabaseRestore": false,
+    "limitations": [
+      "Generated values restored as ordinary values; defaults, triggers, roles, ACLs, RLS, sequences, views and RPC behavior not restored or accepted."
+    ]
+  },
+  "actualReview": {
+    "exit": 2,
+    "format": "webnovels-content-review-summary-v1",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "packetSha256": "b3661fe4ea93ea947e81cd1c6c96342ee4c9cb8c31771a4a37d18287235a0497",
+    "conflicts": 78,
+    "byType": {
+      "NOVEL": 36,
+      "WEBTOON": 42
+    },
+    "seededAlternateBodies": 78,
+    "verifiedOwnerMappings": 78,
+    "approved": 0,
+    "held": 0,
+    "pending": 78,
+    "unresolved": 78,
+    "productionChanged": false,
+    "hostedRestoreAccepted": false,
+    "freeCutoverAccepted": false,
+    "generatedSqlFiles": 0,
+    "kind": "actual production snapshot; no approved source decisions"
+  },
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ]
+}
