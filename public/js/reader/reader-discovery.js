@@ -109,7 +109,7 @@
       if (request !== listRequest) return;
       cards(el, result.works, query.sort === 'popular' || query.sort === 'views');
       if ($('discoverResultsCount')) $('discoverResultsCount').textContent = `이 페이지 ${result.works.length}개 작품`;
-      if ($('discoveryRankingNote')) $('discoveryRankingNote').textContent = query.type === 'WEBTOON' ? '웹툰 공개 서비스는 준비 중입니다.' :
+      if ($('discoveryRankingNote')) $('discoveryRankingNote').textContent = query.type === 'WEBTOON' && window.WEBNOVELS_CONFIG?.webtoonServiceEnabled!==true ? '웹툰 공개 서비스는 준비 중입니다.' :
         ['popular','views'].includes(query.sort) ? rankingText(result.ranking) : '최신 공개순은 최근 회차 공개 시각, 신작순은 첫 공개 시각을 기준으로 합니다.';
       const pager = $('discoverPager');
       if (currentQuery.has('cursor')) { const first = new URLSearchParams(currentQuery); first.delete('cursor'); pager?.append(link('처음 페이지', path(first), 'btn btn-outline')); }
@@ -148,7 +148,7 @@
       cards($('newWorksGrid'), result.sections.new); cards($('completedWorksGrid'), result.sections.completed);
       cards($('todayFreeGrid'), result.sections.new);
       if (genreAtStart === genreRequest) cards($('genreWorksGrid'), result.sections.recommended);
-      status($('webtoonsGrid'), '웹툰 공개 서비스는 준비 중입니다.');
+      if(window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true)cards($('webtoonsGrid'),result.sections.webtoons||[]);else status($('webtoonsGrid'), '웹툰 공개 서비스는 준비 중입니다.');
       if ($('goldenBestSection')) $('goldenBestSection').hidden = true;
       if ($('homeRankingNote')) $('homeRankingNote').textContent = rankingText(result.ranking);
       if ($('homeRecommendationNote')) $('homeRecommendationNote').textContent = '편집 추천 · 운영자가 선정한 작품입니다.';

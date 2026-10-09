@@ -1,3 +1,4 @@
+import {webtoonEnabled,projectWebtoon} from './webtoon-api.mjs';
 // Additive public discovery. No client identity, private distribution rows, or manuscript text in cards.
 import { DISTRIBUTION_HOSTS, normalizeExternalLinks } from './creator-distribution-api.mjs';
 import { adminWorkflowEnabled } from './admin-workflow-api.mjs';
@@ -23,14 +24,14 @@ const pick = (value, keys) => Object.fromEntries(keys.filter(key=>key in value).
 export function discoveryEnabled(env) {
   return env.READER_DISCOVERY_ENABLED==='true' && env.AUTHOR_PUBLISH_ENABLED==='true' && env.READER_SERVICE_ENABLED==='true';
 }
-export function validReadingPosition(position) {
-  return object(position) && Object.keys(position).length===3 && UUID.test(position.versionId||'') &&
-    Number.isInteger(position.paragraphIndex) && position.paragraphIndex>=0 && position.paragraphIndex<=999999 &&
-    Number.isFinite(position.offset) && position.offset>=0 && position.offset<=1;
+export function validReadingPosition(position,panel=false) {
+  const key=panel?'panelIndex':'paragraphIndex';
+  return object(position)&&Object.keys(position).length===3&&Object.keys(position).every(k=>['versionId',key,'offset'].includes(k))&&UUID.test(position.versionId||'')&&
+    Number.isInteger(position[key])&&position[key]>=0&&position[key]<=999999&&Number.isFinite(position.offset)&&position.offset>=0&&position.offset<=1;
 }
-function visibleWork(work) {
+function visibleWork(work,webtoon=false) {
   return object(work) && validId(work.id) && publicStates.has(work.status) &&
-    ['ALL','AGE_15'].includes(work.rating) && work.content_type==='NOVEL' &&
+    ['ALL','AGE_15'].includes(work.rating) && (work.content_type==='NOVEL'||(webtoon&&work.content_type==='WEBTOON')) &&
     !(Array.isArray(work.genre)?work.genre:[work.genre]).some(value=>['성인','19세 이상'].includes(value));
 }
 function visibleEpisode(episode, workId) {
@@ -48,8 +49,8 @@ function publicDistribution(value) {
   catch { links=[]; }
   return {mode:'NON_EXCLUSIVE',externalLinks:links.map(url=>({label:DISTRIBUTION_HOSTS[new URL(url).hostname],url}))};
 }
-function projectWork(work, fail, detail=false) {
-  if (!visibleWork(work)) fail(503,'CATALOG_UNAVAILABLE');
+function projectWork(work, fail, detail=false, webtoon=false) {
+  if (!visibleWork(work,webtoon)) fail(503,'CATALOG_UNAVAILABLE');
   const result=pick(work,fields);
   result.ranking_readers=Number.isSafeInteger(work.ranking_readers)&&work.ranking_readers>=5?work.ranking_readers:null;
   result.distribution=publicDistribution(work.distribution);
@@ -135,15 +136,15 @@ export async function stage16Catalog({url,env,db,fail}) {
       data.cursor={key:cursor.key,id:cursor.id};data.asOf=cursor.asOf;
     }
   }
-  const result=await db('rpc/stage16_catalog',{}, {method:'POST',body:{p_action:action,p_query:data}});
+  const result=await db(webtoonEnabled(env)?'rpc/stage18_catalog':'rpc/stage16_catalog',{}, {method:'POST',body:{p_action:action,p_query:data}});
   if(result?.error)fail([400,404].includes(result.status)?result.status:503,result.error);
   if(!object(result))fail(503,'CATALOG_UNAVAILABLE');
   if(action==='home') {
     if(!object(result.sections))fail(503,'CATALOG_UNAVAILABLE');
     const sections={};
-    for(const key of ['recommended','popular','new','completed']) {
+    for(const key of ['recommended','popular','new','completed',...(webtoonEnabled(env)?['webtoons']:[])]) {
       if(!Array.isArray(result.sections[key])||result.sections[key].length>8)fail(503,'CATALOG_UNAVAILABLE');
-      sections[key]=result.sections[key].map(work=>projectWork(work,fail));
+      sections[key]=result.sections[key].map(work=>projectWork(work,fail,false,webtoonEnabled(env)));
     }
     if(adminWorkflowEnabled(env)) {
       const editorial=await db('rpc/stage17_editorial',{}, {method:'POST',body:{}});
@@ -158,7 +159,7 @@ export async function stage16Catalog({url,env,db,fail}) {
     }
     return {sections,ranking:rank(result.ranking,fail)};
   }
-  if(action==='work')return {work:projectWork(result.work,fail,true)};
+  if(action==='work')return {work:projectWork(result.work,fail,true,webtoonEnabled(env))};
   if(action==='chapter')return {
     episode:projectEpisode(result.episode,data.workId,fail),
     previous:result.previous==null?null:projectEpisode(result.previous,data.workId,fail),
@@ -173,15 +174,16 @@ export async function stage16Catalog({url,env,db,fail}) {
     if(!cursorShape(cursor))fail(503,'CATALOG_UNAVAILABLE');
     nextCursor=encode(cursor);
   }
-  return {[key]:result[key].map(value=>action==='list'?projectWork(value,fail):projectEpisode(value,data.workId,fail)),
+  return {[key]:result[key].map(value=>action==='list'?projectWork(value,fail,false,webtoonEnabled(env)):projectEpisode(value,data.workId,fail)),
     nextCursor,...(ranking?{ranking}:{})};
 }
 
-export function publicContent(result,fail) {
+export function publicContent(result,fail,env={}) {
   if(result?.error)fail([403,404].includes(result.status)?result.status:503,result.error);
   const episode=result?.episode;
   if(!visibleEpisode(episode)||typeof episode.content!=='string'||!Array.isArray(episode.image_urls))
     fail(503,'CONTENT_UNAVAILABLE');
   return {success:true,episode:{...projectEpisode(episode,episode.work_id,fail),content:episode.content,
+    ...(webtoonEnabled(env)&&episode.contentType==='WEBTOON'?{contentType:'WEBTOON',webtoon:projectWebtoon(episode.webtoon,episode.id,episode.versionId,fail)}:{}),
     author_comment:typeof episode.author_comment==='string'?episode.author_comment:'',image_urls:episode.image_urls}};
 }

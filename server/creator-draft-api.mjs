@@ -1,3 +1,4 @@
+import {webtoonEnabled} from './webtoon-api.mjs';
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const number = s => typeof s === 'string' && /^(0|[1-9]\d{0,18})$/.test(s) && BigInt(s) <= 9223372036854775807n;
 export async function creatorDraftApi({request,env,actor,db,readBody,fail,workspaceReady=false}) {
@@ -14,7 +15,7 @@ export async function creatorDraftApi({request,env,actor,db,readBody,fail,worksp
     if (request.headers.get('origin')!==url.origin) fail(403,'ORIGIN_REQUIRED');
     action='save';data=await readBody(request);key=request.headers.get('Idempotency-Key');
     if (!uuid.test(key || '')) fail(400,'IDEMPOTENCY_KEY_REQUIRED');
-    if (Object.keys(data).some(k=>!['expectedRevision','title','content','authorComment'].includes(k)) ||
+    if (Object.keys(data).some(k=>!['expectedRevision','title','content','authorComment',...(webtoonEnabled(env)?['webtoon']:[])].includes(k)) ||
       !number(data.expectedRevision) || ['title','content','authorComment'].some(k=>typeof data[k]!=='string') ||
       data.title.length>200 || data.content.length>200000 || data.authorComment.length>5000) fail(400,'INVALID_FIELD');
   } else if (request.method!=='GET') fail(405,'METHOD_NOT_ALLOWED');

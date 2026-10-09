@@ -32,6 +32,15 @@ test('account change awaits draft checkpoint; failed checkpoint preserves the au
   await assert.rejects(s.api.login('other@example.test','password'),/quota/);assert.equal(s.api.getActor().userId,'uuid');
   s.context.CreatorDraftEditor.beforeAccountChange=async()=>{};await s.api.logout();assert.equal(s.api.getActor(),null);assert.ok(cleared>0);
 });
+
+test('authenticated image bytes use the same refresh and account generation guard as JSON',async()=>{
+ const s=setup();await s.api.login('writer@example.test','password');
+ s.respond(new Response(new Uint8Array([1,2,3]),{headers:{'Content-Type':'image/png'}}));
+ const image=await s.api.api('/api/v2/creator/webtoon/panel/test?workId=10',{responseType:'blob'});assert.deepEqual(new Uint8Array(await image.arrayBuffer()),new Uint8Array([1,2,3]));
+ let release;const pending=new Promise(r=>release=r);s.respond({ok:true,blob:()=>pending});
+ const late=s.api.api('/api/v2/creator/webtoon/panel/test?workId=10',{responseType:'blob'});for(let i=0;i<8;i++)await Promise.resolve();
+ await s.api.logout();release(new Blob(['private']));await assert.rejects(late,e=>e.code==='INVALID_SESSION');
+});
 test('cached role is never authority; real login preserves password and stores no fake tokens',async()=>{
   const s=setup();assert.equal(s.api.getActor(),null);
   await s.api.login(' WRITER@example.test ',' password with spaces ');

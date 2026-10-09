@@ -1,3 +1,4 @@
+import {webtoonEnabled} from './webtoon-api.mjs';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decimal = v => typeof v === 'string' && /^[1-9]\d{0,18}$/.test(v) && BigInt(v) <= 9223372036854775807n;
 
@@ -55,7 +56,7 @@ export async function creatorPublicationApi({ request, env, actor, db, readBody,
       } else if (Object.keys(data).some(k => k !== 'generation')) fail(400, 'FIELD_NOT_ALLOWED');
     }
   }
-  const result = await db('rpc/creator_publications', {}, { method: 'POST', body: {
+  const result = await db(webtoonEnabled(env)?'rpc/creator_publications_v18':'rpc/creator_publications', {}, { method: 'POST', body: {
     p_user_id: who.userId, p_action: op, p_work_id: workId,
     p_draft_id: draftId, p_episode_id: episodeId, p_data: data, p_key: key
   }});

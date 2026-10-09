@@ -6,6 +6,7 @@ const file={id:key,bucket:'authoring-originals',key:uid+'/'+key+'/original'};
 function setup({denied=false,failedUpload=false,committed=false}={}){
  const calls=[],objects=new Map();
  const db=async(t,q,{body})=>{calls.push({rpc:body.p_action,body});if(denied)return {error:'WORK_NOT_FOUND',status:404};
+  if(t==='rpc/creator_works')return {work:{id:'10',content_type:'NOVEL'}};
   if(body.p_action==='prepare')return {state:committed?'COMMITTED':'PREPARED',original:file,derivative:{...file,bucket:'authoring-covers',key:file.key+'/cover'},result:{draft:{id:draft}}};
   if(body.p_action==='commit')return {result:{draft:{id:draft}}};
   if(['read','public-cover'].includes(body.p_action))return {bucket:file.bucket,key:file.key};return {files:[]};};
@@ -17,7 +18,7 @@ function setup({denied=false,failedUpload=false,committed=false}={}){
  return {calls,run,objects};
 }
 test('import validates owner before upload and commits only after durable storage acknowledgement',async()=>{
- const s=setup();assert.equal((await s.run()).draft.id,draft);assert.deepEqual(s.calls.map(c=>c.rpc||'storage'),['authorize','prepare','storage','commit']);assert.equal(s.calls[1].body.p_user_id,uid);
+ const s=setup();assert.equal((await s.run()).draft.id,draft);assert.deepEqual(s.calls.map(c=>c.rpc||'storage'),['authorize','get','prepare','storage','commit']);assert.equal(s.calls[1].body.p_user_id,uid);
  const failure=setup({failedUpload:true});await assert.rejects(failure.run(),e=>e.code==='STORAGE_UPLOAD_FAILED');assert.ok(!failure.calls.some(c=>c.rpc==='commit'));
 });
 test('unknown upload response retry checks identical immutable bytes; committed request skips storage',async()=>{

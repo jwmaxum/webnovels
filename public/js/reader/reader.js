@@ -1330,6 +1330,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
 
   // 3. 온디맨드 보안 회차 본문 로드 (episode_contents / episode_panels)
   let loadedText = null;
+  let loadedWebtoon=null;
   let loadedPanels = [];
   let versionId=null;
 
@@ -1345,6 +1346,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       if(!valid())return;
       loadedText = response.episode?.content;
       loadedPanels = response.episode?.image_urls || [];
+      loadedWebtoon=response.episode?.webtoon||null;
       ep.authorComment = response.episode?.author_comment ?? ep.authorComment;
       versionId=response.versionId||response.episode?.versionId||null;
     } catch (error) {
@@ -1364,7 +1366,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   }
 
   if(!valid())return;
-  if (!loadedText && !loadedPanels.length) {
+  if (!loadedText && !loadedPanels.length && !loadedWebtoon?.panels?.length) {
     showToast('본문을 불러오지 못했습니다. 접근 권한 또는 연결 상태를 확인해 주세요.');
     return;
   }
@@ -1395,7 +1397,11 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   const textBodyEl = document.getElementById('readerBody');
   const webtoonViewerEl = document.getElementById('readerWebtoonViewer');
 
-  if (work.contentType === 'WEBTOON' || (loadedPanels && loadedPanels.length > 0)) {
+  if(loadedWebtoon?.panels?.length){
+    textBodyEl.style.display='none';webtoonViewerEl.style.display='block';
+    window.ReaderWebtoon.render(webtoonViewerEl,loadedWebtoon.panels,{load:window.ReaderWebtoon.publicLoad,valid});
+    if(authorCommentEl)authorCommentEl.textContent=(Object.entries(loadedWebtoon.credits||{}).map(([k,v])=>({writer:'글',artist:'그림',original:'원작'}[k])+': '+v).join(' · '))+'\n'+(ep.authorComment||'');
+  } else if (work.contentType === 'WEBTOON' || (loadedPanels && loadedPanels.length > 0)) {
     if (textBodyEl) textBodyEl.style.display = 'none';
     if (webtoonViewerEl) {
       webtoonViewerEl.style.display = 'block';
@@ -1452,7 +1458,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   window.ReaderPreferencesManager?.apply();
   window.scrollTo({top:0,behavior:'instant'});
   heading.focus?.({preventScroll:true});
-  const restored=window.ReaderPosition?.restore(textBodyEl,savedPosition,versionId);
+  const restored=window.ReaderPosition?.restore(loadedWebtoon?webtoonViewerEl:textBodyEl,savedPosition,versionId);
   const progressStatus=document.getElementById('readerProgressStatus');
   if(progressStatus){
     progressStatus.setAttribute('role','status');progressStatus.setAttribute('aria-live','polite');

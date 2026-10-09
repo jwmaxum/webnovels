@@ -76,6 +76,7 @@
     root().innerHTML=`<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><h3>새 작품 시작하기</h3>
       <p>제목만 입력하면 비공개 작품이 만들어집니다. 소개와 장르, 이용등급은 이후에 설정할 수 있습니다.</p>
       <form id="cwCreateForm"><label for="cwTitle">작품명</label><input id="cwTitle" class="form-control" maxlength="200" required value="${e(saved?.title||'')}" ${saved?'readonly':''}>
+        <label for="cwType">작품 유형</label><select id="cwType" class="form-control" ${saved?'disabled':''}><option value="NOVEL">웹소설</option>${window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true||saved?.contentType==='WEBTOON'?'<option value="WEBTOON" '+(saved?.contentType==='WEBTOON'?'selected':'')+'>웹툰</option>':''}</select><p>생성한 작품의 유형은 변경할 수 없습니다.</p>
         <p id="cwMessage" role="status">${saved?'이전 요청의 등록 결과를 확인하지 못했습니다. 같은 요청을 다시 확인합니다.':''}</p>
         <button type="submit" class="btn btn-primary">${saved?'등록 결과 확인 / 재시도':'비공개 작품 만들기'}</button></form>`;
     root().querySelector('#cwBack').onclick=()=>navigate('/creator/works');
@@ -84,8 +85,8 @@
   async function create(title) {
     const storageKey=pendingKey();
     let saved=pending();
-    if(!saved){saved={key:crypto.randomUUID(),title:title.trim()};sessionStorage.setItem(pendingKey(),JSON.stringify(saved));}
-    const result=await api('',{method:'POST',headers:{'Idempotency-Key':saved.key},body:JSON.stringify({title:saved.title})});
+    if(!saved){saved={key:crypto.randomUUID(),title:title.trim(),...(document.getElementById('cwType')?.value==='WEBTOON'?{contentType:'WEBTOON'}:{})};sessionStorage.setItem(pendingKey(),JSON.stringify(saved));}
+    const result=await api('',{method:'POST',headers:{'Idempotency-Key':saved.key},body:JSON.stringify({title:saved.title,...(saved.contentType?{contentType:saved.contentType}:{})})});
     sessionStorage.removeItem(storageKey);return result;
   }
   async function submitCreate(event) {

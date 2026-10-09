@@ -1,3 +1,4 @@
+import {webtoonEnabled} from './webtoon-api.mjs';
 // Stage 8 service-only operations. The actor comes from the verified Auth session.
 import { discoveryEnabled, stage16Catalog, validReadingPosition } from './stage16-api.mjs';
 const DECIMAL = /^[1-9]\d{0,18}$/;
@@ -75,7 +76,7 @@ export async function stage8Api({request,env,actor,db,readBody,fail}) {
     if (action==='progress') {
       const allowed=discoveryEnabled(env)?['workId','episodeId','progress','position']:['workId','episodeId','progress'];
       if(Object.keys(data).some(key=>!allowed.includes(key)))fail(400,'INVALID_FIELD');
-      if('position' in data&&!validReadingPosition(data.position))fail(400,'INVALID_POSITION');
+      if('position' in data&&!(validReadingPosition(data.position)||(webtoonEnabled(env)&&validReadingPosition(data.position,true))))fail(400,'INVALID_POSITION');
     }
     if (action==='comment') {
       if (typeof data.content!=='string'||!data.content.trim()||data.content.length>2000||
@@ -117,7 +118,7 @@ export async function stage8Api({request,env,actor,db,readBody,fail}) {
     if (['favorite','subscribe'].includes(action) &&
       (typeof data.enabled!=='boolean'||Object.keys(data).some(k=>!['workId','enabled'].includes(k))))
       fail(400,'INVALID_FIELD');
-    const rpc=discoveryEnabled(env)&&['activity','progress'].includes(action)?'rpc/stage16_reader':'rpc/stage8_reader';
+    const rpc=discoveryEnabled(env)&&['activity','progress'].includes(action)?(webtoonEnabled(env)?'rpc/stage18_reader':'rpc/stage16_reader'):'rpc/stage8_reader';
     const result=await db(rpc,{},{
       method:'POST',body:{p_user:who.userId,p_action:action,p_data:data}
     });

@@ -2,7 +2,7 @@
 (function(root) {
   'use strict';
   const copy=x=>JSON.parse(JSON.stringify(x));
-  const snapshot=x=>({title:x.title||'',content:x.content||'',authorComment:x.authorComment||''});
+  const snapshot=x=>({title:x.title||'',content:x.content||'',authorComment:x.authorComment||'',...(x.webtoon?{webtoon:copy(x.webtoon)}:{})});
   class DraftEngine {
     constructor({store,api,uuid,onChange=()=>{}}) { Object.assign(this,{store,api,uuid,onChange});this.current=null;this.epoch=0;this.contexts=new Map(); }
     emit(c) { if(this.current===c)this.onChange(c); }

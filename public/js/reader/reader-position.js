@@ -7,7 +7,7 @@
   let generation = 0, current = null, comments = 0;
   function cleanup() { window._readerScrollCleanup?.(); window._readerScrollCleanup = null; }
   function reset() {
-    generation++; comments++; cleanup(); current = null;
+    generation++; comments++; cleanup();window.ReaderWebtoon?.reset(); current = null;
     window._currentReadingWorkId = null; window._currentReadingEpNum = null;
     window._currentContentVersionId = null; window._paragraphComment = null; window._filterParagraphIndex = null;
     for (const id of ['readerBody', 'readerWebtoonViewer', 'readerCommentsList', 'readerAuthorComment', 'readerProgressStatus'])
@@ -31,17 +31,19 @@
 
   function measure(body, versionId, webtoon = false) {
     if (!body?.getBoundingClientRect) return null;
-    if (webtoon && Array.from(body.querySelectorAll('img')).some(img => !img.complete || !img.naturalHeight)) return null;
+    const panels=webtoon?Array.from(body.querySelectorAll('.webtoon-panel')).filter(p=>p.dataset?.panelIndex!==undefined&&typeof p.getBoundingClientRect==='function'):[];
+    if (webtoon && !panels.length && Array.from(body.querySelectorAll('img')).some(img => !img.complete || !img.naturalHeight)) return null;
     const bounds = body.getBoundingClientRect();
     if (!(bounds.height > 0) || !(window.innerHeight > line)) return null;
     const progress = Math.round(clamp((window.innerHeight - bounds.top) / bounds.height) * 100);
     let position;
-    if (!webtoon && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(versionId || ''))) {
-      const paragraphs = Array.from(body.querySelectorAll('.reader-paragraph'));
+    if ((!webtoon||panels.length) && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(versionId || ''))) {
+      const paragraphs = webtoon?panels:Array.from(body.querySelectorAll('.reader-paragraph'));
       const paragraph = paragraphs.find(item => item.getBoundingClientRect().bottom > line) || paragraphs.at(-1);
       if (paragraph) {
-        const rect = paragraph.getBoundingClientRect(), index = Number(paragraph.dataset.paragraphIndex);
-        if (Number.isInteger(index) && index >= 0) position = {versionId, paragraphIndex: index,
+        if(webtoon&&paragraph.dataset.loaded==='false')return null;
+        const rect = paragraph.getBoundingClientRect(), index = Number(webtoon?paragraph.dataset.panelIndex:paragraph.dataset.paragraphIndex);
+        if (Number.isInteger(index) && index >= 0) position = {versionId, [webtoon?'panelIndex':'paragraphIndex']: index,
           offset: Math.round(clamp((line - rect.top) / Math.max(rect.height, 1)) * 10000) / 10000};
       }
     }
@@ -50,10 +52,11 @@
   function restore(body, position, versionId) {
     if (!position) return 'NONE';
     if (String(position.versionId) !== String(versionId)) return 'VERSION_CHANGED';
-    if (!Number.isInteger(position.paragraphIndex) || position.paragraphIndex < 0 ||
+    const webtoon=Object.hasOwn(position,'panelIndex'), index=webtoon?position.panelIndex:position.paragraphIndex;
+    if (!Number.isInteger(index) || index < 0 ||
         !Number.isFinite(position.offset) || position.offset < 0 || position.offset > 1) return 'UNAVAILABLE';
-    const paragraph = Array.from(body?.querySelectorAll('.reader-paragraph') || [])
-      .find(item => Number(item.dataset.paragraphIndex) === position.paragraphIndex);
+    const paragraph = Array.from(body?.querySelectorAll(webtoon?'.webtoon-panel':'.reader-paragraph') || [])
+      .find(item => Number(webtoon?item.dataset.panelIndex:item.dataset.paragraphIndex) === index);
     if (!paragraph) return 'UNAVAILABLE';
     const rect = paragraph.getBoundingClientRect();
     window.scrollTo({top: Math.max(0, window.scrollY + rect.top + rect.height * position.offset - line), behavior: 'instant'});

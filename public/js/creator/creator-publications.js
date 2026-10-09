@@ -5,6 +5,8 @@
   let work = null, context = null, epoch = 0, lastResult = null, busy = false;
   const pendingKey = (user,id) => 'creator-publication:' + user + ':' + id;
   const errorText = e => ({
+    WEBTOON_PROCESSING_PENDING:'선택한 이미지 처리를 마치거나 실패한 업로드를 취소한 뒤 미리보기를 열어주세요.',
+    LEGACY_WEBTOON_REVIEW_REQUIRED:'기존 웹툰은 원본·권리·순서를 검토한 뒤 이미지 원고로 등록해야 합니다. 기존 자료는 보존됩니다.',
     AUTHOR_PUBLISH_NOT_ACTIVATED:'게시 기능이 아직 활성화되지 않았습니다.',
     PUBLICATION_NOT_READY:'작품 소개·장르·이용등급·AI 사용 표기와 제한 상태를 확인해주세요.',
     DRAFT_REVISION_CONFLICT:'원고 버전이 변경됐습니다. 미리보기를 다시 열어주세요.',
@@ -163,9 +165,13 @@
     document.querySelector('input[name="publicationMode"][value="NOW"]').checked=true;
     $('publicationScheduleFields').hidden=true;$('publicationCommit').textContent='선택한 버전 게시';
     $('publicationPreviewTitle').textContent=context.snapshot.title||'무제';
-    window.ReaderContent.render($('publicationPreviewBody'),$('publicationPreviewComment'),context.snapshot);
+    if(context.snapshot.webtoon){
+      window.ReaderWebtoon?.destroy($('publicationPreviewBody'));
+      await window.CreatorWebtoon.renderPreview($('publicationPreviewBody'),context,()=>turn===epoch&&actor()?.userId===user);
+      assertOpen(turn,user);$('publicationPreviewComment').textContent=Object.entries(context.snapshot.webtoon.credits||{}).map(([k,v])=>({writer:'글',artist:'그림',original:'원작'}[k])+': '+v).join(' · ')+'\n'+context.snapshot.authorComment;
+    }else window.ReaderContent.render($('publicationPreviewBody'),$('publicationPreviewComment'),context.snapshot);
     $('publicationSummary').textContent=
-      `작품: ${work.title} · ${number}화 · 서버 원고 버전 ${context.revision} · 본문 ${context.snapshot.content.length}자 · 등급 ${work.rating} · AI ${work.ai_usage_type} · ${context.episodeId?'기존 접근 정책 유지: '+policy:'신규 무료'} · ${work.description||'소개 없음'}`+
+      `작품: ${work.title} · ${number}화 · 서버 원고 버전 ${context.revision} · ${context.snapshot.webtoon?'이미지 '+context.snapshot.webtoon.assetIds.length+'개':'본문 '+context.snapshot.content.length+'자'} · 등급 ${work.rating} · AI ${work.ai_usage_type} · ${context.episodeId?'기존 접근 정책 유지: '+policy:'신규 무료'} · ${work.description||'소개 없음'}`+
       (work.publication_missing?.length?' · 게시 전 미확인: '+work.publication_missing.join(', '):'');
     $('publicationNowLabel').textContent=context.episodeId?'즉시 재게시 (기존 접근 정책 유지)':'즉시 무료 게시';
     $('publicationScheduledLabel').textContent=context.episodeId?'예약 재게시 (기존 접근 정책 유지)':'예약 무료 게시';
@@ -212,7 +218,7 @@
       assertOpen(turn,user);message('게시 결과를 확인했습니다.'+(notices.length?' '+notices.join(' '):''));
     } finally {if(turn===epoch){busy=false;$('publicationCommit').disabled=false;$('publicationRetry').disabled=false;}}
   }
-  function reset(){epoch++;work=null;context=null;lastResult=null;busy=false;
+  function reset(){window.ReaderWebtoon?.destroy($('publicationPreviewBody'));epoch++;work=null;context=null;lastResult=null;busy=false;
     for(const id of ['publicationList','publicationPreviewBody','publicationPreviewComment','publicationSummary','publicationMessage','publicationChecklist','publicationRetrySummary'])$(id)?.replaceChildren();
     $('publicationDraftPanel').hidden=true;$('publicationResult').hidden=true;$('publicationRetryPanel').hidden=true;
     window.closeModal?.('modalCreatorPublication');

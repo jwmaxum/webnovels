@@ -50,6 +50,7 @@
       if (!Array.isArray(result.sections[key])) throw Error('CATALOG_UNAVAILABLE');
       sections[key] = result.sections[key].map(mapWork);
     }
+    if(Array.isArray(result.sections.webtoons))sections.webtoons=result.sections.webtoons.map(mapWork);
     if(Array.isArray(result.sections.spotlight))sections.spotlight=result.sections.spotlight.map(mapWork);
     return { ...result, sections };
   }

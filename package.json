@@ -12,7 +12,7 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "test": "npm run test:release",
-    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
+    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:stage18 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
     "test:launch": "node scripts/verify_launch_access.test.cjs && node scripts/verify_launch_runtime.test.mjs && node scripts/verify_maintenance_containment.test.mjs && node scripts/verify_launch_repairs.test.mjs && node scripts/verify_virtual_accounts.test.mjs && node scripts/verify_admin_console.test.mjs && node scripts/verify_author_workspace.test.mjs && node scripts/verify_author_dashboard.test.mjs",
     "backup:launch-data": "node scripts/backup_launch_data.cjs",
     "backup:launch-postgres": "node scripts/backup_launch_postgres.cjs",
@@ -40,7 +40,8 @@
     "test:publication": "node scripts/verify_reader_content.test.mjs && node scripts/verify_creator_publications_ui.test.mjs && node scripts/verify_creator_publication_api.test.mjs && node scripts/verify_publication_scheduler.test.mjs && node scripts/verify_creator_publications_db.test.mjs",
     "test:operations": "node scripts/verify_stage8_api.test.mjs && node scripts/verify_stage8_reader_ui.test.mjs && node scripts/verify_stage8_db.test.mjs",
     "test:admin-operations": "node scripts/verify_stage9_api.test.mjs && node scripts/verify_stage9_appeal_api.test.mjs && node scripts/verify_stage9_ui.test.mjs && node scripts/verify_stage9_db.test.mjs",
-    "test:stage17": "node --test scripts/verify_stage17_api.test.mjs scripts/verify_stage17_db.test.mjs scripts/verify_stage17_ui.test.mjs"
+    "test:stage17": "node --test scripts/verify_stage17_api.test.mjs scripts/verify_stage17_db.test.mjs scripts/verify_stage17_ui.test.mjs",
+    "test:stage18": "node --test --test-concurrency=1 scripts/verify_stage18_api.test.mjs scripts/verify_stage18_db.test.mjs scripts/verify_stage18_ui.test.mjs"
   },
   "keywords": [],
   "author": "",

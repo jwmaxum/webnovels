@@ -1,3 +1,4 @@
+import {webtoonApi,webtoonEnabled} from './webtoon-api.mjs';
 // Cloudflare-compatible Web API. No Express, SQLite, Node runtime, or client role trust.
 import { creatorWorkApi } from './creator-work-api.mjs';
 import { creatorDraftApi } from './creator-draft-api.mjs';
@@ -148,6 +149,10 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         return episode;
       }
       const path = url.pathname;
+      if(path.startsWith('/api/v2/creator/webtoon')||path.startsWith('/api/v2/webtoon/images/')){
+        const result=await webtoonApi({request,env,actor,db,fetchImpl,base,serviceHeaders,fail});
+        return result instanceof Response?result:reply(result);
+      }
       if (path === '/api/v2/catalog' || path === '/api/v2/reader/hub' ||
           path === '/api/v2/creator/operations') {
         return reply(await stage8Api({request,env,actor,db,readBody,fail}));
@@ -203,9 +208,9 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         const who = await actor(false); const episode = await getEpisode(match[1]); const work = await getWork(episode.work_id);
         const editor = owns(who, work);
         if (discoveryEnabled(env)) {
-          return reply(publicContent(await db('rpc/stage16_episode_content',{}, {
+          return reply(publicContent(await db(webtoonEnabled(env)?'rpc/stage18_episode_content':'rpc/stage16_episode_content',{}, {
             method:'POST',body:{p_episode_id:String(episode.id)}
-          }),fail));
+          }),fail,env));
         }
         if (!editor) {
           if (!isPublished(work, episode, now())) fail(404, 'EPISODE_NOT_FOUND');

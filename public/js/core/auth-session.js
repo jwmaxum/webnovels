@@ -98,7 +98,7 @@
       if (epoch !== generation) throw error('INVALID_SESSION',401);
       response = await send();
     }
-    const body = await response.json();
+    const body = response.ok && options.responseType==='blob' ? await response.blob() : await response.json();
     if (epoch !== generation) throw error('INVALID_SESSION',401);
     if (!response.ok) {
       if (response.status===401 || (response.status===403 &&

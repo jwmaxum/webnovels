@@ -15,11 +15,11 @@
   function workItems(work,config=window.WEBNOVELS_CONFIG||{}) {
     const missing=work.publication_missing;
     config={...config};if(window.WebNovelsAuth?.getActor()?.authorWorkspaceReady===true){config.authorFilesEnabled=false;config.authorPublishEnabled=false;}
-    const blocked=!!work.trashed_at||work.moderation_state!=='CLEAR'||work.rating==='AGE_19'||work.content_type==='WEBTOON';
+    const blocked=!!work.trashed_at||work.moderation_state!=='CLEAR'||work.rating==='AGE_19'||(work.content_type==='WEBTOON'&&config.webtoonServiceEnabled!==true);
     return [
       item('작품 정보',Array.isArray(missing)&&!missing.length?'done':'pending',
         Array.isArray(missing)?missing.length?'확인 필요: '+missing.join(', '):'소개·장르·등급·AI 표기 입력 완료':'서버에서 작품 정보를 다시 확인해주세요.','settings'),
-      item('게시 범위',blocked?'blocked':'done',work.trashed_at?'휴지통에서 복구해주세요.':work.moderation_state!=='CLEAR'?'운영 제한 상태를 확인해주세요.':work.rating==='AGE_19'?'성인 게시·열람은 별도 준비 중입니다.':work.content_type==='WEBTOON'?'웹툰 제작은 18단계에서 제공합니다.':'현재 신규 게시 범위는 웹소설입니다. 작품 유형·권한은 서버가 최종 확인합니다.'),
+      item('게시 범위',blocked?'blocked':'done',work.trashed_at?'휴지통에서 복구해주세요.':work.moderation_state!=='CLEAR'?'운영 제한 상태를 확인해주세요.':work.rating==='AGE_19'?'성인 게시·열람은 별도 준비 중입니다.':work.content_type==='WEBTOON'?(config.webtoonServiceEnabled===true?'처리 완료된 이미지로 무료 회차를 게시할 수 있습니다.':'웹툰 제작 기능이 아직 활성화되지 않았습니다.'):'현재 신규 게시 범위는 웹소설입니다. 작품 유형·권한은 서버가 최종 확인합니다.'),
       item('첫 원고', 'pending','작성 중 원고와 기기·서버 사본을 선택해 이어서 쓸 수 있습니다.','draft'),
       item('표지·파일', 'optional',config.authorFilesEnabled===true?'TXT/DOCX 가져오기·표지·내보내기. 표지는 선택 사항입니다.':'파일 기능은 준비 중입니다. 본문 직접 입력과 제목 기본 표지를 사용할 수 있습니다.',config.authorFilesEnabled===true?'files':null),
       item('연재 방식', 'optional','작품 설정에서 제공되는 비독점·외부 링크 설정을 확인하세요. 권리 진술은 유통 계약이 아닙니다.','settings'),
@@ -27,7 +27,7 @@
     ];
   }
   function draftItems(c) {
-    return [item('원고 제목·본문',c.snapshot.title.trim()&&c.snapshot.content.trim()?'done':'pending','제목과 본문을 입력해주세요.'),
+    return [item('원고 제목·본문',c.snapshot.title.trim()&&(c.snapshot.webtoon?c.snapshot.webtoon.assetIds.length>0:c.snapshot.content.trim())?'done':'pending',c.snapshot.webtoon?'제목과 처리 완료된 이미지를 등록해주세요.':'제목과 본문을 입력해주세요.'),
       item('저장 버전',c.conflict?'blocked':c.serverSeq===c.seq&&!c.pending&&c.revision!=='0'?'done':'pending',
         c.conflict?'충돌한 양쪽 사본을 비교하고 해결해주세요.':c.lifecycle!=='ACTIVE'?'보관 원고입니다. 다음 원고는 새로 시작해주세요.':c.serverSeq===c.seq&&!c.pending?'서버 버전 '+c.revision:'기기 사본을 보존하며 서버 동기화를 기다립니다.')];
   }

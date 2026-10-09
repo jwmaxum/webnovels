@@ -1,6 +1,6 @@
 (function(root){
  'use strict';
- function dimensions(bytes){
+ function dimensions(bytes,{maxEdge=8192}={}){
   const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);let width,height,type;
   if(bytes.length>=24&&[137,80,78,71,13,10,26,10].every((n,i)=>bytes[i]===n)){
     if(view.getUint32(12)!==0x49484452)throw Error('IMAGE_INVALID');width=view.getUint32(16);height=view.getUint32(20);type='image/png';
@@ -11,7 +11,7 @@
       if([192,193,194].includes(marker)){if(size<7)throw Error('IMAGE_INVALID');height=view.getUint16(offset+3);width=view.getUint16(offset+5);break;}offset+=size;
     }
   }
-  if(!width||!height)throw Error('IMAGE_INVALID');if(width>8192||height>8192||width*height>12000000)throw Error('IMAGE_PIXEL_LIMIT');return {width,height,type};
+  if(!width||!height)throw Error('IMAGE_INVALID');if(width>maxEdge||height>maxEdge||width*height>12000000)throw Error('IMAGE_PIXEL_LIMIT');return {width,height,type};
  }
  root.CreatorFileImage={dimensions};
 })(globalThis);

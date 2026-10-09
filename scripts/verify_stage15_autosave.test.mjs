@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 const paths=['draft-engine.js','creator-readiness.js','creator-editor.js'].map(p=>fileURLToPath(new URL('../public/js/creator/'+p,import.meta.url)));
 const sources=await Promise.all(paths.map(p=>readFile(p,'utf8')));
 const settle=async()=>{for(let i=0;i<60;i++)await Promise.resolve();};
-function setup({put=async()=>{},getRemote=async x=>x}={}){
+function setup({put=async()=>{},getRemote=async x=>x,workType='NOVEL'}={}){
   let now=0,uuid=0,timerId=0,user={userId:'user-a',author:{id:'101',status:'APPROVED'}},active=0,maxActive=0,engine;
   const jobs=new Map(),elements=new Map(),listeners={},heads=new Map(),backups=[],writes=[],remotes=new Map(),receipts=new Map(),messages=[];
   const element=()=>({value:'',textContent:'',innerHTML:'',style:{},events:{},children:[],classList:{remove(){},toggle(){}},
@@ -16,8 +16,9 @@ function setup({put=async()=>{},getRemote=async x=>x}={}){
     setTimeout:(fn,ms)=>{jobs.set(++timerId,{fn,at:now+ms});return timerId;},clearTimeout:id=>jobs.delete(id),
     location:{search:''},history:{replaceState(){}},document:{readyState:'complete',hidden:false,getElementById:el,createElement:element,addEventListener:(k,v)=>listeners[k]=v},
     addEventListener:(k,v)=>listeners[k]=v,showToast:m=>messages.push(m),confirm:()=>true,closeModal(){},switchCreatorTab(){},
+    WEBNOVELS_CONFIG:{webtoonServiceEnabled:true},CreatorWebtoon:{mount(){},reset(){},empty:()=>({schemaVersion:1,assetIds:[],thumbnailAssetId:null,credits:{writer:'',artist:'',original:''}})},
     WebNovelsAuth:{getActor:()=>user,api:async(path,options)=>{
-      if(path.startsWith('/api/v2/creator/works'))return {works:['10','20'].map(id=>({id,title:'work',moderation_state:'CLEAR'})),nextCursor:null};
+      if(path.startsWith('/api/v2/creator/works'))return {works:['10','20'].map(id=>({id,title:'work',moderation_state:'CLEAR',content_type:workType})),nextCursor:null};
       if(path.match(/\/drafts\?/))return {drafts:[]};
       const id=path.match(/\/drafts\/([^?]+)/)?.[1];
       if(options?.method==='PUT'){
@@ -47,6 +48,15 @@ function setup({put=async()=>{},getRemote=async x=>x}={}){
     get engine(){return engine;},get maxActive(){return maxActive;},setUser:value=>user=value};
 }
 const gate=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
+
+test('webtoon editor title edits keep the manifest and preview compares JSON structurally',async()=>{
+ const s=setup({workType:'WEBTOON',getRemote:async row=>({...row,webtoon:row.webtoon?Object.fromEntries(Object.entries(row.webtoon).reverse()):undefined})});
+ await s.editor.openWork('10');assert.equal(s.engine.current.snapshot.content,'');assert.equal(s.engine.current.snapshot.webtoon.schemaVersion,1);
+ const c=s.editor.getFileContext();s.editor.editWebtoon({...c.snapshot.webtoon,assetIds:['asset-a'],thumbnailAssetId:'asset-a'},c);
+ s.el('newEpTitle').value='첫 웹툰';s.el('newEpTitle').events.input();await s.editor.save();
+ const prepared=await s.editor.preparePublication();assert.equal(prepared.snapshot.title,'첫 웹툰');assert.deepEqual(Array.from(prepared.snapshot.webtoon.assetIds),['asset-a']);
+ await assert.rejects(s.editor.replaceFromFile({title:'텍스트 가져오기',content:'body'},s.editor.getFileContext()),/WEBTOON_IMAGE_EDITOR_REQUIRED/);
+});
 
 test('continuous typing saves at 30s deadlines; idle debounce still saves and clean drafts never repeat PUT',async()=>{
   const s=setup();await s.editor.openWork('10');

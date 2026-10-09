@@ -39,6 +39,7 @@
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="/styles.css?v=119">
+<link rel="stylesheet" href="/css/webtoon.css?v=118">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="app" class="app-shell">
@@ -329,7 +330,7 @@
             <button type="submit" class="btn btn-primary">검색</button>
             <label for="discoverType">작품 종류</label>
             <select id="discoverType" onchange="ReaderDiscovery.filter('type', this.value)">
-              <option value="NOVEL">웹소설</option><option value="WEBTOON">웹툰 (준비 중)</option>
+              <option value="NOVEL">웹소설</option><option value="WEBTOON">웹툰</option>
             </select>
           </form>
           <p id="discoverQueryStatus" class="sr-only" role="status" aria-live="polite"></p>
@@ -2403,6 +2404,7 @@
   <script src="/js/reader/reader-content.js?v=107"></script>
   <script src="/js/reader/reader-catalog.js?v=117"></script>
   <script src="/js/reader/reader-discovery.js?v=117"></script>
+  <script src="/js/reader/reader-webtoon.js?v=118"></script>
   <script src="/js/reader/reader-position.js?v=116"></script>
   <script src="/js/reader/reader.js?v=116"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
@@ -2491,6 +2493,7 @@
   <script src="/js/creator/draft-store.js?v=106"></script>
   <script src="/js/creator/draft-diff.js?v=105"></script>
   <script src="/js/creator/creator-readiness.js?v=117"></script>
+  <script src="/js/creator/creator-webtoon.js?v=118"></script>
   <script src="/js/creator/creator-editor.js?v=117"></script>
   <script src="/js/creator/creator-publications.js?v=117"></script>
   <script src="/js/creator/creator-files.js?v=114"></script>

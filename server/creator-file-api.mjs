@@ -42,7 +42,14 @@ export async function creatorFileApi({request,env,actor,db,fetchImpl,base,servic
  function decode(value,max){if(typeof value!=='string'||value.length>Math.ceil(max/3)*4||!/^[A-Za-z0-9+/]*={0,2}$/.test(value))fail(400,'INVALID_FILE');let bytes;try{bytes=Uint8Array.from(atob(value),c=>c.charCodeAt(0));}catch{fail(400,'INVALID_FILE');}if(!bytes.length||bytes.length>max)fail(413,'FILE_TOO_LARGE');return bytes;}
  const original=decode(body.bytes,action==='import'?2097152:4194304);
  // Verify ownership before any external storage or image processing.
- await rpc('authorize');let derivative=null;
+ await rpc('authorize');
+ if(action==='import'){
+  const owned=await db('rpc/creator_works',{}, {method:'POST',body:{p_user_id:who.userId,p_action:'get',p_work_id:workId}});
+  if(owned?.error)fail([403,404].includes(owned.status)?owned.status:503,owned.error);
+  if(!owned?.work)fail(503,'DATABASE_UNAVAILABLE');
+  if(owned?.work?.content_type==='WEBTOON')fail(409,'WEBTOON_IMAGE_EDITOR_REQUIRED');
+ }
+ let derivative=null;
  const payload={kind:action==='import'?'IMPORT':'COVER',filename:body.filename,sha256:await sha(original),size:original.length};
  if(action==='import'){
   if(!UUID.test(body.draftId||'')||!UUID.test(body.batchId||'')||typeof body.title!=='string'||body.title.length>200||typeof body.content!=='string'||body.content.length>200000||!Number.isInteger(body.order)||body.order<0||body.order>99)fail(400,'INVALID_FIELD');
