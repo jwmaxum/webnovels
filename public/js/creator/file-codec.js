@@ -1,4 +1,4 @@
-/* Local-only manuscript conversion. fflate 0.8.2 (MIT), no remote resources. */
+/* Local-only manuscript conversion. fflate 0.8.3 (MIT), no remote resources. */
 (function(root){
   'use strict';
   const MAX_FILE=2*1024*1024,MAX_TEXT=200000,MAX_XML=4*1024*1024,MAX_EXPANDED=16*1024*1024;

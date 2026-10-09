@@ -17,3 +17,17 @@
 | 이용/개인정보/콘텐츠 권리/신고·탈퇴 정책 | 대기 | 현재 기능과 정책의 대조 및 필요한 법적 검토 결과 |
 
 각 항목의 시험 데이터는 실제 고객 원고를 사용하지 않는다. 미실행·실패는 성공으로 대체하지 않는다. 실제 서비스 기능 플래그는 모든 관련 게이트가 닫힐 때까지 비활성 상태를 유지한다.
+
+## 19단계 연결 — 2026-10-09
+
+[19단계 계약](stage19-quality-contract.md)과 [검증 근거](../../artifacts/stage19-quality-verification.json)를 기존 게이트에 연결한다. **NO GO 유지**. 실환경 증거를 수집하면 npm run check:beta로 후보 전체 SHA·HTTPS origin·NOVEL_FREE/NOVEL_WEBTOON_FREE 범위를 고정해 검사한다. 예시 양식은 PENDING이며 PASS 근거가 아니다. 도구의 READY_FOR_HUMAN_APPROVAL은 사람의 최종 승인 전 상태다.
+
+| 기존 게이트 | 19단계 로컬 근거 | 남은 실제 완료 증거 |
+|---|---|---|
+| 역할별 로딩·페이지 조회 / R05 | 16단계 페이지 API, 승인 역할별 순차 로더·경로/계정 경합 회귀 | 호스팅 네트워크·목록 크기·느린 로딩·실기기 성능 |
+| 보안·XSS / S04 | local vendor+SRI, 의존성 감사, 정적/API 기본 CSP·헤더 | SEC-01~05 전수 인수. script-src는 Report-Only이며 인라인 이벤트 전환/강제 정책 미완료 |
+| 키보드·모바일 / R05 | 모달 Tab·Escape·IME 중 닫기 방지·호출자 복귀 | OPS-03 실제 기기/스크린리더·한글 입력·긴 원고 측정 |
+| 복원·운영 / S02/R04 | archive/Storage 바이트·DB fingerprint 비교, 합성 PGlite dump/load | OPS-01 실제 전체 Supabase+Storage 격리 복원, 독립 보관·RPO/RTO·수신 훈련 |
+| 베타·출시 판정 / R01/R04 | 동일 후보/환경·증거 종류·SHA·표본·운영 담당 확인 | 실제 소설 작가 ≥5/독자 ≥30, 웹툰 포함 시 작가 ≥3와 TOON-01~05, 정책/지원/중단 기준·승인자 |
+
+2026-10-09 12:30~12:31 KST 읽기 점검: Auth 42개, 작가 연결 30개·독자 10개·관리자 1개, authoring-001/003/004/005/006만 확인. Storage bucket/object 0, 본문 충돌 78건, P0 marker 없음, provider backup 0이며 과거 수동 백업 재검증·실제 복원은 수행하지 않았다. 운영 health 503 SECURE_API_NOT_ACTIVATED, 게시·파일·독자·발견·작가/관리자 운영·workflow·역할변경·웹툰 공개 플래그 false. DB 쓰기·플래그 활성화·브라우저 인수 미실행.

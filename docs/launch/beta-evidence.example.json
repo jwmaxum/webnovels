@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "candidate": "0000000000000000000000000000000000000000",
+  "origin": "https://staging.example.test",
+  "scope": "NOVEL_WEBTOON_FREE",
+  "p0Open": 1,
+  "participants": {
+    "novelAuthors": 0,
+    "webtoonAuthors": 0,
+    "readers": 0
+  },
+  "operations": {
+    "ownerConfirmed": false,
+    "supportConfirmed": false,
+    "supportHoursConfirmed": false,
+    "stopCriteriaConfirmed": false
+  },
+  "evidence": [
+    {
+      "gate": "CI",
+      "status": "PENDING",
+      "kind": "REMOTE_CI",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/CI.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "DEPLOYMENT",
+      "status": "PENDING",
+      "kind": "HOSTED_API",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/DEPLOYMENT.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "DEPLOYMENT_BLOCK",
+      "status": "PENDING",
+      "kind": "OPERATIONS_DRILL",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/DEPLOYMENT_BLOCK.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "DB_SECURITY",
+      "status": "PENDING",
+      "kind": "HOSTED_API",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/DB_SECURITY.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "ROLES",
+      "status": "PENDING",
+      "kind": "HOSTED_API",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/ROLES.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "AUTH_MAIL",
+      "status": "PENDING",
+      "kind": "OPERATIONS_DRILL",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/AUTH_MAIL.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "AUTHOR_FLOW",
+      "status": "PENDING",
+      "kind": "DEVICE",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/AUTHOR_FLOW.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "NOVEL_READER",
+      "status": "PENDING",
+      "kind": "DEVICE",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/NOVEL_READER.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "RESTORE",
+      "status": "PENDING",
+      "kind": "HOSTED_RESTORE",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/RESTORE.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "DEVICE_INPUT",
+      "status": "PENDING",
+      "kind": "DEVICE",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/DEVICE_INPUT.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "XSS",
+      "status": "PENDING",
+      "kind": "HOSTED_API",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/XSS.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "MONITORING",
+      "status": "PENDING",
+      "kind": "OPERATIONS_DRILL",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/MONITORING.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "POLICY",
+      "status": "PENDING",
+      "kind": "POLICY_REVIEW",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/POLICY.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "BETA",
+      "status": "PENDING",
+      "kind": "HUMAN_BETA",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/BETA.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "WEBTOON_IMAGES",
+      "status": "PENDING",
+      "kind": "HOSTED_API",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/WEBTOON_IMAGES.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "WEBTOON_READER",
+      "status": "PENDING",
+      "kind": "DEVICE",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/WEBTOON_READER.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "gate": "WEBTOON_MODERATION",
+      "status": "PENDING",
+      "kind": "HOSTED_API",
+      "candidate": "0000000000000000000000000000000000000000",
+      "origin": "https://staging.example.test",
+      "observedAt": "2026-10-09T00:00:00Z",
+      "proof": {
+        "file": "scratch/launch/evidence/WEBTOON_MODERATION.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  ]
+}

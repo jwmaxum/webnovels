@@ -12,7 +12,7 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "test": "npm run test:release",
-    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:stage18 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
+    "test:release": "npm run test:data && npm run test:p0 && npm run test:auth && npm run test:naming && npm run test:authoring-schema && npm run test:creator-works && npm run test:stage14 && npm run test:stage15 && npm run test:stage16 && npm run test:stage17 && npm run test:stage18 && npm run test:stage19 && npm run test:drafts && npm run test:files && npm run test:publication && npm run test:operations && npm run test:admin-operations && npm run test:stage11 && npm run test:stage13 && npm run test:launch && npm run test:cloudflare-bundle",
     "test:launch": "node scripts/verify_launch_access.test.cjs && node scripts/verify_launch_runtime.test.mjs && node scripts/verify_maintenance_containment.test.mjs && node scripts/verify_launch_repairs.test.mjs && node scripts/verify_virtual_accounts.test.mjs && node scripts/verify_admin_console.test.mjs && node scripts/verify_author_workspace.test.mjs && node scripts/verify_author_dashboard.test.mjs",
     "backup:launch-data": "node scripts/backup_launch_data.cjs",
     "backup:launch-postgres": "node scripts/backup_launch_postgres.cjs",
@@ -41,24 +41,28 @@
     "test:operations": "node scripts/verify_stage8_api.test.mjs && node scripts/verify_stage8_reader_ui.test.mjs && node scripts/verify_stage8_db.test.mjs",
     "test:admin-operations": "node scripts/verify_stage9_api.test.mjs && node scripts/verify_stage9_appeal_api.test.mjs && node scripts/verify_stage9_ui.test.mjs && node scripts/verify_stage9_db.test.mjs",
     "test:stage17": "node --test scripts/verify_stage17_api.test.mjs scripts/verify_stage17_db.test.mjs scripts/verify_stage17_ui.test.mjs",
-    "test:stage18": "node --test --test-concurrency=1 scripts/verify_stage18_api.test.mjs scripts/verify_stage18_db.test.mjs scripts/verify_stage18_ui.test.mjs"
+    "test:stage18": "node --test --test-concurrency=1 scripts/verify_stage18_api.test.mjs scripts/verify_stage18_db.test.mjs scripts/verify_stage18_ui.test.mjs",
+    "test:stage19": "node --test --test-concurrency=1 scripts/verify_stage19_evidence.test.mjs scripts/verify_stage19_restore.test.mjs scripts/verify_stage19_ui.test.mjs scripts/verify_stage19_dependencies.test.cjs",
+    "audit:dependencies": "node scripts/audit_dependency_versions.cjs",
+    "check:beta": "node scripts/check_beta_readiness.mjs",
+    "verify:recovery": "node scripts/verify_recovery_bundle.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "fflate": "0.8.2",
+    "express": "4.22.3",
+    "fflate": "0.8.3",
     "jsonwebtoken": "^9.0.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
-    "@supabase/supabase-js": "^2.112.3",
+    "@supabase/supabase-js": "2.112.3",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -67,6 +71,7 @@
     "@xmldom/xmldom": "0.9.12",
     "esbuild": "0.28.2",
     "prisma": "^5.22.0",
+    "semver": "7.8.5",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }

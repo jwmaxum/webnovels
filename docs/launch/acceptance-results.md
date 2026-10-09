@@ -28,3 +28,9 @@
 - [ ] 계측·정책: 가입/게시 전환·이어쓰기 시간·파일 실패율의 내용 비포함 지표와 이용·개인정보·권리·신고·탈퇴 정책 대조 및 필요한 법적 검토.
 
 10단계 실환경 전환이 끝나지 않아 스테이징 인수의 전제가 없다. [릴리스 체크리스트](release-checklist.md)의 게이트가 모두 충족되기 전 출시 후보로 표시하지 않는다.
+
+## 19단계 갱신 — 2026-10-09
+
+[19단계 계약](stage19-quality-contract.md)·[검증 근거](../../artifacts/stage19-quality-verification.json). 역할 로더/키보드/headers/vendor, 증거의 잘못된 환경·종류·파일 변조 거절, 복구 패키지 누락/변조/경로·private bucket 검증, 합성 PGlite 전체 dump/load 및 실제 bcrypt native 검증을 추가했다. 전체 회귀·타입·빌드·Functions 번들 결과와 범위를 artifact에 기록한다. 저장공간·symlink 권한의 로컬 조건은 실제 기기 인수와 다르다.
+
+16단계 페이지 카탈로그와 19단계 역할별 로딩 코드로 위 성능 항목의 로컬 구현은 진행됐다. 기존 공용 Supabase/관리 adapter·인라인 이벤트는 남아 있으며 실기기 네트워크/장문/접근성 인수와 SEC-05 전수 검증은 여전히 대기다. 실제 읽기 감사(12:30~12:31 KST)는 health 503/플래그 false 및 authoring 006까지만 확인했으므로 AUTH/WORK/DRAFT/FILE/PUB/SCH/READ/MOD/SEC/ADMIN/OPS/TOON 서비스 시나리오 PASS로 사용하지 않는다. 실제 DB 적용·hosted 복원·브라우저·인간 베타는 미실행이다.

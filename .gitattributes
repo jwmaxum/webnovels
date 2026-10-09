@@ -1,0 +1,2 @@
+# Vendor SRI hashes describe exact upstream bytes on Windows and Linux.
+public/vendor/**/*.js -text -whitespace

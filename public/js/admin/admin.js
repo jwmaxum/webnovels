@@ -16,19 +16,12 @@
 // ============================================================
 // [Admin Auth] 관리자 로그인 로직 처리 (Supabase 및 세션 동기화)
 // ============================================================
-window.handleAdminLoginProcess = async function() {
-  try {
-    const actor = await window.WebNovelsAuth.login(document.getElementById('adminLoginId').value, document.getElementById('adminLoginPw').value);
-    if (!actor.admin) { await window.WebNovelsAuth.logout(); showToast('관리자 권한이 없습니다.'); return; }
-    closeAllModals();
-    switchWebNovelsView('view-admin-cms');
-  } catch(error) { showToast(window.WebNovelsAuth.message(error)); }
-};
+// Login is shared: public/js/core/auth-ui.js.
 
 // ============================================================
 // [Admin Auth] 관리자 로그아웃
 // ============================================================
-window.handleAdminLogoutProcess = async function() { return window.handleMemberLogout(); };
+// Logout is shared: public/js/core/auth-ui.js.
 
 // ---- 관리자 대시보드 KPI 로더는 하단(Line 2100대) 마스터 구현체(window.loadDashboardKPIs)로 일원화됨 ----
 
@@ -712,7 +705,7 @@ window.openWorkSeriesDashboard = async function(workId) {
             <i data-lucide="file-text"></i> 회차 관리 바로가기
           </button>
           <button class="btn btn-outline btn-sm" onclick="showToast('작품 메타데이터 수정 화면으로 이동합니다.')">
-            <i data-lucide="edit-3"></i> 기본 정보 수정
+            <i data-lucide="pencil-line"></i> 기본 정보 수정
           </button>
         </div>
       </div>
@@ -1606,8 +1599,6 @@ window.loadAdminAuditLogs = async function() {
 // [Global Window Namespace Exports for Admin]
 // ============================================================
 if (typeof window !== 'undefined') {
-  window.handleAdminLoginProcess = handleAdminLoginProcess;
-  window.handleAdminLogoutProcess = handleAdminLogoutProcess;
   window.switchAdminSubTab = switchAdminSubTab;
   window.loadDashboardKPIs = loadDashboardKPIs;
   window.toggleWorkCalendarView = toggleWorkCalendarView;

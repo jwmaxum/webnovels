@@ -83,5 +83,7 @@ test('existing admin URLs route to workflow and keep settlement/role console; me
  for(const tab of ['subadmins','settlements','episodes'])await t.context.AdminOperations.navigate(tab,false);
  assert.deepEqual(consoleCalls,['roles','settlements','episodes']);assert.match(text(nodes.adminOperationsNav),/사건 처리/);assert.match(text(nodes.adminOperationsNav),/가상 계정 시험 도구/);
  t.context.AdminOperations.reset();assert.equal(nodes.adminOperationsContent.children.length,0);
- const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');assert.ok(html.indexOf('/js/admin/admin-workflow.js')<html.indexOf('/js/admin/admin-operations.js'));
+ const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
+ const loader=readFileSync(new URL('../public/js/core/role-modules.js',import.meta.url),'utf8');
+ const workflow=loader.indexOf('/js/admin/admin-workflow.js');assert.ok(workflow>=0 && workflow<loader.indexOf('/js/admin/admin-operations.js'));
 });

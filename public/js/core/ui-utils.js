@@ -9,28 +9,70 @@
 // - 관심작품/구독작가 버튼 상태 UI 렌더러
 // ============================================================
 
+// Keyboard focus stays in the top dialog and returns to its invoking control.
+const modalFocusStack = [];
+const modalFocusables = modal => [...(modal.querySelectorAll?.('button, [href], input, select, textarea, [tabindex]') || [])]
+  .filter(node => !node.disabled && !node.hidden && node.tabIndex !== -1 &&
+    (!node.getClientRects || node.getClientRects().length));
+function focusModal(modal) {
+  const target = modalFocusables(modal)[0] || modal;
+  target.focus?.();
+}
+
 // 모달 열기
 function openModal(id) {
   const creatorFlags = { modalCreatorFiles: 'authorFilesEnabled', modalCreatorPublication: 'authorPublishEnabled' };
   if (creatorFlags[id] && (window.WebNovelsAuth?.getActor()?.author?.status !== 'APPROVED' ||
       window.WEBNOVELS_CONFIG?.[creatorFlags[id]] !== true || !/^\/(creator|author)(\/|$)/.test(window.location.pathname))) return;
   const m = document.getElementById(id);
-  if (m) { m.hidden = false; m.classList.add('active'); }
+  if (m) {
+    if (!modalFocusStack.some(entry => entry.modal === m)) modalFocusStack.push({ modal: m, previous: document.activeElement });
+    m.hidden = false; m.classList.add('active');
+    m.tabIndex = -1;
+    if (!m.getAttribute?.('role') && !m.querySelector?.('[role="dialog"]')) m.setAttribute?.('role', 'dialog');
+    m.setAttribute?.('aria-modal', 'true');
+    focusModal(m);
+  }
 }
 window.openModal = openModal;
 
 // 특정 모달 닫기
 function closeModal(id) {
   const m = document.getElementById(id);
-  if (m) { m.classList.remove('active'); m.hidden = true; }
+  if (m) {
+    m.classList.remove('active'); m.hidden = true;
+    const index = modalFocusStack.findIndex(entry => entry.modal === m);
+    if (index >= 0) {
+      const wasTop = index === modalFocusStack.length - 1;
+      const [{ previous }] = modalFocusStack.splice(index, 1);
+      if (wasTop) {
+        if (previous?.isConnected !== false && previous?.focus && (!previous.getClientRects || previous.getClientRects().length)) previous.focus();
+        else if (modalFocusStack.length) focusModal(modalFocusStack.at(-1).modal);
+      }
+    }
+  }
 }
 window.closeModal = closeModal;
 
 // 모든 모달 닫기
 function closeAllModals() {
+  for (const entry of [...modalFocusStack].reverse()) closeModal(entry.modal.id);
   document.querySelectorAll('.modal-backdrop').forEach(m => { m.classList.remove('active'); m.hidden = true; });
 }
 window.closeAllModals = closeAllModals;
+
+document.addEventListener?.('keydown', event => {
+  const modal = modalFocusStack.at(-1)?.modal;
+  if (!modal || event.isComposing) return;
+  if (event.key === 'Escape') { event.preventDefault(); closeModal(modal.id); return; }
+  if (event.key !== 'Tab') return;
+  const controls = modalFocusables(modal);
+  const first = controls[0] || modal, last = controls.at(-1) || modal;
+  if (!controls.length || !modal.contains?.(document.activeElement) ||
+      (!event.shiftKey && document.activeElement === last) || (event.shiftKey && document.activeElement === first)) {
+    event.preventDefault(); (event.shiftKey ? last : first).focus?.();
+  }
+});
 
 // 토스트 메시지 표시 (3초 후 자동 소멸)
 function showToast(msg) {

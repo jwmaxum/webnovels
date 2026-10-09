@@ -12,6 +12,7 @@
  * 1. SPA 메인 뷰 전환기 (switchWebNovelsView)
  */
 function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
+  window.WebNovelsModules?.cancel();
   window.CreatorDraftEditor?.checkpoint();
   window.CreatorFiles?.reset();
   window.CreatorDashboard?.reset();
@@ -38,6 +39,10 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
       return;
     }
   }
+
+  const moduleGroup = viewId === 'view-creator' ? 'creator' : viewId === 'view-admin-cms' ? 'admin' : null;
+  if (moduleGroup && window.WebNovelsModules && !window.WebNovelsModules.ready(moduleGroup))
+    return window.WebNovelsModules.enter(moduleGroup, () => switchWebNovelsView(viewId, activeLink, shouldPushState));
 
   // 이전 메인 뷰 기억 (상세 화면이나 뷰어에서 뒤로가기용)
   if (currentActiveView !== 'view-work-detail' && currentActiveView !== 'view-reader') {
@@ -135,6 +140,11 @@ function resolveRoute(pathname, isInitial = false) {
   const legacyPath = /^#(?:home|discover|library|author|creator|admin)$/.test(hash) ? '/' + hash.slice(1) : rawPath;
   const path = legacyPath.replace(/\/$/, '') || '/';
   const parts = path.split('/').filter(Boolean);
+
+  window.WebNovelsModules?.cancel();
+  const moduleGroup = ['author','creator'].includes(parts[0]) ? 'creator' : parts[0] === 'admin' ? 'admin' : null;
+  if (moduleGroup && window.WebNovelsModules?.allowed(moduleGroup) && !window.WebNovelsModules.ready(moduleGroup))
+    return window.WebNovelsModules.enter(moduleGroup, () => resolveRoute(pathname, isInitial));
 
   console.log(`🧭 [SPA Semantic Router] Resolving route: "${path}" (initial: ${isInitial})`);
 

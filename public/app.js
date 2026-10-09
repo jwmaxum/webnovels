@@ -435,7 +435,7 @@ async function initWebNovelsApp() {
     }
 
     try {
-      if (!window.AdminOperations?.active()) {
+      if (window.WebNovelsAuth.getActor()?.admin && currentActiveView === 'view-admin-cms' && !window.AdminOperations?.active()) {
       const remoteReaders = window.WebNovelsAdmin.getCurrentAdmin() ? await window.WebNovelsAdmin.fetchReadersFromSupabase() : [];
       if (Array.isArray(remoteReaders)) {
         SAMPLE_READERS.length = 0;
@@ -533,11 +533,9 @@ async function initWebNovelsApp() {
  * 4. Safe Multi-Stage Bootstrap Runner
  */
 function runBootstrap() {
-  try {
-    initWebNovelsApp();
-  } catch (err) {
-    console.error('[WebNovels Bootstrap Error]', err);
-  }
+  initWebNovelsApp().catch(() => {
+    window.showToast?.('서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+  });
 }
 
 // 5. 웹소켓 기반 다중 브라우저 실시간 UI 자동 동기화

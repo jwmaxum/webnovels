@@ -35,13 +35,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&family=Outfit:wght@600;700;800;900&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="/styles.css?v=119">
+  <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
+  <link rel="stylesheet" href="/styles.css?v=120">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 </head>
 <body class="theme-default" data-user-role="GUEST">
+  <div id="moduleLoadStatus" role="status" aria-live="polite" hidden></div>
   <div id="app" class="app-shell">
     <!-- PC 전용 좌측 고정 사이드바 (UI_pc.md 레이아웃 표준: 240px 너비) -->
     <aside class="cdg-desktop-sidebar" id="desktopSidebar">
@@ -79,7 +80,7 @@
             <span>최신</span>
           </button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-completed" onclick="scrollToSection('completedWorksSection')">
-            <i data-lucide="check-circle-2" class="sidebar-nav-icon"></i>
+            <i data-lucide="circle-check-big" class="sidebar-nav-icon"></i>
             <span>완결</span>
           </button>
         </div>
@@ -2026,7 +2027,7 @@
     <div class="modal-backdrop" id="modalWriteEpisode">
       <div class="modal-dialog glass-panel dialog-lg" style="max-width: 650px;">
         <div class="modal-header">
-          <h3><i data-lucide="edit-3"></i> <span id="modalWriteEpisodeWorkTitle">새 회차 작성</span></h3>
+          <h3><i data-lucide="pencil-line"></i> <span id="modalWriteEpisodeWorkTitle">새 회차 작성</span></h3>
           <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body">
@@ -2398,8 +2399,9 @@
 
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=102"></script>
-  <script src="/js/core/ui-utils.js?v=114"></script>
-  <script src="/js/core/router.js?v=116"></script>
+  <script src="/js/core/ui-utils.js?v=120"></script>
+  <script src="/js/core/role-modules.js?v=120"></script>
+  <script src="/js/core/router.js?v=120"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader-content.js?v=107"></script>
   <script src="/js/reader/reader-catalog.js?v=117"></script>
@@ -2485,37 +2487,15 @@
       </div>
     </div>
   </div>
-  <script src="/vendor/fflate/fflate-0.8.2.js"></script>
-  <script src="/js/creator/file-codec.js?v=106"></script>
-  <script src="/js/creator/file-image.js?v=106"></script>
-  <script src="/js/creator/file-import-queue.js?v=106"></script>
-  <script src="/js/creator/draft-engine.js?v=105"></script>
-  <script src="/js/creator/draft-store.js?v=106"></script>
-  <script src="/js/creator/draft-diff.js?v=105"></script>
-  <script src="/js/creator/creator-readiness.js?v=117"></script>
-  <script src="/js/creator/creator-webtoon.js?v=118"></script>
-  <script src="/js/creator/creator-editor.js?v=117"></script>
-  <script src="/js/creator/creator-publications.js?v=117"></script>
-  <script src="/js/creator/creator-files.js?v=114"></script>
-  <script src="/js/creator/creator-dashboard.js?v=115"></script>
-  <script src="/js/creator/creator.js?v=115"></script>
-  <script src="/js/creator/creator-works.js?v=117"></script>
-  <script src="/js/creator/creator-distribution.js?v=115"></script>
-  <script src="/js/creator/creator-operations.js?v=108"></script>
-  <script src="/js/admin/admin.js?v=116"></script>
-  <script src="/js/admin/admin-console.js?v=113"></script>
-  <script src="/js/admin/admin-workflow.js?v=117"></script>
-  <script src="/js/admin/admin-operations.js?v=117"></script>
   <!-- Supabase Extension & Bootstrap Entry -->
   <script src="/supabase-public-config.js?v=1"></script>
   <script src="/api/public-config.js"></script>
   <script src="/supabase-admin.js?v=116"></script>
-  <script src="/js/core/auth-session.js?v=116"></script>
-  <script src="/js/admin/virtual-accounts.js?v=111"></script>
+  <script src="/js/core/auth-session.js?v=120"></script>
   <script src="/js/core/account-access.js?v=114"></script>
   <script src="/js/core/appeals.js?v=117"></script>
-  <script src="/js/core/auth-ui.js"></script>
+  <script src="/js/core/auth-ui.js?v=120"></script>
   <script src="/js/core/service-status.js?v=114"></script>
-  <script src="/app.js?v=116"></script>
+  <script src="/app.js?v=120"></script>
 </body>
 </html>

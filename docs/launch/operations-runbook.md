@@ -30,3 +30,15 @@
 ## 알림·지원 준비 상태
 
 저장 실패율, 가입 실패율, 파일 실패율, API 5xx, 예약 지연/실패의 운영 임계치·수신자·온콜·로그 보관은 **미설정**이다. 원고 내용 없이 요청 ID, 기능, 상태, 소요 시간, 시각만 계측해야 한다. 가입/게시 전환과 이어쓰기 시간 지표도 미구현이며, 실제 지표 파이프라인과 개인정보 검토 후 연결한다. 장애 공지 문안·문의 채널·응답 담당자와 모의 훈련 결과는 출시 전에 기록한다.
+
+## 19단계 복구 패키지·출시 증거 연결 — 2026-10-09
+
+[19단계 계약](stage19-quality-contract.md)과 [복구 manifest 예시](recovery-bundle.example.json)를 따른다. 기존 백업 스크립트/과거 archive는 보존한다. PostgreSQL 백업에 Storage 객체 바이트가 포함됐다고 가정하지 않는다.
+
+1. snapshot UUID/기준 시각·쓰기 제한·담당을 정하고 전체 DB archive와 Storage 원본/파생/미참조 객체를 독립 저장장소에 보관한다. 파일 해시와 원고/권리/계정/감사 기준선을 비공개로 남긴다.
+2. 격리 복원 후 schema·RPC·ACL/RLS·모든 테이블/계정 연결·bucket/객체 참조를 별도로 추출한다. 백업 state를 복원 결과로 복사하지 않는다. pg_restore --list와 실제 restore/RPC/Auth/Storage 권한·서명 URL 인수를 별도 수행한다.
+3. 두 디렉터리를 npm run verify:recovery -- <백업> <복원>으로 비교한다. 도구는 실제 파일 크기/해시·DB fingerprint·참조/전체 객체 목록을 검사하며 pg_restore나 hosted 인수는 실행하지 않는다. SYNTHETIC과 실제 HOSTED_BACKUP을 구분하고 항상 hostedRestoreAccepted:false를 유지한다.
+4. 소요 시간과 RPO/RTO, 독립 보관·복원 담당, 운영 알림의 실제 수신/지원 시간/공지·중단/복구를 기록한다. 오류면 기능 전환을 중단하고 원본·초안·확정 게시를 보존한다.
+5. 같은 후보/환경/출시 범위의 실제 증거를 check:beta에 제출하고 담당자가 검토한다. READY_FOR_HUMAN_APPROVAL만으로 GO나 플래그 변경을 실행하지 않는다.
+
+19단계 로컬 전체 PGlite data-directory 복원과 package 바이트 검증은 통과했으나 실제 Supabase+Storage/Auth/외부 설정 복원·알림 수신·장애 훈련·독립 보관 확인은 미실행이다.

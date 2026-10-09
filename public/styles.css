@@ -1,3 +1,20 @@
+#moduleLoadStatus:not([hidden]) {
+  position: fixed;
+  inset-inline-end: 1rem;
+  bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+  max-width: min(30rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: .75rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
 :root {
   /* ============================================================
      1. Comme des Garçons Play (CDG PLAY) Color Tokens

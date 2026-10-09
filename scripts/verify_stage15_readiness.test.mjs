@@ -47,6 +47,9 @@ test('choice buttons preserve custom entries, toggle pressed state and reject th
 });
 test('production script order loads readiness before its callers and offers same-work settings/retry controls',async()=>{
   const html=await readFile(new URL('../public/index.html',import.meta.url),'utf8');
-  for(const caller of ['creator-editor.js','creator-publications.js','creator-works.js'])assert.ok(html.indexOf('creator-readiness.js')<html.indexOf(caller));
+  const loader=await readFile(new URL('../public/js/core/role-modules.js',import.meta.url),'utf8');
+  assert.ok(html.indexOf('role-modules.js')>=0 && html.indexOf('role-modules.js')<html.indexOf('router.js'));
+  const readiness=loader.indexOf('creator-readiness.js');assert.ok(readiness>=0);
+  for(const caller of ['creator-editor.js','creator-publications.js','creator-works.js'])assert.ok(readiness<loader.indexOf(caller));
   assert.match(html,/id="creatorDraftChecklist"/);assert.match(html,/id="btnDraftSettings"/);assert.match(html,/id="publicationRetry"/);
 });

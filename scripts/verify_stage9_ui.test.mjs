@@ -15,7 +15,8 @@ test('administrator proxy authoring controls and direct writer exports are remov
     'deleteEpisodeFromDB','updateWorkAdminSetting','deleteWorkFromDB'])
     assert.doesNotMatch(bridge+'\n'+creator,new RegExp(name));
   assert.match(html,/id="adminOperationsShell"/);
-  assert.match(html,/js\/admin\/admin-operations\.js/);
+  assert.match(html,/js\/core\/role-modules\.js/);
+  assert.match(await read('public/js/core/role-modules.js'),/js\/admin\/admin-operations\.js/);
   assert.match(html,/js\/core\/appeals\.js/);
   assert.match(html,/id="readerAppeals"/);
   for(const id of ['workSummaryTotalCount','workSummaryOngoingCount','workSummaryActionCount',

@@ -1,0 +1,10 @@
+{
+  "format": "webnovels-recovery-v1",
+  "snapshotId": "00000000-0000-4000-8000-000000000000",
+  "capturedAt": "2026-10-09T00:00:00Z",
+  "kind": "SYNTHETIC",
+  "consistentSnapshotConfirmed": false,
+  "database": {"file": "database.dump", "bytes": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "format": "POSTGRES_CUSTOM"},
+  "state": {"file": "state.json", "bytes": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+  "objects": [{"bucket": "authoring-originals", "object": "work/source", "file": "objects/source.bin", "bytes": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}]
+}

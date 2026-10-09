@@ -28,6 +28,7 @@
     return supabaseClient.auth;
   }
   function clear() {
+    window.WebNovelsModules?.cancel();
     window.CreatorDraftEditor?.onAuthLost();
     generation++; actor = null;
     window.CreatorWorks?.reset();

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "name": "lucide",
+      "version": "1.52.0",
+      "path": "public/vendor/lucide/lucide-1.52.0.min.js",
+      "licensePath": "public/vendor/lucide/LICENSE",
+      "source": {
+        "version": "1.52.0",
+        "registry": "https://registry.npmjs.org/lucide/1.52.0",
+        "tarball": "https://registry.npmjs.org/lucide/-/lucide-1.52.0.tgz",
+        "integrity": "sha512-XlP0U+m3seobjTPfT0Ybg9YqJeTwSxx1I6R2Ty7vwpA/4HtibMbV28p9tW7AnIwb77YkTboK9x/OPBEqGAzCFg==",
+        "license": "ISC"
+      },
+      "sha256": "f828bf34002c03a37da4acecfd0cf214935c4c6c26d4bc48903457ba6c44e606",
+      "integrity": "sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u",
+      "bytes": 446378
+    },
+    {
+      "name": "@supabase/supabase-js",
+      "version": "2.112.3",
+      "path": "public/vendor/supabase/supabase-2.112.3.js",
+      "licensePath": "public/vendor/supabase/LICENSE",
+      "source": {
+        "installedPackage": "node_modules/@supabase/supabase-js",
+        "lockfile": "package-lock.json",
+        "integrity": "sha512-Jv1bxVQmEJNkjvPEhFaKjPzsh+Ozyew6lWGD+SoYcsclDEP1z7yEvKvfUQfzy0DkxRIQnZNxmmWtAzw5XLTQoA==",
+        "license": "MIT"
+      },
+      "sha256": "ec004176d101aec77aeef266aa1c94411287fe2039c65ea5f6c72f5e14b3847d",
+      "integrity": "sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg",
+      "bytes": 211907
+    },
+    {
+      "name": "fflate",
+      "version": "0.8.3",
+      "path": "public/vendor/fflate/fflate-0.8.3.js",
+      "licensePath": "public/vendor/fflate/LICENSE",
+      "source": {
+        "installedPackage": "node_modules/fflate",
+        "lockfile": "package-lock.json",
+        "integrity": "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==",
+        "license": "MIT"
+      },
+      "sha256": "462ef8041fc970e3615a20a9dd2b2e3047a073b2da729ef4f02b634bba8b7b83",
+      "integrity": "sha384-ETfVLWAUsU3zp3SpnQsPDbAyrF6jYv2w8aNYo6KtY2JuyxXhzYLOL7e0ATbLSIHP",
+      "bytes": 33044
+    }
+  ]
+}

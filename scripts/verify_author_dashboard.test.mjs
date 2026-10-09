@@ -101,7 +101,8 @@ test('dashboard clears private forms on reset and suppresses late account respon
  assert.equal(nodes.creatorProfileContent.innerHTML,'');assert.equal(c.CreatorDashboard.active(),false);
  const html=read('public/index.html'),nav=html.split('id="creatorTabsBar"')[1].split('</div>')[0];
  assert.deepEqual([...nav.matchAll(/data-creator-tab="([^"]+)"/g)].map(m=>m[1]),['home','works','earnings','profile']);
- assert.ok(html.indexOf('creator-dashboard.js')<html.indexOf('creator.js?'));
+ const loader=read('public/js/core/role-modules.js');
+ const dashboard=loader.indexOf('creator-dashboard.js');assert.ok(dashboard>=0 && dashboard<loader.indexOf('creator.js?'));
  assert.match(read('public/js/core/auth-session.js'),/CreatorDashboard\?\.reset/);
  assert.match(read('public/js/core/router.js'),/CreatorDashboard\?\.reset/);
  assert.match(read('public/styles.css'),/#view-creator:not\(\.stage8-creator\):not\(\.private-author-workspace\) #creatorTabsBar/);

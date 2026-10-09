@@ -1,3 +1,13 @@
+window.handleAdminLoginProcess = async function() {
+  try {
+    const actor = await window.WebNovelsAuth.login(document.getElementById('adminLoginId').value, document.getElementById('adminLoginPw').value);
+    if (!actor.admin) { await window.WebNovelsAuth.logout(); showToast('관리자 권한이 없습니다.'); return; }
+    closeAllModals();
+    switchWebNovelsView('view-admin-cms');
+  } catch(error) { showToast(window.WebNovelsAuth.message(error)); }
+};
+window.handleAdminLogoutProcess = async function() { return window.handleMemberLogout(); };
+
 (function () {
   function panel(mode) {
     let backdrop = document.getElementById('modalAuthCompletion');

@@ -1,5 +1,20 @@
 # 12단계 출시 기록 — 2026-09-24
 
+## 19단계 품질 코드·읽기 감사 — 2026-10-09 최신
+
+**공개 출시 판정: NO GO.** [19단계 계약](stage19-quality-contract.md)·[검증 근거](../../artifacts/stage19-quality-verification.json). 단계 코드는 Git에 반영하지만 해당 커밋의 원격 CI/Pages 배포·실기기·베타를 확인한 결과로 표시하지 않는다. 후보 전체 SHA는 반영된 Git 커밋으로 고정하고 그 SHA의 원격 증거를 후속 수집한다.
+
+| 항목 | 확인한 결과 | 범위/한계 |
+|---|---|---|
+| 품질 코드 | 작가/관리자 지연 로딩, 키보드 모달, local vendor/SRI, 취약 의존성 갱신, 정적/API 보안 헤더 | 단위·VM·합성 DB, 엄격 script CSP는 Report-Only |
+| 복원 도구 | archive·전체 객체 바이트/해시·참조·DB fingerprint 대조, PGlite 전체 data-directory dump/load | 실제 Supabase/Auth/Storage 복원·독립 보관·운영 RPO/RTO 미실행 |
+| 베타 판정 | 후보/환경/범위·최근 실제 증거·파일 SHA·표본·담당·P0를 확인 | LOCAL_UNIT/SYNTHETIC_RESTORE는 실제 인수로 인정하지 않음, 최종 승인자 미정 |
+| 12:30 KST 실제 DB 읽기 | Auth 42개·확인 42개, 작가 연결 30개·독자 10개·관리자 1개; 작품 30개/회차 180개·소유자/FK 누락 0 | 개인 계정 행/비밀 미출력. 해당 계정의 실제 역할/메일/기기 인수는 미실행 |
+| 적용 상태 | authoring-001/003/004/005/006, P0 marker 없음, 본문 충돌 78건, Storage bucket/object 0, provider backup 0 | 007~015 SQL·P0 전환·원본 판정·Storage 준비/복원 남음. 과거 native backup은 이번 감사에서 재검증하지 않음 |
+| 12:31 KST HTTP | health 503 SECURE_API_NOT_ACTIVATED, requestId 170d7b1f-f3ea-4231-aa4b-52073f70694a; public-config 200 | 웹툰·게시·파일·독자·발견·작가/관리자 운영·workflow·역할변경 false. 설정 변경 없음 |
+
+다음 실행은 유지보수/백업 기준을 확정한 격리 전환·Storage 복원 → 실제 역할/메일/Cron/배포 실패 차단 → PC/모바일 인수 → 제한 베타/지원 훈련 순서다. 19단계 실제 무료 서비스 인수가 끝난 뒤 20단계 단일 거래 모델·원장·정산으로 진행한다. 아래 이전 기록의 Auth 0개/일괄 스크립트 로딩은 당시 상태이며 위 최신 근거로 대체한다.
+
 ## 503 복구·데이터 정합화 — 2026-09-25 최신
 
 - 08:22 KST 운영 적용: 작품 소유자 20건(누락 0건), 기존 원고 102건 정합화. 사용자 선택에 따라 빈 본문 78건을 보존했다. 변경 전후 122건은 비공개 DB 이력에 보관한다.
