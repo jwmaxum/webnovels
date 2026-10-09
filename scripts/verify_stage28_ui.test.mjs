@@ -15,6 +15,14 @@ function setup(){
  return {c,get,jobs,calls,setUser:x=>user=x,edit:()=>sequence++,setDraft:x=>currentId=x,setRevision:x=>revision=x,setError:x=>prepareError=x,setOptions:x=>options=x,setHandler:x=>handler=x,setPrepare:x=>prepareHook=x};
 }
 const open=s=>s.c.CreatorRecovery.open('10',id),posts=s=>s.calls.filter(c=>c.init?.method==='POST');
+test('stage29 author history and receipt display derived disposition/reason while preserving PENDING submission',async()=>{
+ const s=setup();s.setOptions({...initial,requests:[{...result,review:{status:'HOLD',reason:'<script>권리 자료 보완'}}]});await open(s);assert.match(s.get('recoveryHistory').children[0].textContent,/자료 보완·보류/);assert.match(s.get('recoveryHistory').children[0].textContent,/<script>권리 자료 보완/);
+ select(s);s.setHandler(()=>({request:{...result,review:{status:'READY_FOR_RESTORE_REVIEW',reason:'후속 검증 필요'}}}));await s.get('recoverySubmit').onclick();assert.match(s.get('recoveryResultText').textContent,/후속 복원 검증 준비/);assert.match(s.get('recoveryResultText').textContent,/아직 진행되지/);assert.equal([...s.jobs.values()][0].result.status,'PENDING');
+});
+test('disabled stage29 feedback is reported unavailable instead of asserting the request is still awaiting review',async()=>{
+ const s=setup();s.setOptions({...initial,reviewAvailable:false,requests:[result]});await open(s);assert.match(s.get('recoveryHistory').children[0].textContent,/조회 미활성/);
+ select(s);s.setHandler(()=>({request:result,reviewAvailable:false}));await s.get('recoverySubmit').onclick();assert.match(s.get('recoveryResultText').textContent,/조회 미활성/);
+});
 function select(s){s.get('recoveryFile').value=fileId;s.get('recoveryEpisode').value='9007199254740993';s.get('recoveryConfirmed').checked=true;s.get('recoveryNote').value='수정 설명';}
 test('explicit source/episode choices and confirmation are required; user text stays text and result is pending, not published',async()=>{
  const s=setup();await open(s);assert.equal(s.get('recoveryFile').value,'');assert.equal(s.get('recoveryEpisode').value,'');assert.ok(s.get('recoveryFile').children[1].textContent.includes('<script>'));await s.get('recoverySubmit').onclick();assert.equal(posts(s).length,0);

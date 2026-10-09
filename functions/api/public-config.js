@@ -2,6 +2,7 @@ import {webtoonEnabled} from '../../server/webtoon-api.mjs';
 import {SECURITY_HEADERS} from '../../server/security-headers.mjs';
 import {growthEnabled,measurementEnabled} from '../../server/growth-api.mjs';
 import {recoveryEnabled} from '../../server/creator-draft-api.mjs';
+import {recoveryReviewEnabled} from '../../server/recovery-review-policy.mjs';
 // Cloudflare Pages runtime bindings; never serialize context.env.
 export function onRequestGet({ env }) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL;
@@ -21,6 +22,7 @@ export function onRequestGet({ env }) {
     readerDiscoveryEnabled: env.READER_DISCOVERY_ENABLED === 'true',
     authorOperationsEnabled: env.AUTHOR_OPERATIONS_ENABLED === 'true',
     adminOperationsEnabled: env.ADMIN_OPERATIONS_ENABLED === 'true',
+    adminRecoveryReviewEnabled: recoveryReviewEnabled(env),
     adminWorkflowEnabled: env.ADMIN_WORKFLOW_ENABLED === 'true' && env.ADMIN_OPERATIONS_ENABLED === 'true' && env.P0_API_ENABLED === 'true',
     adminRoleChangesEnabled: env.ADMIN_ROLE_CHANGES_ENABLED === 'true' };
   return new Response('window.WEBNOVELS_CONFIG = Object.freeze(' + JSON.stringify(config).replace(/</g, '\\u003c') + ');', { headers });

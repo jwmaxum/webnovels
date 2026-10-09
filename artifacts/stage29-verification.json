@@ -1,0 +1,233 @@
+{
+  "stage": 29,
+  "verifiedAt": "2026-10-09T15:34:35.008Z",
+  "scope": "Audited fixed-submission recovery review in existing administrator workflow with append-only decisions, bounded SHA-verified private original download and owner feedback",
+  "verification": {
+    "status": "PASS",
+    "localBuild": "npm run build:compile",
+    "fullReleaseBuild": "PENDING_REMOTE_CI_AFTER_PUSH",
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "noInitialScratch": true,
+    "reusedLockedDependencies": true,
+    "runtime": "v24.19.0",
+    "functionsBundle": true,
+    "commands": [
+      {
+        "name": "test:naming",
+        "exit": 0,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:auth",
+        "exit": 0,
+        "tests": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:creator-works",
+        "exit": 0,
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:drafts",
+        "exit": 0,
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:files",
+        "exit": 0,
+        "tests": 28,
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:publication",
+        "exit": 0,
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:admin-operations",
+        "exit": 0,
+        "tests": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage17",
+        "exit": 0,
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage28",
+        "exit": 0,
+        "tests": 23,
+        "passed": 23,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "build:compile",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "runtime-ui",
+        "exit": 0,
+        "tests": 25,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typecheck",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage29",
+        "exit": 0,
+        "tests": 20,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:cloudflare-bundle",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "postCopyReview": "Selected submission feedback now queries its exact request even beyond recent-20; related source/RPC tests and Functions bundle rerun. Added queue/owner indexes."
+  },
+  "tests": {
+    "status": "PASS",
+    "relatedTests": 209,
+    "passed": 209,
+    "stage29Tests": 20,
+    "coverageTests": 14,
+    "kind": "API mocks, Node VM/DOM and synthetic PGlite PostgreSQL; not browser/device/hosted or actual original manuscript acceptance"
+  },
+  "coverage": {
+    "scope": [
+      "public/js/admin/admin-recovery.js",
+      "server/admin-recovery-api.mjs",
+      "server/recovery-review-policy.mjs"
+    ],
+    "lines": 100,
+    "branches": 93.81,
+    "functions": 97.62,
+    "minimumLineTarget": 80
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 19
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0,
+    "reviewIssuesResolved": [
+      "workerd manual redirect and explicit redirect rejection",
+      "main-view/menu/logout reset clears private manuscript and late responses",
+      "current permission required before exact receipt replay including SUPER_ADMIN ready disposition",
+      "fixed submitted revision and original lineage/checksum/size",
+      "unknown responses retain exact metadata/key without body or URL storage",
+      "original byte bounds and SHA checked before attachment",
+      "CAS and immutable review/audit histories; originals/publication state preserved",
+      "specific-request author feedback remains accurate beyond recent-20"
+    ]
+  },
+  "testedCodeSha256": {
+    "functions/api/public-config.js": "84d1d143fc5309fd37e033918b17f58f207f9dabcf9e439a0fba542642ea653e",
+    "package.json": "f6c9fef5095a713bd5c6f66f383d87c353ad71ee93a455fd974401e0f4316a00",
+    "public/index.html": "f8b663c06b12ec3648df6a30115dd8ca1f29f444b0ea510c7f8341bc92bd1516",
+    "public/js/admin/admin-operations.js": "493375ad77493376422df77037a8b1b70187e0fd0f8fd247618700ee715e7403",
+    "public/js/admin/admin-workflow.js": "05b2ef3014dab519217844fb0e7cd39435e4bd6d5b378654bc4610babb034606",
+    "public/js/core/role-modules.js": "b33bb57dab2ca949b0d77922628b83a778539ea5885f2a091651ac45914fadc3",
+    "public/js/core/router.js": "3d0a5b80bfed3360fd0a9a9f08fbce023d37f726ba66e38f48aaf67c58d2248e",
+    "public/js/creator/creator-recovery.js": "c441409f64ba488f5c49ce00af037e653ffb58054c78ca2868e594b4d9ce52ac",
+    "scripts/verify_cloudflare_routes.test.mjs": "6a5ab528e0c5ac530f2581a5fe49687795be5d4c54e8830710a59a899f797999",
+    "scripts/verify_stage28_ui.test.mjs": "8fee8eb3bdef297c1593031127c617f89b4afd7d5061a675fcab2f89d156d673",
+    "server/admin-workflow-api.mjs": "4eaf428ea15e78cd9779a3b6e67a11eb486cae9d9a809afae7327de76a29ca79",
+    "server/creator-draft-api.mjs": "7d3cfefa3d86ed5314c1279627228efa21a8d98151aeee632e55edaaf817f3a0",
+    "server/secure-api.mjs": "fa66c335f5da483838a205bea3e59e04387721587cb0ae3b7b12f81f2ea9744c",
+    "database/authoring/020_admin_recovery_review.sql": "b2a0170619d76662559daf4d67ae6eff55c34579c0ef7669c6a88d63d13f07b8",
+    "public/js/admin/admin-recovery.js": "3ec37d83bc2a65465e76e969d80fe247c70c75ba0fca4a4afc03e3efb2389dd2",
+    "scripts/audit_stage29_launch.cjs": "ed86e05b197c1549b7d8999cafc1a6d42cf564907af091284c98d9fc11d8407b",
+    "scripts/fixtures/stage29-db.mjs": "d92700a761d2fc82ce2abdcc6fed670e91a6920cce81071227e5f65efa367aaf",
+    "scripts/verify_stage29_api.test.mjs": "f2227eea55dc3d90886362849c95508fd4beeef5247a965c7be7ad0b2e0ead1d",
+    "scripts/verify_stage29_db.test.mjs": "2be14cafa2612e63892a500a37185bfa771388894bb5550a661054837f57ecb5",
+    "scripts/verify_stage29_ui.test.mjs": "deff1138a7dba189a1758f05ddf759e6cd570bb6fa5306c928459935fcfd8fe1",
+    "server/admin-recovery-api.mjs": "f82db29d9b83e0917527c5f8d02f0c90704a9da3f1d63e234c2f8e03a9d2fd42",
+    "server/recovery-review-policy.mjs": "8d683c0409a5c922e8b039b87af5ace64ada4788f10cfb7040b0bcb099317522"
+  },
+  "actualSourceAccess": {
+    "managementReadOnlyVerified": true,
+    "accessibleProjects": 1,
+    "nonProductionCandidates": 0,
+    "approvedDecisionFiles": 0,
+    "designatedLocalEnvironmentReadWithoutSecretOutput": true
+  },
+  "optionalFeaturePrerequisites": {
+    "migration": "authoring-020",
+    "applied": false,
+    "requiresMigrations": [
+      "authoring-014",
+      "authoring-019"
+    ],
+    "flag": "ADMIN_RECOVERY_REVIEW_ENABLED",
+    "flagsChanged": false
+  },
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "actualOriginalManuscriptAccepted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+  ]
+}

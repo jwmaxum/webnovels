@@ -62,3 +62,5 @@ Node VM/DOM·API 대역·PGlite 합성 PostgreSQL에서 권한/타입/lineage, r
 불변성/멱등성과 늦은 응답을 검증한다. 실제 작가 파일, 브라우저/기기 사용성, 운영 적용 및
 격리 hosted DB/Auth/Storage 인수는 별도다. 실제 원본·권리/이미지·등급/AI 결정을 확보한 뒤
 29단계에서 운영자 검토·새 snapshot 정합화와 검토된 무료 전환으로 연결한다.
+
+2026-10-10: 29단계는 별도 불변 검토 이력과 작가용 파생 상태를 추가한다. 접수 PENDING은 유지한다. [검토 계약](admin-recovery-review-contract.md).

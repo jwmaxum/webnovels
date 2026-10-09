@@ -189,6 +189,6 @@
       pager(result,c);
     }catch(error){if(current(c)){root.replaceChildren();status(root,'조회 실패: '+(error.code||error.message||'요청 실패'));button(root,'다시 불러오기',()=>render(root,page,options));}}
   }
-  function reset(){turn++;context=null;if(host)host.replaceChildren();host=null;}
+  function reset(){window.AdminRecovery?.reset();turn++;context=null;if(host)host.replaceChildren();host=null;}
   window.AdminWorkflow=Object.freeze({active,api,render,reset});
 })();

@@ -163,8 +163,11 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
           path === '/api/v2/creator/operations') {
         return reply(await stage8Api({request,env,actor,db,readBody,fail}));
       }
-      if (path === '/api/v2/admin/workflow')
-        return reply(await adminWorkflowApi({request,env,actor,db,readBody,fail}));
+      if (path === '/api/v2/admin/workflow') {
+        const result=await adminWorkflowApi({request,env,actor,db,readBody,fail,fetchImpl,base,serviceHeaders});
+        if(result instanceof Response){result.headers.set('X-Request-ID',requestId);return result;}
+        return reply(result);
+      }
       if (path === '/api/v2/admin/operations')
         return reply(await stage9Api({request,env,actor,db,readBody,fail}));
       if (path === '/api/v2/appeals')

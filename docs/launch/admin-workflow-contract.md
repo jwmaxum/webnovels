@@ -57,3 +57,5 @@
 검증 근거: [17단계 기록](../../artifacts/stage17-admin-workflow-verification.json). PGlite는 실제 PostgreSQL 다중 연결·RLS 배포·Auth/메일/브라우저 인수의 대체가 아니다. 패키지 추가 없이 기존 구현을 확장했다. 연구 근거는 [PostgreSQL 잠금](https://www.postgresql.org/docs/current/explicit-locking.html), [원자적 INSERT](https://www.postgresql.org/docs/current/sql-insert.html), [Supabase 이메일 복구](https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail)다.
 
 다음은 18단계 웹툰 업로드 manifest·이미지 처리·권한·예약 공개·세로 뷰어다. 실제 관리자 인수와 기존 출시 차단 조건도 병행해 해소한다.
+
+2026-10-10: 29단계 복구 검토는 기존 경로·권한을 사용하며, 제출 전문과 원본은 SUPER_ADMIN의 사유 있는 감사 열람으로만 제공한다. [검토 계약](admin-recovery-review-contract.md).

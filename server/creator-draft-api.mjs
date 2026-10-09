@@ -1,4 +1,5 @@
 import {webtoonEnabled} from './webtoon-api.mjs';
+import {recoveryReviewEnabled} from './recovery-review-policy.mjs';
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const number = s => typeof s === 'string' && /^(0|[1-9]\d{0,18})$/.test(s) && BigInt(s) <= 9223372036854775807n;
 export const recoveryEnabled = env => ['P0_API_ENABLED','AUTHOR_WORKS_ENABLED','AUTHOR_DRAFTS_ENABLED','AUTHOR_FILES_ENABLED','AUTHOR_RECOVERY_ENABLED'].every(k=>env[k]==='true');
@@ -29,6 +30,14 @@ export async function creatorDraftApi({request,env,actor,db,readBody,fail,worksp
       p_action:request.method==='POST'?'submit':'options',p_work_id:work,p_id:match[1],p_data:data,p_key:key,p_after:before}});
     if (result?.error) fail([400,403,404,409,503].includes(result.status)?result.status:503,result.error);
     if (!result || typeof result!=='object') fail(503,'DATABASE_UNAVAILABLE');
+    if(recoveryReviewEnabled(env)) {
+      const feedback=await db('rpc/creator_recovery_review_status',{}, {method:'POST',body:{p_user:who.userId,p_work:work,p_draft:match[1],p_request:result.request?.id||null}});
+      if(feedback?.error)fail([403,404].includes(feedback.status)?feedback.status:503,feedback.error);
+      if(!feedback?.reviews||typeof feedback.reviews!=='object'||Array.isArray(feedback.reviews))fail(503,'WORKFLOW_UNAVAILABLE');
+      if(result.request)result.request={...result.request,review:feedback.reviews[result.request.id]||null};
+      if(result.requests)result.requests=result.requests.map(r=>({...r,review:feedback.reviews[r.id]||null}));
+      result.reviewAvailable=true;
+    } else result.reviewAvailable=false;
     return result;
   }
   let action=match[2]?'history':match[1]?'get':'list', data={},key=null;

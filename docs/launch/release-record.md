@@ -247,3 +247,9 @@ snapshot 기반 무료 서비스 전환을 진행한다. 검증 결과는 stage2
 env/초기 scratch 없는 소스 복사에서 Prisma/TypeScript 컴파일·별도 타입·6개 Functions 번들,
 변경 JS 구문·비밀/충돌·diff를 통과했다. lint는 미구성이며 전체 release build는 push 이후 CI에서 확인한다.
 [검증 기록](../../artifacts/stage28-verification.json)은 합성/대역과 운영 적용을 구분한다.
+
+2026-10-10: 29단계: 관리자 복구 검토함·고정 제출본 열람·서버 원본 SHA/크기 검사·불변 검토 의견·작가 피드백을 추가했다. 실제 SQL/Storage/플래그 적용은 별도 인수 대상이다. [검토 계약](admin-recovery-review-contract.md).
+
+29단계 검증: 관련 회귀 209/209, 전용 20/20, 새 관리자 UI/API 라인 100.00%·분기 93.81%·함수 97.62%.
+env/초기 scratch 없는 소스 복사에서 Prisma/TypeScript 컴파일·타입·6개 Functions 번들·JS 구문·비밀/충돌·diff를 통과했다. lint는 미구성이며 전체 release는 push 이후 CI에서 확인한다.
+[검증 기록](../../artifacts/stage29-verification.json)은 합성/대역과 운영 적용을 구분한다. 운영 읽기 전용 감사는 Auth42·연결 작가30·본문 충돌78·Storage0·미적용 기본12개·health503을 확인했다. 추가019/020도 미적용이고 승인/격리 대상이 없어 NO_GO다.

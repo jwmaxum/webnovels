@@ -51,6 +51,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   }
   currentActiveView = viewId;
   window.currentActiveView = currentActiveView;
+  window.AdminRecovery?.leave(viewId);
   window.ReaderSession?.leave(viewId);
   window.ReaderDiscovery?.leave(viewId);
   if (!window.ReaderDiscovery?.active() && (viewId === 'view-home' || viewId === 'view-discover') && window.WEBNOVELS_CONFIG?.authorPublishEnabled)

@@ -85,3 +85,5 @@ meta CSP에서 지원되지 않는 sandbox를 안전 근거로 삼지 않는다.
 [jsdiff](https://github.com/kpdecker/jsdiff) 등 새 비교 라이브러리는 채택하지 않았다.
 줄 비교 생략본 대신 두 전문을 표시한다. Node VM/DOM 대역으로 입력/필터/파일/내보내기와
 XSS 경계를 검증하며 실제 브라우저·CSP 동작·모바일 시각 인수는 별도다.
+
+2026-10-10: 29단계는 명시적 작가 제출 요청의 인증·감사 열람을 별도 계약으로 확장한다. offline packet의 기존 공개 금지와 legacy 결정 schema는 유지한다. [검토 계약](admin-recovery-review-contract.md).

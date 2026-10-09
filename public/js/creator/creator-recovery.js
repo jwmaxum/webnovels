@@ -11,13 +11,15 @@
  const safe=fn=>async()=>{const turn=epoch;try{await fn();}catch(e){if(turn===epoch&&context?.userId===actor()?.userId)message(text(e));}};
  function controls(){for(const id of ['recoveryFile','recoveryEpisode','recoveryNote','recoveryConfirmed','recoverySubmit','recoveryMore','recoveryRetry','recoveryReload'])$(id).disabled=busy;}
  function option(select,value,label){const o=document.createElement('option');o.value=value;o.textContent=label;select.append(o);}
- function history(rows){const list=$('recoveryHistory');list.replaceChildren();for(const r of rows){const p=document.createElement('p');p.textContent=r.episodeNumber+'화 · 원고 버전 '+r.revision+' · 검토 대기 · 요청 '+r.id;list.append(p);}}
+ const reviewLabels={HOLD:'자료 보완·보류',REJECTED:'반려',READY_FOR_RESTORE_REVIEW:'후속 복원 검증 준비'};
+ function reviewText(r,available){return available===false?'검토 결과 조회 미활성':(reviewLabels[r.review?.status]||'검토 대기')+(r.review?.reason?' · 사유: '+r.review.reason:'');}
+ function history(rows){const list=$('recoveryHistory');list.replaceChildren();for(const r of rows){const p=document.createElement('p');p.textContent=r.episodeNumber+'화 · 원고 버전 '+r.revision+' · '+reviewText(r,options?.reviewAvailable)+' · 요청 '+r.id;list.append(p);}}
  function showPending(){
   $('recoveryForm').hidden=true;$('recoveryPending').hidden=false;$('recoveryResult').hidden=true;
   $('recoveryPendingText').textContent='응답 미확인: 회차 ID '+pending.body.episodeId+' · 원고 버전 '+pending.body.expectedRevision+'. 당시 선택을 보존한 동일 요청의 결과를 확인합니다.';
   message('요청 결과 확인을 먼저 진행해주세요. 현재 편집 내용은 이 요청에 포함되지 않습니다.');
  }
- function showResult(r){$('recoveryForm').hidden=true;$('recoveryPending').hidden=true;$('recoveryResult').hidden=false;$('recoveryResultText').textContent=r.episodeNumber+'화 · 원고 버전 '+r.revision+' · 원본 연결 버전 '+r.sourceRevision+' · 요청 '+r.id+' · 검토 대기. 권리 승인·회차 복구·공개는 아직 진행되지 않았습니다.';message('비공개 검토 요청을 저장했습니다. 원본 파일과 기존 회차는 보존됩니다.');}
+ function showResult(r,available){$('recoveryForm').hidden=true;$('recoveryPending').hidden=true;$('recoveryResult').hidden=false;$('recoveryResultText').textContent=r.episodeNumber+'화 · 원고 버전 '+r.revision+' · 원본 연결 버전 '+r.sourceRevision+' · 요청 '+r.id+' · '+reviewText(r,available)+'. 권리 승인·회차 복구·공개는 아직 진행되지 않았습니다.';message('비공개 검토 요청을 저장했습니다. 원본 파일과 기존 회차는 보존됩니다.');}
  async function open(workId,draftId){
   reset();const turn=epoch,user=actor()?.userId;
   if(!user||actor()?.author?.status!=='APPROVED')throw Error('AUTHOR_REQUIRED');
@@ -46,7 +48,7 @@
    const r=await api({id:job.draftId,workId:job.workId},job.body,job.requestId);
    if(!r?.request?.id||r.request.status!=='PENDING')throw Error('RECOVERY_RESULT_INVALID');
    job.state='COMMITTED';job.result=r.request;await DraftStore.saveFileJob(job);
-   assertOpen(turn,user);assertDraft();showResult(r.request);
+   assertOpen(turn,user);assertDraft();showResult(r.request,r.reviewAvailable);
   }catch(e){
    // Auth/ownership failures happen before receipt lookup and cannot resolve a lost response.
    if([404,409].includes(e.status)&&['DRAFT_REVISION_CONFLICT','RECOVERY_TARGET_CONFLICT','RECOVERY_READ_ONLY','RECOVERY_NOVEL_REQUIRED','SOURCE_FILE_NOT_FOUND','EPISODE_NOT_FOUND'].includes(e.code||e.message)){
