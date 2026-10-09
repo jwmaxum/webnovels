@@ -1,0 +1,205 @@
+{
+  "format": "webnovels-cutover-preparation-v1",
+  "candidate": "04a0318e44198a46a239df4282d2de5527af827e",
+  "origin": "https://webnovels-db4.pages.dev",
+  "scope": "NOVEL_FREE",
+  "sourceRef": "ghwabesnydktumeyejnm",
+  "targetRef": null,
+  "status": "PENDING_ISOLATED_TARGET",
+  "manifestSha256": "25baa02cab37985e356be42f1b3417acc75910d0905c30741e5030370ae7a69b",
+  "logicalSnapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+  "nativeArchiveSha256": "cf1f6309216fa3a0641fc62fe2c659c25552a4aaa239973780c16993090795cc",
+  "tables": 105,
+  "initialContentConflicts": 78,
+  "initialImportEntries": 180,
+  "initialPacketsArePlanningOnly": true,
+  "regenerateReviewAfterRestore": true,
+  "regenerateImportAfterMigrations": true,
+  "migrationPlan": [
+    {
+      "id": "p0-expand",
+      "path": "database/p0/001_expand_identity_content.sql",
+      "sha256": "9bdf6a068df7e37548b86abebbcb1f6b0569f647f71a986cc7323db15172aa1c",
+      "requires": [],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-001",
+      "path": "database/authoring/001_authoring_foundation.sql",
+      "sha256": "be708bb0277fb2279a4710a80b73cd1beb7fb85a95eda86c1499b61777e643f7",
+      "requires": [
+        "p0-expand"
+      ],
+      "action": "VERIFY_EXISTING",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-002",
+      "path": "database/authoring/002_private_storage.sql",
+      "sha256": "e36219e8d703f4ea96a8386436138ee11f3076a580f981c25e59849410d4ffff",
+      "requires": [
+        "authoring-001"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-003",
+      "path": "database/authoring/003_verified_identity_link.sql",
+      "sha256": "c2d979f50a3792f062d51300af9cc5fafcbe039775f09cfd480cd134f91e42e3",
+      "requires": [
+        "authoring-001"
+      ],
+      "action": "VERIFY_EXISTING",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-004",
+      "path": "database/authoring/004_auth_onboarding.sql",
+      "sha256": "45b2ac125b8541e8e38b33a8411a2b1ca6c94e83c0ba171c5f6fcb33c8fc3803",
+      "requires": [
+        "authoring-003"
+      ],
+      "action": "VERIFY_EXISTING",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-005",
+      "path": "database/authoring/005_creator_works.sql",
+      "sha256": "74b4f6335ef2772cb0615edbcd2efe559a2c21cca31a0926e310f6050d6e41ff",
+      "requires": [
+        "authoring-004"
+      ],
+      "action": "VERIFY_EXISTING",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-006",
+      "path": "database/authoring/006_creator_drafts.sql",
+      "sha256": "83d0cba4b533da33fd9b8b9ae88114b2f672ce6b0f48847c3fff3599368eb587",
+      "requires": [
+        "authoring-005"
+      ],
+      "action": "VERIFY_EXISTING",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-007",
+      "path": "database/authoring/007_creator_files.sql",
+      "sha256": "bf94913ce1ebbc5e8d74d29e6d609c2e9d0767fcdb1c0a42ef71dc0588451dc3",
+      "requires": [
+        "authoring-006",
+        "authoring-002"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-008",
+      "path": "database/authoring/008_creator_publications.sql",
+      "sha256": "0752027ddc437567716a11910ccd91b1835394c04235a86df7bda2ceae0f69cf",
+      "requires": [
+        "authoring-007"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-009",
+      "path": "database/authoring/009_creator_reader_operations.sql",
+      "sha256": "99e4b5240efcf9c1432b9efbf48af561092edde56883cf9e4146aa433c44d2aa",
+      "requires": [
+        "authoring-008"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-010",
+      "path": "database/authoring/010_admin_operations.sql",
+      "sha256": "33945ec8b2aea1cbe58f8d8bc73e7fa1e9542320c94f6dfbdad8beb0e8dba6c2",
+      "requires": [
+        "authoring-009"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-011",
+      "path": "database/authoring/011_reader_profile_cutover.sql",
+      "sha256": "391859eeea6c6ede8cd578bd69e696d398c295d90668720a7c9e181ddf2045f1",
+      "requires": [
+        "authoring-010"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-012",
+      "path": "database/authoring/012_creator_distribution.sql",
+      "sha256": "e0ff4d544d21c24311bb9a9f1993a64e11251e3d44a4ef2ff05235fe5e8a67aa",
+      "requires": [
+        "authoring-005"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-013",
+      "path": "database/authoring/013_reader_discovery.sql",
+      "sha256": "c2bfb3cce7829cb4035ba51f0919d9e6b624a5ab57d25a2fad8203fbbc398dd5",
+      "requires": [
+        "authoring-009",
+        "authoring-012"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-014",
+      "path": "database/authoring/014_admin_workflow.sql",
+      "sha256": "f7bfd530e31074f95274b8ba54ebf92f9bac2d283c763a1ec161748b9f8cbea9",
+      "requires": [
+        "authoring-010",
+        "authoring-013"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-015",
+      "path": "database/authoring/015_webtoon.sql",
+      "sha256": "44bb2cb194cb49a9b3233e79682dc04dedf9245cc4540d0d55c423648dfea6c3",
+      "requires": [
+        "authoring-014"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-017",
+      "path": "database/authoring/017_growth_experiments.sql",
+      "sha256": "5aa4082bc2c2845358b5e0280cdeaee561b2abd64cf67f479c9831a42758e647",
+      "requires": [
+        "authoring-015"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    },
+    {
+      "id": "authoring-018",
+      "path": "database/authoring/018_growth_measurement.sql",
+      "sha256": "a1513425cc4f40a75deb6c3528ddcc2d1f91a49469134cf299d03c7254daee77",
+      "requires": [
+        "authoring-017"
+      ],
+      "action": "REVIEW_AND_APPLY",
+      "executionAllowed": false
+    }
+  ],
+  "activationAllowed": false,
+  "sqlExecuted": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false
+}

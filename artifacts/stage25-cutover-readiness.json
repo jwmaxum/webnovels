@@ -1,0 +1,22 @@
+{
+  "format": "webnovels-cutover-readiness-v1",
+  "candidate": "04a0318e44198a46a239df4282d2de5527af827e",
+  "origin": "https://webnovels-db4.pages.dev",
+  "scope": "NOVEL_FREE",
+  "sourceRef": "ghwabesnydktumeyejnm",
+  "targetRef": null,
+  "status": "BLOCKED",
+  "completedSteps": 0,
+  "nextStep": "RESTORE",
+  "steps": [],
+  "blockers": [
+    "ISOLATED_TARGET_NOT_CONFIGURED"
+  ],
+  "activationAllowed": false,
+  "sqlExecuted": false,
+  "flagsChanged": false,
+  "hostedRestoreAccepted": false,
+  "sourceCopiesVerified": 8,
+  "originalSourceFilesPreserved": true,
+  "preparedBaselineOnly": true
+}

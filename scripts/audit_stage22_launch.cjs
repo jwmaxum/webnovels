@@ -1,7 +1,7 @@
 // Read-only aggregate audit. Does not apply SQL, alter bindings, or load remote JavaScript.
 const fs=require('node:fs');
 const {loadEnv,connection,managementToken,managementProbe}=require('./lib/launch-access.cjs');
-const required=['001','003','004','005','006','007','008','009','010','011','012','013','014','015','017','018'].map(n=>'authoring-'+n);
+const required=['001','002','003','004','005','006','007','008','009','010','011','012','013','014','015','017','018'].map(n=>'authoring-'+n);
 function assess({database={},integrity={},versions=[],security=[],runtime={},management={}}){
  const blockers=[];
  if(!management.ok)blockers.push(management.code||'DATABASE_AUDIT_UNAVAILABLE');

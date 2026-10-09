@@ -202,3 +202,13 @@ hosted native 복원·역할/Storage 인수·무료 게시 전환을 진행한�
 관리 인증은 유효하지만 접근 가능한 별도 프로젝트와 승인 자료가 없어 실제 전환은 NO_GO다.
 25단계는 [무료 공개본 계약](legacy-free-cutover-contract.md)에 따라 원본/권리/등급/AI 확인,
 별도 hosted DB/Auth/Storage 복원 및 역할 인수, 검토 SQL·공개본 이관·잠금/출시를 진행한다.
+
+2026-10-09 [25단계](../../improve25.md): 필요한 실제 원본 승인과 별도 대상이 없어
+[후보별 무료 전환 패키지](cutover-package-contract.md)를 구현했다. 고정 Git SQL·백업 바이트와
+RESTORE/CONTENT/MIGRATIONS/IMPORT/LOCKDOWN/BETA 증거 사슬을 연결하고, 각 단계의
+새 전체 snapshot과 기존 원고/행·marker·private 버킷·공개본/BASELINE 보존을 검사한다.
+생성 SQL을 승인 입력으로 재생성 비교하며 002/007 및 012/013 의존성을 보완했다.
+기존 23단계 백업의 실제 105테이블/1,381행에서 24단계 후보용 계획 패키지를 준비했지만
+hosted 완료 기록 0·승인 0·격리 target 미설정으로 출시 NO_GO를 유지한다.
+26단계는 실제 원본/권리·등급/AI 승인과 별도 hosted DB/Auth/Storage·역할 인수를 확보하고
+새 후보/단계별 백업으로 검토된 마이그레이션·첫 공개본·잠금·무료 베타 전환을 수행한다.

@@ -169,3 +169,25 @@ authoring 007~015/017/018 미적용·P0 잠금 미완료·health 503으로 NO_GO
 함수 100%·분기 92.99%, 초기 scratch/로컬 env 없는 소스 복사에서 전체 build 485/485와
 Functions 번들·Prisma·TypeScript 컴파일, 별도 타입/구문·비밀/diff 검사를 통과했다.
 lint는 미구성이며 실제 브라우저/hosted 복원/운영 SQL 인수 결과는 포함하지 않는다.
+
+2026-10-09 25단계 후속: [패키지 계약](cutover-package-contract.md),
+[실제 읽기 전용 감사](../../artifacts/stage25-launch-readiness.json),
+[준비 계획](../../artifacts/stage25-cutover-preparation.json),
+[실제 준비 파일 재검증](../../artifacts/stage25-cutover-readiness.json).
+09:20 UTC 실제 감사는 Auth 42·연결 작가 30·본문 충돌 78·Storage 객체 0·health 503을
+재확인했다. 실제 authoring-002 누락도 기존 감사 기준에 추가해 미적용 12개를 확인했다.
+지정 로컬 env의 관리 인증은 유효하지만 접근 가능한 프로젝트는 운영 1개이며 격리 target과
+확정 결정 파일은 없다. 운영 원고/DDL/플래그는 변경하지 않았다.
+23단계 검증된 독립 logical/native 백업에서 24단계 기준 후보 `04a0318...`의 계획용 private
+패키지를 만들고 원본 8파일·복사 바이트·후보 SQL·기록 0개를 재검증했다.
+이 패키지는 25단계 배포 후보의 hosted 인수 근거가 아니며 **BLOCKED/NO_GO**다.
+후보·원본/결정/실행 SQL·단계별 새 전체 snapshot과 기록 바이트를 연결하고
+원고·marker·private 버킷·공개본/BASELINE 보존·최종 베타를 검사하는 도구를 구현했다.
+합성/로컬 검증 결과는 [25단계 검증 기록](../../artifacts/stage25-verification.json)에 구분한다.
+다음 26단계에는 새 후보와 실제 권리/원본·격리 hosted 복원/역할/기기 근거를 확보하고
+검토된 SQL·첫 공개본·잠금/무료 베타 전환을 진행한다.
+
+25단계 로컬 검증: 전용 17/17, 새 helper 라인 100%·분기 93.27%·함수 98.73%.
+로컬 env/초기 scratch를 제외한 새 소스 복사에서 전체 build 502/502·Functions 번들·
+Prisma/TypeScript 컴파일을 통과했다. 별도 tsc --noEmit·변경 JS 구문·비밀/충돌·diff도
+통과했고 lint는 미구성이다. 실제 hosted 복원·운영 SQL·브라우저 인수를 성공으로 기록하지 않는다.

@@ -100,18 +100,21 @@ export function legacyImportSummary(packet,validated) {
     prerequisites:packet.prerequisites,approved:validated.selected.length,held:validated.held,pending:validated.pending,
     productionApplied:false,flagsChanged:false,hostedRestoreAccepted:false,freeCutoverAccepted:false};
 }
-export function legacyImportSql(packet,validated,template) {
+export function legacyImportSql(packet,validated,template,{versionIds}={}) {
   if(!validated.selected.length)fail('NO_APPROVED_IMPORTS');
+  if(versionIds!==undefined&&(!Array.isArray(versionIds)||versionIds.length!==validated.selected.length||
+    new Set(versionIds).size!==versionIds.length||versionIds.some(v=>!z.string().uuid().safeParse(v).success)))fail('INVALID_VERSION_IDS');
+  const generatedVersionIds=versionIds||validated.selected.map(()=>randomUUID());
   const md5=s=>createHash('md5').update(s).digest('hex'),lit=s=>"'"+String(s).replaceAll("'","''")+"'";
   const batchId='legacy-novel-'+sha(JSON.stringify({snapshot:packet.snapshotSha256,selected:validated.selected,cutover:validated.cutoverEvidence}));
   let prelude=`create temp table legacy_import_context(batch_id text,backup_sha256 text,cutover_evidence text) on commit drop;
     insert into legacy_import_context values(${lit(batchId)},${lit(packet.snapshotSha256)},${lit(JSON.stringify(validated.cutoverEvidence))});
     create temp table legacy_import_plan(episode_id bigint primary key,version_id uuid unique,published_at timestamptz,
       episode_hash text,work_hash text,state_hash text,author_hash text,auth_hash text,identity_hash text,secure_hash text,alternate_hash text,evidence_ref text) on commit drop;`;
-  for(const {row,decision} of validated.selected){
-    prelude+=`insert into legacy_import_plan values(${row.episodeId},${lit(randomUUID())},${lit(decision.originalPublishedAt)},
+  for(const [index,{row,decision}] of validated.selected.entries()){
+    prelude+=`insert into legacy_import_plan values(${row.episodeId},${lit(generatedVersionIds[index])},${lit(decision.originalPublishedAt)},
       ${['episode','work','state','author','auth','identity','secure','alternate'].map(k=>lit(md5(row.source[k]))).join(',')},
       ${lit(JSON.stringify({reviewer:decision.reviewerRef,evidence:decision.evidenceRef,rights:decision.rightsEvidence,sourceDigest:row.sourceDigest}))});\n`;
   }
-  return {batchId,sql:template.replace('begin;',`begin;\n${prelude}`)};
+  return {batchId,versionIds:generatedVersionIds,sql:template.replace('begin;',`begin;\n${prelude}`)};
 }
