@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "stage": 20,
+  "checkedAt": "2026-10-09T05:17:26.010Z",
+  "codeStatus": "LOCAL_PREPARATION_VERIFIED",
+  "liveRelease": "NO_GO",
+  "baselineCommit": "0f78ed4d0d69b0cec6e05b86efea39f80b857707",
+  "runtime": "v24.19.0",
+  "scope": "KRW / normal card / TEST-only paid novel episode; full refund; isolated rights and immutable ledger",
+  "evidenceSource": "LOCAL_SIMULATED",
+  "actual": {
+    "databaseApplied": false,
+    "providerTested": false,
+    "browserAcceptance": false,
+    "flagsActivated": false,
+    "liveCheckout": false,
+    "webhookEnabled": false,
+    "payoutEnabled": false
+  },
+  "verification": {
+    "stage20": {
+      "tests": 24,
+      "passed": 24,
+      "failed": 0
+    },
+    "initialReleaseRegression": {
+      "tests": 410,
+      "passed": 410,
+      "failed": 0
+    },
+    "buildCompile": "PASS",
+    "types": "PASS",
+    "cloudflareBundles": 3,
+    "coverage": {
+      "files": [
+        "server/paid-episode-api.mjs",
+        "server/providers/toss.mjs",
+        "public/js/core/purchase-contract.js"
+      ],
+      "tests": 31,
+      "linePercent": 100,
+      "branchPercent": 90.25,
+      "functionPercent": 100,
+      "sqlCoverage": "Not instrumented; exercised with synthetic PGlite RPC tests"
+    },
+    "lint": "NOT_CONFIGURED; JavaScript syntax checks instead",
+    "freshCheckoutBuild": {
+      "result": "PASS",
+      "tests": 411,
+      "passed": 411,
+      "failed": 0,
+      "noLocalEnv": true,
+      "noInitialScratch": true,
+      "reusedLockedDependencies": true,
+      "finalSqlChanges": "Subsequent entries projection and offer version trigger validated by final 24 stage20 tests"
+    },
+    "static": {
+      "syntax": [
+        {
+          "file": "server/providers/toss.mjs",
+          "status": 0
+        },
+        {
+          "file": "server/secure-api.mjs",
+          "status": 0
+        },
+        {
+          "file": "public/js/core/purchase-contract.js",
+          "status": 0
+        },
+        {
+          "file": "scripts/fixtures/stage20-db.mjs",
+          "status": 0
+        },
+        {
+          "file": "scripts/verify_monetization_sandbox.mjs",
+          "status": 0
+        },
+        {
+          "file": "scripts/verify_stage20_api.test.mjs",
+          "status": 0
+        },
+        {
+          "file": "scripts/verify_stage20_db.test.mjs",
+          "status": 0
+        },
+        {
+          "file": "scripts/verify_stage20_ui.test.mjs",
+          "status": 0
+        },
+        {
+          "file": "server/paid-episode-api.mjs",
+          "status": 0
+        }
+      ],
+      "secretAndConflictScan": {
+        "files": 17,
+        "findings": []
+      },
+      "diffStatus": 0,
+      "lint": "NOT_CONFIGURED"
+    }
+  },
+  "scenario": {
+    "schemaVersion": 1,
+    "checkedAt": "2026-10-09T05:12:45.469Z",
+    "stage": 20,
+    "provenance": "LOCAL_SIMULATED",
+    "liveRelease": "NO_GO",
+    "realDatabaseApplied": false,
+    "realProviderCalled": false,
+    "browserAcceptance": false,
+    "policy": "Synthetic fixture only; not approved business pricing or revenue allocation",
+    "steps": [
+      {
+        "action": "claim-confirm",
+        "status": "UNKNOWN",
+        "sandboxEntitled": false,
+        "liveContentAccess": false,
+        "gross": 0,
+        "author": 0
+      },
+      {
+        "action": "claim-query",
+        "status": "PAID",
+        "sandboxEntitled": true,
+        "liveContentAccess": false,
+        "gross": 101,
+        "author": 68
+      },
+      {
+        "action": "claim-refund",
+        "status": "REFUND_UNKNOWN",
+        "sandboxEntitled": true,
+        "liveContentAccess": false,
+        "gross": 101,
+        "author": 68
+      },
+      {
+        "action": "admin-query",
+        "status": "REFUNDED",
+        "sandboxEntitled": false,
+        "liveContentAccess": false,
+        "gross": 0,
+        "author": 0
+      }
+    ],
+    "evidence": {
+      "database/authoring/016_paid_episodes.sql": "eadd2eb9fdc6c382e46d26b63e5cde19dc3c3bd50f4ffa8c21b45dbccaa8a826",
+      "server/paid-episode-api.mjs": "05fd78dc6b2995b8c17eb7d89be79077cbcf6e2772aed20917b8554da6d80799",
+      "server/providers/toss.mjs": "3494fb4e37b7f478b69d38aa655471460a6dd229680ca41f23fe925c5bc89f45"
+    },
+    "payout": {
+      "payableKrw": 0,
+      "paidKrw": 0,
+      "status": "NOT_AVAILABLE"
+    },
+    "limitations": [
+      "Single PGlite instance is not real PostgreSQL concurrency acceptance",
+      "No live content grant, webhook or actual payment/payout launch"
+    ]
+  },
+  "sourceSha256": {
+    "database/authoring/016_paid_episodes.sql": "eadd2eb9fdc6c382e46d26b63e5cde19dc3c3bd50f4ffa8c21b45dbccaa8a826",
+    "server/paid-episode-api.mjs": "05fd78dc6b2995b8c17eb7d89be79077cbcf6e2772aed20917b8554da6d80799",
+    "server/providers/toss.mjs": "3494fb4e37b7f478b69d38aa655471460a6dd229680ca41f23fe925c5bc89f45",
+    "public/js/core/purchase-contract.js": "6d7650cc6c97925db9954d5409f94ff70417d4622623c8146acbdf6a9b864d87"
+  },
+  "remaining": [
+    "Stage19 real free beta acceptance",
+    "Approved merchant, pricing/revenue/tax/refund terms and legacy ledger reconciliation",
+    "Actual provider TEST and real PostgreSQL concurrency/restore acceptance",
+    "Live paid catalog/content/image protection and checkout/UI acceptance",
+    "Durable webhook inbox, verified server query worker and reconciliation alerts",
+    "Verified payout account/key rotation/separate approval/transfer proof/duplicate payout controls"
+  ]
+}

@@ -10,6 +10,7 @@ import { stage9AppealApi } from './stage9-appeal-api.mjs';
 import { adminWorkflowApi } from './admin-workflow-api.mjs';
 import { accountApi } from './account-api.mjs';
 import { discoveryEnabled, publicContent } from './stage16-api.mjs';
+import { paidEpisodeApi } from './paid-episode-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
@@ -149,6 +150,8 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         return episode;
       }
       const path = url.pathname;
+      if (path === '/api/v2/payments' || path.startsWith('/api/v2/payments/'))
+        return reply(await paidEpisodeApi({request,env,actor,db,readBody,fail,fetchImpl}));
       if(path.startsWith('/api/v2/creator/webtoon')||path.startsWith('/api/v2/webtoon/images/')){
         const result=await webtoonApi({request,env,actor,db,fetchImpl,base,serviceHeaders,fail});
         return result instanceof Response?result:reply(result);
