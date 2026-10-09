@@ -1,6 +1,6 @@
 {
   "stage": 25,
-  "verifiedAt": "2026-10-09T09:41:01.375Z",
+  "verifiedAt": "2026-10-09T09:47:38.193Z",
   "scope": "candidate-bound private free cutover package, append-only hosted evidence lineage, exact SQL regeneration and full logical data preservation",
   "build": {
     "status": "PASS",
@@ -14,7 +14,12 @@
     "cleanSourceCopy": true,
     "noLocalEnv": true,
     "noInitialScratch": true,
-    "reusedLockedDependencies": true
+    "reusedLockedDependencies": true,
+    "fullBuildBeforeTestClockIsolation": {
+      "sourceCommit": "3a1828dda72c0221c353f7559e287f273d6990e1",
+      "runtimeCodeUnchanged": true,
+      "testFileSha256": "17f1b57d8a640188e30d552908f602edf6fa6edf578b5795673666d02eae4081"
+    }
   },
   "typeCheck": {
     "status": "PASS",
@@ -25,7 +30,9 @@
     "status": "PASS",
     "tests": 17,
     "passed": 17,
-    "kind": "synthetic full logical snapshots, generated SQL/rights and local file/byte/Git evidence fixtures; not hosted acceptance"
+    "kind": "synthetic full logical snapshots, generated SQL/rights and local file/byte/Git evidence fixtures; not hosted acceptance",
+    "finalTestClockIsolated": true,
+    "reverifiedAfterTestOnlyChange": true
   },
   "coverage": {
     "scope": [
@@ -62,7 +69,7 @@
     "scripts/audit_stage25_launch.cjs": "e279660efb7f72fa26f4d22e8af0a881bd0b3b3e9f6ad50793f76ff381f027d4",
     "scripts/lib/cutover-package.mjs": "3b460dd12c9d01f3b33bdc5a21857eac5c3855c43c7f6ad1e25f618e87ed7ae7",
     "scripts/prepare_cutover_package.mjs": "ec944dc3b13c54d1cbd0861869f8056388b4bbe4c0ff12ee3c8d468ed43603e5",
-    "scripts/verify_stage25_cutover.test.mjs": "17f1b57d8a640188e30d552908f602edf6fa6edf578b5795673666d02eae4081",
+    "scripts/verify_stage25_cutover.test.mjs": "2375943ffe683e3bddc80e7341b413c1d770df6c6ebe663b0da2a8673bd1cbd7",
     "package.json": "d1d6b2e2d0497f76ab36d4c939286656a0a2ac94370464fb1b97fdfff0a35dce"
   },
   "actualSourceAccess": {

@@ -263,7 +263,8 @@ test('on-disk verification rejects byte tampering, candidate SQL mismatch and pa
  try{await symlink(path.join(dir,'source'),path.join(dir,'linked'),'junction')}catch(e){if(['EPERM','EACCES'].includes(e.code))return;throw e}
  await assert.rejects(()=>readCutoverFile(dir,{...first,file:'linked/logical-snapshot.json'}),/LINK_FORBIDDEN/);
 });
-test('CLI checks candidate Git blobs and append-only records without touching source or replacing history',async()=>{
+test('CLI checks candidate Git blobs and append-only records without touching source or replacing history',async t=>{
+ t.mock.method(Date,'now',()=>now);
  const head=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim(),f=fixture({candidate:head,sql:candidateSqlBytes(head)}),dir=await privateFixture(f);
  assert.equal((await checkCutoverPackage(dir,{now})).nextStep,'RESTORE');
  const original=await readFile(path.join(dir,'source/logical-snapshot.json'));
