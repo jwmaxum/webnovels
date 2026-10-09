@@ -11,7 +11,7 @@ import { adminWorkflowApi } from './admin-workflow-api.mjs';
 import { accountApi } from './account-api.mjs';
 import { discoveryEnabled, publicContent } from './stage16-api.mjs';
 import { paidEpisodeApi } from './paid-episode-api.mjs';
-import { growthApi } from './growth-api.mjs';
+import { growthApi,measurementEnabled } from './growth-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
@@ -214,6 +214,9 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         const who = await actor(false); const episode = await getEpisode(match[1]); const work = await getWork(episode.work_id);
         const editor = owns(who, work);
         if (discoveryEnabled(env)) {
+          if(measurementEnabled(env))return reply(publicContent(await db('rpc/stage22_episode_content',{}, {
+            method:'POST',body:{p_user:who?.userId||null,p_episode_id:String(episode.id),p_webtoon:webtoonEnabled(env)}
+          }),fail,env));
           return reply(publicContent(await db(webtoonEnabled(env)?'rpc/stage18_episode_content':'rpc/stage16_episode_content',{}, {
             method:'POST',body:{p_episode_id:String(episode.id)}
           }),fail,env));

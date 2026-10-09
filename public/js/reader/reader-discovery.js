@@ -232,6 +232,7 @@
       for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) { $(key).disabled = !work.firstEpisodeNumber; $(key).textContent = work.firstEpisodeNumber ? `첫 공개 회차 읽기 (${work.firstEpisodeNumber}화)` : '공개 회차 없음'; }
       window.updateFavoriteButtons?.(work.id); window.updateSubscribeButtons?.(work);
       distribution(work); meta(work);
+      window.GrowthStudio?.referral?.(work.id);
       if($('detailShareLink')&&window.WEBNOVELS_CONFIG?.growthServiceEnabled===true){$('detailShareLink').href='/share/'+work.id;$('detailShareLink').hidden=false;}
       $('detailTitle')?.setAttribute('tabindex', '-1'); $('detailTitle')?.focus({ preventScroll: true });
       await loadEpisodes(String(id), request);

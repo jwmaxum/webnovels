@@ -1,13 +1,15 @@
 (function(){
  'use strict';
- let generation=0;const roots=new Set(),turns=new WeakMap();
+ let generation=0;const roots=new Set(),turns=new WeakMap(),observations=new Set(),referrals=new Set(),referralFlights=new Set();
  const actor=()=>window.WebNovelsAuth?.getActor();
  const active=()=>window.WEBNOVELS_CONFIG?.growthServiceEnabled===true;
+ const measuring=()=>active()&&window.WEBNOVELS_CONFIG?.growthMeasurementEnabled===true;
+ function stopObservations(){for(const dispose of observations)dispose();observations.clear();}
  function el(parent,tag,text){const n=document.createElement(tag);if(text!=null)n.textContent=String(text);parent.append(n);return n;}
  function button(parent,text,fn){const b=el(parent,'button',text);b.type='button';b.className='btn btn-outline';b.onclick=fn;return b;}
  function begin(root){if(!active()||!root)return null;roots.add(root);const g=generation,u=actor()?.userId,n=(turns.get(root)||0)+1;turns.set(root,n);
   root.hidden=false;root.replaceChildren();return ()=>g===generation&&u===actor()?.userId&&turns.get(root)===n&&root.isConnected!==false;}
- function reset(){generation++;for(const r of roots){r.replaceChildren();if(r.id==='growthHome')r.hidden=true;}roots.clear();}
+ function reset(){generation++;stopObservations();referrals.clear();referralFlights.clear();for(const r of roots){r.replaceChildren();if(r.id==='growthHome')r.hidden=true;}roots.clear();}
  const api=(role,action,data,query='')=>window.WebNovelsAuth.api('/api/v2/'+role+'/growth?action='+action+query,
   data?{method:'POST',body:JSON.stringify(data)}:undefined);
  const message=(root,text,alert=false)=>{const n=el(root,'p',text);n.setAttribute('role',alert?'alert':'status');return n;};
@@ -15,7 +17,34 @@
   const labels={INVALID_POLICY:'가설·대조 기준은 10자 이상, 표본은 5명 이상, 기간은 최대 90일로 입력해주세요. 웹툰의 소설 글자 수 기준은 0입니다.',POLICY_VERSION_CONFLICT:'같은 버전의 기준은 변경할 수 없습니다. 새 버전을 입력해주세요.',POLICY_WINDOW_CONFLICT:'같은 유형의 다른 실험과 기간이 겹칩니다. 기간이나 종료된 실험을 확인해주세요.',WORK_NOT_ELIGIBLE_AT_CUTOFF:'오늘 KST 0시 기준으로 공개 무료 회차가 있는 작품만 평가합니다.',INVALID_DECISION:'표본·관찰 일수·비용과 각 10자 이상의 근거를 입력해주세요.'};
   message(root,labels[error?.code]||'성장 정보를 불러오거나 저장하지 못했습니다. 다시 조회하여 상태를 확인해주세요.',true);button(root,'다시 조회',retry);}
  const reason={RECENT_PUBLIC_SERIAL:'최근 30일 공개 연재 · 새로운 작품 만나기',GENRE_ROTATION:'장르와 작가별 노출 수를 제한한 탐색 추천'};
+ function observeCards(cards,valid){
+  if(!measuring()||typeof window.IntersectionObserver!=='function'||!cards.length)return;
+  const state=new Map(cards.map(([node,receiptId])=>[node,{receiptId,visible:false,timer:null,sent:false}]));let closed=false;
+  const cancel=s=>{if(s.timer!==null){clearTimeout(s.timer);s.timer=null;}};
+  const schedule=(node,s)=>{cancel(s);if(closed||!valid()||document.hidden||!s.visible||s.sent)return;
+   s.timer=setTimeout(()=>{s.timer=null;if(closed||!valid()||document.hidden||!s.visible||s.sent)return;s.sent=true;observer.unobserve(node);
+    api('reader','viewport',{receiptId:s.receiptId}).catch(()=>{});
+   },1000);
+  };
+  const observer=new window.IntersectionObserver(entries=>{for(const entry of entries){const s=state.get(entry.target);if(!s)continue;
+   s.visible=entry.isIntersecting&&entry.intersectionRatio>=0.5;schedule(entry.target,s);}}, {threshold:[0,0.5]});
+  const visibility=()=>{for(const [node,s] of state)schedule(node,s);};
+  const dispose=()=>{closed=true;observer.disconnect();for(const s of state.values())cancel(s);document.removeEventListener('visibilitychange',visibility);};
+  observations.add(dispose);document.addEventListener('visibilitychange',visibility);for(const [node] of state)observer.observe(node);
+ }
+ async function referral(workId){
+  if(!measuring()||actor()?.reader?.status!=='ACTIVE')return;
+  const u=new URL(window.location.href);if(u.pathname!=='/works/'+workId||u.searchParams.getAll('source').length!==1||u.searchParams.get('source')!=='share')return;
+  const user=actor().userId,g=generation,pending=user+':'+workId+':'+g;if(referralFlights.has(pending))return;referralFlights.add(pending);
+  const valid=()=>g===generation&&user===actor()?.userId&&window.location.pathname==='/works/'+workId&&window.location.href===u.href;
+  try{const pref=await api('reader','preferences');if(!valid()||!pref.measurementConsent||!pref.measurementSince)return;
+   const key=user+':'+workId+':'+pref.measurementSince;if(referrals.has(key))return;
+   await api('reader','referral',{workId:String(workId),source:'SHARE'});
+   if(valid())referrals.add(key);
+  }catch{}finally{referralFlights.delete(pending);}
+ }
  async function home(){
+  stopObservations();
   const root=document.getElementById('growthHome'),valid=begin(root);if(!valid)return;
   el(root,'h2','새로운 연재 만나기');message(root,'추천 이유를 확인하고 보고 싶은 장르를 직접 선택하세요.');
   const logged=actor()?.reader?.status==='ACTIVE';
@@ -24,8 +53,12 @@
    const data=logged?await api('reader','feed',{}):await (async()=>{const r=await fetch('/api/v2/reader/growth?action=feed',{credentials:'omit',cache:'no-store'});if(!r.ok)throw Error('FEED');return r.json();})();
    if(!valid())return;
    const cards=el(root,'div');cards.className='works-grid';
-   for(const raw of data.works||[]){const w=window.ReaderCatalog.mapWork(raw),a=el(cards,'a');a.href='/works/'+w.id;a.className='work-card';
+   const measured=[];for(const raw of data.works||[]){const w=window.ReaderCatalog.mapWork(raw),a=el(cards,'a');a.href='/works/'+w.id;a.className='work-card';
     el(a,'h3',w.title);el(a,'p',w.author);el(a,'small',reason[raw.reason]||reason.RECENT_PUBLIC_SERIAL);}
+   if(prefs?.measurementConsent&&data.measurementConsent===true){const nodes=Array.from(cards.children);
+    for(let i=0;i<nodes.length;i++)if(/^[0-9a-f-]{36}$/i.test(data.works[i]?.receiptId||''))measured.push([nodes[i],data.works[i].receiptId]);
+    observeCards(measured,valid);
+   }
    if(!data.works?.length)message(cards,'설정에 맞는 최근 공개 연재가 아직 없습니다.');
    if(!prefs){message(root,'로그인하면 장르 제외와 추천 설정을 저장할 수 있습니다.');return;}
    const form=el(root,'form');form.className='growth-controls';
@@ -35,6 +68,11 @@
    message(form,'빈도 설정은 저장되며 성장 알림은 현재 발송되지 않습니다.');
    const consentLabel=el(form,'label'),consent=el(consentLabel,'input');consent.type='checkbox';consent.checked=prefs.analyticsConsent;
    el(consentLabel,'span','선택: 추천 카드 제공·인증 열람 기록의 성장 분석에 동의');
+   let measurement=null;
+   if(measuring()){const label=el(form,'label');measurement=el(label,'input');measurement.type='checkbox';measurement.checked=prefs.measurementConsent===true;
+    el(label,'span','추가 선택: 화면 노출 신고·공유 표식·첫 본문 제공 분석에 동의');
+    message(form,'분석 동의와 함께 선택합니다. 화면의 절반 이상이 활성 탭에 1초 보인 신고와 공유 링크 표식을 관찰합니다. 실제 독서·검증된 외부 유입은 아닙니다. 신고는 최대 90일, 첫 본문 기준점은 동의 중 보존하며 철회 시 삭제합니다.');
+   }
    message(form,'동의 후 기록으로 분석합니다. 동의를 끄면 새 집계에서 제외되고 카드 제공 기록이 삭제됩니다. 카드 제공 기록은 최대 90일 보존합니다.');
    const save=button(form,'설정 저장');save.type='submit';
    const clear=button(form,'추천 초기화',async()=>{if(!valid()||clear.disabled)return;clear.disabled=true;save.disabled=true;
@@ -44,7 +82,8 @@
     const genres=excluded.value.split(',').map(x=>x.trim()).filter(Boolean);
     if(genres.length>8||genres.some(x=>x.length>40)){message(form,'장르는 항목당 40자, 최대 8개까지 입력해주세요.',true);return;}
     save.disabled=true;clear.disabled=true;
-    try{await api('reader','save-preferences',{excludedGenres:genres,frequency:frequency.value,analyticsConsent:consent.checked});if(valid())home();}
+    try{await api('reader','save-preferences',{excludedGenres:genres,frequency:frequency.value,analyticsConsent:consent.checked,
+     ...(measurement?{measurementConsent:consent.checked&&measurement.checked}:{})});if(valid())home();}
     catch{failed(root,valid,home);if(valid()){save.disabled=false;clear.disabled=false;}}
    };
   }catch{failed(root,valid,home);}
@@ -61,6 +100,10 @@
   if(m.serialSupply)message(root,'새 회차 공개: 최근 14일 '+m.serialSupply.newEpisodes+'화 · '+m.serialSupply.activeKstDays+'일. 이전 공개본 교체 '+m.serialSupply.replacedHeads+'건은 새 회차에서 제외합니다. 성장 집계 시작 전 기록은 기준선입니다.');
   message(root,'D0는 동의 후 최초 기록된 공개 무료 회차 열람입니다. 대상일이 끝난 표본만 집계하며 5명 미만은 숨깁니다.');
   const s=m.providedCards;message(root,'카드 제공 후 7일 내 열람: '+(s?.denominator==null?'표본 부족':s.subsequentReaders+'/'+s.denominator)+'. 실제 화면 노출이나 유입에 따른 첫 열람 전환율은 아닙니다.');
+  if(m.funnel){message(root,'추가 계측 동의 구간의 첫 서버 본문 제공: '+stat(m.funnel.firstBodies,m.funnel.firstBodyStatus)+'. 수신 완료·생애 최초 독서·완독을 증명하지 않습니다.');
+   for(const [kind,label] of [['VIEWPORT','화면 노출 신고'],['SHARE','공유 링크 표식']]){const c=m.funnel.channels?.[kind];
+    message(root,label+' 후 24시간 내 첫 본문 제공: '+(c?.denominator==null?stat(null,c?.status):c.converted+'/'+c.denominator+' ('+(c.rate*100).toFixed(1)+'%)')+'. 24시간 관찰을 마친 표본만 포함합니다.');}
+  }
  }
  function creator(parent,works){
   if(!active())return;const root=el(parent,'section'),valid=begin(root);if(!valid)return;
@@ -77,10 +120,12 @@
   const report=el(root,'div');let data=null;
   async function load(){const v=begin(report);try{const r=await api('admin','admin');if(!valid()||!v())return;data=r;
    message(report,'최근 공개 무료 작품 최대 50개를 관찰합니다. 전체 장르 공급을 대표하는 표본은 아닙니다.');
+   if(r.viewportEvidenceScope)message(report,'화면 노출 신고의 실험 비교는 최근 28일, 가장 최근 30개 실험 범위입니다.');
    if(r.serialContinuity)message(report,'완료된 KST 7일 구간 간 연재 지속 작가: '+stat(r.serialContinuity.continuedAuthors,r.serialContinuity.status)+' / '+stat(r.serialContinuity.denominator,r.serialContinuity.status)+'. 새 회차 공개만 집계하며 성장 집계 시작 후 14일을 관찰합니다.');
    for(const w of r.works||[]){const details=el(report,'details');el(details,'summary',w.title+' · '+(Array.isArray(w.genre)?w.genre.join(', '):w.genre));metrics(details,w.metrics);}
    for(const e of r.experiments||[])message(report,e.version+' · '+(e.decision||'판정 대기')+' · '+e.config.hypothesis);
    for(const v of r.variantEvidence||[])message(report,v.version+' · '+v.variant+' 카드 제공/후속 열람 쌍 '+stat(v.providedReaderWorkPairs,v.status)+' / '+stat(v.subsequentReadingPairs,v.status)+'. 7일 관찰을 마친 카드 제공 기록이며 실제 노출·첫 열람 전환은 아닙니다.');
+   for(const v of r.viewportEvidence||[])message(report,v.version+' · '+v.variant+' 화면 노출 신고 후 24시간 내 첫 본문 제공 쌍 '+stat(v.firstBodyPairs,v.status)+' / '+stat(v.readerWorkPairs,v.status)+'. 동의한 고유 독자 5명 이상, 관찰을 마친 표본만 공개합니다.');
    for(const e of r.evaluations||[])message(report,'#'+e.workId+' · '+e.policyVersion+' · '+e.kstDay+' · '+e.decision+' (실제 승격 없음)');
   }catch{failed(report,()=>valid()&&v(),load);}}
   button(root,'지표·편향·후보 조회',load);
@@ -112,6 +157,6 @@
     if(valid()){message(decisionForm,'결정을 기록했습니다. 새 실험은 새 버전으로 등록해주세요.');load();}}
    catch(e){failed(decisionForm,valid,load,e);}finally{if(valid())decideButton.disabled=false;}};
  }
- function leaveHome(){const r=document.getElementById('growthHome');if(r){turns.set(r,(turns.get(r)||0)+1);r.replaceChildren();r.hidden=true;}}
- window.GrowthStudio={home,creator,admin,reset,leaveHome};
+ function leaveHome(){stopObservations();const r=document.getElementById('growthHome');if(r){turns.set(r,(turns.get(r)||0)+1);r.replaceChildren();r.hidden=true;}}
+ window.GrowthStudio={home,creator,admin,reset,leaveHome,referral};
 })();

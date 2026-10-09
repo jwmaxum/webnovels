@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 
 const root='scratch/step11-cloudflare-bundle';
-const files=['api/[[path]].js','api/public-config.js','api/v2/[[path]].js','sitemap.xml.js','share/[id].js'];
+const files=['api/[[path]].js','api/public-config.js','api/v2/[[path]].js','sitemap.xml.js','share/[id].js','sitemaps/[bucket]/index.xml.js'];
 for(const file of files){
   const source=await readFile(join(root,file),'utf8');
   assert.ok(source.length>0,`Empty Pages Function bundle: ${file}`);
@@ -13,4 +13,4 @@ for(const file of files){
   if(file==='api/v2/[[path]].js')
     assert.ok(source.includes('createSecureApi'),'Secure API missing from v2 bundle');
 }
-console.log('PASS: 5 Cloudflare Pages Functions bundle for browser/Worker runtime');
+console.log('PASS: 6 Cloudflare Pages Functions bundle for browser/Worker runtime');

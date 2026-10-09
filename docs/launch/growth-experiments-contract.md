@@ -91,14 +91,16 @@ Cloudflare minute Cron은 별도 기본 false gate로 최대 20작품을 처리�
 
 GROWTH_CANONICAL_ORIGIN은 자격 증명/경로/쿼리 없는 고정 https origin이다. 공유 페이지는 제목·설명·
 canonical/OG와 공개 표지의 안전한 URL만 escape해 반환한다. private signed URL·외부 임의 이미지는 제거한다.
-공유 페이지는 noindex, follow이며 canonical은 `/works/:id`다. sitemap은 공개 무료 head가 있는
-최대 1,000작품의 절대 URL/최종 공개 시각을 반환한다. 1,001작품부터 503 SITEMAP_LIMIT_REQUIRES_PARTITION으로
-중단하므로 규모가 증가하기 전에 index/분할을 구현해야 한다. [Google sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap).
+공유 페이지는 noindex, follow이며 canonical은 `/works/:id`다. 22단계의
+[계측·검색 계약](growth-measurement-contract.md)이 기존 1,000작품 전체 sitemap을 index와
+ID 구간별 최대 1,000작품 child로 확장한다. 성장 SEO 활성화에는 검토된 018도 필요하다.
+[Google sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap).
 
 017은 검토된 015·P0/Auth 매핑·백업/격리 복원을 확인하고 review gate 세션에서 별도 적용한다.
 016 결제 SQL은 필요하지 않다. rollback은 새 플래그를 끄고 관찰/정책/snapshot을 보존한다.
 실제 RLS/PostgREST·Cron/삭제 지연·공유 crawler·동의 철회·장르 편향·28일 실제 표본·성장 비용·
 KEEP/CHANGE/STOP 판단은 실환경 인수 대기다. localhost/브라우저 검증은 명시 요청 전 실행하지 않는다.
 
-다음 22단계: 기존 19단계 무료 출시 차단을 먼저 해소하고, 동의 기반 출처·첫 열람/viewport 계측,
-sitemap 분할, 실제 성장 표본과 대조 실험을 인수한다. 실제 배지 승격은 등급 매핑/CAS/알림 인수 후 분리한다.
+22단계는 별도 동의의 신고 기반 화면 노출/공유 표식·첫 본문 제공과 sitemap 분할을 구현했다.
+다음 23단계는 기존 무료 출시 차단과 실제 DB/복원/권한 인수를 먼저 해소하고,
+승인된 무료 서비스의 동의 표본과 28일 대조 실험을 관찰한다. 실제 배지 승격은 등급 매핑/CAS/알림 인수 후 분리한다.

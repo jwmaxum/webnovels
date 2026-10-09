@@ -67,9 +67,9 @@ test('server share escapes HTML, uses fixed canonical and rejects private/unsafe
  assert.equal((await growthSeo(new Request('https://example.test/share/x'),env,{workId:'../bad'})).status,404);
 });
 test('sitemap is bounded UTF-8 absolute public URLs and fails rather than silently truncating',async()=>{
- const r=await growthSeo(new Request('https://example.test/sitemap.xml'),env,{fetchImpl:seoFetch([{id:'35',title:'작품',lastModified:'2026-10-09T01:00:00Z'}])});
+ const r=await growthSeo(new Request('https://example.test/sitemaps/0/index.xml'),env,{bucket:'0',fetchImpl:seoFetch([{id:'35',title:'작품',lastModified:'2026-10-09T01:00:00Z'}])});
  assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/xml.*utf-8/);assert.match(await r.text(),/<loc>https:\/\/example.test\/works\/35<\/loc>/);
- assert.equal((await growthSeo(new Request('https://example.test/sitemap.xml'),env,{fetchImpl:seoFetch(Array(1001).fill({id:'1',title:'작품'}))})).status,503);
+ assert.equal((await growthSeo(new Request('https://example.test/sitemaps/0/index.xml'),env,{bucket:'0',fetchImpl:seoFetch(Array(1001).fill({id:'1',title:'작품'}))})).status,503);
  assert.equal((await growthSeo(new Request('https://example.test/sitemap.xml',{method:'POST'}),env)).status,405);
  assert.equal((await growthSeo(new Request('https://example.test/sitemap.xml'),{})).status,503);
 });

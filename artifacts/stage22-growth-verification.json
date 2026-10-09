@@ -1,0 +1,131 @@
+{
+  "stage": 22,
+  "checkedAt": "2026-10-09T07:02:27.304Z",
+  "baseCommit": "b97ba8ce728f58196811b65a0be0c300f9030cb7",
+  "status": "LOCAL_VERIFIED_HOSTED_NO_GO",
+  "runtime": "v24.19.0",
+  "dependenciesAdded": 0,
+  "verification": {
+    "scopedTests": {
+      "passed": 22,
+      "failed": 0,
+      "environment": "PGlite + synthetic HTTP + DOM VM + mocked Cron"
+    },
+    "coverage": {
+      "scope": [
+        "server/growth-api.mjs",
+        "server/growth-seo.mjs",
+        "public/js/reader/growth-studio.js",
+        "scheduler/worker.mjs"
+      ],
+      "tests": 29,
+      "linePercent": 99.42,
+      "branchPercent": 91.72,
+      "functionPercent": 97.33
+    },
+    "typescript": {
+      "command": "tsc --noEmit",
+      "errors": 0
+    },
+    "build": {
+      "status": "PASS",
+      "command": "npm run build",
+      "isolatedSourceCopy": true,
+      "noLocalEnv": true,
+      "reusedLockedDependencies": true,
+      "name": "build",
+      "exit": 0,
+      "tests": 459,
+      "passed": 459,
+      "failed": 0,
+      "skipped": 0,
+      "prismaGenerate": "PASS",
+      "typescriptCompile": "PASS"
+    },
+    "postBuildSqlRegression": {
+      "status": "PASS",
+      "tests": 8,
+      "passed": 8,
+      "failed": 0,
+      "headReplacementAdditionalChecks": 1,
+      "environment": "Synthetic PGlite",
+      "files": [
+        "database/authoring/018_growth_measurement.sql",
+        "scripts/verify_stage22_db.test.mjs"
+      ],
+      "reason": "Work eligibility narrowed to indexed per-work public episode query; additional immutable first-marker replacement assertion."
+    },
+    "pagesBundle": {
+      "entries": 6,
+      "status": "PASS"
+    },
+    "lint": {
+      "status": "NOT_CONFIGURED",
+      "substitute": "Node syntax checks"
+    },
+    "syntax": {
+      "status": "PASS",
+      "files": 17
+    },
+    "security": {
+      "status": "PASS",
+      "scannedFiles": 30,
+      "findings": 0
+    },
+    "diff": {
+      "status": "PASS",
+      "unintendedChanges": 0
+    }
+  },
+  "liveAcceptance": {
+    "evidence": "artifacts/stage22-launch-readiness.json",
+    "checkedAt": "2026-10-09T06:37:29.702Z",
+    "kind": "HOSTED_READ_ONLY_AGGREGATES",
+    "decision": "NO_GO",
+    "authUsers": 42,
+    "linkedAuthors": 30,
+    "legacyBodyConflicts": 78,
+    "storageObjects": 0,
+    "missingMigrations": [
+      "authoring-007",
+      "authoring-008",
+      "authoring-009",
+      "authoring-010",
+      "authoring-011",
+      "authoring-012",
+      "authoring-013",
+      "authoring-014",
+      "authoring-015",
+      "authoring-017",
+      "authoring-018"
+    ],
+    "runtime": {
+      "origin": "https://webnovels-db4.pages.dev",
+      "healthStatus": 503,
+      "healthCode": "SECURE_API_NOT_ACTIVATED"
+    },
+    "blockers": [
+      "AUTHORING_MIGRATIONS_INCOMPLETE",
+      "P0_NOT_LOCKED",
+      "LEGACY_BODY_SOURCE_CONFLICT",
+      "FREE_RUNTIME_NOT_READY",
+      "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+      "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED"
+    ],
+    "actualSqlApplied": false,
+    "flagsChanged": false,
+    "browserOrLocalhostRun": false,
+    "hostedRestoreAccepted": false,
+    "real28DayExperimentRun": false,
+    "promotionsOrNotifications": false
+  },
+  "limitations": [
+    "Viewport and SHARE are client-reported proxies, not verified attention/external attribution.",
+    "First marker is server body issuance in a separate consent epoch, not confirmed reception or lifetime reading.",
+    "24h mature denominators require 5 unique readers; current public status/consent/Auth are rechecked.",
+    "Expired receipt and 90d touch cleanup is bounded Cron and may lag; first markers persist only while consent is retained.",
+    "Sitemap partitions recheck public heads per request; index and children are not a frozen cross-request snapshot.",
+    "Hosted DB/RLS/Auth/Storage restore, devices and real 28-day experiment remain unaccepted."
+  ],
+  "nextStage": 23
+}

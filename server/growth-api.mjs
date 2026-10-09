@@ -1,6 +1,9 @@
 import {discoveryEnabled,projectWork} from './stage16-api.mjs';
 import {webtoonEnabled} from './webtoon-api.mjs';
 export const growthEnabled=env=>env.P0_API_ENABLED==='true'&&env.GROWTH_SERVICE_ENABLED==='true'&&discoveryEnabled(env);
+export const measurementEnabled=env=>growthEnabled(env)&&env.GROWTH_MEASUREMENT_ENABLED==='true';
+const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+export const sitemapBucket=v=>typeof v==='string'&&/^(0|[1-9]\d{0,15})$/.test(v)&&BigInt(v)<=9223372036854775n;
 const id=v=>typeof v==='string'&&/^[1-9]\d{0,18}$/.test(v)&&BigInt(v)<=9223372036854775807n;
 const obj=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const exact=(v,keys)=>obj(v)&&Object.keys(v).length===keys.length&&Object.keys(v).every(k=>keys.includes(k));
@@ -27,7 +30,7 @@ export function validGrowthPolicy(p){
  (p.type!=='WEBTOON'||p.minCharacters===0);
 }
 const routes={
- '/api/v2/reader/growth':{feed:'PUBLIC',preferences:'GET','save-preferences':'POST',reset:'POST'},
+ '/api/v2/reader/growth':{feed:'PUBLIC',preferences:'GET','save-preferences':'POST',reset:'POST',viewport:'POST',referral:'POST'},
  '/api/v2/creator/growth':{report:'GET'},
  '/api/v2/admin/growth':{admin:'GET',configure:'POST',decide:'POST',evaluate:'POST'},
  '/api/v2/growth/seo':{seo:'GET'}
@@ -36,12 +39,15 @@ export async function growthApi({request,env,actor,db,readBody,fail}){
  if(!growthEnabled(env))fail(503,'GROWTH_NOT_ACTIVATED');
  const u=new URL(request.url),route=routes[u.pathname],action=u.searchParams.get('action')||Object.keys(route||{})[0];
  const queryKeys=[...u.searchParams.keys()];
- if(!route?.[action]||new Set(queryKeys).size!==queryKeys.length||queryKeys.some(k=>!['action','workId'].includes(k)))fail(400,'INVALID_ACTION');
+ if(!route?.[action]||new Set(queryKeys).size!==queryKeys.length||queryKeys.some(k=>!['action','workId','bucket'].includes(k)))fail(400,'INVALID_ACTION');
+ if(['viewport','referral'].includes(action)&&!measurementEnabled(env))fail(503,'MEASUREMENT_NOT_ACTIVATED');
  const publicRead=(action==='feed'&&request.method==='GET')||action==='seo';
  if(route[action]==='PUBLIC'?!['GET','POST'].includes(request.method):request.method!==route[action])fail(405,'METHOD_NOT_ALLOWED');
  if(request.method==='POST'&&request.headers.get('origin')!==u.origin)fail(403,'ORIGIN_REQUIRED');
  let data=request.method==='POST'?await readBody(request):{};
  const queryId=u.searchParams.get('workId');
+ const bucket=u.searchParams.get('bucket');
+ if(bucket!==null){if(action!=='seo'||queryId!==null||!sitemapBucket(bucket))fail(400,'INVALID_QUERY');data.bucket=bucket;}
  if((action==='report'||action==='seo')&&queryId!==null){if(!id(queryId))fail(400,'INVALID_WORK_ID');data.workId=queryId;}
  else if(queryId!==null)fail(400,'INVALID_QUERY');
  if(action==='report'&&!id(data.workId))fail(400,'INVALID_WORK_ID');
@@ -53,9 +59,12 @@ export async function growthApi({request,env,actor,db,readBody,fail}){
   if(u.pathname.includes('/admin/')&&(who.admin?.role!=='SUPER_ADMIN'||who.admin?.is_active!==true))fail(403,'ADMIN_FORBIDDEN');
  }
  if(['feed','reset','preferences','admin'].includes(action)&&!exact(data,[]))fail(400,'INVALID_FIELD');
- if(action==='save-preferences'&&(!exact(data,['excludedGenres','frequency','analyticsConsent'])||
+ const preferenceKeys=['excludedGenres','frequency','analyticsConsent'];
+ if(action==='save-preferences'&&(!(exact(data,preferenceKeys)||(measurementEnabled(env)&&exact(data,[...preferenceKeys,'measurementConsent'])&&typeof data.measurementConsent==='boolean'&&(!data.measurementConsent||data.analyticsConsent===true)))||
  !Array.isArray(data.excludedGenres)||data.excludedGenres.length>8||data.excludedGenres.some(g=>!text(g,1,40))||
  !['OFF','WEEKLY','DAILY'].includes(data.frequency)||typeof data.analyticsConsent!=='boolean'))fail(400,'INVALID_PREFERENCES');
+ if(action==='viewport'&&(!exact(data,['receiptId'])||!uuid(data.receiptId)))fail(400,'INVALID_INPUT');
+ if(action==='referral'&&(!exact(data,['workId','source'])||!id(data.workId)||data.source!=='SHARE'))fail(400,'INVALID_INPUT');
  if(action==='configure'&&(!exact(data,['version','config'])||!version(data.version)||!validGrowthPolicy(data.config)))fail(400,'INVALID_POLICY');
  if(action==='evaluate'&&(!exact(data,['version','workId'])||!version(data.version)||!id(data.workId)))fail(400,'INVALID_INPUT');
  if(action==='decide'){
@@ -65,18 +74,25 @@ export async function growthApi({request,env,actor,db,readBody,fail}){
    !integer(e.sampleSize,0,10000000)||!integer(e.observedDays,0,90)||!integer(e.costKrw,0,1000000000)||
    !text(e.retentionSummary,10,1000)||!text(e.supplySummary,10,1000)||!text(e.guardrailSummary,10,1000))fail(400,'INVALID_DECISION');
  }
- if(['feed','seo'].includes(action))data.webtoon=webtoonEnabled(env);
- const result=await db('rpc/stage21_growth',{}, {method:'POST',body:{p_user:who?.userId||null,p_action:action,p_data:data}});
- if(result?.error)fail([400,403,404,409].includes(result.status)?result.status:503,result.error);
+ if(['feed','seo','viewport','referral'].includes(action))data.webtoon=webtoonEnabled(env);
+ const result=await db(action==='seo'||measurementEnabled(env)?'rpc/stage22_growth':'rpc/stage21_growth',{}, {method:'POST',body:{p_user:who?.userId||null,p_action:action,p_data:data}});
+ if(result?.error)fail([400,403,404,409,429].includes(result.status)?result.status:503,result.error);
  if(!obj(result))fail(503,'GROWTH_UNAVAILABLE');
+ if(action==='admin'&&result.viewportEvidence!==undefined&&(!Array.isArray(result.viewportEvidence)||result.viewportEvidence.length>60))fail(503,'GROWTH_UNAVAILABLE');
  if(action==='feed'){
   if(!Array.isArray(result.works)||result.works.length>8)fail(503,'GROWTH_UNAVAILABLE');
-  return {works:result.works.map(w=>({...projectWork(w,fail,false,webtoonEnabled(env)),cover_image:publicGrowthCover(w.cover_image,env),reason:['RECENT_PUBLIC_SERIAL','GENRE_ROTATION'].includes(w.reason)?w.reason:'RECENT_PUBLIC_SERIAL'})),
-   measurement:'SERVER_PROVIDED_NOT_VIEWPORT',analyticsConsent:result.analyticsConsent===true};
+  return {works:result.works.map(w=>({...projectWork(w,fail,false,webtoonEnabled(env)),cover_image:publicGrowthCover(w.cover_image,env),reason:['RECENT_PUBLIC_SERIAL','GENRE_ROTATION'].includes(w.reason)?w.reason:'RECENT_PUBLIC_SERIAL',
+   ...(measurementEnabled(env)&&result.measurementConsent===true&&uuid(w.receiptId)?{receiptId:w.receiptId}:{})})),
+   measurement:'SERVER_PROVIDED_NOT_VIEWPORT',analyticsConsent:result.analyticsConsent===true,measurementConsent:measurementEnabled(env)&&result.measurementConsent===true};
  }
  if(action==='seo'){
+  if(queryId===null&&bucket===null){
+   if(!Array.isArray(result.partitions)||result.partitions.length>50000||result.partitions.some(p=>!sitemapBucket(p))||new Set(result.partitions).size!==result.partitions.length)fail(503,'SITEMAP_INDEX_LIMIT_OR_INVALID');
+   return {partitions:result.partitions};
+  }
   if(!Array.isArray(result.items)||result.items.length>1000)fail(503,'SITEMAP_LIMIT_REQUIRES_PARTITION');
   return {items:result.items.map(r=>{if(!id(r.id)||typeof r.title!=='string')fail(503,'GROWTH_UNAVAILABLE');
+   if((bucket!==null&&(BigInt(r.id)-1n)/1000n!==BigInt(bucket))||(queryId!==null&&r.id!==queryId))fail(503,'GROWTH_UNAVAILABLE');
    return {id:r.id,title:r.title.slice(0,200),description:typeof r.description==='string'?r.description.slice(0,200):'',lastModified:typeof r.lastModified==='string'&&Number.isFinite(Date.parse(r.lastModified))?r.lastModified:null,cover:publicGrowthCover(r.cover,env)};})};
  }
  return result;

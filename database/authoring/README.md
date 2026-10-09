@@ -36,3 +36,5 @@
 20단계 로컬 준비: [016_paid_episodes.sql](016_paid_episodes.sql). 검토된 014와 백업 gate 후 TEST 전용 commerce 주문·원장·권리 이력을 추가한다. 가격/정책 seed와 LIVE·실제 지급·기존 원장/권리 이관은 없다. [시험 계약](../../docs/launch/paid-episode-sandbox-contract.md)에 따라 합성 PGlite에서만 검증했으며 실제 DB에는 미적용이다. `npm run test:stage20`, `npm run verify:monetization-sandbox`는 운영 활성화 근거가 아니다.
 
 21단계 로컬 준비: [017_growth_experiments.sql](017_growth_experiments.sql). 검토된 **015**와 backup/review gate 후 private 추천 설정·동의·정책·KST 평가 snapshot·DRY_RUN outbox·새 공개 공급 기록을 추가한다. 016 결제 SQL은 선행 조건이 아니다. 정책 seed·실제 등급 변경·알림 발송은 없다. [성장 계약](../../docs/launch/growth-experiments-contract.md)에 따라 `npm run test:stage21`은 합성 DB/HTTP/DOM VM/Cron 검증만 실행한다. 실제 DB에는 미적용이며 GROWTH_SERVICE_ENABLED는 기본 false다.
+
+22단계 로컬 준비: [018_growth_measurement.sql](018_growth_measurement.sql). 검토된 **017**와 backup/review gate 후 별도 선택 동의·24시간 카드 receipt·신고 기반 화면 노출/공유 표식·동의 구간별 첫 서버 본문 제공·안정적 ID 구간 sitemap을 추가한다. [계측 계약](../../docs/launch/growth-measurement-contract.md)을 따른다. GROWTH_MEASUREMENT_ENABLED는 기본 false다. `npm run test:stage22`는 합성 DB/HTTP/DOM VM, `npm run audit:stage22`는 실제 읽기 전용 집계다. 실제 SQL 적용·기능 활성화·복원/기기 인수·28일 실험은 완료하지 않았다.

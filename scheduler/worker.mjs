@@ -28,6 +28,7 @@ export default {
     const jobs=[];
     if(env.AUTHOR_PUBLISH_ENABLED==='true')jobs.push(invoke(env.WEBTOON_SERVICE_ENABLED==='true'?'run_creator_schedules_v18':'run_creator_schedules'));
     if(env.GROWTH_SERVICE_ENABLED==='true')jobs.push(invoke('run_growth_evaluations'));
+    if(env.GROWTH_SERVICE_ENABLED==='true'&&env.GROWTH_MEASUREMENT_ENABLED==='true')jobs.push(invoke('prune_growth_measurements'));
     const results=await Promise.allSettled(jobs);
     if(results.some(x=>x.status==='rejected'))throw Error('Scheduled job failed; inspect RPC status');
   },
