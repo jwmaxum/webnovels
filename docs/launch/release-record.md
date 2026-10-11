@@ -259,3 +259,11 @@ env/초기 scratch 없는 소스 복사에서 Prisma/TypeScript 컴파일·타�
 30단계 검증: 관련 회귀 124/124, 전용 13/13, 도구 라인 100.00%·분기 94.41%·함수 95.12%.
 env/초기 scratch 없는 소스 복사에서 컴파일·타입·Functions 번들·구문·비밀/충돌·diff를 통과했다. lint는 미구성이며 전체 release는 push 후 CI에서 확인한다.
 [검증 기록](../../artifacts/stage30-verification.json)은 합성 검증과 실제 인수를 구분한다. 기존 실제 백업의 패키지 prepare/check는 전제 누락12·요청/선택0·종료2이며 원본 승인/복원 완료가 아니다. 실제 운영 SQL/원고/플래그·hosted/브라우저 인수는 변경/실행하지 않았고 NO_GO다.
+
+2026-10-11 31단계 전 PG 가입 준비: 회사정보·환불정책·기본 이용약관을 로그인/JS/API 없이
+읽을 수 있는 공개 HTML 페이지로 추가하고 홈 footer에 사업자 신원/연락처·정책 링크를
+표시했다. 통신판매업은 사용자 확인에 따라 신고 전이며 유료 결제는 준비 중으로 고지한다.
+[구현·법령 근거·유료 출시 전 과제](pg-policy-publication-2026-10-11.md)를 기록했다.
+유료 결제/복구 플래그·DB/원고/원장은 변경하지 않았다.
+
+2026-10-11 검증: 기존 관련 회귀 33/33, 새 정적 HTML3개·홈 footer의 사업자정보/메뉴·링크/앵커·CSS 파싱, env/초기 scratch 없는 소스 복사의 Prisma/TypeScript 컴파일·타입·Functions 번들과 비밀/충돌/diff를 통과했다. lint는 미구성이고 HTML/CSS 커버리지는 해당하지 않는다. [검증 기록](../../artifacts/pg-policy-verification-2026-10-11.json). 전체 CI/배포와 정책 URL HTTP 인수는 push 이후 별도로 확인한다.

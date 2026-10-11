@@ -1,0 +1,128 @@
+{
+  "work": "PG_POLICY_PRE_STAGE31",
+  "verifiedAt": "2026-10-11T04:28:45.877Z",
+  "status": "PASS",
+  "companyInformationSource": "Explicit user supplied; telecommerce registration not yet filed per user reply",
+  "policyVersion": "1.0",
+  "effectiveDate": "2026-10-11",
+  "publicPaths": [
+    "/company/",
+    "/policies/terms/",
+    "/policies/refund/"
+  ],
+  "verification": {
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "noInitialScratch": true,
+    "commands": [
+      {
+        "name": "test:naming",
+        "exit": 0,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:auth",
+        "exit": 0,
+        "tests": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:cloudflare-bundle",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "build:compile",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "public-runtime",
+        "exit": 0,
+        "tests": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typecheck",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "relatedTests": 33,
+    "passed": 33,
+    "staticPages": [
+      {
+        "file": "public/company/index.html",
+        "companyInformation": true,
+        "policyLinks": true,
+        "standalone": true,
+        "htmlErrors": 0
+      },
+      {
+        "file": "public/policies/terms/index.html",
+        "companyInformation": true,
+        "policyLinks": true,
+        "standalone": true,
+        "htmlErrors": 0
+      },
+      {
+        "file": "public/policies/refund/index.html",
+        "companyInformation": true,
+        "policyLinks": true,
+        "standalone": true,
+        "htmlErrors": 0
+      },
+      {
+        "file": "public/index.html",
+        "companyInformation": true,
+        "policyLinks": true,
+        "standalone": false,
+        "htmlErrors": null
+      }
+    ],
+    "cssParse": "PASS",
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_APPLICABLE_STATIC_HTML_CSS_NO_RUNTIME_LOGIC_ADDED",
+    "secretAndConflictScan": {
+      "files": 9,
+      "findings": 0
+    },
+    "diffStatus": 0,
+    "testedSourceSha256": {
+      "public/index.html": "301623d7db0220679eb5ed5f4c791e609973598a1d294b984443b25f43397f5a",
+      "vercel.json": "2f87cf8074d8b9f129a0c643c243c5027331a9edfbfa41003e89074dd0747601",
+      "public/company/index.html": "520f15bef21865f6b80c17a233b10b42377655939e886f1da4e43c7634b28462",
+      "public/css/policies.css": "caaa1d7659a132c874dd77384d98fb43f49dcb53a20346551e8ab7ff8d2c5080",
+      "public/policies/refund/index.html": "ce93267211dff76084ec518511a3e2f129c91eaac37de3e6f721f61f91ab1823",
+      "public/policies/terms/index.html": "b3688ebf0d1f2a1dff235001fd0707478dc8c93edce5bcd50bd264afc5fb9a79"
+    }
+  },
+  "fullReleaseBuild": "PENDING_REMOTE_CI_AFTER_PUSH",
+  "deploymentHttpAcceptance": "PENDING_AFTER_PUSH",
+  "browserAcceptanceExecuted": false,
+  "localServerStarted": false,
+  "registrationNumberInvented": false,
+  "pgApprovalGranted": false,
+  "livePaymentsActivated": false,
+  "productionDatabaseChanged": false,
+  "manuscriptsChanged": false,
+  "flagsChanged": false,
+  "nextDevelopment": "Register seller number/agency, publish verified privacy disclosures and accept actual PG/refund ledger before live sales; stage31 recovery work remains separate",
+  "plan": "docs/launch/pg-policy-publication-2026-10-11.md"
+}

@@ -1,0 +1,58 @@
+.policy-page { margin: 0; background: #f7f7fa; color: #222331; font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif; line-height: 1.8; }
+.policy-page * { box-sizing: border-box; }
+.policy-page a { color: #a5154f; text-underline-offset: .2em; }
+.policy-page a:focus-visible, .legal-footer a:focus-visible { outline: 3px solid #ff2a7a; outline-offset: 4px; border-radius: 3px; }
+.policy-skip { position: absolute; left: 1rem; top: -6rem; z-index: 10; padding: .8rem 1rem; background: #fff; }
+.policy-skip:focus { top: 1rem; }
+.policy-header { background: #fff; border-bottom: 1px solid #e3e3eb; }
+.policy-header-inner { max-width: 1120px; margin: auto; padding: 1.2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.policy-brand { color: #171823 !important; text-decoration: none; font-size: 1.5rem; font-weight: 800; letter-spacing: -.05em; }
+.policy-brand span { color: #bc1855; }
+.policy-home { font-size: .9rem; }
+.policy-layout { max-width: 1120px; margin: 2.5rem auto; padding: 0 1.5rem; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 2rem; align-items: start; }
+.policy-nav { position: sticky; top: 1.5rem; }
+.policy-nav p { font-size: .8rem; font-weight: 700; color: #606274; margin: 0 0 .8rem; }
+.policy-nav a { display: block; padding: .7rem 1rem; border-radius: .6rem; margin-bottom: .3rem; text-decoration: none; color: #424455; }
+.policy-nav a[aria-current="page"] { background: #ffe9f1; color: #9d164a; font-weight: 700; }
+.policy-article { background: #fff; border: 1px solid #e3e3eb; border-radius: 1rem; padding: clamp(1.3rem, 4vw, 3rem); min-width: 0; overflow-wrap: anywhere; }
+.policy-eyebrow { color: #a5154f; font-size: .8rem; font-weight: 700; margin: 0; letter-spacing: .08em; }
+.policy-article h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -.04em; margin: .3rem 0 .8rem; line-height: 1.35; }
+.policy-article h2 { font-size: 1.2rem; margin: 2rem 0 .7rem; line-height: 1.5; }
+.policy-article p { margin: .7rem 0; }
+.policy-article li { margin: .5rem 0; }
+.policy-article ul, .policy-article ol { padding-left: 1.4rem; }
+.policy-meta { color: #636577; font-size: .85rem; }
+.policy-note { padding: 1rem 1.2rem; background: #faf3f6; border-left: 3px solid #bc1855; border-radius: .3rem; margin: 1.5rem 0; }
+.policy-company { margin: 1.5rem 0; }
+.policy-company > div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 1rem; padding: .85rem 0; border-bottom: 1px solid #ececf2; }
+.policy-company dt { color: #606274; }
+.policy-company dd { margin: 0; font-weight: 500; }
+.policy-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.policy-card { display: block; border: 1px solid #e3e3eb; border-radius: .7rem; padding: 1.2rem; text-decoration: none; }
+.policy-card strong { display: block; margin-bottom: .4rem; }
+.policy-card span { color: #606274; font-size: .9rem; }
+.policy-template { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1rem; border: 1px solid #e3e3eb; border-radius: .6rem; font: inherit; background: #fafafd; }
+.policy-contact { display: flex; flex-wrap: wrap; gap: .7rem 1.2rem; }
+.policy-page .legal-footer { max-width: 1120px; margin: 0 auto; background: transparent; }
+.legal-footer { padding: 2rem clamp(1rem, 4vw, 3rem); border-top: 1px solid var(--border-color, #e3e3eb); color: var(--text-secondary, #5b5d6d); background: var(--bg-surface, #fff); font-size: .82rem; line-height: 1.9; overflow-wrap: anywhere; }
+.legal-footer nav { display: flex; flex-wrap: wrap; gap: .6rem 1.3rem; margin-bottom: .8rem; }
+.legal-footer a { color: inherit; text-decoration: underline; text-underline-offset: .2em; }
+.legal-footer p { margin: .3rem 0; }
+.legal-footer address { font-style: normal; }
+@media (max-width: 760px) {
+  .policy-layout { display: block; margin: 1.3rem auto; padding: 0 1rem; }
+  .policy-nav { position: static; margin-bottom: 1.2rem; }
+  .policy-nav p { margin-bottom: .4rem; }
+  .policy-nav-links { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .policy-nav a { padding: .55rem .8rem; font-size: .9rem; }
+  .policy-company > div { grid-template-columns: 1fr; gap: .15rem; }
+  .policy-cards { grid-template-columns: 1fr; }
+}
+@media print {
+  .policy-page { background: #fff; font-size: 11pt; }
+  .policy-header, .policy-nav, .policy-skip, .legal-footer { display: none; }
+  .policy-layout { display: block; margin: 0; padding: 0; }
+  .policy-article { border: 0; padding: 0; }
+  .policy-article h2 { break-after: avoid; }
+  .policy-article a { color: #222; }
+}
