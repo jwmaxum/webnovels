@@ -267,3 +267,11 @@ env/초기 scratch 없는 소스 복사에서 컴파일·타입·Functions 번�
 유료 결제/복구 플래그·DB/원고/원장은 변경하지 않았다.
 
 2026-10-11 검증: 기존 관련 회귀 33/33, 새 정적 HTML3개·홈 footer의 사업자정보/메뉴·링크/앵커·CSS 파싱, env/초기 scratch 없는 소스 복사의 Prisma/TypeScript 컴파일·타입·Functions 번들과 비밀/충돌/diff를 통과했다. lint는 미구성이고 HTML/CSS 커버리지는 해당하지 않는다. [검증 기록](../../artifacts/pg-policy-verification-2026-10-11.json). 전체 CI/배포와 정책 URL HTTP 인수는 push 이후 별도로 확인한다.
+
+## 2026-10-11 — 31단계 제출 원고 트랜잭션 복구 후보
+
+기존 stage30 증거 패키지를 확장하여 private SQL 후보·전체 행 CAS·불변 원본/전후 이력·세 본문 경로·rollback·재실행 차단을 개발했다. 공개 head/예약은 차단하고 비대상/계정/초안/버전을 보존한다.
+
+31단계 검증: 관련 회귀 106/106, 전용10/10, 도구 라인 99.35%·분기 89.90%·함수 97.06%. env/초기 scratch 없는 소스 복사에서 컴파일·타입·Functions 번들·구문·비밀/충돌·diff를 통과했다. lint는 미구성이며 전체 release CI/배포는 push 후 별도 확인한다.
+실제 읽기 전용 감사는 NO_GO이며 운영 프로젝트1개·별도 대상0개·기존 충돌78·019/020 미적용이다. 기존 실제 백업 assess는 전제 누락12·요청/선택0·종료2이고 실제 SQL 후보/본문 교체는 없다. 합성 트랜잭션 성공과 실제 hosted/원본 승인·브라우저 인수를 구분한다.
+[검증 기록](../../artifacts/stage31-verification.json), [계약과32단계 준비](submitted-manuscript-restore-contract.md).

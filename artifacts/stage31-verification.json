@@ -1,0 +1,233 @@
+{
+  "stage": 31,
+  "verifiedAt": "2026-10-11T06:27:31.544Z",
+  "scope": "Offline transaction candidate for fixed reviewed novel submissions; full-row SHA256 CAS, original/private immutable before-after archive, all-body-path consistency, rollback and replay rejection",
+  "verification": {
+    "status": "PASS",
+    "localBuild": "npm run build:compile",
+    "fullReleaseBuild": "PENDING_REMOTE_CI_AFTER_PUSH",
+    "cleanSourceCopy": true,
+    "noLocalEnv": true,
+    "noInitialScratch": true,
+    "reusedLockedDependencies": true,
+    "runtime": "v24.19.0",
+    "functionsBundle": true,
+    "commands": [
+      {
+        "name": "test:stage31",
+        "exit": 0,
+        "tests": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:naming",
+        "exit": 0,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:auth",
+        "exit": 0,
+        "tests": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage23",
+        "exit": 0,
+        "tests": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage24",
+        "exit": 0,
+        "tests": 14,
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage26",
+        "exit": 0,
+        "tests": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage29",
+        "exit": 0,
+        "tests": 20,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:stage30",
+        "exit": 0,
+        "tests": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:cloudflare-bundle",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "build:compile",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typecheck",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "postCopyReview": "Protected/alternate image evidence hardening and final 10 tests synchronized into the same clean copy; final code SHA matches tested source"
+  },
+  "tests": {
+    "status": "PASS",
+    "relatedTests": 106,
+    "passed": 106,
+    "stage31Tests": 10,
+    "kind": "Synthetic PostgreSQL/PGlite and local evidence bytes, existing mocks; not hosted concurrency/browser/actual original acceptance"
+  },
+  "coverage": {
+    "scope": [
+      "scripts/lib/submitted-recovery.mjs",
+      "scripts/prepare_submitted_restore.mjs"
+    ],
+    "lines": 99.35,
+    "branches": 89.9,
+    "functions": 97.06,
+    "minimumLineTarget": 80,
+    "sqlPercentageClaimed": false
+  },
+  "typeCheck": {
+    "status": "PASS",
+    "command": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "syntax": {
+    "status": "PASS",
+    "files": 5
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "Node syntax checks; not a lint pass"
+  },
+  "security": {
+    "status": "PASS",
+    "secretAndConflictFindings": 0,
+    "diffStatus": 0,
+    "reviewIssuesResolved": [
+      "Current fixed source/latest review/author and SUPER_ADMIN permissions revalidated",
+      "All source/after row fingerprints with PostgreSQL SHA256 and canonical JSONB preserve bigint precision",
+      "No Auth credentials in SQL/history/stdout; bounded private inputs and output verification",
+      "Known P0 mirror image/timestamp effects preserved without disabling triggers",
+      "Publication/legacy schedule/active authoring schedule blocked",
+      "Protected and alternate legacy image references require image evidence",
+      "ACCESS EXCLUSIVE table locks and bounded operator-context transaction; no advisory-only claim",
+      "Failure and trigger side-effect rollback for multiple targets; private RLS/revoke and update/delete/truncate/replay rejection",
+      "Operator GUC settings do not prove real hosted identity or isolation; acceptance remains required"
+    ]
+  },
+  "testedCodeSha256": {
+    "package.json": "456e02886e37cca7276dfaaa3f0744749809b39be5f650a483629d65fcfea314",
+    "database/launch/005_submitted_manuscript_restore.sql": "66389a5bce910c40939bbb3356321ad36805b846584789f3e28b7903141525f9",
+    "scripts/audit_stage31_launch.cjs": "ab8d715fa08b0f0d615c863eb9ce9f6f5b009173998a25103a461ac15e472552",
+    "scripts/fixtures/stage31-restore.mjs": "c39aaba754e6a2ad6ad112c9fcbdc19c300c3114b95a64183e31cc54ea90cc96",
+    "scripts/lib/submitted-recovery.mjs": "324a9bb17048b17e7b29cefd74260317a454fae7015f0c5d1f52cd1b00da9952",
+    "scripts/prepare_submitted_restore.mjs": "89628bc9c388204548012ac2f3f4335953bfbc978a4752bb4a11361e0f8946a0",
+    "scripts/verify_stage31_restore.test.mjs": "16cde20cc249f453028a5ba1972f8eca1f67de553c400df2f08b73162f3f0e2b"
+  },
+  "actualSourceAccess": {
+    "managementReadOnlyVerified": true,
+    "accessibleProjects": 1,
+    "accessibleNonSourceProjects": 0,
+    "separateTargetConfigured": false,
+    "actualOriginalManuscriptAccepted": false,
+    "actualEvidenceFilesAccepted": 0,
+    "designatedLocalEnvironmentReadWithoutSecretOutput": true
+  },
+  "actualSourceAssessment": {
+    "format": "webnovels-recovery-evidence-summary-v1",
+    "snapshotSha256": "45c6cf26353d5a5cbfc3ff6e2e4f1e0954d92fb661a594ea2bce0698facdf237",
+    "packetSha256": "02bd87f6253775f2d5902ecfe31fbf657dcd5b9acee3a655f458a5604a74cf2d",
+    "requests": 0,
+    "readyForEvidence": 0,
+    "blockedRequests": 0,
+    "missingPrerequisites": [
+      "TABLE:public.secure_episode_contents",
+      "TABLE:authoring.file_jobs",
+      "TABLE:authoring.recovery_requests",
+      "TABLE:authoring.recovery_review_events",
+      "TABLE:authoring.recovery_source_access",
+      "TABLE:authoring.recovery_review_receipts",
+      "TABLE:authoring.workflow_events",
+      "MIGRATION:authoring-002",
+      "MIGRATION:authoring-007",
+      "MIGRATION:authoring-014",
+      "MIGRATION:authoring-019",
+      "MIGRATION:authoring-020"
+    ],
+    "selected": 0,
+    "held": 0,
+    "pending": 0,
+    "unresolved": 0,
+    "status": "SOURCE_PREREQUISITES_MISSING",
+    "productionChanged": false,
+    "hostedRestoreAccepted": false,
+    "rightsAuthenticated": false,
+    "freeCutoverAccepted": false,
+    "source": "Previously verified real logical backup predating SQL019/020; not a fresh hosted apply snapshot",
+    "assessmentRegenerationMatched": true,
+    "assessmentExit": 2,
+    "actualOriginalManuscriptAccepted": false,
+    "actualEvidenceFilesAccepted": 0,
+    "transactionCandidateGenerated": false,
+    "bodyReplacementExecuted": false
+  },
+  "productionMigrationApplied": false,
+  "productionManuscriptsWritten": false,
+  "flagsChanged": false,
+  "paymentActivated": false,
+  "fullSchemaRestore": false,
+  "actualBodyReplacementExecuted": false,
+  "syntheticBodyReplacementExecuted": true,
+  "transactionCandidateAppliedToHosted": false,
+  "hostedRestoreAccepted": false,
+  "browserAcceptanceExecuted": false,
+  "releaseDecision": "NO_GO",
+  "blockers": [
+    "AUTHORING_MIGRATIONS_INCOMPLETE",
+    "P0_NOT_LOCKED",
+    "LEGACY_BODY_SOURCE_CONFLICT",
+    "FREE_RUNTIME_NOT_READY",
+    "HOSTED_DB_STORAGE_RESTORE_ACCEPTANCE_REQUIRED",
+    "ROLE_DEVICE_BETA_ACCEPTANCE_REQUIRED",
+    "RECOVERY_MIGRATIONS_INCOMPLETE",
+    "ACTUAL_RECOVERY_ORIGINAL_AND_REVIEW_EVIDENCE_REQUIRED",
+    "SEPARATE_HOSTED_TARGET_REQUIRED"
+  ],
+  "nextStage": 32,
+  "contract": "docs/launch/submitted-manuscript-restore-contract.md"
+}

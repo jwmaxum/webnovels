@@ -97,6 +97,10 @@ HOLD/PENDING에 원본 선택 descriptor를 실을 수 없고 HOLD에는 사유 
 
 ## 공식 근거
 
+2026-10-11: [31단계 트랜잭션 후보](submitted-manuscript-restore-contract.md)가 이 증거 패키지를
+재사용해 선택 본문의 전체 행 CAS/보존/rollback과 private 불변 이력을 격리 검증한다.
+30단계의 계획 전용 모드와 기존 CLI는 그대로 유지한다. 실제 hosted 적용/출시 완료는 아니다.
+
 [Supabase 백업 안내](https://supabase.com/docs/guides/platform/backups)의 Storage 바이트 제외,
 [PGlite](https://github.com/electric-sql/pglite), [Zod](https://github.com/colinhacks/zod),
 [Node24 파일 API](https://nodejs.org/docs/latest-v24.x/api/fs.html)를 참고했다. 기존 도구와
