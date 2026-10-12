@@ -202,7 +202,7 @@ window.renderPolicyBlockedReadersList = async function(workId) {
   container.innerHTML = `
     <table style="width:100%; border-collapse:collapse; font-size:0.8rem; text-align:left;">
       <thead>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.08); color:#94a3b8;">
+        <tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary);">
           <th style="padding:6px 10px;">독자 ID</th>
           <th style="padding:6px 10px;">차단 일시</th>
           <th style="padding:6px 10px; text-align:right;">관리</th>
@@ -212,9 +212,9 @@ window.renderPolicyBlockedReadersList = async function(workId) {
         ${blocks.map(b => {
           const dateStr = b.created_at ? new Date(b.created_at).toLocaleDateString() : '최근';
           return `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-              <td style="padding:6px 10px; color:#e2e8f0; font-family:monospace;">${escapeCreatorHtml(b.reader_id)}</td>
-              <td style="padding:6px 10px; color:#64748b;">${dateStr}</td>
+            <tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:6px 10px; color:var(--text-primary); font-family:monospace;">${escapeCreatorHtml(b.reader_id)}</td>
+              <td style="padding:6px 10px; color:var(--text-secondary);">${dateStr}</td>
               <td style="padding:6px 10px; text-align:right;">
                 <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.72rem;" onclick="unblockReaderInModal(${workId}, '${b.reader_id}')">
                   차단 해제
@@ -408,7 +408,7 @@ window.renderCreatorEarningLedger = function() {
   container.innerHTML = `
     <table class="creator-ledger-table" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
       <thead>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.08); color:var(--text-muted); background:rgba(255,255,255,0.02);">
+        <tr style="border-bottom:1px solid var(--border-color); color:var(--text-muted); background:var(--bg-subtle);">
           <th style="padding:10px 12px; min-width:130px;">발생 일시</th>
           <th style="padding:10px 12px; min-width:120px;">수익 원천</th>
           <th style="padding:10px 12px; min-width:180px;">작품 / 상세 내역</th>
@@ -427,7 +427,7 @@ window.renderCreatorEarningLedger = function() {
           const amountColor = isNegative ? '#EF4444' : (entry.currency === 'POINT' ? 'var(--cdg-pink, #FF2A7A)' : 'var(--accent-emerald, #10B981)');
 
           return `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.2s;" class="ledger-row-hover">
+            <tr style="border-bottom:1px solid var(--border-color); transition:background 0.2s;" class="ledger-row-hover">
               <td style="padding:10px 12px; color:var(--text-muted); font-size:0.8rem; font-family:monospace;">${dateStr}</td>
               <td style="padding:10px 12px;">
                 <span class="badge ${sBadge.class}" style="font-size:0.75rem; padding:3px 8px; display:inline-flex; align-items:center; gap:4px;">
@@ -435,14 +435,14 @@ window.renderCreatorEarningLedger = function() {
                 </span>
               </td>
               <td style="padding:10px 12px;">
-                <div style="font-weight:600; color:#fff;">${escapeCreatorHtml(entry.workTitle || '전체 작품')}</div>
+                <div style="font-weight:600; color:var(--text-primary);">${escapeCreatorHtml(entry.workTitle || '전체 작품')}</div>
                 <div class="text-muted" style="font-size:0.76rem; margin-top:2px;">${escapeCreatorHtml(entry.description || '')}</div>
               </td>
               <td style="padding:10px 12px; text-align:right; font-weight:700; font-size:0.95rem; color:${amountColor}; font-family:monospace;">
                 ${formattedAmount}
               </td>
               <td style="padding:10px 12px; text-align:center;">
-                <span style="display:inline-block; font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:12px; border:1px solid ${statBadge.color}; color:${statBadge.color}; background:rgba(0,0,0,0.3);">
+                <span style="display:inline-block; font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:12px; border:1px solid ${statBadge.color}; color:${statBadge.color}; background:var(--bg-surface);">
                   ${statBadge.label}
                 </span>
               </td>
@@ -567,19 +567,19 @@ function renderReaderFunnelChart(events, episodes) {
   ];
 
   container.innerHTML = steps.map(step => `
-    <div class="funnel-step-row p-3 glass-panel" style="border-radius:10px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color);">
+    <div class="funnel-step-row p-3 glass-panel" style="border-radius:10px; background:var(--bg-subtle); border:1px solid var(--border-color);">
       <div class="flex-between mb-2" style="display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <strong style="color:#fff; font-size:0.92rem;">${step.label}</strong>
+          <strong style="color:var(--text-primary); font-size:0.92rem;">${step.label}</strong>
           <span class="badge badge-outline" style="font-size:0.72rem;">${step.note}</span>
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
-          ${step.dropPct > 0 ? `<span style="color:#F43F5E; font-size:0.78rem; font-weight:700;">-${step.dropPct}% 이탈</span>` : ''}
+          ${step.dropPct > 0 ? `<span style="color:var(--accent-danger); font-size:0.78rem; font-weight:700;">-${step.dropPct}% 이탈</span>` : ''}
           <strong style="color:${step.color}; font-size:1.05rem; font-family:monospace;">${step.pct}%</strong>
           <span class="text-muted small">(${step.count.toLocaleString()}명)</span>
         </div>
       </div>
-      <div class="funnel-progress-track" style="height:10px; width:100%; background:rgba(0,0,0,0.4); border-radius:6px; overflow:hidden;">
+      <div class="funnel-progress-track" style="height:10px; width:100%; background:var(--bg-surface); border-radius:6px; overflow:hidden;">
         <div class="funnel-progress-bar" style="height:100%; width:${step.pct}%; background:${step.color}; border-radius:6px; transition:width 0.6s ease;"></div>
       </div>
     </div>
@@ -596,7 +596,7 @@ function renderEpisodeCompletionList(events, episodes) {
   container.innerHTML = `
     <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem;">
       <thead>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.08); color:var(--text-muted); background:rgba(255,255,255,0.02);">
+        <tr style="border-bottom:1px solid var(--border-color); color:var(--text-muted); background:var(--bg-subtle);">
           <th style="padding:10px 12px; width:80px;">회차</th>
           <th style="padding:10px 12px;">회차 제목</th>
           <th style="padding:10px 12px; width:100px; text-align:right;">열람수</th>
@@ -616,21 +616,21 @@ function renderEpisodeCompletionList(events, episodes) {
           const isWarning = rate < 50;
 
           return `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.2s;" class="ledger-row-hover">
+            <tr style="border-bottom:1px solid var(--border-color); transition:background 0.2s;" class="ledger-row-hover">
               <td style="padding:10px 12px; font-weight:700; color:var(--text-muted);">${ep.episodeNumber}화</td>
-              <td style="padding:10px 12px; font-weight:600; color:#fff;">${escapeCreatorHtml(ep.title)}</td>
+              <td style="padding:10px 12px; font-weight:600; color:var(--text-primary);">${escapeCreatorHtml(ep.title)}</td>
               <td style="padding:10px 12px; text-align:right; color:var(--text-muted); font-family:monospace;">${opens.toLocaleString()}</td>
-              <td style="padding:10px 12px; text-align:right; color:#10B981; font-family:monospace; font-weight:700;">${completes.toLocaleString()}</td>
+              <td style="padding:10px 12px; text-align:right; color:var(--accent-emerald); font-family:monospace; font-weight:700;">${completes.toLocaleString()}</td>
               <td style="padding:10px 12px;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <div style="flex:1; height:6px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden;">
+                  <div style="flex:1; height:6px; background:var(--bg-subtle); border-radius:4px; overflow:hidden;">
                     <div style="height:100%; width:${rate}%; background:${isKiller ? '#F43F5E' : (rate >= 60 ? '#10B981' : '#F59E0B')}; border-radius:4px;"></div>
                   </div>
                   <span style="font-weight:700; font-size:0.8rem; width:38px; text-align:right; font-family:monospace;">${rate}%</span>
                 </div>
               </td>
               <td style="padding:10px 12px; text-align:center;">
-                ${isKiller ? '<span class="badge" style="background:rgba(244,63,94,0.15); color:#F43F5E; border:1px solid rgba(244,63,94,0.3); font-size:0.75rem;">🔥 킬러 회차</span>' : (isWarning ? '<span class="badge" style="background:rgba(245,158,11,0.15); color:#F59E0B; border:1px solid rgba(245,158,11,0.3); font-size:0.75rem;">⚠️ 이탈 주의</span>' : '<span class="text-muted small">안정적</span>')}
+                ${isKiller ? '<span class="badge" style="background:rgba(244,63,94,0.15); color:var(--accent-danger); border:1px solid rgba(244,63,94,0.3); font-size:0.75rem;">🔥 킬러 회차</span>' : (isWarning ? '<span class="badge" style="background:rgba(245,158,11,0.15); color:var(--accent-amber); border:1px solid rgba(245,158,11,0.3); font-size:0.75rem;">⚠️ 이탈 주의</span>' : '<span class="text-muted small">안정적</span>')}
               </td>
             </tr>
           `;

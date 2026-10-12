@@ -264,7 +264,7 @@ window.loadSubAdminList = async function() {
       <div class="card glass-panel p-4 mb-3" style="border: 1px solid var(--border-color); border-radius: 8px;">
         <div class="flex-between">
           <div>
-            <strong style="font-size: 1.1rem; color: #fff;">${admin.nickname || admin.username} (${admin.username})</strong>
+            <strong style="font-size: 1.1rem; color: var(--text-primary);">${admin.nickname || admin.username} (${admin.username})</strong>
             <div class="text-muted small" style="margin-top: 4px;">Role: <span class="badge badge-primary">${admin.role}</span> | Email: ${admin.email}</div>
           </div>
           <div class="action-buttons-group" style="display:flex; gap:8px;">
@@ -273,7 +273,7 @@ window.loadSubAdminList = async function() {
             <button class="btn btn-outline btn-sm style-danger" onclick="handleDeleteSubAdmin('${admin.id}', '${admin.nickname || admin.username}')">🗑️ 삭제</button>
           </div>
         </div>
-        <hr class="divider" style="margin: 12px 0; border-color: rgba(255,255,255,0.1);">
+        <hr class="divider" style="margin: 12px 0; border-color: var(--border-color);">
         <small class="text-muted">부여된 접근 권한 (${permsList.length}/16):</small>
         <div class="perm-tags mt-2" style="display: flex; flex-wrap: wrap; gap: 6px;">
           ${permsList.map(p => `<span class="badge badge-accent" style="font-size: 0.75rem;">${p}</span>`).join('')}
@@ -400,7 +400,7 @@ async function renderAdminWorks() {
     }
 
     return `
-      <tr class="work-table-row" style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;">
+      <tr class="work-table-row" style="border-bottom: 1px solid var(--border-color); transition: background 0.15s ease;">
         <td style="padding: 10px 12px; text-align: center;">
           <input type="checkbox" class="work-item-cb" value="${w.id}" onchange="updateSelectedWorksCount()">
         </td>
@@ -410,7 +410,7 @@ async function renderAdminWorks() {
             <div>
               <div style="display: flex; align-items: center; gap: 5px;">
                 ${typeBadge}
-                <strong style="color: #fff; cursor: pointer;" onclick="openWorkSeriesDashboard(${w.id})">${escapeHtml(w.title)}</strong>
+                <strong style="color: var(--text-primary); cursor: pointer;" onclick="openWorkSeriesDashboard(${w.id})">${escapeHtml(w.title)}</strong>
               </div>
               <div class="text-muted small">ID: ${w.id} · ${escapeHtml(w.genre)}</div>
             </div>
@@ -469,7 +469,7 @@ function getStatusBadgeHtml(status) {
 function getTrendIconHtml(w) {
   if (w.isTopRecommended) return `<span title="실시간 Hot" style="color: var(--accent-rose);">🔥</span>`;
   if (w.isPopularWork) return `<span title="상승세" style="color: var(--color-brand-secondary);">↑</span>`;
-  if (w.status === 'DELAYED' || w.status === 'ALERT') return `<span title="이상 감지" style="color: #facc15;">⚠</span>`;
+  if (w.status === 'DELAYED' || w.status === 'ALERT') return `<span title="이상 감지" style="color: var(--accent-amber);">⚠</span>`;
   return `<span title="안정" style="color: var(--text-secondary);">↔</span>`;
 }
 
@@ -619,7 +619,7 @@ async function renderAdminCalendar(targetYear = new Date().getFullYear(), target
 
     html += `
       <div class="calendar-day-cell ${isToday ? 'today' : ''}" style="cursor: pointer;" onclick="${clickAction}">
-        <div style="font-weight: ${isToday ? '800' : '500'}; color: ${isToday ? 'var(--color-brand-secondary)' : '#fff'};">${day}</div>
+        <div style="font-weight: ${isToday ? '800' : '500'}; color: ${isToday ? 'var(--color-brand-secondary)' : 'var(--text-primary)'};">${day}</div>
         ${badgeHtml}
       </div>
     `;
@@ -715,7 +715,7 @@ window.openWorkSeriesDashboard = async function(workId) {
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0;">
       <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
         <div class="text-muted small">총 연재 회차</div>
-        <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px;">${epCount}화</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">${epCount}화</div>
       </div>
       <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
         <div class="text-muted small">누적 조회수</div>
@@ -723,7 +723,7 @@ window.openWorkSeriesDashboard = async function(workId) {
       </div>
       <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
         <div class="text-muted small">구독 독자 팬</div>
-        <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px;">${fansCount}명</div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">${fansCount}명</div>
       </div>
       <div class="card glass-panel p-3 text-center" style="border-radius: 6px;">
         <div class="text-muted small">누적 정산 수익</div>
@@ -924,19 +924,19 @@ window.renderAdminEpisodes = async function(workId) {
     const views = Number(rawViews).toLocaleString();
 
     return `
-      <tr class="ep-table-row" style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;">
+      <tr class="ep-table-row" style="border-bottom: 1px solid var(--border-color); transition: background 0.15s ease;">
         <td style="padding: 10px 12px; text-align: center;">
           <input type="checkbox" class="ep-item-cb" value="${ep.id || epNum}" onchange="updateSelectedEpisodesCount()">
         </td>
         <td style="padding: 10px 12px; font-weight: 800; color: var(--color-brand-secondary);">#${epNum}</td>
         <td style="padding: 10px 12px;">
-          <strong style="color: #fff;">${ep.title}</strong>
+          <strong style="color: var(--text-primary);">${ep.title}</strong>
           ${ep.imageUrls && ep.imageUrls.length > 0 ? `<span class="badge badge-outline" style="font-size:0.7rem; margin-left: 6px;"><i data-lucide="image"></i> 웹툰 ${ep.imageUrls.length}컷</span>` : ''}
         </td>
         <td style="padding: 10px 12px;">${statusBadge}</td>
         <td style="padding: 10px 12px;">${badgeFreeHtml}</td>
         <td style="padding: 10px 12px; font-size: 0.8rem; color: var(--text-secondary);">${pubDate}</td>
-        <td style="padding: 10px 12px; font-weight: 700; color: #fff;">${views}</td>
+        <td style="padding: 10px 12px; font-weight: 700; color: var(--text-primary);">${views}</td>
         <td style="padding: 10px 12px; text-align: center;">
           <span class="text-muted small">조회 전용</span>
         </td>
@@ -1413,7 +1413,7 @@ window.loadAdminContentReviews = async function(isManualRefresh = false) {
       const timeStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : '최근';
 
       return `
-        <div class="episode-row mb-3 p-3 glass-panel flex-between" style="border-radius: 8px; background: rgba(255,255,255,0.02);">
+        <div class="episode-row mb-3 p-3 glass-panel flex-between" style="border-radius: 8px; background: var(--bg-subtle);">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <strong>[연재 심사] ${escapeHtml(r.work_title || '작품명 미정')}</strong>
@@ -1485,7 +1485,7 @@ window.loadAdminReports = async function(isManualRefresh = false) {
       <div class="table-responsive">
         <table style="width:100%; font-size:0.85rem; text-align:left; border-collapse:collapse;">
           <thead>
-            <tr style="color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.08);">
+            <tr style="color:var(--text-muted); border-bottom:1px solid var(--border-color);">
               <th class="p-2">유형</th>
               <th class="p-2">신고 사유</th>
               <th class="p-2">신고자</th>
@@ -1507,10 +1507,10 @@ window.loadAdminReports = async function(isManualRefresh = false) {
               const timeStr = rep.created_at ? new Date(rep.created_at).toLocaleDateString() : '-';
 
               return `
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <tr style="border-bottom:1px solid var(--border-color);">
                   <td class="p-2">${typeBadge}</td>
                   <td class="p-2">
-                    <strong style="color:#fff;">${escapeHtml(rep.reason || '신고 접수')}</strong>
+                    <strong style="color:var(--text-primary);">${escapeHtml(rep.reason || '신고 접수')}</strong>
                     <div class="text-muted small">대상 ID: ${escapeHtml(rep.target_id || '-')}</div>
                   </td>
                   <td class="p-2 text-muted">${escapeHtml(rep.reporter_id || '익명')}</td>
@@ -1582,7 +1582,7 @@ window.loadAdminAuditLogs = async function() {
       const actionLabel = actionMap[l.action] || l.action || '시스템 작업';
 
       return `
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+        <tr style="border-bottom:1px solid var(--border-color);">
           <td class="p-2 text-muted">${escapeHtml(timeStr)}</td>
           <td class="p-2 text-white">${escapeHtml(l.admin_id ? String(l.admin_id).slice(0, 8) : 'admin')}</td>
           <td class="p-2">${escapeHtml(actionLabel)}</td>

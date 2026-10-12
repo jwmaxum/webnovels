@@ -41,7 +41,7 @@ function renderCdgWorkCardHtml(w, options = {}) {
 
   let cornerBadgeHtml = '';
   if (options.badge === 'GOLDEN') {
-    cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink" style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;">GOLDEN</span></div>`;
+    cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink" style="background:linear-gradient(135deg, #f59e0b, #d97706);color:var(--text-on-accent);">GOLDEN</span></div>`;
   } else if (options.badge === 'NEW') {
     cornerBadgeHtml = `<div class="cdg-corner-badge"><span class="cdg-badge-pink">NEW</span></div>`;
   } else if (options.badge === 'FREE') {
@@ -536,8 +536,8 @@ function renderDiscoverWorks(explicitGenre = null) {
   if (filtered.length === 0) {
     container.innerHTML = `
       <div class="discover-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
-        <i data-lucide="filter-x" style="width: 48px; height: 48px; color: #64748b; margin-bottom: 12px; display: inline-block;"></i>
-        <h4 style="color: #cbd5e1; margin-bottom: 6px;">선택한 조건에 일치하는 작품이 없습니다</h4>
+        <i data-lucide="filter-x" style="width: 48px; height: 48px; color: var(--text-secondary); margin-bottom: 12px; display: inline-block;"></i>
+        <h4 style="color: var(--text-primary); margin-bottom: 6px;">선택한 조건에 일치하는 작품이 없습니다</h4>
         <p class="text-muted small mb-4">태그나 필터 조건을 변경하거나 초기화해 보세요.</p>
         <button type="button" class="btn btn-outline btn-sm" onclick="resetDiscoverFilters()">
           <i data-lucide="rotate-ccw"></i> 필터 전체 초기화
@@ -554,7 +554,7 @@ function renderDiscoverWorks(explicitGenre = null) {
       const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
       const epCount = (w.episodes && w.episodes.length) ? w.episodes.length : (Number(w.episodeCount ?? w.episode_count ?? 1));
       const isCompleted = !!(w.isCompleted || w.is_completed || w.status === 'COMPLETED');
-      const statusBadge = isCompleted ? `<span class="badge-status completed" style="background:rgba(16,185,129,0.85);color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;">완결</span>` : `<span class="badge-status ongoing" style="background:rgba(99,102,241,0.85);color:#fff;font-size:0.7rem;padding:2px 6px;border-radius:4px;">${epCount}화</span>`;
+      const statusBadge = isCompleted ? `<span class="badge-status completed" style="background:rgba(16,185,129,0.85);color:var(--text-on-accent);font-size:0.7rem;padding:2px 6px;border-radius:4px;">완결</span>` : `<span class="badge-status ongoing" style="background:rgba(99,102,241,0.85);color:var(--text-on-accent);font-size:0.7rem;padding:2px 6px;border-radius:4px;">${epCount}화</span>`;
 
       return `
         <article class="feature-card cdg-discover-card" onclick="openWorkDetailDirect('${w.id}')" style="cursor:pointer;">
@@ -622,7 +622,7 @@ function renderSearchResultItem(work) {
   const cover = escapeHtml(getWorkCover(work));
   const workId = /^[1-9]\d{0,18}$/.test(String(work.id)) ? String(work.id) : '';
   return `
-    <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect('${workId}');" style="width: 100%; border-radius: 8px; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); color: #fff;">
+    <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect('${workId}');" style="width: 100%; border-radius: 8px; text-align: left; background: var(--bg-subtle); border: 1px solid var(--border-color); color: var(--text-primary);">
       <div style="display: flex; align-items: center; gap: 10px;">
         <img src="${cover}" alt="${escapeHtml(work.title)}" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px;">
         <div>
@@ -729,12 +729,12 @@ function updateFavoriteButtons(workId) {
 
   if (btnDetailFav) {
     btnDetailFav.innerHTML = isFav 
-      ? '<i data-lucide="heart" style="fill: #ef4444; color: #ef4444;"></i> 관심등록 완료' 
+      ? '<i data-lucide="heart" style="fill: #ef4444; color: var(--accent-danger);"></i> 관심등록 완료'
       : '<i data-lucide="heart"></i> 관심등록';
   }
   if (btnStickyFav) {
     btnStickyFav.innerHTML = isFav 
-      ? '<i data-lucide="heart" style="fill: #ef4444; color: #ef4444;"></i>' 
+      ? '<i data-lucide="heart" style="fill: #ef4444; color: var(--accent-danger);"></i>'
       : '<i data-lucide="heart"></i>';
   }
   if (window.lucide) window.lucide.createIcons();
@@ -809,15 +809,15 @@ window.openAuthorWorksDirect = function(authorName) {
       const cover = escapeHtml(getWorkCover(work));
       const epCount = work.episodes?.length || 0;
       return `
-        <div class="author-work-item glass-panel" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s;">
+        <div class="author-work-item glass-panel" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: var(--bg-subtle); border: 1px solid var(--border-color); transition: all 0.2s;">
           <div style="display: flex; align-items: center; gap: 14px; flex: 1;">
-            <img src="${cover}" alt="${escapeHtml(work.title)} 표지" style="width: 56px; height: 76px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+            <img src="${cover}" alt="${escapeHtml(work.title)} 표지" style="width: 56px; height: 76px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 10px rgba(32, 37, 53, 0.10);">
             <div>
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
                 <span class="badge badge-accent" style="font-size: 0.75rem;">${escapeHtml(work.genre || '판타지')}</span>
-                <span class="badge" style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: #fff;">총 ${epCount}화 연재</span>
+                <span class="badge" style="font-size: 0.72rem; background: var(--bg-subtle); color: var(--text-primary);">총 ${epCount}화 연재</span>
               </div>
-              <h4 style="margin: 0 0 4px; font-size: 1.05rem; color: #fff; font-weight: 700;">${escapeHtml(work.title)}</h4>
+              <h4 style="margin: 0 0 4px; font-size: 1.05rem; color: var(--text-primary); font-weight: 700;">${escapeHtml(work.title)}</h4>
               <p class="text-muted small" style="margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 320px;">
                 ${escapeHtml(work.description || '작품 소개글이 준비 중입니다.')}
               </p>
@@ -933,15 +933,15 @@ async function renderLibraryContent(skipRemote = false) {
 
         let html = `
           <!-- 최신 읽은 대표 작품 (상단 하이라이트 카드) -->
-          <div class="library-reading-card glass-panel mb-4" style="border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 16px;">
+          <div class="library-reading-card glass-panel mb-4" style="border: 1px solid var(--border-color); background: var(--bg-subtle); border-radius: 14px; margin-bottom: 16px;">
             <img src="${topItem.cover}" alt="${escapeHtml(topItem.work.title)} 표지">
             <div>
               <span class="badge badge-accent" style="font-weight: 600;">${topItem.pct}% 읽음</span>
-              <h3 style="margin: 6px 0 4px; font-size: 1.15rem; color: #fff;">${escapeHtml(topItem.work.title)}</h3>
+              <h3 style="margin: 6px 0 4px; font-size: 1.15rem; color: var(--text-primary);">${escapeHtml(topItem.work.title)}</h3>
               <p class="text-muted small" style="margin-bottom: 10px;">
                 제 ${topItem.readEpNum}화 읽는 중 (총 ${topItem.totalEps}화) · ${escapeHtml(topItem.work.genre)}
               </p>
-              <div class="progress-bar-bg" style="height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); overflow: hidden; width: 100%;">
+              <div class="progress-bar-bg" style="height: 8px; border-radius: 4px; background: var(--bg-subtle); border: 1px solid var(--border-color); overflow: hidden; width: 100%;">
                 <div class="progress-bar-fill" style="width: ${topItem.pct}%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #6D5EF5 0%, #8B5CF6 50%, #25D1FF 100%); box-shadow: 0 0 12px rgba(109, 94, 245, 0.7);"></div>
               </div>
             </div>
@@ -956,18 +956,18 @@ async function renderLibraryContent(skipRemote = false) {
           html += `
             <div class="rest-history-list" style="display: flex; flex-direction: column; gap: 8px;">
               ${restItems.map(item => `
-                <button class="library-row" onclick="openReaderDirect('${item.work.id}', ${item.readEpNum})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                <button class="library-row" onclick="openReaderDirect('${item.work.id}', ${item.readEpNum})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; background: var(--bg-subtle); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
                   <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
                     <img src="${item.cover}" alt="${escapeHtml(item.work.title)} 표지" style="width: 48px; height: 64px; object-fit: cover; border-radius: 6px;">
                     <div style="flex: 1; max-width: 400px;">
                       <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                        <strong style="font-size: 0.95rem; color: #fff;">${escapeHtml(item.work.title)}</strong>
-                        <span class="badge" style="font-size: 0.75rem; padding: 2px 6px; background: rgba(109, 94, 245, 0.2); color: #a5b4fc;">${item.pct}%</span>
+                        <strong style="font-size: 0.95rem; color: var(--text-primary);">${escapeHtml(item.work.title)}</strong>
+                        <span class="badge" style="font-size: 0.75rem; padding: 2px 6px; background: rgba(109, 94, 245, 0.2); color: var(--accent-indigo);">${item.pct}%</span>
                       </div>
                       <small class="text-muted" style="display: block; font-size: 0.82rem; margin-bottom: 6px;">
                         제 ${item.readEpNum}화 읽는 중 · ${escapeHtml(item.work.genre)}
                       </small>
-                      <div class="progress-bar-bg" style="height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); width: 100%; overflow: hidden;">
+                      <div class="progress-bar-bg" style="height: 6px; border-radius: 3px; background: var(--bg-subtle); width: 100%; overflow: hidden;">
                         <div class="progress-bar-fill" style="width: ${item.pct}%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6D5EF5, #818cf8, #25D1FF);"></div>
                       </div>
                     </div>
@@ -985,18 +985,18 @@ async function renderLibraryContent(skipRemote = false) {
         continueContainer.innerHTML = html;
       } else {
         continueContainer.innerHTML = `
-          <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+          <div class="p-6 text-center text-muted" style="background: var(--bg-subtle); border: 1px dashed var(--border-color); border-radius: 12px; padding: 28px;">
             <i data-lucide="book-open" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
-            <p style="margin: 0; font-size: 1rem; color: #fff;">아직 읽은 작품이 없습니다.</p>
+            <p style="margin: 0; font-size: 1rem; color: var(--text-primary);">아직 읽은 작품이 없습니다.</p>
             <small class="text-muted">웹소설 회차를 감상하면 이곳에 실시간으로 기록됩니다.</small>
           </div>
         `;
       }
     } else {
       continueContainer.innerHTML = `
-        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+        <div class="p-6 text-center text-muted" style="background: var(--bg-subtle); border: 1px dashed var(--border-color); border-radius: 12px; padding: 28px;">
           <i data-lucide="book-open" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
-          <p style="margin: 0; font-size: 1rem; color: #fff;">아직 읽은 작품이 없습니다.</p>
+          <p style="margin: 0; font-size: 1rem; color: var(--text-primary);">아직 읽은 작품이 없습니다.</p>
           <small class="text-muted">웹소설 회차를 감상하면 이곳에 실시간으로 기록됩니다.</small>
         </div>
       `;
@@ -1010,11 +1010,11 @@ async function renderLibraryContent(skipRemote = false) {
       favoriteContainer.innerHTML = favWorks.map(work => {
         const cover = escapeHtml(getWorkCover(work));
         return `
-          <button class="library-row" onclick="openWorkDetailDirect('${work.id}')" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+          <button class="library-row" onclick="openWorkDetailDirect('${work.id}')" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border-radius: 10px; background: var(--bg-subtle); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <img src="${cover}" alt="${escapeHtml(work.title)} 표지" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px;">
               <div>
-                <strong style="display: block; font-size: 1rem; color: #fff; margin-bottom: 4px;">${escapeHtml(work.title)}</strong>
+                <strong style="display: block; font-size: 1rem; color: var(--text-primary); margin-bottom: 4px;">${escapeHtml(work.title)}</strong>
                 <small class="text-muted">${escapeHtml(work.author)} · ${escapeHtml(work.genre)}</small>
               </div>
             </div>
@@ -1024,9 +1024,9 @@ async function renderLibraryContent(skipRemote = false) {
       }).join('');
     } else {
       favoriteContainer.innerHTML = `
-        <div class="p-6 text-center text-muted" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+        <div class="p-6 text-center text-muted" style="background: var(--bg-subtle); border: 1px dashed var(--border-color); border-radius: 12px; padding: 28px;">
           <i data-lucide="heart" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
-          <p style="margin: 0; font-size: 1rem; color: #fff;">등록된 관심 작품이 없습니다.</p>
+          <p style="margin: 0; font-size: 1rem; color: var(--text-primary);">등록된 관심 작품이 없습니다.</p>
           <small class="text-muted">작품 상세페이지에서 '관심등록'을 눌러보세요.</small>
         </div>
       `;
@@ -1050,13 +1050,13 @@ async function renderLibraryContent(skipRemote = false) {
       });
 
       authorContainer.innerHTML = authorsData.map(author => `
-        <div class="library-author-card glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s;">
+        <div class="library-author-card glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; padding: 18px; border-radius: 14px; background: var(--bg-subtle); border: 1px solid var(--border-color); transition: all 0.2s;">
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; width: 100%;">
-            <div class="library-author-avatar" style="width: 42px; height: 42px; min-width: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.05rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+            <div class="library-author-avatar" style="width: 42px; height: 42px; min-width: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: var(--text-on-accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.05rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
               ${author.pen_name.slice(0, 1)}
             </div>
             <div style="flex: 1; min-width: 0; text-align: left;">
-              <strong style="display: block; font-size: 1.05rem; color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;">
+              <strong style="display: block; font-size: 1.05rem; color: var(--text-primary); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;">
                 ${author.pen_name}
               </strong>
               <small class="text-muted" style="display: block; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -1064,7 +1064,7 @@ async function renderLibraryContent(skipRemote = false) {
               </small>
             </div>
           </div>
-          <button type="button" class="btn btn-outline btn-sm w-full" onclick="openAuthorWorksDirect('${author.pen_name}')" style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 14px; border-radius: 8px; background: rgba(109, 94, 245, 0.12); border: 1px solid rgba(109, 94, 245, 0.35); color: #a5b4fc; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+          <button type="button" class="btn btn-outline btn-sm w-full" onclick="openAuthorWorksDirect('${author.pen_name}')" style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 14px; border-radius: 8px; background: rgba(109, 94, 245, 0.12); border: 1px solid rgba(109, 94, 245, 0.35); color: var(--accent-indigo); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
             <i data-lucide="book-open" style="width: 15px; height: 15px;"></i>
             <span>작품보기</span>
           </button>
@@ -1072,9 +1072,9 @@ async function renderLibraryContent(skipRemote = false) {
       `).join('');
     } else {
       authorContainer.innerHTML = `
-        <div class="p-6 text-center text-muted" style="grid-column: 1 / -1; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 28px;">
+        <div class="p-6 text-center text-muted" style="grid-column: 1 / -1; background: var(--bg-subtle); border: 1px dashed var(--border-color); border-radius: 12px; padding: 28px;">
           <i data-lucide="users" style="width: 36px; height: 36px; margin-bottom: 8px; opacity: 0.6;"></i>
-          <p style="margin: 0; font-size: 1rem; color: #fff;">구독 중인 작가가 없습니다.</p>
+          <p style="margin: 0; font-size: 1rem; color: var(--text-primary);">구독 중인 작가가 없습니다.</p>
           <small class="text-muted">작품 상세페이지에서 '작가 구독'을 눌러보세요.</small>
         </div>
       `;
@@ -1575,7 +1575,7 @@ async function startAdSimulation() {
 // - 로컬스토리지 영구 보관 및 Supabase 원격 동기화
 // ============================================================
 const DEFAULT_READER_PREFERENCES = {
-  theme: 'theme-dark',       // 'theme-dark' | 'theme-oled' | 'theme-sepia' | 'theme-light'
+  theme: 'theme-light',       // 'theme-dark' | 'theme-oled' | 'theme-sepia' | 'theme-light'
   fontFamily: 'serif',       // 'serif' | 'sans'
   fontSize: 18,              // 14 ~ 26 px
   lineHeight: 1.8,           // 1.5 | 1.8 | 2.2
@@ -1955,7 +1955,7 @@ function updateMemberHeader(user) {
         const adminName = escapeHtml(user.nickname || user.username || user.role || '관리자');
         profileMenu.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
-            <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-admin-cms')" style="display: flex; align-items: center; gap: 6px; border-color: var(--primary-color); color: #fff;">
+            <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-admin-cms')" style="display: flex; align-items: center; gap: 6px; border-color: var(--primary-color); color: var(--text-primary);">
               <i data-lucide="shield" style="color: var(--primary-color);"></i>
               <span>${adminName} (${user.role || 'ADMIN'})</span>
             </button>
@@ -2255,10 +2255,10 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     if (window._filterParagraphIndex !== null && window._filterParagraphIndex !== undefined) {
       filterBannerHtml = `
         <div class="paragraph-filter-banner mb-3" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.35); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:0.84rem; color:#c7d2fe;">
+          <span style="font-size:0.84rem; color:var(--accent-indigo);">
             📌 <strong>문단 #${Number(window._filterParagraphIndex) + 1}</strong>에 남겨진 댓글만 표시 중입니다.
           </span>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="filterParagraphComments(${window._filterParagraphIndex})" style="font-size:0.75rem; padding:3px 8px; color:#fff; border:1px solid rgba(255,255,255,0.2);">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="filterParagraphComments(${window._filterParagraphIndex})" style="font-size:0.75rem; padding:3px 8px; color:var(--text-primary); border:1px solid var(--border-color);">
             전체 댓글 보기 ✕
           </button>
         </div>
@@ -2278,9 +2278,9 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     let html = `
       <!-- 댓글 입력창 -->
       <div class="comment-input-box card glass-panel p-3 mb-4" style="border: 1px solid var(--border-color); border-radius: 8px;">
-        <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 6px;">💬 독자 한줄 감상평 남기기</div>
+        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">💬 독자 한줄 감상평 남기기</div>
         ${paragraphContext}
-        <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.05); color:#fff; border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
+        <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
         <div class="flex-between mt-2" style="display:flex; justify-content:space-between; align-items:center;">
           <label class="text-muted" style="font-size:.78rem; cursor:pointer;"><input id="readerCommentSpoiler" type="checkbox"> ⚠️ 스포일러 포함</label>
           <button class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit('${workId}', '${episodeId}')">
@@ -2331,7 +2331,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
 
             <!-- 대댓글 입력창 -->
             <div class="reply-input-wrapper" id="replyInput-${c.id}">
-              <textarea id="replyText-${c.id}" class="form-control" rows="2" placeholder="답글을 입력하세요..." style="width:100%; background:rgba(255,255,255,0.05); color:#fff; border-radius:6px; padding:6px; border:1px solid var(--border-color); font-size:0.85rem;"></textarea>
+              <textarea id="replyText-${c.id}" class="form-control" rows="2" placeholder="답글을 입력하세요..." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:6px; border:1px solid var(--border-color); font-size:0.85rem;"></textarea>
               <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
                 <button class="btn btn-ghost btn-sm" onclick="toggleReplyInput('${c.id}')">취소</button>
                 <button class="btn btn-primary btn-sm" onclick="handleReaderReplySubmit('${workId}', '${episodeId}', '${c.id}')">답글 등록</button>

@@ -28,7 +28,8 @@
   <title>WebNovels - 웹소설 연재 플랫폼</title>
   <!-- SEO Meta Tags -->
   <meta name="description" content="WebNovels에서 공개된 무료 웹소설을 읽고 연재하세요.">
-  <meta name="theme-color" content="#6D5EF5">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#F7F8FC">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='3' y1='3' x2='25' y2='25'%3E%3Cstop stop-color='%2325D1FF'/%3E%3Cstop offset='.6' stop-color='%239C65FF'/%3E%3Cstop offset='1' stop-color='%23FF4F9A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M5.8 4.1c0-1.2 1.4-1.9 2.4-1.3l14 9c1 .6 1 2.1 0 2.7l-14 9c-1 .7-2.4-.1-2.4-1.3V4.1Z' fill='url(%23g)'/%3E%3Cpath d='M9.3 8.2v11.6l8.9-5.8-8.9-5.8Z' fill='%23fff'/%3E%3C/svg%3E">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +39,7 @@
   <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
-  <link rel="stylesheet" href="/styles.css?v=120">
+  <link rel="stylesheet" href="/styles.css?v=20261012">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 <link rel="stylesheet" href="/css/growth.css?v=121">
 <link rel="stylesheet" href="/css/policies.css?v=20261011">
@@ -164,7 +165,7 @@
         <!-- 모바일 직하단 검색 입력창 (UI_mobile.md: 🔍 작품명, 작가 검색) -->
         <div class="mobile-search-bar-wrap" id="mobileSearchBarWrap" onclick="openModal('modalSearch')">
           <div class="mobile-search-bar">
-            <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px; color: #8b8f9e; margin-right: 10px; flex-shrink: 0;">
+            <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px; color: var(--text-secondary); margin-right: 10px; flex-shrink: 0;">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
@@ -487,7 +488,7 @@
           </div>
 
           <!-- Top Supporters Wall Widget (improve5.md) -->
-          <div class="work-supporters-section mt-8 mb-6 card glass-panel p-6" id="workTopSupportersWidget" style="display:none; border-radius:12px; border:1px solid var(--border-color); background:rgba(255,255,255,0.02);">
+          <div class="work-supporters-section mt-8 mb-6 card glass-panel p-6" id="workTopSupportersWidget" style="display:none; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-subtle);">
             <div class="flex-between mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.15rem;">
                 <i data-lucide="trophy" style="color:var(--accent-amber, #F59E0B);"></i> 이 작품의 명예의 전당 (Top Supporters)
@@ -577,7 +578,7 @@
 
               <!-- Comment Input Form -->
               <div class="comment-input-form mb-4" style="display:flex; gap:8px;">
-                <input type="text" id="readerCommentInput" class="form-input" style="flex:1; background:rgba(255,255,255,0.06); border:1px solid var(--border-color); border-radius:8px; padding:10px 14px; color:#fff;" placeholder="작품과 작가를 응원하는 댓글을 남겨보세요.">
+                <input type="text" id="readerCommentInput" class="form-input" style="flex:1; background:var(--bg-subtle); border:1px solid var(--border-color); border-radius:8px; padding:10px 14px; color:var(--text-primary);" placeholder="작품과 작가를 응원하는 댓글을 남겨보세요.">
                 <button class="btn btn-primary" id="btnSubmitComment" onclick="submitReaderComment()">등록</button>
               </div>
 
@@ -606,7 +607,7 @@
           <div class="card glass-panel p-4 mb-4" id="creatorAuthorBar" style="border-left: 4px solid var(--cdg-pink);">
             <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
               <div style="display: flex; align-items: center; gap: 14px;">
-                <div class="avatar" id="creatorAuthorAvatar" style="width: 48px; height: 48px; font-size: 1.3rem; background: var(--color-brand-gradient); display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-weight: bold;">✍️</div>
+                <div class="avatar" id="creatorAuthorAvatar" style="width: 48px; height: 48px; font-size: 1.3rem; background: var(--color-brand-gradient); display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-on-accent); font-weight: bold;">✍️</div>
                 <div>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <h3 id="creatorAuthorPenName" style="margin: 0; font-size:1.2rem; font-weight:800;">작가 전용 스튜디오</h3>
@@ -633,7 +634,7 @@
             <div id="creatorAuthorDetails" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 20px; font-size: 0.88rem;">
               <div>🏦 <span class="text-muted">등록 정산 계좌:</span> <strong id="creatorBankInfo" class="text-white">미등록</strong></div>
               <div>📈 <span class="text-muted">총 독자 조회수:</span> <strong id="creatorTotalViews" style="color:var(--cdg-pink);">—</strong></div>
-              <div>📖 <span class="text-muted">총 연재 회차수:</span> <strong id="creatorTotalEpisodes" style="color:#10B981;">—</strong></div>
+              <div>📖 <span class="text-muted">총 연재 회차수:</span> <strong id="creatorTotalEpisodes" style="color:var(--accent-emerald);">—</strong></div>
             </div>
           </div>
 
@@ -690,7 +691,7 @@
               <form id="formCreateEpisode" onsubmit="handleCreateEpisodeSubmit(event)">
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">내 연재 작품 선택 (실제 DB 연동)</label>
-                  <select id="newEpWorkSelect" class="form-input" style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
+                  <select id="newEpWorkSelect" class="form-input" style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
                     <!-- Injected dynamically by author's real works -->
                   </select>
                 </div>
@@ -738,7 +739,7 @@
                 </div>
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">작가의 말</label>
-                  <input type="text" id="newEpAuthorComment" maxlength="5000" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                  <input type="text" id="newEpAuthorComment" maxlength="5000" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--border-color);">
                 </div>
 
                 <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">초안 저장</button>
@@ -762,8 +763,8 @@
               <div class="flex-between" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                   <i data-lucide="line-chart" style="color:var(--cdg-pink);"></i>
-                  <span style="font-weight:700; color:#fff;">분석 대상 작품:</span>
-                  <select id="creatorAnalyticsWorkSelect" onchange="loadCreatorReaderAnalyticsVisuals(this.value)" class="form-input" style="padding:6px 12px; font-size:0.88rem; background:#1C1C22; color:#fff; border-radius:8px; border:1px solid var(--border-color); min-width:220px;">
+                  <span style="font-weight:700; color:var(--text-primary);">분석 대상 작품:</span>
+                  <select id="creatorAnalyticsWorkSelect" onchange="loadCreatorReaderAnalyticsVisuals(this.value)" class="form-input" style="padding:6px 12px; font-size:0.88rem; background:var(--bg-surface); color:var(--text-primary); border-radius:8px; border:1px solid var(--border-color); min-width:220px;">
                     <!-- Dynamically populated works -->
                   </select>
                 </div>
@@ -786,12 +787,12 @@
               </div>
               <div class="card glass-panel p-4 text-center" style="border-radius:10px;">
                 <div class="text-muted small">평균 스크롤 진행률 (Depth)</div>
-                <h2 id="creatorAverageProgress" style="color:#38BDF8; margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
+                <h2 id="creatorAverageProgress" style="color:var(--accent-blue); margin:6px 0; font-size:1.8rem; font-weight:800;">0%</h2>
                 <small class="text-muted">회차당 평균 스크롤 도달도</small>
               </div>
               <div class="card glass-panel p-4 text-center" style="border-radius:10px;">
                 <div class="text-muted small">총 독서 이벤트 로그</div>
-                <h2 id="creatorAnalyticsEvents" style="color:#10B981; margin:6px 0; font-size:1.8rem; font-weight:800;">0건</h2>
+                <h2 id="creatorAnalyticsEvents" style="color:var(--accent-emerald); margin:6px 0; font-size:1.8rem; font-weight:800;">0건</h2>
                 <small class="text-muted">열람·진행·완독 수집 표본</small>
               </div>
             </div>
@@ -816,7 +817,7 @@
                 <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.1rem;">
                   <i data-lucide="trending-up" class="icon-indigo"></i> 회차별 완독률 및 이탈 분석 (Episode Retention Heatmap)
                 </h3>
-                <span class="text-muted small">완독률 80% 이상 회차 = <span style="color:#F43F5E; font-weight:700;">🔥 킬러 회차</span></span>
+                <span class="text-muted small">완독률 80% 이상 회차 = <span style="color:var(--accent-danger); font-weight:700;">🔥 킬러 회차</span></span>
               </div>
               <div id="creatorEpisodeAnalyticsTable" style="overflow-x:auto;">
                 <!-- Dynamically rendered episode progress rows -->
@@ -827,11 +828,11 @@
             <div class="card glass-panel p-6" id="creatorActivityTimelineCard" style="border-radius:12px;">
               <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.1rem;">
-                  <i data-lucide="calendar-clock" style="color:#10B981;"></i> 최근 7일 독서 활동 추이 (Daily Activity Timeline)
+                  <i data-lucide="calendar-clock" style="color:var(--accent-emerald);"></i> 최근 7일 독서 활동 추이 (Daily Activity Timeline)
                 </h3>
                 <span class="text-muted small">일별 열람(Open) 및 완독(Complete) 추이</span>
               </div>
-              <div id="creatorTimelineActivity" style="display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:180px; padding:20px 10px 10px; background:rgba(0,0,0,0.25); border-radius:10px; border:1px solid var(--border-color);">
+              <div id="creatorTimelineActivity" style="display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:180px; padding:20px 10px 10px; background:var(--bg-surface); border-radius:10px; border:1px solid var(--border-color);">
                 <!-- Dynamically rendered activity bars -->
               </div>
             </div>
@@ -872,7 +873,7 @@
                 </div>
                 <div class="glass-panel p-4">
                   <span class="text-muted small">당월 포인트 정산 누적액</span>
-                  <h2 id="creatorSalesRevenue" style="font-size:1.6rem; font-weight:800; color:#10B981; margin:6px 0;">₩0</h2>
+                  <h2 id="creatorSalesRevenue" style="font-size:1.6rem; font-weight:800; color:var(--accent-emerald); margin:6px 0;">₩0</h2>
                 </div>
               </div>
             </div>
@@ -929,7 +930,7 @@
               </div>
 
               <!-- Ledger Source Filters -->
-              <div class="ledger-filter-bar mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:rgba(0,0,0,0.25); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
+              <div class="ledger-filter-bar mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:var(--bg-surface); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
                 <div class="ledger-type-buttons" style="display:flex; gap:6px; flex-wrap:wrap;">
                   <button type="button" class="btn btn-xs btn-primary ledger-filter-btn active" data-source="ALL" onclick="filterCreatorLedger('ALL')">전체</button>
                   <button type="button" class="btn btn-xs btn-outline ledger-filter-btn" data-source="AD" onclick="filterCreatorLedger('AD')">광고 수익</button>
@@ -939,7 +940,7 @@
                 </div>
                 <div class="ledger-status-select" style="display:flex; align-items:center; gap:6px;">
                   <span class="text-muted small">상태:</span>
-                  <select id="creatorLedgerStatusFilter" onchange="filterCreatorLedgerStatus(this.value)" class="form-input" style="padding:4px 8px; font-size:0.8rem; background:#1C1C22; color:#fff; border-radius:6px; border:1px solid var(--border-color);">
+                  <select id="creatorLedgerStatusFilter" onchange="filterCreatorLedgerStatus(this.value)" class="form-input" style="padding:4px 8px; font-size:0.8rem; background:var(--bg-surface); color:var(--text-primary); border-radius:6px; border:1px solid var(--border-color);">
                     <option value="ALL">전체 상태</option>
                     <option value="CONFIRMED">CONFIRMED (확정)</option>
                     <option value="ESTIMATED">ESTIMATED (예상)</option>
@@ -1196,7 +1197,7 @@
                 <div class="grid-3-col gap-3 mb-3">
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; cursor: pointer;" onclick="filterWorksByStatus('ALL')">
                     <div class="text-muted small">전체 작품</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;"><span id="workSummaryTotalCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-top: 2px;"><span id="workSummaryTotalCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid var(--accent-emerald); cursor: pointer;" onclick="filterWorksByStatus('ONGOING')">
                     <div class="text-muted small">🟢 정상 연재</div>
@@ -1208,7 +1209,7 @@
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid #818cf8; cursor: pointer;" onclick="filterWorksByStatus('COMPLETED')">
                     <div class="text-muted small">⚫ 휴재 / 완결</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #818cf8; margin-top: 2px;"><span id="workSummaryCompletedCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-indigo); margin-top: 2px;"><span id="workSummaryCompletedCount">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">개</span></div>
                   </div>
                 </div>
 
@@ -1229,9 +1230,9 @@
                 <div class="card glass-panel p-3 mb-3" style="border-radius: 8px;">
                   <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px; align-items: center;">
                     <div style="position: relative;">
-                      <input type="text" id="adminWorkSearchInput" class="form-input" placeholder="🔍 작품명, 작가명 실시간 검색..." oninput="handleWorkSearchFilter(this.value)" style="width: 100%; padding: 7px 12px; font-size: 0.85rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                      <input type="text" id="adminWorkSearchInput" class="form-input" placeholder="🔍 작품명, 작가명 실시간 검색..." oninput="handleWorkSearchFilter(this.value)" style="width: 100%; padding: 7px 12px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                     </div>
-                    <select id="adminWorkGenreFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                    <select id="adminWorkGenreFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                       <option value="ALL">장르: 전체</option>
                       <option value="판타지">판타지</option>
                       <option value="무협">무협</option>
@@ -1241,12 +1242,12 @@
                       <option value="호러">호러</option>
                       <option value="성인">성인 (19+)</option>
                     </select>
-                    <select id="adminWorkPlatformFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                    <select id="adminWorkPlatformFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                       <option value="ALL">플랫폼: 전체</option>
                       <option value="NOVEL">웹소설</option>
                       <option value="WEBTOON">웹툰</option>
                     </select>
-                    <select id="adminWorkDayFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                    <select id="adminWorkDayFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                       <option value="ALL">발행주기: 전체</option>
                       <option value="MON">월요일</option>
                       <option value="TUE">화요일</option>
@@ -1265,7 +1266,7 @@
                   <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
                       <thead>
-                        <tr style="background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <tr style="background: var(--bg-subtle); border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
                           <th style="padding: 10px 12px; width: 40px; text-align: center;">
                             <input type="checkbox" id="workSelectAllCheckbox" onchange="toggleSelectAllWorks(this.checked)">
                           </th>
@@ -1286,7 +1287,7 @@
                 </div>
 
                 <!-- 5. 선택 작품 일괄 조작 바 (Bulk Actions) -->
-                <div class="card glass-panel p-3 flex-between" style="border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color);">
+                <div class="card glass-panel p-3 flex-between" style="border-radius: 8px; background: var(--bg-surface); border: 1px solid var(--border-color);">
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="small text-muted">선택된 작품: <strong id="selectedWorksCount" style="color: var(--color-brand-secondary);">0</strong>개</span>
                   </div>
@@ -1300,7 +1301,7 @@
                   <div style="display: flex; align-items: center; gap: 6px;" id="adminEpisodeBreadcrumb">
                     <span class="text-muted" style="cursor: pointer;" onclick="switchAdminSubTab('works')">작품 연재 관리</span>
                     <span class="text-muted">&gt;</span>
-                    <span style="font-weight: 700; color: #fff;" id="adminEpCurrentWorkTitle">작품 선택</span>
+                    <span style="font-weight: 700; color: var(--text-primary);" id="adminEpCurrentWorkTitle">작품 선택</span>
                     <span class="text-muted">&gt;</span>
                     <span style="color: var(--color-brand-secondary);">회차 관리</span>
                   </div>
@@ -1323,13 +1324,13 @@
                 <div class="grid-4-col gap-3 mb-3">
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px;">
                     <div class="text-muted small">전체 회차</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-top: 2px;">
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-top: 2px;">
                       <span id="epSummaryTotal">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">화</span>
                     </div>
                   </div>
                   <div class="card glass-panel p-3 text-center" style="border-radius: 8px; border-left: 3px solid #f59e0b;">
                     <div class="text-muted small">⏰ 예약 회차</div>
-                    <div style="font-size: 1.35rem; font-weight: 800; color: #f59e0b; margin-top: 2px;">
+                    <div style="font-size: 1.35rem; font-weight: 800; color: var(--accent-amber); margin-top: 2px;">
                       <span id="epSummaryScheduled">-</span><span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">화</span>
                     </div>
                   </div>
@@ -1346,17 +1347,17 @@
                   <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; align-items: center;">
                     <div>
                       <label class="small text-muted" style="display: block; margin-bottom: 4px;">대상 작품 선택 (실제 DB 10개 작품 연동)</label>
-                      <select id="adminEpisodeWorkSelect" class="form-input" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                      <select id="adminEpisodeWorkSelect" class="form-input" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                         <!-- Dynamic options injected by JS -->
                       </select>
                     </div>
                     <div>
                       <label class="small text-muted" style="display: block; margin-bottom: 4px;">회차 검색</label>
-                      <input type="text" id="adminEpSearchInput" class="form-input" placeholder="소제목 검색..." oninput="handleEpisodeSearchFilter(this.value)" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                      <input type="text" id="adminEpSearchInput" class="form-input" placeholder="소제목 검색..." oninput="handleEpisodeSearchFilter(this.value)" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                     </div>
                     <div>
                       <label class="small text-muted" style="display: block; margin-bottom: 4px;">유료 / 무료</label>
-                      <select id="adminEpFreeFilter" class="form-input" onchange="applyAllEpisodeFilters()" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                      <select id="adminEpFreeFilter" class="form-input" onchange="applyAllEpisodeFilters()" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
                         <option value="ALL">전체 회차</option>
                         <option value="FREE">무료 회차</option>
                         <option value="PAID">유료 (100P / 광고)</option>
@@ -1375,7 +1376,7 @@
                   <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
                       <thead>
-                        <tr style="background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <tr style="background: var(--bg-subtle); border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
                           <th style="padding: 10px 12px; width: 40px; text-align: center;">
                             <input type="checkbox" id="epSelectAllCheckbox" onchange="toggleSelectAllEpisodes(this.checked)">
                           </th>
@@ -1396,7 +1397,7 @@
                 </div>
 
                 <!-- 5. 선택 회차 일괄 조작 바 -->
-                <div class="card glass-panel p-3 flex-between" style="border-radius: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color);">
+                <div class="card glass-panel p-3 flex-between" style="border-radius: 8px; background: var(--bg-surface); border: 1px solid var(--border-color);">
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="small text-muted">선택된 회차: <strong id="selectedEpisodesCount" style="color: var(--color-brand-secondary);">0</strong>개</span>
                   </div>
@@ -1479,7 +1480,7 @@
                     <div class="table-responsive">
                       <table style="width:100%; font-size:0.82rem; text-align:left;">
                         <thead>
-                          <tr style="color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.08);">
+                          <tr style="color:var(--text-muted); border-bottom:1px solid var(--border-color);">
                             <th class="p-2">일시</th>
                             <th class="p-2">계정</th>
                             <th class="p-2">이벤트</th>
@@ -1545,10 +1546,10 @@
           <p class="text-muted small mb-4" style="line-height:1.45;">광고를 시청하면 작가에게 직접 정산금이 후원되고 회차가 무료 해금되며, 보유 포인트를 사용하여 즉시 열람할 수도 있습니다.</p>
 
           <!-- Ad Video Player Simulation Box -->
-          <div class="ad-player-box mb-4" id="adPlayerBox" style="display: none; background:#000; border-radius:12px; padding:20px; border:1px solid var(--cdg-pink-border);">
+          <div class="ad-player-box mb-4" id="adPlayerBox" style="display: none; background:var(--bg-surface); border-radius:12px; padding:20px; border:1px solid var(--cdg-pink-border);">
             <div class="ad-video-sim">
               <i data-lucide="play" class="pulse-icon" style="color:var(--cdg-pink); width:28px; height:28px;"></i>
-              <span id="adTimerText" style="display:block; margin-top:8px; font-weight:700; color:#fff;">📺 광고 시청 중... 3초</span>
+              <span id="adTimerText" style="display:block; margin-top:8px; font-weight:700; color:var(--text-on-accent);">📺 광고 시청 중... 3초</span>
             </div>
           </div>
 
@@ -1582,10 +1583,10 @@
           <div class="form-group">
             <label class="small text-muted mb-2 block font-bold">독서 배경 테마</label>
             <div class="theme-selector-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
-              <button type="button" class="theme-btn theme-dark active" data-theme="theme-dark" onclick="window.ReaderPreferencesManager?.setTheme('theme-dark')">다크</button>
+              <button type="button" class="theme-btn theme-dark" data-theme="theme-dark" onclick="window.ReaderPreferencesManager?.setTheme('theme-dark')">다크</button>
               <button type="button" class="theme-btn theme-oled" data-theme="theme-oled" onclick="window.ReaderPreferencesManager?.setTheme('theme-oled')">OLED 블랙</button>
               <button type="button" class="theme-btn theme-sepia" data-theme="theme-sepia" onclick="window.ReaderPreferencesManager?.setTheme('theme-sepia')">세피아</button>
-              <button type="button" class="theme-btn theme-light" data-theme="theme-light" onclick="window.ReaderPreferencesManager?.setTheme('theme-light')">화이트</button>
+              <button type="button" class="theme-btn theme-light active" data-theme="theme-light" onclick="window.ReaderPreferencesManager?.setTheme('theme-light')">화이트</button>
             </div>
           </div>
 
@@ -1605,7 +1606,7 @@
           <!-- 3. 본문 글자 크기 (14px ~ 26px) -->
           <div class="form-group">
             <label class="small text-muted mb-2 block font-bold">본문 글자 크기</label>
-            <div class="font-size-control" style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);">
+            <div class="font-size-control" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-subtle); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);">
               <button type="button" class="btn btn-outline btn-sm" onclick="window.ReaderPreferencesManager?.changeFontSize(-2)" style="width:44px; height:36px; font-weight:800;">A-</button>
               <span id="fontSizeDisplay" style="font-weight:800; font-size:1.1rem; color:var(--cdg-pink);">18px</span>
               <button type="button" class="btn btn-outline btn-sm" onclick="window.ReaderPreferencesManager?.changeFontSize(2)" style="width:44px; height:36px; font-weight:800;">A+</button>
@@ -1750,7 +1751,7 @@
       <div class="modal-dialog glass-panel" style="max-width: 680px; width: 92%;">
         <div class="modal-header">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <div id="modalAuthorAvatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem;">작</div>
+            <div id="modalAuthorAvatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), #818cf8); color: var(--text-on-accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem;">작</div>
             <div>
               <h3 id="modalAuthorName" style="margin: 0; font-size: 1.15rem;">작가 연재 작품 목록</h3>
               <p id="modalAuthorStats" class="text-muted small" style="margin: 0;">총 0편 연재 중 · 구독 중인 작가</p>
@@ -1796,11 +1797,11 @@
           <form id="formAdminLoginSubmit" onsubmit="event.preventDefault(); handleAdminLoginProcess();">
             <div class="form-group mb-3">
               <label>관리자 ID / 이메일</label>
-              <input type="text" id="adminLoginId" class="form-control" placeholder="관리자 아이디 (이메일)" autocomplete="username" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="text" id="adminLoginId" class="form-control" placeholder="관리자 아이디 (이메일)" autocomplete="username" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
             </div>
             <div class="form-group mb-4">
               <label>비밀번호</label>
-              <input type="password" id="adminLoginPw" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="password" id="adminLoginPw" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-full">
               <i data-lucide="lock"></i> 관리자 인증 로그인
@@ -1825,21 +1826,21 @@
             <div class="grid-2-col gap-4 mb-3">
               <div class="form-group">
                 <label>서브 관리자 Username / ID (이메일)</label>
-                <input type="text" id="newSubAdminId" class="form-control" placeholder="예: andysung@webnovel-admin.com" autocomplete="username" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <input type="text" id="newSubAdminId" class="form-control" placeholder="예: andysung@webnovel-admin.com" autocomplete="username" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
               </div>
               <div class="form-group">
                 <label>초기 비밀번호</label>
-                <input type="password" id="newSubAdminPw" class="form-control" placeholder="비밀번호 입력" autocomplete="new-password" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <input type="password" id="newSubAdminPw" class="form-control" placeholder="비밀번호 입력" autocomplete="new-password" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
               </div>
             </div>
             <div class="form-group mb-4">
               <label>담당자 닉네임 / 직책</label>
-              <input type="text" id="newSubAdminName" class="form-control" placeholder="예: 앤디성 (정산담당관)" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="text" id="newSubAdminName" class="form-control" placeholder="예: 앤디성 (정산담당관)" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
             </div>
 
             <!-- 16 Menu Permission Selection Checklist -->
             <label class="font-bold text-indigo mb-2 block"><i data-lucide="shield"></i> 서브 관리자 부여 메뉴 접근 권한 선택 (16개 메뉴):</label>
-            <div class="permission-matrix-grid p-3 glass-panel" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3);">
+            <div class="permission-matrix-grid p-3 glass-panel" style="max-height: 200px; overflow-y: auto; background: var(--bg-surface);">
               <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="DASHBOARD" checked> <span>1. DASHBOARD</span></label>
               <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="USER_MGMT"> <span>2. USER_MGMT</span></label>
               <label class="perm-switch-card"><input type="checkbox" name="newPerm" value="AUTHOR_MGMT"> <span>3. AUTHOR_MGMT</span></label>
@@ -1876,7 +1877,7 @@
           <form id="formEditSubAdminPerms" onsubmit="handleSaveSubAdminPerms(event)">
             <p class="text-muted small mb-3">체크한 메뉴만 서브 관리자 로그인 시 메뉴 바에 표출되며 API 접근이 허용됩니다.</p>
 
-            <div class="permission-matrix-grid p-3 glass-panel" style="max-height: 240px; overflow-y: auto; background: rgba(0,0,0,0.3); display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div class="permission-matrix-grid p-3 glass-panel" style="max-height: 240px; overflow-y: auto; background: var(--bg-surface); display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
               <label class="perm-switch-card"><input type="checkbox" name="subAdminPerm" value="DASHBOARD"> <span>1. DASHBOARD (대시보드)</span></label>
               <label class="perm-switch-card"><input type="checkbox" name="subAdminPerm" value="USER_MGMT"> <span>2. USER_MGMT (회원 관리)</span></label>
               <label class="perm-switch-card"><input type="checkbox" name="subAdminPerm" value="AUTHOR_MGMT"> <span>3. AUTHOR_MGMT (작가 관리)</span></label>
@@ -1931,8 +1932,8 @@
             <input type="hidden" id="readerDetailId" value="">
             <p class="text-muted small">이 화면은 조회 전용입니다. 계정 제한·복구는 관리자 계정 지원 메뉴를 이용해 주세요.</p>
 
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-              <h4 style="margin: 0 0 14px 0; font-size: 1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+            <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <h4 style="margin: 0 0 14px 0; font-size: 1rem; color: var(--accent-blue); display: flex; align-items: center; gap: 6px;">
                 <i data-lucide="user"></i> 기본 인적 정보 및 계정 상태
               </h4>
 
@@ -2003,8 +2004,8 @@
           </form>
 
           <!-- 2. 비밀번호 강제 변경 -->
-          <form id="formChangeReaderPw" onsubmit="handleChangeReaderPassword(event)" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-            <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+          <form id="formChangeReaderPw" onsubmit="handleChangeReaderPassword(event)" style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--accent-amber); display: flex; align-items: center; gap: 6px;">
               <i data-lucide="key"></i> 비밀번호 강제 변경 / 재설정
             </h4>
             <p class="text-muted small mb-3">비밀번호는 Auth 재설정 절차를 통해 본인이 변경합니다.</p>
@@ -2020,12 +2021,12 @@
           <div style="background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 16px;">
             <div class="flex-between" style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <strong style="color: #ef4444; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                <strong style="color: var(--accent-danger); font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
                   <i data-lucide="alert-triangle"></i> 위험 구역 (Danger Zone)
                 </strong>
                 <p class="text-muted small mt-1 mb-0">직접 삭제는 제공하지 않습니다. 계정 제한·복구는 관리자 계정 지원 메뉴를 이용해 주세요.</p>
               </div>
-              <button type="button" class="btn btn-outline btn-sm style-danger" onclick="handleDeleteReader()" style="color: #ef4444; border-color: rgba(239,68,68,0.4); white-space: nowrap;" disabled>
+              <button type="button" class="btn btn-outline btn-sm style-danger" onclick="handleDeleteReader()" style="color: var(--accent-danger); border-color: rgba(239,68,68,0.4); white-space: nowrap;" disabled>
                 🗑️ 회원 영구 삭제
               </button>
             </div>
@@ -2047,16 +2048,16 @@
             <div class="grid-2-col gap-4 mb-3">
               <div class="form-group">
                 <label>회차 번호</label>
-                <input type="number" id="writeEpisodeNumber" class="form-control" placeholder="예: 5" min="1" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <input type="number" id="writeEpisodeNumber" class="form-control" placeholder="예: 5" min="1" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
               </div>
               <div class="form-group">
                 <label>회차 제목</label>
-                <input type="text" id="writeEpisodeTitle" class="form-control" placeholder="예: 제5화 결전의 서막" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                <input type="text" id="writeEpisodeTitle" class="form-control" placeholder="예: 제5화 결전의 서막" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
               </div>
             </div>
             <div class="form-group mb-3">
               <label>회차 본문 내용</label>
-              <textarea id="writeEpisodeContent" class="form-control" rows="10" placeholder="소설 본문 내용을 입력하세요..." required style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color); font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
+              <textarea id="writeEpisodeContent" class="form-control" rows="10" placeholder="소설 본문 내용을 입력하세요..." required style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color); font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
             </div>
             <div class="small text-muted mb-4">
               💡 공개 전 미리보기와 예약 상태를 확인하세요. 현재 신규 유료·광고 해금은 제공하지 않습니다.
@@ -2080,7 +2081,7 @@
           <form id="formEditProfile" onsubmit="handleSaveProfile(event)">
             <div class="form-group mb-4">
               <label>닉네임</label>
-              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" minlength="2" maxlength="40" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" minlength="2" maxlength="40" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
             </div>
 
             <p class="text-muted small mb-4">비밀번호는 로그인 화면의 재설정 메일로 변경할 수 있습니다.</p>
@@ -2104,9 +2105,9 @@
           <input type="hidden" id="policyCurrentWorkId" value="">
 
           <!-- 1. 댓글 허용 토글 -->
-          <div class="form-group mb-4" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
+          <div class="form-group mb-4" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
             <div>
-              <strong style="color:#fff; display:block; margin-bottom:2px;">독자 댓글 작성 허용</strong>
+              <strong style="color:var(--text-primary); display:block; margin-bottom:2px;">독자 댓글 작성 허용</strong>
               <span class="text-muted small">비활성화 시 악플 폭격을 즉시 방어할 수 있습니다.</span>
             </div>
             <label class="toggle-switch">
@@ -2116,10 +2117,10 @@
           </div>
 
           <!-- 2. 최소 열람 회차 슬라이더 -->
-          <div class="form-group mb-4" style="background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
+          <div class="form-group mb-4" style="background:var(--bg-subtle); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <div>
-                <strong style="color:#fff; display:block; margin-bottom:2px;">댓글 작성 최소 열람 조건</strong>
+                <strong style="color:var(--text-primary); display:block; margin-bottom:2px;">댓글 작성 최소 열람 조건</strong>
                 <span class="text-muted small">1화만 보고 비방하는 악플러(체리피커)를 차단합니다.</span>
               </div>
               <span id="policyMinReadDisplay" class="font-bold" style="font-size:0.85rem; color:var(--cdg-pink); min-width:85px; text-align:right;">전체 독자 가능</span>
@@ -2143,7 +2144,7 @@
               <label class="small text-muted block" style="margin:0;">현재 차단된 악성 독자 목록</label>
               <span class="text-muted small" id="policyBlockedCount">0명 차단됨</span>
             </div>
-            <div class="blocked-readers-table-box" id="policyBlockedReadersList" style="max-height:160px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; background:rgba(0,0,0,0.25);">
+            <div class="blocked-readers-table-box" id="policyBlockedReadersList" style="max-height:160px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-surface);">
               <!-- Dynamic Table of Blocked Readers -->
             </div>
           </div>
@@ -2167,12 +2168,12 @@
         <div class="modal-body">
           <div class="support-author-target-box glass-panel p-3 mb-4 text-center" style="border-radius:10px; background:rgba(255,42,122,0.06); border:1px solid rgba(255,42,122,0.2);">
             <div class="text-muted small">응원 대상 작가 및 작품</div>
-            <h4 id="supportTargetAuthor" style="margin:4px 0 2px; color:#fff;">작가님</h4>
+            <h4 id="supportTargetAuthor" style="margin:4px 0 2px; color:var(--text-primary);">작가님</h4>
             <div class="text-muted small" id="supportTargetWorkTitle">작품명</div>
           </div>
 
           <!-- Current Balance -->
-          <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:8px;">
+          <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-subtle); padding:10px 14px; border-radius:8px;">
             <span class="text-muted small">내 보유 포인트 잔액:</span>
             <strong id="supportUserPointBalance" style="color:var(--accent-amber, #F59E0B); font-size:1.05rem;">1,000 P</strong>
           </div>
@@ -2195,7 +2196,7 @@
               <span class="text-muted" style="font-size:0.75rem;">(최소 1,000P ~ 최대 50,000P)</span>
             </div>
             <div style="position:relative;">
-              <input type="number" id="supportCustomAmount" class="form-input" min="1000" max="50000" step="500" value="5000" oninput="handleSupportCustomInput(this.value)" style="width:100%; padding:10px 40px 10px 12px; font-size:1.1rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.4); border:1px solid var(--border-color); border-radius:8px;">
+              <input type="number" id="supportCustomAmount" class="form-input" min="1000" max="50000" step="500" value="5000" oninput="handleSupportCustomInput(this.value)" style="width:100%; padding:10px 40px 10px 12px; font-size:1.1rem; font-weight:700; color:var(--text-primary); background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
               <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-weight:600;">P</span>
             </div>
           </div>
@@ -2203,7 +2204,7 @@
           <!-- Cheer Message -->
           <div class="form-group mb-4">
             <label class="small text-muted mb-1 block">작가님께 보낼 응원 한마디</label>
-            <input type="text" id="supportCheerMessage" class="form-input" maxlength="100" placeholder="작가님 항상 건필하세요! 다음 화 기대 중입니다." style="width:100%; padding:10px; font-size:0.9rem; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--border-color); border-radius:8px;">
+            <input type="text" id="supportCheerMessage" class="form-input" maxlength="100" placeholder="작가님 항상 건필하세요! 다음 화 기대 중입니다." style="width:100%; padding:10px; font-size:0.9rem; background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px;">
           </div>
 
           <!-- Anonymous Option -->
@@ -2252,7 +2253,7 @@
           <div class="mobile-more-user-box glass-panel p-4 mb-3">
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="user-avatar" id="mMoreAvatar" style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-brand-gradient); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: #fff;">👤</div>
+                <div class="user-avatar" id="mMoreAvatar" style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-brand-gradient); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; color: var(--text-on-accent);">👤</div>
                 <div>
                   <div style="font-weight: 700; font-size: 1.05rem;" id="mMoreUserEmail">로그인이 필요합니다</div>
                   <div class="text-muted small" id="mMoreAdultStatus" style="display:none"></div>
@@ -2319,7 +2320,7 @@
             <div class="mobile-more-list">
               <div class="mobile-more-list-item" style="display:none" onclick="toggleAdultContentMode()">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <i data-lucide="shield-alert" style="color: #EF4444;"></i>
+                  <i data-lucide="shield-alert" style="color: var(--accent-danger);"></i>
                   <span>19+ 성인 콘텐츠 필터</span>
                 </div>
                 <span id="mMoreAdultToggleLabel" class="badge badge-outline">ON</span>
@@ -2409,9 +2410,9 @@
   </div>
 
   <!-- Core Architecture Modules -->
-  <script src="/js/core/state.js?v=102"></script>
+  <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=122"></script>
-  <script src="/js/core/role-modules.js?v=123"></script>
+  <script src="/js/core/role-modules.js?v=20261012"></script>
   <script src="/js/core/router.js?v=123"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/reader/reader-content.js?v=107"></script>
@@ -2419,7 +2420,7 @@
   <script src="/js/reader/reader-discovery.js?v=122"></script>
   <script src="/js/reader/reader-webtoon.js?v=118"></script>
   <script src="/js/reader/reader-position.js?v=116"></script>
-  <script src="/js/reader/reader.js?v=116"></script>
+  <script src="/js/reader/reader.js?v=20261012"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>

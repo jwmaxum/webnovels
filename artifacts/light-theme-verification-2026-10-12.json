@@ -1,0 +1,158 @@
+{
+  "date": "2026-10-12",
+  "scope": "Pre-stage32 light site design",
+  "baseline": "70a57828e09f94f5d2a7371c1b24685cc35c4f24",
+  "runtime": "v24.19.0",
+  "sourceHashes": {
+    "public/styles.css": "26add3ca3b0904077f38c252282a5e72924141be4292e4cd199c49f7da4d9594",
+    "public/index.html": "ba403f41a322814e841f759ff363c4c5825a295e4abb8ee67b3045c4f3b0a1c2",
+    "public/js/core/state.js": "befb2953039b949855ae682880140ed92711c7fd57174c7af63a653762f6697f",
+    "public/js/core/role-modules.js": "31a7e493278de9548a4f19560a353e36df3f7a9cd7490fae584342e686a2f367",
+    "public/js/reader/reader.js": "ca209206effd15572aeaa7395bef4bf15cea488ded5086c90291026ab319483f",
+    "public/js/creator/creator.js": "7874a800bcf2b56bacacaee11fc8519472e54161d05c3c7dc2ee7495d037ae85",
+    "public/js/admin/admin.js": "adc5ed5ded4d9043b4be8405c4a6ab060b0dd9339f0e70c6adf5960fe5b1d5c9"
+  },
+  "verification": {
+    "source": "Tracked/unignored source copy without .env.local or initial scratch; existing locked dependencies reused",
+    "commands": [
+      {
+        "name": "ui-regressions",
+        "exit": 0,
+        "tests": 58,
+        "passed": 58,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:naming",
+        "exit": 0,
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:auth",
+        "exit": 0,
+        "tests": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "test:cloudflare-bundle",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "build:compile",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typecheck",
+        "exit": 0,
+        "tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "regressions": {
+      "passed": 77,
+      "failed": 0
+    },
+    "designChecks": [
+      {
+        "name": "CSS parses without warnings",
+        "result": "PASS"
+      },
+      {
+        "name": "Home IDs, event handlers and forms are preserved",
+        "result": "PASS"
+      },
+      {
+        "name": "Legal pages unchanged",
+        "result": "PASS"
+      },
+      {
+        "name": "Generated markup changes are presentation only",
+        "result": "PASS"
+      },
+      {
+        "name": "Site uses light native controls and revised asset URLs",
+        "result": "PASS"
+      },
+      {
+        "name": "New reader defaults to light without writing preferences",
+        "result": "PASS"
+      },
+      {
+        "name": "Existing local and legacy reading choices survive",
+        "result": "PASS"
+      },
+      {
+        "name": "Invalid cache and reset use light",
+        "result": "PASS"
+      },
+      {
+        "name": "Core text and button contrast is at least 4.5:1",
+        "result": "PASS"
+      },
+      {
+        "name": "Remote empty defaults and explicit saved OLED choice are preserved",
+        "result": "PASS"
+      }
+    ],
+    "contrast": {
+      "scope": "Core text colors on main, surface and subtle backgrounds",
+      "pairs": 27,
+      "minRatio": 4.85,
+      "primaryButtonContrast": ">=4.5:1",
+      "renderedAccessibilityAudit": false
+    },
+    "syntax": [
+      {
+        "file": "public/js/admin/admin.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/core/role-modules.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/core/state.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/creator/creator.js",
+        "status": 0
+      },
+      {
+        "file": "public/js/reader/reader.js",
+        "status": 0
+      }
+    ],
+    "security": {
+      "files": 8,
+      "findings": []
+    },
+    "diff": "PASS",
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED: palette and default preference changes; no new domain logic"
+  },
+  "browserExecuted": false,
+  "localhostExecuted": false,
+  "productionDatabaseChanged": false,
+  "featureFlagsChanged": false,
+  "readerSavedPreferencesPreserved": true,
+  "policyPagesUnchanged": true,
+  "releaseAcceptance": "After push: exact-commit CI/deployment status and anonymous HTTP source matching",
+  "nextStep": "Stage32: actual reviewed originals and separate hosted DB/Auth/Storage/roles/RLS/RPC/multiple-connection acceptance; current launch NO_GO is unchanged"
+}

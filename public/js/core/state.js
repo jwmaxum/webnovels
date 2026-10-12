@@ -34,7 +34,7 @@ function getPublishedWorks() {
 let activeWork = null;
 let activeEpisodeId = null;
 let unlockedEpisodes = new Set();
-let currentTheme = 'theme-dark';
+let currentTheme = 'theme-light';
 let currentFontSize = 18;
 let currentActiveView = 'view-home';
 let lastMainView = 'view-home';
