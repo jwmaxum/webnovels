@@ -1,5 +1,7 @@
 import {webtoonEnabled} from './webtoon-api.mjs';
 import {recoveryReviewEnabled} from './recovery-review-policy.mjs';
+import '../public/js/shared/manuscript-document.js';
+export const richTextEnabled=env=>env.AUTHOR_RICH_TEXT_ENABLED==='true';
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const number = s => typeof s === 'string' && /^(0|[1-9]\d{0,18})$/.test(s) && BigInt(s) <= 9223372036854775807n;
 export const recoveryEnabled = env => ['P0_API_ENABLED','AUTHOR_WORKS_ENABLED','AUTHOR_DRAFTS_ENABLED','AUTHOR_FILES_ENABLED','AUTHOR_RECOVERY_ENABLED'].every(k=>env[k]==='true');
@@ -45,9 +47,10 @@ export async function creatorDraftApi({request,env,actor,db,readBody,fail,worksp
     if (request.headers.get('origin')!==url.origin) fail(403,'ORIGIN_REQUIRED');
     action='save';data=await readBody(request);key=request.headers.get('Idempotency-Key');
     if (!uuid.test(key || '')) fail(400,'IDEMPOTENCY_KEY_REQUIRED');
-    if (Object.keys(data).some(k=>!['expectedRevision','title','content','authorComment',...(webtoonEnabled(env)?['webtoon']:[])].includes(k)) ||
+    if (Object.keys(data).some(k=>!['expectedRevision','title','content','authorComment',...(richTextEnabled(env)?['contentDocument']:[]),...(webtoonEnabled(env)?['webtoon']:[])].includes(k)) ||
       !number(data.expectedRevision) || ['title','content','authorComment'].some(k=>typeof data[k]!=='string') ||
       data.title.length>200 || data.content.length>200000 || data.authorComment.length>5000) fail(400,'INVALID_FIELD');
+    if('contentDocument' in data && (!globalThis.ManuscriptDocument.valid(data.contentDocument,data.content)||data.webtoon))fail(400,'INVALID_CONTENT_DOCUMENT');
   } else if (request.method!=='GET') fail(405,'METHOD_NOT_ALLOWED');
   const result=await db('rpc/creator_drafts',{}, {method:'POST',body:{p_user_id:who.userId,p_action:action,p_work_id:work,p_id:match[1] || null,p_data:data,p_key:key,p_before:before}});
   if (result?.error) fail([400,403,404,409,503].includes(result.status)?result.status:503,result.error);

@@ -11,7 +11,16 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
   if (!match) fail(404, 'NOT_FOUND');
   const id = match[1] || null;
   if (id && !decimal(id)) fail(400, 'INVALID_ID');
-  if (match[2] === 'distribution') return creatorDistributionApi({request,env,who,id,db,readBody,fail});
+  // The partial private workspace can run before 022. Never let its legacy RPC
+  // change a work with episode/publication history before the review migration is accepted.
+  const checkWorkspaceChange=async()=>{if(workspaceReady && id && env.AUTHOR_PUBLICATION_REVIEW_ENABLED!=='true') {
+    if(request.headers.get('origin')!==url.origin)fail(403,'ORIGIN_REQUIRED');
+    const owned=await db('rpc/creator_works',{}, {method:'POST',body:{p_user_id:who.userId,p_action:'get',p_work_id:id}});
+    if(owned?.error)fail([403,404].includes(owned.status)?owned.status:503,owned.error);
+    if(!owned?.work||!Number.isFinite(Number(owned.work.episode_count)))fail(503,'DATABASE_UNAVAILABLE');
+    if(owned.work.hasPublicationHistory || owned.work.visibility==='PUBLIC' || Number(owned.work.episode_count)>0)fail(409,'PUBLICATION_REVIEW_NOT_ACTIVATED');
+  }};
+  if (match[2] === 'distribution') return creatorDistributionApi({request,env,who,id,db,readBody,fail,beforeMutation:checkWorkspaceChange});
   if ([...url.searchParams.keys()].some(k => !['filter','after'].includes(k))) fail(400, 'FIELD_NOT_ALLOWED');
   const filter = url.searchParams.get('filter') || 'all', after = url.searchParams.get('after') || '0';
   if (!['all','draft','public','trash'].includes(filter) || !decimal(after,true)) fail(400, 'INVALID_FILTER');
@@ -40,6 +49,7 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
       if (name in data && !values.includes(data[name])) fail(400, 'INVALID_FIELD');
     }
   }
+  if(['update','trash','restore'].includes(action))await checkWorkspaceChange();
   const result = await db('rpc/creator_works', {}, { method:'POST', body:{
     p_user_id:who.userId, p_action:action, p_work_id:id, p_data:data, p_key:key, p_filter:filter, p_after:after
   }});

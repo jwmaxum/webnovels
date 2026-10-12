@@ -8,6 +8,7 @@
   const actor = () => window.WebNovelsAuth?.getActor();
   const pendingKey = () => 'creator.pending-work.'+actor().userId;
   const message = error => ({
+    PUBLICATION_REVIEW_NOT_ACTIVATED:'발행 이력이 있는 작품의 변경은 관리자 검토가 필요합니다. 검토 서비스 연결 전까지 기존 공개본을 유지합니다. 비공개 수정 원고는 계속 작성할 수 있습니다.',
     WORK_CONFLICT:'다른 화면에서 수정되었습니다. 입력 내용은 유지됩니다. 최신 내용을 확인한 뒤 다시 저장해주세요.',
     WORK_NOT_FOUND:'작품을 찾을 수 없거나 접근 권한이 없습니다.',
     AUTHOR_REQUIRED:'작가 로그인이 필요합니다.', WORK_RESTRICTED:'운영 제한 중인 작품입니다. 운영자에게 문의해주세요.',
@@ -142,6 +143,12 @@
     try {
       const result=await api('/'+id);if(!validRequest(seq,user))return;
       current=result.work;root().innerHTML=detailHTML(current,result.episodes,tab,result.distributionEnabled===true);
+      if(result.changeRequests?.length){
+        const section=document.createElement('section');section.className='co-panel';
+        const heading=document.createElement('h4');heading.textContent='발행 후 변경 검토 현황';section.append(heading);
+        const names={work:'작품 정보·삭제',publication:'회차 수정',operation:'공개·연재 상태',distribution:'연재 방식',file:'표지'};
+        for(const change of result.changeRequests){const row=document.createElement('p');row.textContent=(names[change.kind]||'변경')+' · '+({APPROVE:'승인·반영 완료',REJECT:'반려'}[change.decision]||'검토 대기')+(change.reason?' · '+change.reason:'');section.append(row);}root().append(section);
+      }
       if(tab==='settings'&&result.distributionEnabled===true)window.CreatorDistribution?.mount(root().querySelector('#cwDistributionPanel'),current);
       const drafts=root().querySelector('#cwDrafts');if(drafts)drafts.onclick=()=>window.CreatorDraftEditor.openWork(id);
       const files=root().querySelector('#cwFiles');if(files)files.onclick=()=>window.CreatorFiles.open(id);
@@ -177,13 +184,13 @@
       document.getElementById('cwMessage').textContent='연재 방식에 저장하지 않은 변경이 있습니다. 연재 방식을 저장하거나 최신 설정을 불러온 뒤 작품 정보·상태를 변경해주세요.';return;
     }
     if(action==='trash'&&!window.confirm('공개가 중단되고 대기 예약이 취소됩니다. 원고는 보존됩니다. 휴지통으로 옮길까요?'))return;
-    if(data.visibility==='PRIVATE'&&!window.confirm('공개를 중단하고 대기 예약을 취소할까요?'))return;
+    if(data.visibility==='PRIVATE'&&!window.confirm('공개 중단을 요청할까요? 발행 이력이 있는 작품은 관리자 승인 후 반영됩니다.'))return;
     busy=true;const id=current.id,version=current.version,seq=epoch,user=actor()?.userId;
     root().querySelectorAll('button[type="submit"],#cwTrash,#cwPrivate').forEach(b=>b.disabled=true);
     try {
-      await api('/'+id+(action==='update'?'':'/'+action),{method:action==='update'?'PATCH':'POST',body:JSON.stringify({...data,version})});
+      const saved=await api('/'+id+(action==='update'?'':'/'+action),{method:action==='update'?'PATCH':'POST',body:JSON.stringify({...data,version})});
       if(action==='trash'||(action==='update'&&data.visibility==='PRIVATE'))await window.refreshReaderCatalog?.(true);
-      if(validRequest(seq,user)){await loadDetail(id,tab);const msg=document.getElementById('cwMessage');if(msg)msg.textContent='저장되었습니다.';}
+      if(validRequest(seq,user)){await loadDetail(id,tab);const msg=document.getElementById('cwMessage');if(msg)msg.textContent=saved.reviewRequired?'변경 검토 요청을 접수했습니다. 승인 전까지 기존 공개본은 유지됩니다.':'저장되었습니다.';}
     }catch(error){if(validRequest(seq,user))document.getElementById('cwMessage').textContent=message(error);}
     finally{busy=false;if(root())root().querySelectorAll('button[type="submit"],#cwTrash,#cwPrivate').forEach(b=>b.disabled=false);}
   }

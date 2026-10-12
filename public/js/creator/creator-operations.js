@@ -82,7 +82,8 @@
             toggle.onclick=async()=>{
               if(!confirm(withdraw?'회차를 비공개로 전환할까요? 댓글과 공개본 이력은 보존됩니다.':'기존 공개본을 다시 공개할까요?'))return;
               try{
-                await api(withdraw?'withdraw':'restore-episode',workId,{episodeId:row.id});
+                const saved=await api(withdraw?'withdraw':'restore-episode',workId,{episodeId:row.id});
+                if(saved.reviewRequired){message.textContent='공개 상태 변경 검토를 요청했습니다. 승인 전까지 기존 공개 상태를 유지합니다.';return;}
                 await window.refreshReaderCatalog?.(true);
                 await episodes(root,workId);
               }catch(error){message.textContent=reportError(error);}
@@ -116,7 +117,7 @@
         schedulePolicy:form.elements.schedulePolicy.value,version:String(work.version)};
       try{
         const result=await api('serial-state',work.id,data);
-        const confirmation=`저장했습니다. 기존 예약 ${result.cancelledSchedules}건 취소, 나머지는 ${data.schedulePolicy==='KEEP'?'유지':'없음'}입니다.`;
+        const confirmation=result.reviewRequired?'연재 상태 변경 검토를 요청했습니다. 승인 전까지 기존 설정을 유지합니다.':`저장했습니다. 기존 예약 ${result.cancelledSchedules}건 취소, 나머지는 ${data.schedulePolicy==='KEEP'?'유지':'없음'}입니다.`;
         await window.CreatorWorks.loadFromRoute();
         const updated=document.getElementById('coSerialMessage');
         if(updated)updated.textContent=confirmation;

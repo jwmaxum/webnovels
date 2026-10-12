@@ -30,6 +30,12 @@ function fixture(path = '/home') {
     location: path => { context.location = new URL(path, 'https://app.test'); } };
 }
 
+test('webtoon navigation and legacy routing share the discovery surface',()=>{
+  const app=fixture(),types=[];app.context.ReaderDiscovery.active=()=>false;app.context.setDiscoverType=(type,navigate)=>types.push({type,navigate});
+  app.context.openWebtoonFilterHome();assert.equal(app.context.currentActiveView,'view-discover');assert.equal(app.pushes.at(-1),'/discover?type=WEBTOON');assert.deepEqual(types.at(-1),{type:'WEBTOON',navigate:false});
+  app.context.openNovelFilterHome();assert.equal(types.at(-1).type,'NOVEL');
+});
+
 test('navigateTo preserves query casing, repeated tags and opaque cursor without a duplicate history entry', () => {
   const app = fixture();
   const path = '/discover?q=CaseSensitive+%EC%A0%9C%EB%AA%A9&tag=Fantasy&tag=%EB%AA%A8%ED%97%98&cursor=Aa_Z-19';

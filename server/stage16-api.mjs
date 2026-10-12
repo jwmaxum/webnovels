@@ -1,3 +1,4 @@
+import '../public/js/shared/manuscript-document.js';
 import {webtoonEnabled,projectWebtoon} from './webtoon-api.mjs';
 // Additive public discovery. No client identity, private distribution rows, or manuscript text in cards.
 import { DISTRIBUTION_HOSTS, normalizeExternalLinks } from './creator-distribution-api.mjs';
@@ -184,6 +185,7 @@ export function publicContent(result,fail,env={}) {
   if(!visibleEpisode(episode)||typeof episode.content!=='string'||!Array.isArray(episode.image_urls))
     fail(503,'CONTENT_UNAVAILABLE');
   return {success:true,episode:{...projectEpisode(episode,episode.work_id,fail),content:episode.content,
+    ...(globalThis.ManuscriptDocument.valid(episode.contentDocument,episode.content)?{contentDocument:episode.contentDocument}:{}),
     ...(webtoonEnabled(env)&&episode.contentType==='WEBTOON'?{contentType:'WEBTOON',webtoon:projectWebtoon(episode.webtoon,episode.id,episode.versionId,fail)}:{}),
     author_comment:typeof episode.author_comment==='string'?episode.author_comment:'',image_urls:episode.image_urls}};
 }

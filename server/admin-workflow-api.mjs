@@ -1,3 +1,4 @@
+import {publicationChangeApi} from './publication-change-api.mjs';
 import {adminRecoveryApi} from './admin-recovery-api.mjs';
 // Administrator workflow boundary. Identity and permissions are checked again inside the RPC.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -20,6 +21,7 @@ const timestamp=value=>typeof value==='string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d
 export async function adminWorkflowApi({request,env,actor,db,readBody,fail,fetchImpl,base,serviceHeaders}) {
   if(!adminWorkflowEnabled(env))fail(503,'ADMIN_WORKFLOW_NOT_ACTIVATED');
   if(new URL(request.url).searchParams.get('action')?.startsWith('recovery-'))return adminRecoveryApi({request,env,actor,db,readBody,fail,fetchImpl,base,serviceHeaders});
+  if(new URL(request.url).searchParams.get('action')?.startsWith('publication-'))return publicationChangeApi({request,env,actor,db,readBody,fail,fetchImpl,base,serviceHeaders});
   const url=new URL(request.url),action=url.searchParams.get('action'),write=Object.hasOwn(writes,action);
   if(!write&&!Object.hasOwn(reads,action))fail(400,'INVALID_ACTION');
   if(request.method!==(write?'POST':'GET'))fail(405,'METHOD_NOT_ALLOWED');

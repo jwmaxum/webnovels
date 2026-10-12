@@ -18,7 +18,7 @@ export function normalizeExternalLinks(links, fail) {
   if (new Set(normalized).size !== normalized.length) fail(400, 'INVALID_EXTERNAL_LINK');
   return normalized;
 }
-export async function creatorDistributionApi({request, env, who, id, db, readBody, fail}) {
+export async function creatorDistributionApi({request, env, who, id, db, readBody, fail, beforeMutation}) {
   if (env.AUTHOR_DISTRIBUTION_ENABLED !== 'true') fail(503, 'AUTHOR_DISTRIBUTION_NOT_ACTIVATED');
   const url = new URL(request.url);
   if ([...url.searchParams].length) fail(400, 'FIELD_NOT_ALLOWED');
@@ -35,10 +35,12 @@ export async function creatorDistributionApi({request, env, who, id, db, readBod
     data.externalLinks = normalizeExternalLinks(data.externalLinks, fail);
     action = 'update';
   } else fail(405, 'METHOD_NOT_ALLOWED');
+  if(action==='update')await beforeMutation?.();
   const result = await db('rpc/creator_work_distribution', {}, {method:'POST', body:{
     p_user_id:who.userId, p_work_id:id, p_action:action, p_data:data
   }});
   if (result?.error) fail([400,403,404,409,503].includes(result.status) ? result.status : 503, result.error);
+  if (result?.reviewRequired===true && /^[0-9a-f-]{36}$/.test(result.changeId||'')) return result;
   if (!result?.distribution || typeof result.distribution !== 'object') fail(503, 'DATABASE_UNAVAILABLE');
   return result;
 }

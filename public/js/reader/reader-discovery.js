@@ -35,7 +35,7 @@
     const art = node('div', null, 'cdg-card-cover'), image = node('img');
     image.src = work.coverUrl; image.alt = ''; image.loading = 'lazy'; image.className = 'cdg-card-cover-img'; art.append(image);
     const info = node('div', null, 'cdg-card-info');
-    info.append(node('span', work.genre || '웹소설', 'cdg-card-tag'), node('h3', work.title, 'cdg-card-title'),
+    info.append(node('span', work.genre || (work.contentType === 'WEBTOON' ? '웹툰' : '웹소설'), 'cdg-card-tag'), node('h3', work.title, 'cdg-card-title'),
       node('p', work.author, 'text-muted small'), node('p', `${work.isCompleted ? '완결 · ' : ''}공개 ${work.episodeCount}화`, 'small'));
     if (popular && Number.isInteger(work.rankingReaders) && work.rankingReaders >= 5)
       info.append(node('p', `최근 7일 독자 ${work.rankingReaders}명`, 'small'));
@@ -81,6 +81,7 @@
   }
   function path(params) { const query = params.toString(); return '/discover' + (query ? '?' + query : ''); }
   function syncControls() {
+    window.updateDiscoverTypeControls?.(currentQuery.get('type') || 'NOVEL');
     const groups = [['discoverGenreFilters','genre','ALL'], ['filterStatusGroup','status','ALL'],
       ['filterEpRangeGroup','epRange','ALL'], ['filterRatingGroup','rating','ALL']];
     for (const [id, key, fallback] of groups) for (const el of $(id)?.querySelectorAll('button') || []) {
@@ -246,14 +247,15 @@
     configure();
     const request = ++searchRequest; clearTimeout(searchTimer);
     const sort = $('searchSortSelect')?.value || 'latest';
+    const type = new URLSearchParams(window.location.search).get('type') === 'WEBTOON' ? 'WEBTOON' : 'NOVEL';
     status($('searchResults'), '검색 중입니다.');
     searchTimer = setTimeout(async () => {
       try {
-        const result = await window.ReaderCatalog.list({ q: query.trim(), sort, limit: 8 });
+        const result = await window.ReaderCatalog.list({ q: query.trim(), type, sort, limit: 8 });
         if (request !== searchRequest) return;
         const el = $('searchResults'); cards(el, result.works, sort === 'popular');
         if (sort === 'popular') el?.append(node('p', rankingText(result.ranking), 'text-muted small'));
-        el?.append(link('전체 검색 결과 보기', path(new URLSearchParams({ ...(query.trim() ? { q: query.trim() } : {}), sort })), 'btn btn-primary'));
+        el?.append(link('전체 검색 결과 보기', path(new URLSearchParams({ ...(query.trim() ? { q: query.trim() } : {}), type, sort })), 'btn btn-primary'));
       } catch { if (request === searchRequest) failure($('searchResults'), () => search(query)); }
     }, 200);
   }
@@ -263,5 +265,5 @@
     if (view !== 'view-home') { ++homeRequest; ++genreRequest; window.GrowthStudio?.leaveHome(); }
   }
   window.ReaderDiscovery = Object.freeze({ active, home, discover, detail, genre, search, filter, toggleTag, leave, parse, values, path,
-    reset: () => window.navigateTo('/discover'), submit: event => { event?.preventDefault(); filter('q', $('discoverQuery')?.value.trim() || ''); } });
+    reset: () => window.navigateTo('/discover?type=' + (currentQuery.get('type') === 'WEBTOON' ? 'WEBTOON' : 'NOVEL')), submit: event => { event?.preventDefault(); filter('q', $('discoverQuery')?.value.trim() || ''); } });
 })();

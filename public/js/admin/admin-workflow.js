@@ -130,7 +130,7 @@
     },c);
   }
   async function render(root,page,options={}){
-    if(!active())return;host=root;const c={turn:++turn,user:actor()?.userId,page,options,isCurrent:options.isCurrent||(()=>true)};context=c;
+    if(!active())return;window.AdminPublicationChanges?.reset();host=root;const c={turn:++turn,user:actor()?.userId,page,options,isCurrent:options.isCurrent||(()=>true)};context=c;
     root.replaceChildren();status(root,'운영 정보를 불러오는 중입니다…');
     const source=options.source||'CONTENT_REVIEW',kind=options.accountKind||'reader',offset=options.offset||0;
     try{
@@ -142,6 +142,8 @@
       }else result=await api(page==='works'?'work-list':page,page==='accounts'?{kind,offset}:page==='audit'?{offset,target:options.target||''}:page==='appeals'?{offset}:{});
       if(!current(c))return;root.replaceChildren();el(root,'h3',({cases:'신고·검수 사건 처리',appeals:'이의제기와 후속 조치',accounts:'계정 지원',works:'콘텐츠 상태·제재',curation:'기간별 편집 추천',audit:'통합 감사 기록'})[page]);
       if(page==='cases'){
+        if(can('CONTENT_REVIEW'))await window.AdminPublicationChanges?.render(root,()=>current(c));
+        if(!current(c))return;
         for(const [key,name] of Object.entries(sourceNames))if(can('CASE_READ')||can(key==='CONTENT_REVIEW'?'CONTENT_REVIEW':'COMMENT_REPORT'))button(root,name,()=>render(root,page,{...options,source:key,offset:0}));
         if(!result.cases.length)status(root,'사건이 없습니다.');result.cases.forEach(item=>caseCard(item,assignees,c));
       }else if(page==='appeals'){
@@ -189,6 +191,6 @@
       pager(result,c);
     }catch(error){if(current(c)){root.replaceChildren();status(root,'조회 실패: '+(error.code||error.message||'요청 실패'));button(root,'다시 불러오기',()=>render(root,page,options));}}
   }
-  function reset(){window.AdminRecovery?.reset();turn++;context=null;if(host)host.replaceChildren();host=null;}
+  function reset(){window.AdminPublicationChanges?.reset();window.AdminRecovery?.reset();turn++;context=null;if(host)host.replaceChildren();host=null;}
   window.AdminWorkflow=Object.freeze({active,api,render,reset});
 })();

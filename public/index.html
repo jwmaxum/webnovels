@@ -39,7 +39,7 @@
   <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
-  <link rel="stylesheet" href="/styles.css?v=20261012">
+  <link rel="stylesheet" href="/styles.css?v=124">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 <link rel="stylesheet" href="/css/growth.css?v=121">
 <link rel="stylesheet" href="/css/policies.css?v=20261011">
@@ -70,7 +70,7 @@
             <i data-lucide="book-open" class="sidebar-nav-icon"></i>
             <span>웹소설</span>
           </button>
-          <button type="button" class="sidebar-nav-item" data-side-target="view-webtoon" onclick="scrollToSection('webtoonsSection')">
+          <button type="button" class="sidebar-nav-item" data-side-target="view-webtoon" onclick="openWebtoonFilterHome()">
             <i data-lucide="palette" class="sidebar-nav-icon"></i>
             <span>웹툰</span>
           </button>
@@ -276,7 +276,7 @@
         <section class="cdg-section" id="webtoonsSection">
           <div class="cdg-section-head">
             <h2 class="cdg-section-title">🎨 인기 웹툰</h2>
-            <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">더보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
+            <span class="cdg-more-link" onclick="openWebtoonFilterHome()">더보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
           </div>
           <div class="cdg-scroll-row" id="webtoonsGrid">
             <!-- Dynamic Webtoon Cards -->
@@ -323,12 +323,16 @@
         <div class="container section-padding">
           <div class="section-header discover-header">
             <div>
-              <h2>작품 탐색</h2>
+              <h2 id="discoverHeading">웹소설 작품 탐색</h2>
               <p class="text-muted">검색, 장르 필터, 정렬로 다음에 읽을 작품을 빠르게 찾으세요.</p>
             </div>
             <button class="btn btn-outline" id="btnDiscoverSearch"><i data-lucide="search"></i> 작품/작가 검색</button>
           </div>
 
+          <nav class="discovery-type-tabs" aria-label="작품 종류">
+            <button type="button" class="pill active" data-discover-type="NOVEL" aria-pressed="true" onclick="setDiscoverType('NOVEL')">웹소설</button>
+            <button type="button" class="pill" data-discover-type="WEBTOON" aria-pressed="false" onclick="setDiscoverType('WEBTOON')">웹툰</button>
+          </nav>
           <form id="discoverySearchForm" class="discovery-search" hidden onsubmit="ReaderDiscovery.submit(event)">
             <label for="discoverQuery">작품명·작가명 검색</label>
             <input id="discoverQuery" type="search" maxlength="100" autocomplete="off" placeholder="작품이나 작가를 입력하세요">
@@ -663,7 +667,7 @@
             </div>
           </div>
 
-          <p id="authorWorkspaceNotice" class="cms-notice" hidden>내 작품을 등록하고 작품 정보와 비공개 원고를 저장할 수 있습니다. 원고의 독자 공개·예약 발행과 파일 업로드는 준비 중입니다.</p>
+          <p id="authorWorkspaceNotice" class="cms-notice" hidden>작품과 원고를 저장하고, 미리보기 후 발행할 수 있습니다. 새 회차는 작가가 직접 발행하며, 발행된 작품의 수정·삭제는 관리자 검토 대상입니다. 현재 계정의 공개 서비스 연결 상태는 발행 버튼에서 확인하세요.</p>
           <!-- Tab 1: Works Management (작품관리) -->
           <div class="creator-tab-panel active" id="creatorTab-works">
             <div class="card glass-panel">
@@ -734,6 +738,18 @@
                     </div>
                   </div>
                   <div class="creator-word-progress" aria-hidden="true"><span id="creatorWordProgress"></span></div>
+                  <section id="creatorRichEditor" hidden aria-label="Word 서식 원고 편집기">
+                    <div class="rich-toolbar" role="group" aria-label="본문 서식">
+                      <button type="button" class="btn btn-outline btn-sm" data-rich-command="bold">굵게</button>
+                      <button type="button" class="btn btn-outline btn-sm" data-rich-command="italic">기울임</button>
+                      <button type="button" class="btn btn-outline btn-sm" data-rich-command="underline">밑줄</button>
+                      <button type="button" class="btn btn-outline btn-sm" data-rich-command="justifyLeft">왼쪽</button>
+                      <button type="button" class="btn btn-outline btn-sm" data-rich-command="justifyCenter">가운데</button>
+                      <button type="button" class="btn btn-outline btn-sm" data-rich-command="justifyRight">오른쪽</button>
+                    </div>
+                    <p id="creatorRichNotice" class="text-muted small" role="status">Word에서 복사한 문단·줄바꿈·강조·정렬을 붙여넣을 수 있습니다. 표·그림·쪽 배치는 지원하지 않습니다.</p>
+                    <div id="creatorRichBody" class="creator-rich-body" contenteditable="false" role="textbox" aria-multiline="true" aria-label="서식 원고 본문"></div>
+                  </section>
                   <textarea id="newEpContent" rows="16" class="form-input creator-editor-textarea" placeholder="원고를 입력해주세요." maxlength="200000"></textarea>
                   <p class="creator-editor-help">입력을 잠시 멈추면 기기 저장과 서버 동기화를 요청합니다. 계속 입력해도 최대 30초 대기로 요청하며 한글 조합·진행 중 저장이 끝날 때까지 기다립니다. 중단된 탭·오프라인에서는 저장 상태를 확인해주세요. Ctrl/Cmd+S로 바로 저장할 수 있습니다.</p>
                 </div>
@@ -742,8 +758,9 @@
                   <input type="text" id="newEpAuthorComment" maxlength="5000" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--border-color);">
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">초안 저장</button>
-                <button type="button" class="btn btn-outline" id="btnOpenPublication">미리보기·게시</button>
+                <p class="creator-publish-policy">새 회차는 작가가 직접 발행합니다. 이미 발행된 작품의 수정·삭제는 관리자 승인 후 반영됩니다.</p>
+                <button type="submit" class="btn btn-outline" id="btnSubmitNewEpisode">비공개 저장</button>
+                <button type="button" class="btn btn-primary" id="btnOpenPublication">미리보기 후 발행</button>
                 <button type="button" class="btn btn-outline" id="btnDraftSettings">작품 정보·연재 방식 설정</button>
                 <div id="creatorDraftChecklist" aria-label="원고 준비 상태"></div>
                 <p class="text-muted small">초안 저장은 비공개입니다. 게시 전 저장 버전·작품 정보·권리를 다시 확인합니다.</p>
@@ -2412,15 +2429,16 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=122"></script>
-  <script src="/js/core/role-modules.js?v=20261012"></script>
-  <script src="/js/core/router.js?v=123"></script>
+  <script src="/js/core/role-modules.js?v=124"></script>
+  <script src="/js/core/router.js?v=124"></script>
   <!-- Domain Functional Modules -->
-  <script src="/js/reader/reader-content.js?v=107"></script>
+  <script src="/js/shared/manuscript-document.js?v=124"></script>
+  <script src="/js/reader/reader-content.js?v=124"></script>
   <script src="/js/reader/reader-catalog.js?v=117"></script>
-  <script src="/js/reader/reader-discovery.js?v=122"></script>
+  <script src="/js/reader/reader-discovery.js?v=124"></script>
   <script src="/js/reader/reader-webtoon.js?v=118"></script>
   <script src="/js/reader/reader-position.js?v=116"></script>
-  <script src="/js/reader/reader.js?v=20261012"></script>
+  <script src="/js/reader/reader.js?v=124"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>

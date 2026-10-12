@@ -11,8 +11,8 @@
   }
   const canonical=value=>JSON.stringify((function ordered(v){return Array.isArray(v)?v.map(ordered):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,ordered(v[k])])):v;})(value));
   const safe=fn=>(...args)=>Promise.resolve().then(()=>fn(...args)).catch(error);
-  function data(){return {...Object.fromEntries(Object.entries(fields).map(([k,id])=>[k,$(id)?.value||''])),...(engine.current?.snapshot.webtoon?{webtoon:engine.current.snapshot.webtoon,content:''}:{})};}
-  function form(value={},readOnly=engine.current?.lifecycle!=='ACTIVE'){for(const [k,id]of Object.entries(fields))if($(id)){$(id).value=value[k]||'';$(id).disabled=readOnly;}window.CreatorWebtoon?.mount(works.find(w=>w.id===engine.current?.workId),engine.current,readOnly);counts();}
+  function data(){return {...Object.fromEntries(Object.entries(fields).map(([k,id])=>[k,$(id)?.value||''])),...(window.CreatorRichEditor?.snapshot()||{}),...(engine.current?.snapshot.webtoon?{webtoon:engine.current.snapshot.webtoon,content:''}:{})};}
+  function form(value={},readOnly=engine.current?.lifecycle!=='ACTIVE'){for(const [k,id]of Object.entries(fields))if($(id)){$(id).value=value[k]||'';$(id).disabled=readOnly;}const work=works.find(w=>w.id===engine.current?.workId);window.CreatorRichEditor?.mount(value,readOnly,work?.content_type);window.CreatorWebtoon?.mount(work,engine.current,readOnly);counts();}
   function counts(){const s=$('newEpContent')?.value||'';if($('creatorWordCount'))$('creatorWordCount').textContent=`공백 포함 ${s.length}자 · 제외 ${s.replace(/\s/g,'').length}자`;if($('creatorWordProgress'))$('creatorWordProgress').style.width=Math.min(100,s.length/45)+'%';}
   async function api(action,args) {
     if(args.userId && actor()?.userId!==args.userId)throw Object.assign(Error('SESSION_CHANGED'),{code:'SESSION_CHANGED'});
@@ -114,6 +114,7 @@
   }
   async function save(){const c=engine.current;if(!c)throw Error('작품을 선택해주세요.');if(composing)throw Error('DRAFT_COMPOSING');await engine.flush(c);await requestSave(c);}
   async function preparePublication(){
+    window.CreatorRichEditor?.assertValid();
     if(window.CreatorWebtoon?.hasPending?.())throw Error('WEBTOON_PROCESSING_PENDING');
     const c=engine.current,user=actor()?.userId,turn=epoch;
     if(composing)throw Error('DRAFT_COMPOSING');
@@ -132,7 +133,7 @@
     if(turn!==epoch||c!==engine.current||actor()?.userId!==user||c.seq!==seq||c.revision!==revision||composing)
       throw Error('PUBLISH_SAVE_REQUIRED');
     if(remote.revision!==c.revision||remote.lifecycle!=='ACTIVE'||
-       ['title','content','authorComment'].some(k=>remote[k]!==c.snapshot[k])||canonical(remote.webtoon||null)!==canonical(c.snapshot.webtoon||null))
+       ['title','content','authorComment'].some(k=>remote[k]!==c.snapshot[k])||canonical(remote.webtoon||null)!==canonical(c.snapshot.webtoon||null)||canonical(remote.contentDocument||null)!==canonical(c.snapshot.contentDocument||null))
       throw Error('PUBLISH_REVISION_CONFLICT');
     return JSON.parse(JSON.stringify({userId:user,workId:c.workId,id:c.id,revision:c.revision,
       episodeId:remote.episodeId,seq:c.seq,snapshot:c.snapshot}));
@@ -170,7 +171,7 @@
     const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='이전-원고-'+workId+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
   async function transform(kind) {
-    const c=engine.current;if(!c||composing||c.snapshot.webtoon)return;let content=c.snapshot.content;
+    const c=engine.current;if(!c||composing||c.snapshot.webtoon)return;if(c.snapshot.contentDocument){toast('서식 원고는 위쪽 서식 도구로 편집해주세요.');return;}let content=c.snapshot.content;
     if(kind==='indent')content=content.split('\n').map(l=>!l.trim()?'':['"','“','‘',"'",'「','『','(','['].some(q=>l.trimStart().startsWith(q))?l.trimStart():'  '+l.trimStart()).join('\n');
     if(kind==='dialogue')content=content.split('\n').map(l=>/^["“‘'「『]/.test(l.trim())?'\n'+l.trim()+'\n':l).join('\n').replace(/\n{3,}/g,'\n\n');
     if(kind==='clean')content=content.replace(/[ \t]+$/gm,'').replace(/\n{3,}/g,'\n\n');
@@ -179,7 +180,7 @@
   function compare(value) {
     selected=value;const current=engine.current?.snapshot||{};
     $('diffPreviewHeader').textContent='선택한 사본 → 현재 원고 (복구 직전 원고도 보존됩니다)';
-    $('diffSectionsContainer').innerHTML=['title','content','authorComment',...(value.webtoon||current.webtoon?['webtoon']:[])].map(k=>`<h4>${esc({title:'제목',content:'본문',authorComment:'작가의 말',webtoon:'이미지 순서·크레딧'}[k])}</h4>`+draftLineDiff(k==='webtoon'?JSON.stringify(value[k]||null,null,2):value[k]||'',k==='webtoon'?JSON.stringify(current[k]||null,null,2):current[k]||'').map(d=>`<div class="diff-line-row diff-type-${d.type}"><span>${d.type==='ins'?'+':d.type==='del'?'−':' '} ${esc(d.text)}</span></div>`).join('')).join('');
+    $('diffSectionsContainer').innerHTML=['title','content','authorComment',...(value.webtoon||current.webtoon?['webtoon']:[]),...(value.contentDocument||current.contentDocument?['contentDocument']:[])].map(k=>`<h4>${esc({title:'제목',content:'본문',authorComment:'작가의 말',webtoon:'이미지 순서·크레딧',contentDocument:'문단·본문 서식'}[k])}</h4>`+draftLineDiff(['webtoon','contentDocument'].includes(k)?JSON.stringify(value[k]||null,null,2):value[k]||'',['webtoon','contentDocument'].includes(k)?JSON.stringify(current[k]||null,null,2):current[k]||'').map(d=>`<div class="diff-line-row diff-type-${d.type}"><span>${d.type==='ins'?'+':d.type==='del'?'−':' '} ${esc(d.text)}</span></div>`).join('')).join('');
     $('btnConfirmRestoreRevision').disabled=engine.current?.lifecycle!=='ACTIVE';
   }
   async function openDiffModal(){
@@ -220,7 +221,7 @@
     bind('btnFormatIndent',()=>transform('indent'));bind('btnFormatDialogue',()=>transform('dialogue'));bind('btnFormatClean',()=>transform('clean'));
     bind('btnDraftUndo',async()=>{if(engine.current?.undo){await engine.replace(engine.current.undo,'before-undo');form(engine.current.snapshot);schedule();}});
     bind('btnConflictCompare',openDiffModal);for(const [id,keep]of [['btnConflictLocal',true],['btnConflictRemote',false]])bind(id,async()=>{await engine.resolve(keep);form(engine.current.snapshot);status(engine.current);});
-    bind('btnDraftFocus',()=>{$('creatorTab-new-ep').classList.toggle('draft-focus');$('newEpContent').focus();});
+    bind('btnDraftFocus',()=>{$('creatorTab-new-ep').classList.toggle('draft-focus');window.CreatorRichEditor?.focus();});
     document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'&&engine.current){e.preventDefault();if(!e.isComposing)safe(save)();}if(e.key==='Escape')$('creatorTab-new-ep')?.classList.remove('draft-focus');});
     document.addEventListener('visibilitychange',()=>{if(document.hidden){stop(true);safe(()=>engine.checkpoint())();}else schedule();});
     window.addEventListener('online',safe(async()=>{if(composing)return;const user=actor()?.userId;for(const c of engine.contexts.values()){if(actor()?.userId!==user||composing)return;if(c.userId!==user)continue;if(c===engine.current)await requestSave(c);else await engine.sync(c);}}));
@@ -228,9 +229,9 @@
     window.visualViewport?.addEventListener('resize',()=>{document.documentElement.style.setProperty('--draft-viewport',window.visualViewport.height+'px');if(document.activeElement===$('newEpContent'))$('newEpContent').scrollIntoView({block:'nearest'});});
   }
   window.CreatorDraftEditor={openWork:safe(openWork),enter:safe(enter),save:safe(save),syncServer:safe(save),download,openDiffModal:safe(openDiffModal),beforeAccountChange,onAuthLost,
-    editWebtoon:(webtoon,expected)=>{const c=engine.current;if(!active(c)||c.id!==expected.id||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('SESSION_CHANGED');engine.edit({...c.snapshot,content:'',webtoon});schedule(c);},
+    editWebtoon:(webtoon,expected)=>{const c=engine.current;if(!active(c)||c.id!==expected.id||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('SESSION_CHANGED');const {contentDocument,...snapshot}=c.snapshot;engine.edit({...snapshot,content:'',webtoon});schedule(c);},
     preparePublication,markPublished,refreshPublicationState,startNext:workId=>openWork(workId,null,{fresh:true}),
-    getFileContext:()=>engine.current?JSON.parse(JSON.stringify({userId:engine.current.userId,workId:engine.current.workId,id:engine.current.id,seq:engine.current.seq,snapshot:engine.current.snapshot})):null,
+    getFileContext:()=>engine.current?JSON.parse(JSON.stringify({userId:engine.current.userId,workId:engine.current.workId,id:engine.current.id,seq:engine.current.seq,snapshot:engine.current.snapshot,episodeId:engine.current.episodeId||null})):null,
     replaceFromFile:async(snapshot,expected)=>{
       const c=engine.current;if(composing)throw Error('DRAFT_COMPOSING');if(!c||c.id!==expected.id||c.seq!==expected.seq||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('EDIT_CHANGED_DURING_IMPORT');
       if(c.snapshot.webtoon)throw Error('WEBTOON_IMAGE_EDITOR_REQUIRED');stop();await engine.replace(snapshot,'before-file-import');if(engine.current!==c)throw Error('SESSION_CHANGED');form(c.snapshot);schedule(c);

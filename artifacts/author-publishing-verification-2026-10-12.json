@@ -1,0 +1,412 @@
+{
+  "verifiedAt": "2026-10-12T07:53:24.229Z",
+  "baseCommit": "646852e56a06bcd77e22a71ce1e2217b789ddb35",
+  "runtime": "v24.19.0",
+  "status": "PASS_LOCAL_SCOPED_AND_RELEASE_GATES",
+  "totalDistinctReleaseTests": 629,
+  "passed": 629,
+  "failed": 0,
+  "releaseSegments": [
+    {
+      "command": "npm run build: test:release through test:stage30",
+      "tests": 461,
+      "passed": 461,
+      "failed": 0,
+      "parentTimedOut": true,
+      "notes": "The 10-minute parent timeout was not a test failure. Incomplete stage31 and later build gates were rerun below. The orphaned initial chain continued separately and is not used as exit-status evidence."
+    },
+    {
+      "name": "test:stage31",
+      "exit": 0,
+      "tests": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:drafts",
+      "exit": 0,
+      "tests": 23,
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:files",
+      "exit": 0,
+      "tests": 28,
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:publication",
+      "exit": 0,
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:operations",
+      "exit": 0,
+      "tests": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:admin-operations",
+      "exit": 0,
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:stage11",
+      "exit": 0,
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:stage13",
+      "exit": 0,
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:launch",
+      "exit": 0,
+      "tests": 33,
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "test:cloudflare-bundle",
+      "exit": 0,
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "build:compile",
+      "exit": 0,
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "typecheck",
+      "exit": 0,
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "finalScoped": [
+    {
+      "name": "test:author-publishing",
+      "exit": 0,
+      "tests": 22,
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "editor-regressions",
+      "exit": 0,
+      "tests": 19,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "changedSinceFirstSnapshot": [
+    "public/js/creator/creator-editor.js",
+    "database/authoring/022_publication_change_review.sql",
+    "public/js/creator/creator-rich-editor.js",
+    "public/vendor/manuscript-paste.js",
+    "scripts/verify_author_publishing_db.test.mjs",
+    "scripts/verify_manuscript_document.test.mjs",
+    "src/manuscript-paste.mjs"
+  ],
+  "finalScopedSnapshot": {
+    "functions/api/public-config.js": "6d7b5de3a1676ce4526ddb3851dcae2bc461211e409f213b5f8a979ba221c18e",
+    "package-lock.json": "78eecb268e9fc3a2cb2f6c2c0b37d8c7d7bfdd40b129ed72061fb56dad9c1830",
+    "package.json": "2d5091099c5136c53161e320703e472d3be45157176f8d010f2c4c46e9ce59ca",
+    "public/index.html": "54827e5550789898e037727b94d76c21f83666f01febd5e5e437c6b028775939",
+    "public/js/admin/admin-workflow.js": "116d6b13591e667a2fd2e4e7dfd6202873bc92d04b3f6d1f43475be7cad2b1d8",
+    "public/js/core/role-modules.js": "4a07b61718b18e9abd22d51214ca3ddd595bbdf6a92fe8b764c8fd414cfed466",
+    "public/js/core/router.js": "ea4b5a8e4252e13ab81dbaa4319359ddd70c96ea22e538cd0591fad80e69819f",
+    "public/js/creator/creator-distribution.js": "8be6e24037b2645e3b19ecf1e80c317716e0c27ba349e090ab0d4d9e1397b4a5",
+    "public/js/creator/creator-editor.js": "5cd1c63881439838ecf770add8a7940b92aee0ff2e26fee091d5b6b9e5cc1a90",
+    "public/js/creator/creator-files.js": "7656e806c310453ae317ad2a73e9b813d291e1b0cafb1c449f853f17bdcdfaf2",
+    "public/js/creator/creator-operations.js": "87c91e1b0646a295d5e425679ff0b7b90b2d05c57cb15e17a020785e6c0cceeb",
+    "public/js/creator/creator-publications.js": "5a3353dd20016a86daf0496c56132b8b68143b0d7f47409d1b5a911d16a03316",
+    "public/js/creator/creator-webtoon.js": "3194a4a484abddb4bd0306b3e98dcfc510f5efa8ad9562ee8b0b39aa5adcfee3",
+    "public/js/creator/creator-works.js": "3d7da5b4d784eced4562f38841d8c332a5762859663f17cd9f1a5e288100b802",
+    "public/js/creator/draft-engine.js": "09661ef96ab2ebc49291ab91e18fd8d8f718784adbed61ecbda47247e104b180",
+    "public/js/reader/reader-content.js": "ff21253d937757adbe7ecc328b7016bb21db78d9b5090c2473a323bb8d8ed76b",
+    "public/js/reader/reader-discovery.js": "794a02e49b609a3b2bb07e42cb8de453ff2aae899fe7dd1193648ac060857d37",
+    "public/js/reader/reader.js": "451398b9096efd4c235fa5e32ae9f578e53f7a288a010ffbf90f4fd28a0b13f8",
+    "public/styles.css": "5b7e960e08bc3326246cac3de8664a72087338e4fc86141ca14bb947f0fe9011",
+    "public/supabase-public-config.js": "485659ee84f7aac98401d9903695ac26e89b4db1356c38b209170f4c43809c81",
+    "scripts/verify_cloudflare_routes.test.mjs": "5a5554b0e8b918be59006cfdc719f0014dacf39e15092797c14492ccc502bfa6",
+    "scripts/verify_creator_distribution_api.test.mjs": "c3e6653697849847245755005eda6bee512838b00b737c0659b887c9075ef03f",
+    "scripts/verify_stage16_discovery.test.mjs": "ec55b91e3d54dcefc487dc53997600532417a62e616355f24ae607896adfafa2",
+    "scripts/verify_stage16_routes.test.mjs": "7c685718b51e2fd81b8c6857f20e65f5decd99954e9eba9026265a54bbe26587",
+    "scripts/verify_stage18_ui.test.mjs": "a078a6666d2b5f48b2412946e96e40c8c26d9ad0ad36984472ee55c7721a4b20",
+    "server/admin-workflow-api.mjs": "94bf1a2a9282f97e5205d1f2799a3bd78f03caebd93233fa5dfd8d849b1708af",
+    "server/creator-distribution-api.mjs": "04f3512583ef323aa55e02474756ddfdd4fea2b4e34d4b7d7255c0b0c29fb719",
+    "server/creator-draft-api.mjs": "e894f39bea5af79edfc4ca877c08c253c675d32595ab20a0a88715e28561a96f",
+    "server/creator-file-api.mjs": "96bbe6134bbc754da1bf4524998e7cd7e751ea7a9ed4046c7f92a6e5ea278e15",
+    "server/creator-work-api.mjs": "77989537eadaa9be37d26c0284e23758a4283d824bcfe559e46d19ad5ae2943f",
+    "server/stage16-api.mjs": "02138115a14f6bb8ea2fb88fb65b97d4aee84b86d5545f31b679b692080cca93",
+    "database/authoring/021_manuscript_documents.sql": "8045551c4c6680f1455e201fa19622b8e3c829edec45be2551af61bc32203f5d",
+    "database/authoring/022_publication_change_review.sql": "e34388d5f22e213d06de0e0f3b41aa69c327af6a2fc56ff1e0b039846da0e215",
+    "public/js/admin/admin-publication-changes.js": "cd1f7cfbadb67bfff5f22ff9759f24966027e48babc7ca4cdbdfbb31ff9a4fcf",
+    "public/js/creator/creator-rich-editor.js": "bcfb5b5b290a3a6944bfc278060167d19f83b79ae65f2de557714a87951af743",
+    "public/js/shared/manuscript-document.js": "e3befd1d118f25888dc366a6eb1bd65857495f007ee803acb7f6e0f0cf1b3521",
+    "public/vendor/manuscript-paste.js": "2dd0343fe70bde93b9cfc899cee1ec1e859c18da390e5def7f4825fc26e86e97",
+    "scripts/build_manuscript_paste.mjs": "e9a6c63f88fa6c88be277e30d66eeb1b4c9a446ab8afde57754105888248d452",
+    "scripts/verify_author_publishing_api.test.mjs": "8e76440354832f9943f87ebb59a53d8b41933509283c19a7c866aa6db3aa5f72",
+    "scripts/verify_author_publishing_db.test.mjs": "aeefc5faabb12ef85e806caff82601082680d63b5cac46383c1d61f3c6863833",
+    "scripts/verify_manuscript_document.test.mjs": "d55558ac91ea17dcb6289166165180679f5f9693d5cf12c84169cf0fe1635c19",
+    "server/publication-change-api.mjs": "1c4be13014bd6f78e014cdab51d2a82871b878ade909c06584dffd1724c73c7c",
+    "src/manuscript-paste.mjs": "3e839996840417675efae188783cc4e6f018a9d83beabe4296ced0ec4f8fcf36"
+  },
+  "noLocalEnvInSnapshots": true,
+  "noInitialScratchInSnapshots": true,
+  "reusedLockedDependencies": true,
+  "syntax": [
+    {
+      "file": "functions/api/public-config.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/admin/admin-workflow.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/core/role-modules.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/core/router.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-distribution.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-editor.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-files.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-operations.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-publications.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-webtoon.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-works.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/draft-engine.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/reader/reader-content.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/reader/reader-discovery.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/reader/reader.js",
+      "status": 0
+    },
+    {
+      "file": "public/supabase-public-config.js",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_cloudflare_routes.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_creator_distribution_api.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_stage16_discovery.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_stage16_routes.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_stage18_ui.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "server/admin-workflow-api.mjs",
+      "status": 0
+    },
+    {
+      "file": "server/creator-distribution-api.mjs",
+      "status": 0
+    },
+    {
+      "file": "server/creator-draft-api.mjs",
+      "status": 0
+    },
+    {
+      "file": "server/creator-file-api.mjs",
+      "status": 0
+    },
+    {
+      "file": "server/creator-work-api.mjs",
+      "status": 0
+    },
+    {
+      "file": "server/stage16-api.mjs",
+      "status": 0
+    },
+    {
+      "file": "public/js/admin/admin-publication-changes.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/creator/creator-rich-editor.js",
+      "status": 0
+    },
+    {
+      "file": "public/js/shared/manuscript-document.js",
+      "status": 0
+    },
+    {
+      "file": "public/vendor/manuscript-paste.js",
+      "status": 0
+    },
+    {
+      "file": "scripts/build_manuscript_paste.mjs",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_author_publishing_api.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_author_publishing_db.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "scripts/verify_manuscript_document.test.mjs",
+      "status": 0
+    },
+    {
+      "file": "server/publication-change-api.mjs",
+      "status": 0
+    },
+    {
+      "file": "src/manuscript-paste.mjs",
+      "status": 0
+    }
+  ],
+  "secretAndConflictScan": {
+    "files": 50,
+    "findings": []
+  },
+  "diffStatus": 0,
+  "lint": "NOT_CONFIGURED",
+  "coverage": "NOT_MEASURED",
+  "browserExecuted": false,
+  "localhostExecuted": false,
+  "productionDatabaseApplied": false,
+  "productionFeatureFlagsChanged": false,
+  "migrationsPrepared": [
+    "database/authoring/021_manuscript_documents.sql",
+    "database/authoring/022_publication_change_review.sql"
+  ],
+  "limits": [
+    "Word paragraph/line-break/emphasis/alignment/basic-indent/list-text subset; DOCX/HWPX file import remains plaintext.",
+    "Published replacements apply on approval; scheduling a replacement is not supported.",
+    "PGlite/Node VM and API mocks do not substitute for hosted DB/Storage, browser, IME or actual Word acceptance.",
+    "Runtime service activation awaits stage32 hosted prerequisites; both new feature flags default false."
+  ],
+  "changedFileHashes": {
+    ".env.example": "f1510da1f1e754d74c63b9fa77a5e9c2850af64226a82d6b5f9e882cb728b92d",
+    "docs/launch/creator-publication-contract.md": "0ed9a09df3ad808de85583ba35bb652ddfd31c1099e1b145e89eee04dca9f843",
+    "docs/launch/future-development-plan-2026-10-10.md": "477122c2242bc0a795fb2290f65f61fbe2712af7f2338c3459de885904caf935",
+    "docs/launch/release-record.md": "cc4f3e147fad40f02d1fa2f50a4fdcc274c45298db3526adfaf1f02fe4ebfe56",
+    "functions/api/public-config.js": "6d7b5de3a1676ce4526ddb3851dcae2bc461211e409f213b5f8a979ba221c18e",
+    "package-lock.json": "78eecb268e9fc3a2cb2f6c2c0b37d8c7d7bfdd40b129ed72061fb56dad9c1830",
+    "package.json": "2d5091099c5136c53161e320703e472d3be45157176f8d010f2c4c46e9ce59ca",
+    "public/index.html": "54827e5550789898e037727b94d76c21f83666f01febd5e5e437c6b028775939",
+    "public/js/admin/admin-workflow.js": "116d6b13591e667a2fd2e4e7dfd6202873bc92d04b3f6d1f43475be7cad2b1d8",
+    "public/js/core/role-modules.js": "4a07b61718b18e9abd22d51214ca3ddd595bbdf6a92fe8b764c8fd414cfed466",
+    "public/js/core/router.js": "ea4b5a8e4252e13ab81dbaa4319359ddd70c96ea22e538cd0591fad80e69819f",
+    "public/js/creator/creator-distribution.js": "8be6e24037b2645e3b19ecf1e80c317716e0c27ba349e090ab0d4d9e1397b4a5",
+    "public/js/creator/creator-editor.js": "5cd1c63881439838ecf770add8a7940b92aee0ff2e26fee091d5b6b9e5cc1a90",
+    "public/js/creator/creator-files.js": "7656e806c310453ae317ad2a73e9b813d291e1b0cafb1c449f853f17bdcdfaf2",
+    "public/js/creator/creator-operations.js": "87c91e1b0646a295d5e425679ff0b7b90b2d05c57cb15e17a020785e6c0cceeb",
+    "public/js/creator/creator-publications.js": "5a3353dd20016a86daf0496c56132b8b68143b0d7f47409d1b5a911d16a03316",
+    "public/js/creator/creator-webtoon.js": "3194a4a484abddb4bd0306b3e98dcfc510f5efa8ad9562ee8b0b39aa5adcfee3",
+    "public/js/creator/creator-works.js": "3d7da5b4d784eced4562f38841d8c332a5762859663f17cd9f1a5e288100b802",
+    "public/js/creator/draft-engine.js": "09661ef96ab2ebc49291ab91e18fd8d8f718784adbed61ecbda47247e104b180",
+    "public/js/reader/reader-content.js": "ff21253d937757adbe7ecc328b7016bb21db78d9b5090c2473a323bb8d8ed76b",
+    "public/js/reader/reader-discovery.js": "794a02e49b609a3b2bb07e42cb8de453ff2aae899fe7dd1193648ac060857d37",
+    "public/js/reader/reader.js": "451398b9096efd4c235fa5e32ae9f578e53f7a288a010ffbf90f4fd28a0b13f8",
+    "public/styles.css": "5b7e960e08bc3326246cac3de8664a72087338e4fc86141ca14bb947f0fe9011",
+    "public/supabase-public-config.js": "485659ee84f7aac98401d9903695ac26e89b4db1356c38b209170f4c43809c81",
+    "scripts/verify_cloudflare_routes.test.mjs": "5a5554b0e8b918be59006cfdc719f0014dacf39e15092797c14492ccc502bfa6",
+    "scripts/verify_creator_distribution_api.test.mjs": "c3e6653697849847245755005eda6bee512838b00b737c0659b887c9075ef03f",
+    "scripts/verify_stage16_discovery.test.mjs": "ec55b91e3d54dcefc487dc53997600532417a62e616355f24ae607896adfafa2",
+    "scripts/verify_stage16_routes.test.mjs": "7c685718b51e2fd81b8c6857f20e65f5decd99954e9eba9026265a54bbe26587",
+    "scripts/verify_stage18_ui.test.mjs": "a078a6666d2b5f48b2412946e96e40c8c26d9ad0ad36984472ee55c7721a4b20",
+    "server/admin-workflow-api.mjs": "94bf1a2a9282f97e5205d1f2799a3bd78f03caebd93233fa5dfd8d849b1708af",
+    "server/creator-distribution-api.mjs": "04f3512583ef323aa55e02474756ddfdd4fea2b4e34d4b7d7255c0b0c29fb719",
+    "server/creator-draft-api.mjs": "e894f39bea5af79edfc4ca877c08c253c675d32595ab20a0a88715e28561a96f",
+    "server/creator-file-api.mjs": "96bbe6134bbc754da1bf4524998e7cd7e751ea7a9ed4046c7f92a6e5ea278e15",
+    "server/creator-work-api.mjs": "77989537eadaa9be37d26c0284e23758a4283d824bcfe559e46d19ad5ae2943f",
+    "server/stage16-api.mjs": "02138115a14f6bb8ea2fb88fb65b97d4aee84b86d5545f31b679b692080cca93",
+    "database/authoring/021_manuscript_documents.sql": "8045551c4c6680f1455e201fa19622b8e3c829edec45be2551af61bc32203f5d",
+    "database/authoring/022_publication_change_review.sql": "e34388d5f22e213d06de0e0f3b41aa69c327af6a2fc56ff1e0b039846da0e215",
+    "docs/launch/author-publishing-experience-2026-10-12.md": "957863837f824497cd4b592854a80c4fab6ce2f1bda88ef953829e14187f664a",
+    "public/js/admin/admin-publication-changes.js": "cd1f7cfbadb67bfff5f22ff9759f24966027e48babc7ca4cdbdfbb31ff9a4fcf",
+    "public/js/creator/creator-rich-editor.js": "bcfb5b5b290a3a6944bfc278060167d19f83b79ae65f2de557714a87951af743",
+    "public/js/shared/manuscript-document.js": "e3befd1d118f25888dc366a6eb1bd65857495f007ee803acb7f6e0f0cf1b3521",
+    "public/vendor/manuscript-paste.LICENSE.txt": "b64577f1d8291abee8531b516952468e1846d93ba830b8c74011832a2d6e0245",
+    "public/vendor/manuscript-paste.js": "2dd0343fe70bde93b9cfc899cee1ec1e859c18da390e5def7f4825fc26e86e97",
+    "scripts/build_manuscript_paste.mjs": "e9a6c63f88fa6c88be277e30d66eeb1b4c9a446ab8afde57754105888248d452",
+    "scripts/verify_author_publishing_api.test.mjs": "8e76440354832f9943f87ebb59a53d8b41933509283c19a7c866aa6db3aa5f72",
+    "scripts/verify_author_publishing_db.test.mjs": "aeefc5faabb12ef85e806caff82601082680d63b5cac46383c1d61f3c6863833",
+    "scripts/verify_manuscript_document.test.mjs": "d55558ac91ea17dcb6289166165180679f5f9693d5cf12c84169cf0fe1635c19",
+    "server/publication-change-api.mjs": "1c4be13014bd6f78e014cdab51d2a82871b878ade909c06584dffd1724c73c7c",
+    "src/manuscript-paste.mjs": "3e839996840417675efae188783cc4e6f018a9d83beabe4296ced0ec4f8fcf36"
+  }
+}

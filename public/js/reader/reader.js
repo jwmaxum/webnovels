@@ -312,6 +312,7 @@ const DISCOVER_TAG_ALIASES = {
 };
 
 const discoverFilterState = {
+  type: 'NOVEL',
   genre: 'ALL',
   status: 'ALL',       // 'ALL' | 'ONGOING' | 'COMPLETED'
   epRange: 'ALL',      // 'ALL' | '1-25' | '26-100' | '101+'
@@ -321,6 +322,25 @@ const discoverFilterState = {
 };
 
 let discoverRenderDebounceTimer = null;
+
+window.updateDiscoverTypeControls = function(type) {
+  const webtoon = type === 'WEBTOON';
+  const heading = document.getElementById('discoverHeading');
+  if (heading) heading.textContent = webtoon ? '웹툰 작품 탐색' : '웹소설 작품 탐색';
+  document.querySelectorAll('[data-discover-type]').forEach(button => {
+    const selected = button.dataset.discoverType === (webtoon ? 'WEBTOON' : 'NOVEL');
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+};
+window.setDiscoverType = function(type, navigate = true) {
+  const value = type === 'WEBTOON' ? 'WEBTOON' : 'NOVEL';
+  if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.filter('type', value);
+  discoverFilterState.type = value;
+  window.updateDiscoverTypeControls(value);
+  if (navigate) return window.navigateTo('/discover?type=' + value);
+  renderDiscoverWorks();
+};
 
 function getDiscoverTags(work) {
   let raw = [];
@@ -467,6 +487,7 @@ function renderDiscoverWorks(explicitGenre = null) {
   const { genre, status, epRange, rating, sortBy, tags } = discoverFilterState;
 
   let filtered = getPublishedWorks().filter(w => {
+    if ((w.contentType || w.content_type || 'NOVEL') !== discoverFilterState.type) return false;
     // 1. Genre filter
     if (genre !== 'ALL' && genre !== '전체') {
       if (genre === '19+ 성인') {
@@ -585,7 +606,9 @@ function renderSearchResults(query = '') {
   if (!container) return;
 
   const normalized = normalizeSearchText(query);
-  let results = getPublishedWorks().filter(work => {
+  const kind = new URLSearchParams(window.location.search).get('type');
+  const searchable = getPublishedWorks().filter(work => !['NOVEL','WEBTOON'].includes(kind) || (work.contentType || work.content_type || 'NOVEL') === kind);
+  let results = searchable.filter(work => {
     if (!normalized) return true;
     const haystack = normalizeSearchText(`${work.title} ${work.author} ${work.genre} ${work.description}`);
     return haystack.includes(normalized);
@@ -601,7 +624,7 @@ function renderSearchResults(query = '') {
   }
 
   if (results.length === 0) {
-    const fallback = getPublishedWorks().slice().sort((a, b) => b.viewCount - a.viewCount).slice(0, 3);
+    const fallback = searchable.slice().sort((a, b) => b.viewCount - a.viewCount).slice(0, 3);
     container.innerHTML = `
       <div class="empty-search p-4 text-center text-muted">
         <h4>검색 결과가 없습니다</h4>
@@ -1345,6 +1368,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       }
       if(!valid())return;
       loadedText = response.episode?.content;
+      ep.contentDocument = response.episode?.contentDocument;
       loadedPanels = response.episode?.image_urls || [];
       loadedWebtoon=response.episode?.webtoon||null;
       ep.authorComment = response.episode?.author_comment ?? ep.authorComment;
@@ -1397,6 +1421,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   const textBodyEl = document.getElementById('readerBody');
   const webtoonViewerEl = document.getElementById('readerWebtoonViewer');
 
+  document.querySelector('.reader-container')?.classList.toggle('is-webtoon',!!loadedWebtoon?.panels?.length||work.contentType==='WEBTOON');
   if(loadedWebtoon?.panels?.length){
     textBodyEl.style.display='none';webtoonViewerEl.style.display='block';
     window.ReaderWebtoon.render(webtoonViewerEl,loadedWebtoon.panels,{load:window.ReaderWebtoon.publicLoad,valid});
@@ -1423,7 +1448,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       textBodyEl.style.display = 'block';
       const contentVersion = versionId||`${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`;
       window.ReaderContent.render(textBodyEl, authorCommentEl, {
-        content: loadedText || '', authorComment: ep.authorComment || '', version: contentVersion
+        content: loadedText || '', contentDocument: ep.contentDocument, authorComment: ep.authorComment || '', version: contentVersion
       }, (index, paragraph, version) => selectParagraphComment(index, paragraph, version));
     }
   }

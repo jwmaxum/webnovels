@@ -5665,7 +5665,7 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .main-view.account-only > :not(.account-access-summary) {display:none!important;}
 .private-author-workspace #creatorTabsBar [data-creator-tab]:not([data-creator-tab="works"]):not([data-creator-tab="home"]):not([data-creator-tab="earnings"]):not([data-creator-tab="profile"]),
 .private-author-workspace #creatorAuthorDetails,
-.private-author-workspace #btnCreatorFiles,.private-author-workspace #btnOpenPublication {display:none!important;}
+.private-author-workspace #btnCreatorFiles {display:none!important;}
 .account-access-summary p {margin:1rem 0;}
 .account-access-summary button {margin-right:.75rem;}
 .author-section-heading {display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:1.5rem;}
@@ -5767,3 +5767,15 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .workflow-card :focus-visible,.workflow-field :focus-visible {outline:3px solid #c5a7ff;outline-offset:3px;}
 .workflow-draft {padding:16px;border:1px solid var(--border-color,#555);}
 @media (prefers-reduced-motion:reduce) { .discovery-card,.discovery-episode {transition:none;animation:none;} html {scroll-behavior:auto;} }
+
+/* Author publishing and equal novel/webtoon discovery. */
+.discovery-type-tabs,.rich-toolbar {display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;}
+.creator-rich-body {min-height:420px;padding:1.25rem;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);font-size:18px;line-height:1.9;overflow-wrap:anywhere;}
+.creator-rich-body:focus {outline:2px solid var(--primary-color);outline-offset:2px;}
+.creator-rich-body p {margin:0 0 1em;}
+#newEpTitle {width:100%;padding:.8rem 1rem;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);font-size:1.05rem;}
+.creator-publish-policy {padding:1rem;border-left:3px solid var(--primary-color);background:var(--bg-secondary);}
+.webtoon-upload-order {display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin:1rem 0;}
+.webtoon-viewer-box {width:100%;min-width:0;}
+.webtoon-panel img {max-width:100%;}
+@media(max-width:600px){.creator-rich-body{padding:.75rem;min-height:320px;} .webtoon-viewer-box{max-width:100%;} .reader-container.is-webtoon{padding-inline:0;}}

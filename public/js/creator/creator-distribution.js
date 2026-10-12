@@ -77,6 +77,7 @@
         externalLinks:q('cwDistributionLinks').value.split(/\r?\n/).map(v=>v.trim()).filter(Boolean),rightsConfirmed:q('cwDistributionRights').checked};
       try {
         const result=await api({method:'PATCH',body:JSON.stringify(body)});if(!valid(state))return;
+        if(result.reviewRequired){message.textContent='연재 방식 변경 검토를 요청했습니다. 승인 전까지 기존 설정을 유지합니다.';return;}
         const data=checked(result.distribution,state.workId);
         if(data.mode==='UNSET'||BigInt(data.version)!==BigInt(state.version)+1n)throw new Error('Unconfirmed save');
         apply(data);message.textContent='연재 방식 설정이 저장되었습니다. 공개 여부와 계약 상태는 변경되지 않았습니다.';

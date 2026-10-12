@@ -203,7 +203,7 @@ test('search waits for debounce and suppresses results from the previous query',
   app.ui.search(' new '); await app.runTimers(); assert.equal(app.requests.at(-1).url.searchParams.get('q'), 'new'); assert.equal(app.requests.at(-1).url.searchParams.get('limit'), '8');
   old.resolve(Response.json({ works: [rawWork('10')], ranking, nextCursor: null })); await first;
   assert.match(app.nodes.searchResults.textContent, /작품 20/); assert.doesNotMatch(app.nodes.searchResults.textContent, /작품 10/);
-  assert.equal(app.nodes.searchResults.children.at(-1).href, '/discover?q=new&sort=latest');
+  assert.equal(app.nodes.searchResults.children.at(-1).href, '/discover?q=new&type=NOVEL&sort=latest');
 });
 test('home distinguishes editorial recommendations from authenticated reader ranking and insufficient samples', async () => {
   const app = setup(() => Response.json({ sections: { recommended: [rawWork('10')], popular: [], new: [rawWork('20')], completed: [] }, ranking }));

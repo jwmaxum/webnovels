@@ -7,5 +7,7 @@ window.WEBNOVELS_CONFIG = Object.freeze({
   "growthServiceEnabled": false,
   "growthMeasurementEnabled": false,
   "adminWorkflowEnabled": false,
+  "authorRichTextEnabled": false,
+  "publicationChangeReviewEnabled": false,
   "webtoonServiceEnabled": false
 });

@@ -15,7 +15,7 @@ export function onRequestGet({ env }) {
   if (!validKey || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url || '')) {
     return new Response('/* Runtime override unavailable; keep public deployment settings. */', { status: 503, headers });
   }
-  const config = { growthMeasurementEnabled:measurementEnabled(env), growthServiceEnabled:growthEnabled(env), webtoonServiceEnabled:webtoonEnabled(env), supabaseUrl: url, supabaseAnonKey: key, authorPublishEnabled: env.AUTHOR_PUBLISH_ENABLED === 'true',
+  const config = { publicationChangeReviewEnabled: env.AUTHOR_PUBLICATION_REVIEW_ENABLED === 'true' && env.ADMIN_WORKFLOW_ENABLED === 'true' && env.ADMIN_OPERATIONS_ENABLED === 'true' && env.P0_API_ENABLED === 'true', authorRichTextEnabled: env.AUTHOR_RICH_TEXT_ENABLED === 'true', growthMeasurementEnabled:measurementEnabled(env), growthServiceEnabled:growthEnabled(env), webtoonServiceEnabled:webtoonEnabled(env), supabaseUrl: url, supabaseAnonKey: key, authorPublishEnabled: env.AUTHOR_PUBLISH_ENABLED === 'true',
     authorFilesEnabled: env.AUTHOR_FILES_ENABLED === 'true',
     authorRecoveryEnabled: recoveryEnabled(env),
     readerServiceEnabled: env.READER_SERVICE_ENABLED === 'true',

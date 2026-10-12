@@ -17,7 +17,7 @@ function setup({author=true,result={distribution},upstream=200}={}) {
     if(path.endsWith('/readers'))return Response.json([{id:'1',status:'ACTIVE',auth_user_id:uid}]);
     if(path.endsWith('/admin_users'))return Response.json([]);
     if(path.endsWith('/creator_work_distribution')){calls.push({path,body:JSON.parse(init.body)});return upstream===200?Response.json(result):new Response('private upstream information',{status:upstream});}
-    if(path.endsWith('/creator_works'))return Response.json({work:{id:'10'},episodes:[]});
+    if(path.endsWith('/creator_works'))return Response.json({work:{id:'10',visibility:'PRIVATE',episode_count:0},episodes:[]});
     if(path.endsWith('/launch_accounts_ready')||path.endsWith('/launch_author_workspace_ready'))return Response.json(true);
     if(path.endsWith('/launch_account_actor'))return Response.json({userId:uid,...(author?{author:{id:'1',status:'APPROVED'}}:{reader:{id:'1',status:'ACTIVE'}})});
     throw new Error('Unexpected mock route '+path);

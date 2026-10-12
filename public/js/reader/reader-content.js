@@ -5,13 +5,13 @@
     const text = String(snapshot?.content ?? '').replace(/\r\n?/g, '\n');
     const version = String(snapshot?.version ?? '');
     const fragment = document.createDocumentFragment();
+    const formatted=window.ManuscriptDocument?.valid(snapshot?.contentDocument,text)?snapshot.contentDocument:null;
     text.split('\n\n').forEach((part, index) => {
-      const paragraph = document.createElement('p');
+      const paragraph = formatted?window.ManuscriptDocument.paragraph(formatted.paragraphs[index]):document.createElement('p');
       paragraph.className = 'reader-paragraph';
       paragraph.dataset.paragraphIndex = String(index);
       paragraph.style.whiteSpace = 'pre-wrap';
-      if (part) paragraph.textContent = part;
-      else paragraph.append(document.createElement('br'));
+      if (!formatted) { if (part) paragraph.textContent = part; else paragraph.append(document.createElement('br')); }
       if (onParagraph) paragraph.addEventListener('click', () => onParagraph(index, part, version));
       fragment.append(paragraph);
     });

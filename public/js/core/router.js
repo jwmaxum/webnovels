@@ -159,6 +159,7 @@ function resolveRoute(pathname, isInitial = false) {
   if (parts[0] === 'discover' || hash === '#discover') {
     switchWebNovelsView('view-discover', null, false);
     if (window.ReaderDiscovery?.active()) window.ReaderDiscovery.discover(route.search || window.location.search);
+    else window.setDiscoverType?.(new URLSearchParams(route.search || window.location.search).get('type'), false);
     return;
   }
 
@@ -309,16 +310,12 @@ window.openGenreDiscover = openGenreDiscover;
  * 7. 기타 사이드바 / 회차 연동 헬퍼
  */
 window.openNovelFilterHome = function() {
-  if (window.ReaderDiscovery?.active()) return navigateTo('/discover?type=NOVEL');
-  switchWebNovelsView('view-discover');
-  setTimeout(() => {
-    const pills = document.querySelectorAll('.filter-pills .pill');
-    if (pills && pills[0]) pills[0].click();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, 50);
+  navigateTo('/discover?type=NOVEL');
 };
+window.openWebtoonFilterHome = () => navigateTo('/discover?type=WEBTOON');
 
 window.scrollToSection = function(sectionId) {
+  if (sectionId === 'webtoonsSection') return window.openWebtoonFilterHome();
   if (window.ReaderDiscovery?.active()) {
     const routes = { trendingWorksSection: '/discover?sort=popular', webtoonsSection: '/discover?type=WEBTOON',
       newWorksSection: '/discover?sort=new', completedWorksSection: '/discover?status=COMPLETED', todayFreeSection: '/discover' };

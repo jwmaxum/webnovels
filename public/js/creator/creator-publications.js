@@ -8,6 +8,7 @@
     WEBTOON_PROCESSING_PENDING:'선택한 이미지 처리를 마치거나 실패한 업로드를 취소한 뒤 미리보기를 열어주세요.',
     LEGACY_WEBTOON_REVIEW_REQUIRED:'기존 웹툰은 원본·권리·순서를 검토한 뒤 이미지 원고로 등록해야 합니다. 기존 자료는 보존됩니다.',
     AUTHOR_PUBLISH_NOT_ACTIVATED:'게시 기능이 아직 활성화되지 않았습니다.',
+    REVIEW_SCHEDULE_UNSUPPORTED:'공개본 수정은 관리자 승인 시 반영됩니다. 지금 수정 검토 요청을 선택해주세요.',
     PUBLICATION_NOT_READY:'작품 소개·장르·이용등급·AI 사용 표기와 제한 상태를 확인해주세요.',
     DRAFT_REVISION_CONFLICT:'원고 버전이 변경됐습니다. 미리보기를 다시 열어주세요.',
     EPISODE_NUMBER_CONFLICT:'다른 회차나 예약이 먼저 번호를 사용했습니다. 목록을 새로고침하세요.',
@@ -163,7 +164,7 @@
     const policy=context.episodeId?(prior?.accessPolicy||'기존 정책'):'FREE';
     $('publicationDraftPanel').hidden=false;
     document.querySelector('input[name="publicationMode"][value="NOW"]').checked=true;
-    $('publicationScheduleFields').hidden=true;$('publicationCommit').textContent='선택한 버전 게시';
+    $('publicationScheduleFields').hidden=true;$('publicationCommit').textContent=context.episodeId?'수정 검토 요청':'지금 발행';
     $('publicationPreviewTitle').textContent=context.snapshot.title||'무제';
     if(context.snapshot.webtoon){
       window.ReaderWebtoon?.destroy($('publicationPreviewBody'));
@@ -173,8 +174,9 @@
     $('publicationSummary').textContent=
       `작품: ${work.title} · ${number}화 · 서버 원고 버전 ${context.revision} · ${context.snapshot.webtoon?'이미지 '+context.snapshot.webtoon.assetIds.length+'개':'본문 '+context.snapshot.content.length+'자'} · 등급 ${work.rating} · AI ${work.ai_usage_type} · ${context.episodeId?'기존 접근 정책 유지: '+policy:'신규 무료'} · ${work.description||'소개 없음'}`+
       (work.publication_missing?.length?' · 게시 전 미확인: '+work.publication_missing.join(', '):'');
-    $('publicationNowLabel').textContent=context.episodeId?'즉시 재게시 (기존 접근 정책 유지)':'즉시 무료 게시';
-    $('publicationScheduledLabel').textContent=context.episodeId?'예약 재게시 (기존 접근 정책 유지)':'예약 무료 게시';
+    $('publicationNowLabel').textContent=context.episodeId?'수정 검토 요청 (승인 후 반영)':'지금 무료 발행 (사전 검수 없음)';
+    $('publicationScheduledLabel').textContent=context.episodeId?'공개본 수정은 승인 시 반영됩니다':'예약 무료 발행';
+    const scheduled=document.querySelector('input[name="publicationMode"][value="SCHEDULED"]');if(scheduled)scheduled.disabled=!!context.episodeId;
     $('publicationRights').checked=false;
     checklist();
     message('미리보기는 이 계정의 저장된 초안 버전입니다. 공개 전 내용을 확인하세요.');
@@ -206,6 +208,7 @@
       const result=await post('/publish/'+context.id,pending.data,pending.key);
       assertOpen(turn,user);
       sessionStorage.removeItem(storage);
+      if(result.reviewRequired){$('publicationDraftPanel').hidden=true;$('publicationRetryPanel').hidden=true;message('수정 검토 요청이 접수되었습니다. 승인 전까지 기존 공개본이 유지됩니다.');return;}
       const publication=result.publication,notices=[];
       try { await reconcileDraft(publication,context); }
       catch { notices.push('기기 상태 저장에 실패했습니다. 기기 원고를 다운로드해 보관해주세요.'); }
@@ -224,12 +227,12 @@
     window.closeModal?.('modalCreatorPublication');
   }
   function init(){
-    $('btnOpenPublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(c)return open(c.workId).catch(e=>{if(actor()?.userId===user&&e.message!=='SESSION_CHANGED')message(errorText(e));});};
+    $('btnOpenPublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(!c){window.showToast?.('작품을 선택하고 원고를 작성해주세요.');return;}return open(c.workId).catch(e=>{if(actor()?.userId===user&&e.message!=='SESSION_CHANGED'){const text=(e.message==='AUTHOR_PUBLISH_NOT_ACTIVATED'?'최초 발행은 관리자 사전 검수 없이 진행합니다. 현재 공개 서비스 연결이 준비되지 않아 발행할 수 없습니다. 원고 저장은 계속 이용할 수 있습니다.':errorText(e));message(text);window.showToast?.(text);const notice=$('creatorDraftError');if(notice)notice.textContent=text;}});};
     $('publicationDesktop').onclick=()=>$('publicationPreview').classList.remove('is-mobile');
     $('publicationMobile').onclick=()=>$('publicationPreview').classList.add('is-mobile');
     for(const input of document.querySelectorAll('input[name="publicationMode"]'))input.onchange=()=>{
       $('publicationScheduleFields').hidden=input.value!=='SCHEDULED';
-      $('publicationCommit').textContent=input.value==='SCHEDULED'?'선택한 버전 예약':'선택한 버전 게시';
+      $('publicationCommit').textContent=context?.episodeId?'수정 검토 요청':input.value==='SCHEDULED'?'예약 발행':'지금 발행';
     };
     const submit=()=>{const turn=epoch;return publish().catch(e=>{if(turn===epoch)message(errorText(e));});};
     $('publicationCommit').onclick=submit;

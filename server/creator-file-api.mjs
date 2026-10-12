@@ -80,5 +80,7 @@ export async function creatorFileApi({request,env,actor,db,fetchImpl,base,servic
  }
  await put(prepared.original,original,'application/octet-stream');
  if(derivative)await put(prepared.derivative,derivative,'image/jpeg');
- return (await rpc('commit',{},key)).result;
+ const committed=await rpc('commit',{},key);
+ if(committed.reviewRequired)fail(409,'PUBLICATION_REVIEW_PENDING');
+ return committed.result;
 }

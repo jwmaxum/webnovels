@@ -5,17 +5,17 @@
     creator: [
       '/vendor/fflate/fflate-0.8.3.js', '/js/creator/file-codec.js?v=120',
       '/js/creator/file-image.js?v=106', '/js/creator/file-import-queue.js?v=106',
-      '/js/creator/draft-engine.js?v=105', '/js/creator/draft-store.js?v=106',
+      '/js/creator/draft-engine.js?v=124', '/js/creator/draft-store.js?v=106',
       '/js/creator/draft-diff.js?v=105', '/js/creator/creator-readiness.js?v=117',
-      '/js/creator/creator-webtoon.js?v=118', '/js/creator/creator-editor.js?v=122',
-      '/js/creator/creator-publications.js?v=117', '/js/creator/creator-recovery.js?v=123', '/js/creator/creator-files.js?v=122',
+      '/js/creator/creator-webtoon.js?v=124', '/vendor/manuscript-paste.js?v=124', '/js/creator/creator-rich-editor.js?v=124', '/js/creator/creator-editor.js?v=124',
+      '/js/creator/creator-publications.js?v=124', '/js/creator/creator-recovery.js?v=123', '/js/creator/creator-files.js?v=124',
       '/js/creator/creator-dashboard.js?v=121', '/js/creator/creator.js?v=20261012',
-      '/js/creator/creator-works.js?v=117', '/js/creator/creator-distribution.js?v=115',
-      '/js/creator/creator-operations.js?v=108'
+      '/js/creator/creator-works.js?v=124', '/js/creator/creator-distribution.js?v=124',
+      '/js/creator/creator-operations.js?v=124'
     ],
     admin: [
       '/js/admin/admin.js?v=20261012', '/js/admin/admin-console.js?v=121',
-      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-workflow.js?v=123', '/js/admin/admin-operations.js?v=123',
+      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=124', '/js/admin/admin-workflow.js?v=124', '/js/admin/admin-operations.js?v=123',
       '/js/admin/virtual-accounts.js?v=111'
     ]
   };

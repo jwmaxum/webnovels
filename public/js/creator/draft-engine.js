@@ -2,7 +2,7 @@
 (function(root) {
   'use strict';
   const copy=x=>JSON.parse(JSON.stringify(x));
-  const snapshot=x=>({title:x.title||'',content:x.content||'',authorComment:x.authorComment||'',...(x.webtoon?{webtoon:copy(x.webtoon)}:{})});
+  const snapshot=x=>({title:x.title||'',content:x.content||'',authorComment:x.authorComment||'',...(x.webtoon?{webtoon:copy(x.webtoon)}:{}),...(x.contentDocument?{contentDocument:copy(x.contentDocument)}:{})});
   class DraftEngine {
     constructor({store,api,uuid,onChange=()=>{}}) { Object.assign(this,{store,api,uuid,onChange});this.current=null;this.epoch=0;this.contexts=new Map(); }
     emit(c) { if(this.current===c)this.onChange(c); }
@@ -17,7 +17,7 @@
         let remote=null;
         if(arguments[2]&&!localOnly) remote=(await this.api('get',{workId,id,userId})).draft;
         c={userId,workId,id,branch:this.uuid(),snapshot:snapshot(remote||{}),seq:0,localSeq:-1,serverSeq:remote?0:-1,
-          revision:remote?.revision||'0',lifecycle:remote?.lifecycle||'ACTIVE',pending:null,conflict:null,error:null};
+          episodeId:remote?.episodeId||null,revision:remote?.revision||'0',lifecycle:remote?.lifecycle||'ACTIVE',pending:null,conflict:null,error:null};
         if(epoch!==this.epoch)return null;
         this.contexts.set(key,c);
       }

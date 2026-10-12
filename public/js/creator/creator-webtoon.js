@@ -14,7 +14,9 @@
  const message=text=>{if($('creatorWebtoonMessage'))$('creatorWebtoonMessage').textContent=text;};
  const error=e=>({IMAGE_ORIENTATION_REQUIRED:'회전 정보를 적용한 JPEG/PNG로 다시 내보내주세요.',STATIC_IMAGE_REQUIRED:'움직이지 않는 PNG/JPEG를 선택해주세요.',IMAGE_PIXEL_LIMIT:'원본은 변당 12,000px, 1,200만 화소 이하로 나눠주세요.',FILE_TOO_LARGE:'파일 하나는 8 MiB 이하여야 합니다.',PROCESSING_BUSY:'이 파일을 처리 중입니다. 잠시 후 이어서 처리해주세요.',ASSET_CANCELLED:'업로드가 취소되었습니다. 원본 기록은 보존됩니다.',WEBTOON_NOT_ACTIVATED:'웹툰 제작 기능이 아직 활성화되지 않았습니다.',PROCESSING_LIMIT:'처리 실패가 누적되었습니다. 원본을 보관하고 운영자에게 문의해주세요.'}[e.code||e.message]||'완료된 이미지는 보존했습니다. 연결 상태를 확인하고 파일별로 재시도해주세요.');
  function set(m){if(!context||context.readOnly)return;editor().editWebtoon(m,context);draw();}
- function attach(id){const m=manifest();if(m.assetIds.includes(id))return;const selected=[...m.assetIds,id];
+ function attach(id){const m=manifest();if(m.assetIds.includes(id))return;const selected=[...m.assetIds],asset=assets.find(a=>a.id===id);
+  const next=asset?.batchId?selected.findIndex(key=>{const peer=assets.find(a=>a.id===key);return peer?.batchId===asset.batchId&&peer.queueOrder>asset.queueOrder;}):-1;
+  selected.splice(next<0?selected.length:next,0,id);
   if(selected.length>100||assets.filter(a=>selected.includes(a.id)).reduce((n,a)=>n+a.bytes,0)>134217728){message('회차는 이미지 100개, 원본 합계 128 MiB까지 등록할 수 있습니다.');return;}
   set({...m,assetIds:selected,thumbnailAssetId:m.thumbnailAssetId||id});
  }
@@ -25,7 +27,7 @@
   const ordered=[...m.assetIds.map(id=>assets.find(a=>a.id===id)||{id,name:'원본 정보 불러오는 중',state:'UNKNOWN'}),...assets.filter(a=>!m.assetIds.includes(a.id)&&a.state!=='CANCELLED')];
   for(const asset of ordered){
    const row=node('div'),index=m.assetIds.indexOf(asset.id);row.className='webtoon-asset';row.append(node('strong',(index>=0?(index+1)+'. ':'')+asset.name),node('span',`${{LOCAL:'업로드 대기',PREPARED:'원본 저장 대기',UPLOADED:'이미지 처리 대기',PROCESSING:'이미지 처리 중',FAILED:'처리 실패 · 재시도 가능',READY:'완료',UNKNOWN:'정보 확인 중'}[asset.state]||'상태 확인'} · 분할 ${asset.cursor||0}/${asset.partCount||'?'}${m.thumbnailAssetId===asset.id?' · 대표 이미지':''}`));
-   const locked=c.readOnly||running.has(asset.id);
+   const locked=c.readOnly||c.batch||running.has(asset.id);
    if(index>=0){
     row.draggable=!locked;row.ondragstart=e=>e.dataTransfer.setData('text/plain',asset.id);row.ondragover=e=>e.preventDefault();row.ondrop=e=>{e.preventDefault();if(!locked){const from=manifest().assetIds.indexOf(e.dataTransfer.getData('text/plain'));if(from>=0)move(from,index);}};
     row.append(button('위로',()=>move(index,index-1),locked||index===0),button('아래로',()=>move(index,index+1),locked||index===m.assetIds.length-1),
@@ -36,13 +38,13 @@
     const input=node('input');input.type='file';input.accept='image/jpeg,image/png';input.onchange=()=>{if(input.files[0]){files.set(asset.id,input.files[0]);process(c,asset.id).catch(e=>message(error(e)));}};input.click();
    },locked));
    else if(['UPLOADED','PROCESSING','FAILED'].includes(asset.state))row.append(button('이어서 처리',()=>process(c,asset.id),locked));
-   if(!['READY','UNKNOWN','CANCELLED'].includes(asset.state))row.append(button('업로드 취소',async()=>{asset.cancelRequested=true;try{await api(c,'cancel',asset.id,{method:'POST'});}catch(e){asset.cancelRequested=false;const latest=await api(c,'','');if(same(c)){Object.assign(asset,latest.assets.find(a=>a.id===asset.id)||{});draw();}throw e;}if(!same(c))return;asset.state='CANCELLED';files.delete(asset.id);draw();},c.readOnly));
+   if(!['READY','UNKNOWN','CANCELLED'].includes(asset.state))row.append(button('업로드 취소',async()=>{asset.cancelRequested=true;if(asset.state==='LOCAL'&&!running.has(asset.id)){asset.state='CANCELLED';files.delete(asset.id);draw();return;}try{await api(c,'cancel',asset.id,{method:'POST'});}catch(e){asset.cancelRequested=false;const latest=await api(c,'','');if(same(c)){Object.assign(asset,latest.assets.find(a=>a.id===asset.id)||{});draw();}throw e;}if(!same(c))return;asset.state='CANCELLED';files.delete(asset.id);draw();},c.readOnly));
    if(asset.state==='READY')row.append(button('원본 다운로드',async()=>{const blob=await api(c,'original',asset.id,{responseType:'blob'});if(!same(c))return;const href=URL.createObjectURL(blob),a=node('a');a.href=href;a.download=asset.name;a.click();setTimeout(()=>URL.revokeObjectURL(href),1000);}));
    list.append(row);
   }
  }
  async function process(c,id){
-  if(running.has(id)||!same(c))return;running.add(id);draw();let asset=assets.find(a=>a.id===id);
+  if(running.has(id)||!same(c)||assets.find(a=>a.id===id)?.state==='CANCELLED')return;running.add(id);draw();let asset=assets.find(a=>a.id===id);
   try{
    if(['LOCAL','PREPARED'].includes(asset.state)){
     const file=files.get(id);if(!file)throw Error('FILE_REQUIRED');
@@ -59,14 +61,22 @@
  async function select(selected){
   const c=context;if(!c||c.readOnly)return;if(!c.loaded||c.batch){message('현재 이미지 목록·업로드 처리가 끝난 뒤 선택해주세요.');return;}c.batch=true;
   try{
+  const queued=[],batchId=crypto.randomUUID(),included=()=>assets.filter(a=>a.state!=='CANCELLED'&&(manifest().assetIds.includes(a.id)||files.has(a.id)||running.has(a.id)));
+  let bytes=included().reduce((n,a)=>n+(a.bytes||0),0);
   for(const file of selected){
    if(!same(c))return;
    if(!['image/jpeg','image/png'].includes(file.type)||file.size>8388608){message('JPEG/PNG 파일을 각각 8 MiB 이하로 선택해주세요.');continue;}
-   if(manifest().assetIds.length>=100){message('한 회차에 이미지 100개까지 등록할 수 있습니다.');break;}
-   const id=crypto.randomUUID();files.set(id,file);assets.push({id,name:file.name,bytes:file.size,state:'LOCAL'});draw();
+   if(included().length>=100){message('한 회차에 이미지 100개까지 등록할 수 있습니다.');break;}
+   if(bytes+file.size>134217728){message('원본 합계는 회차당 128 MiB까지입니다.');break;}bytes+=file.size;
+   const id=crypto.randomUUID();files.set(id,file);assets.push({id,name:file.name,bytes:file.size,state:'LOCAL',batchId,queueOrder:queued.length});queued.push(id);
+  }
+  draw();
+  for(const id of queued){
+   if(!same(c))return;
+   const asset=assets.find(a=>a.id===id);if(asset?.state==='CANCELLED')continue;
    try{await process(c,id);}catch(e){if(same(c))message(error(e));}
   }
-  }finally{c.batch=false;}
+  }finally{c.batch=false;if(same(c))draw();}
  }
  function reset(){epoch++;previewDispose?.();previewDispose=null;context=null;assets=[];files.clear();running.clear();if($('creatorWebtoon')){$('creatorWebtoon').replaceChildren();$('creatorWebtoon').hidden=true;}}
  async function mount(work,c,readOnly){
@@ -77,7 +87,10 @@
   context={userId:c.userId,workId:c.workId,id:c.id,readOnly};const current=context,turn=epoch;
   const heading=node('h3','웹툰 이미지 원고'),help=node('p','JPEG/PNG · 파일당 8 MiB · 변당 12,000px / 1,200만 화소 · 회차 100개 / 128 MiB. 원본을 보존하며 긴 이미지를 자동 분할합니다.');
   const input=node('input');input.type='file';input.multiple=true;input.accept='image/jpeg,image/png';input.disabled=true;input.setAttribute('aria-label','웹툰 이미지 여러 개 선택');input.onchange=()=>{const selected=[...input.files];input.value='';return select(selected);};
-  root.append(heading,help,input);root.ondragover=e=>e.preventDefault();root.ondrop=e=>{if(e.dataTransfer.files.length){e.preventDefault();select([...e.dataTransfer.files]);}};
+  const order=node('label','추가 순서 '),sort=node('select');for(const [value,label]of [['selection','선택 순서'],['filename','파일명 순서 (1, 2, 10)']]){const option=node('option',label);option.value=value;sort.append(option);}order.className='webtoon-upload-order';order.append(sort);
+  const ordered=files=>sort.value==='filename'?[...files].sort((a,b)=>a.name.localeCompare(b.name,'ko',{numeric:true})):files;
+  input.onchange=()=>{const selected=ordered([...input.files]);input.value='';return select(selected);};
+  root.append(heading,help,order,input,node('p','선택한 파일을 차례대로 처리합니다. 완료 후 위·아래 버튼이나 드래그로 읽는 순서를 정하고 세로 미리보기에서 확인하세요. 독자 화면 너비에 맞춰 표시됩니다.'));root.ondragover=e=>e.preventDefault();root.ondrop=e=>{if(e.dataTransfer.files.length){e.preventDefault();select(ordered([...e.dataTransfer.files]));}};
   for(const [key,label]of [['writer','글'],['artist','그림'],['original','원작']]){const l=node('label',label+' 크레딧'),field=node('input');field.value=manifest().credits[key]||'';field.maxLength=100;field.disabled=readOnly;field.oninput=()=>{const m=manifest();set({...m,credits:{...m.credits,[key]:field.value}});};l.append(field);root.append(l);}
   const status=node('p');status.id='creatorWebtoonMessage';status.setAttribute('role','status');const list=node('div');list.id='creatorWebtoonList';root.append(status,list);
   const preview=node('div');preview.className='webtoon-preview';preview.hidden=true;

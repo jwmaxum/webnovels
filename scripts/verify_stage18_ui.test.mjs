@@ -63,6 +63,22 @@ async function creator({api}={}){
  const content=s.element();content.id='newEpContent';await load(s.context,'reader/reader-webtoon.js');await load(s.context,'creator/creator-webtoon.js');
  await s.context.CreatorWebtoon.mount({content_type:'WEBTOON'},context,false);return {...s,draft:context,edits,calls,ready};
 }
+
+test('all selected uploads appear before first response and failed retry restores selection order',async()=>{
+ const hold=gate();let first=true;const uploaded=[];
+ const s=await creator({api:async(path,options,ready)=>{
+  if(!path.includes('/upload/'))return {assets:ready};
+  const id=path.split('/upload/')[1].split('?')[0];uploaded.push(id);
+  if(first){first=false;await hold.promise;throw Error('network');}
+  return {asset:{id,name:decodeURIComponent(options.headers['X-File-Name']),state:'READY',bytes:100,panels:[]}};
+ }});
+ const task=s.context.CreatorWebtoon.select([{name:'1.png',type:'image/png',size:100},{name:'2.png',type:'image/png',size:100}]);await ticks();
+ const list=s.nodes.find(n=>n.id==='creatorWebtoonList');assert.equal(list.children.length,4);assert.equal(uploaded.length,1);
+ assert.ok(list.children.some(row=>row.children.some(child=>child.textContent==='2.png')));
+ hold.resolve();await task;assert.equal(s.draft.snapshot.webtoon.assetIds.at(-1),uploaded[1]);
+ const retry=list.children.flatMap(row=>row.children).find(n=>n.textContent==='업로드 재시도');assert.ok(retry);await retry.onclick();await ticks();
+ assert.deepEqual(s.draft.snapshot.webtoon.assetIds.slice(-2),uploaded.slice(0,2));
+});
 test('creator order controls update the same draft manifest, and preview fetches only authenticated panel endpoints',async()=>{
  const s=await creator();s.context.CreatorWebtoon.move(0,1);assert.deepEqual(s.edits.at(-1).assetIds,['b','a']);assert.equal(s.edits.at(-1).thumbnailAssetId,'a');assert.equal(s.edits.at(-1).credits.writer,'글');
  const root=s.element();await s.context.CreatorWebtoon.renderPreview(root,plain(s.draft));await s.flush();
