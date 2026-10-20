@@ -32,8 +32,18 @@ test('private workspace applies canonical storage without publishing legacy bodi
     update launch_recovery.account_service set enabled=true;`);
   await assert.rejects(db.exec(read('database/authoring/001_authoring_foundation.sql')),/review gate/);await db.exec('rollback');
   await db.exec(workspaceSql('a'.repeat(64)));
+  // Public tables have no automatic API grants; only the service RPC is exposed.
+  for(const role of ['anon','authenticated','service_role'])
+    for(const table of ['works','episodes','authors','readers','admin_users'])
+      assert.equal((await db.query('select has_table_privilege($1,$2,\'SELECT\') allowed',[role,'public.'+table])).rows[0].allowed,false);
+  await db.exec('set role service_role');
+  assert.equal((await db.query('select launch_accounts_ready() ready')).rows[0].ready,true);
   assert.equal((await db.query('select launch_author_workspace_ready() ready')).rows[0].ready,true);
+  assert.equal((await db.query('select launch_account_actor($1) actor',[author])).rows[0].actor.author.id,'1');
+  await assert.rejects(db.query('select * from public.episodes'),e=>e.code==='42501');
+  await assert.rejects(db.query('select * from launch_recovery.account_links'),e=>e.code==='42501');
   await verifyWorkspace(db,[author,other,reader]);
+  await db.exec('reset role');
   assert.equal((await db.query("select to_regclass('public.p0_migration_status') marker")).rows[0].marker,null);
   assert.equal((await db.query('select text_content from episode_contents')).rows[0].text_content,'Disputed source retained');
   assert.equal((await db.query('select content from authoring.draft_revisions where draft_id=$1',[author])).rows[0].content,'Retained draft');

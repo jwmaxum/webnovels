@@ -7,6 +7,23 @@ select jsonb_build_object(
   -- Catalog ACLs preserve PUBLIC and column grants independently of the audit role.
   'table_grants', (select jsonb_agg(jsonb_build_object('table_schema',n.nspname,'table_name',c.relname,'grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,'privilege_type',a.privilege_type,'is_grantable',a.is_grantable)) from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where n.nspname='public' and c.relkind in ('r','p','v','m')),
   'column_grants', (select jsonb_agg(jsonb_build_object('table_schema',n.nspname,'table_name',c.relname,'column_name',col.attname,'grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,'privilege_type',a.privilege_type,'is_grantable',a.is_grantable)) from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace join pg_catalog.pg_attribute col on col.attrelid=c.oid cross join lateral aclexplode(col.attacl) a where n.nspname='public' and col.attnum>0 and not col.attisdropped),
+  'sequence_grants', (select coalesce(jsonb_agg(jsonb_build_object(
+    'sequence_schema',n.nspname,'sequence_name',c.relname,
+    'grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,
+    'privilege_type',a.privilege_type,'is_grantable',a.is_grantable)),'[]'::jsonb)
+    from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+    cross join lateral aclexplode(coalesce(c.relacl,acldefault('S',c.relowner))) a
+    where n.nspname='public' and c.relkind='S'),
+  -- Defaults are per creating role. Global and schema-specific entries are additive;
+  -- an absent entry does not mean that existing objects lack explicit grants.
+  'default_privileges', (select coalesce(jsonb_agg(jsonb_build_object(
+    'owner',pg_get_userbyid(d.defaclrole),'schema',n.nspname,'object_type',d.defaclobjtype,
+    'grants',(select coalesce(jsonb_agg(jsonb_build_object(
+      'grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,
+      'privilege_type',a.privilege_type,'is_grantable',a.is_grantable)),'[]'::jsonb)
+      from aclexplode(d.defaclacl) a))),'[]'::jsonb)
+    from pg_catalog.pg_default_acl d left join pg_catalog.pg_namespace n on n.oid=d.defaclnamespace
+    where d.defaclnamespace=0 or n.nspname='public'),
   'storage_grants', (select jsonb_agg(jsonb_build_object('table_schema',n.nspname,'table_name',c.relname,'grantee',case when a.grantee=0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end,'privilege_type',a.privilege_type,'is_grantable',a.is_grantable)) from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace cross join lateral aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a where n.nspname='storage' and c.relkind in ('r','p','v','m')),
   'storage_buckets', (select jsonb_agg(jsonb_build_object('id',b.id,'public',b.public,'objects',
     (select count(*) from storage.objects o where o.bucket_id=b.id))) from storage.buckets b),

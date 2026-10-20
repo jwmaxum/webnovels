@@ -23,3 +23,11 @@
 - [.agents/rules/testing_rules.md](.agents/rules/testing_rules.md)를 준수한다. 명시 요청 없이 localhost/브라우저 검증을 실행하지 않는다.
 - 실제 DB 적용·브라우저 인수와 로컬 대역/합성 DB 검증을 구분해 보고한다. 기능 플래그를 임의로 활성화하지 않는다.
 - 기존 작업 트리 변경, 초안·버전·계정 매핑을 보존한다. `.env.local`이나 인증 비밀을 출력·커밋하지 않는다.
+
+## Supabase 명시적 권한 — 새 테이블·재생성 시 필수
+
+- [2026-10-30 권한 변경 대응](docs/launch/supabase-explicit-grants-2026-10-21.md)을 따른다. 자동 기본 권한에 의존하지 않는다.
+- 테이블을 생성하는 같은 마이그레이션에서 실제 호출 역할의 필요한 테이블/열 권한과 RLS를 함께 정의한다. 비공개 테이블은 의도적인 직접 접근 금지와 RPC 접근 경로를 명시한다.
+- `anon`/`authenticated`에 일괄 CRUD를 부여하지 않는다. `service_role`의 RLS 우회도 테이블·시퀀스 ACL을 대신하지 않는다. 직접 삽입에 시퀀스가 필요하면 그 권한도 명시한다.
+- 비공개 스키마의 `SECURITY DEFINER` RPC는 기존 소유권 검증·고정 search_path·서비스 전용 EXECUTE 계약을 유지한다. API 오류의 GRANT 안내만 보고 브라우저 권한을 넓히지 않는다.
+- 자동 public 테이블·시퀀스 권한이 없는 합성 DB에서 실제 `SET ROLE`로 허용·거절을 검증한다. 과거 `database/*.sql` 일괄 재실행은 복원 절차가 아니다.

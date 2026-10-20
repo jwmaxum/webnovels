@@ -62,9 +62,25 @@ test('maintenance containment preserves rows, blocks legacy privileges and retai
   assert.equal(JSON.stringify((await db.query('select to_jsonb(e) as row from episodes e order by id')).rows),before);
   assert.equal((await db.query("select to_regclass('public.p0_migration_status') marker")).rows[0].marker,null);
   // A restricted audit role cannot see other roles in information_schema.role_table_grants.
-  await db.exec('create role audit_reader; grant usage on schema public to audit_reader; grant select on works,episodes,authors,readers to audit_reader; grant usage on schema storage to audit_reader; grant select on storage.objects,storage.buckets to audit_reader; set role audit_reader');
+  await db.exec(`create sequence public.audit_sequence;
+    grant usage on sequence public.audit_sequence to service_role;
+    alter default privileges in schema public grant select on tables to service_role;
+    alter default privileges grant usage on sequences to service_role;
+    create role audit_reader; grant usage on schema public to audit_reader;
+    grant select on works,episodes,authors,readers to audit_reader;
+    grant usage on schema storage to audit_reader; grant select on storage.objects,storage.buckets to audit_reader;
+    set role audit_reader`);
   const audit=(await db.query(await read('database/p0/000_preflight.sql'))).rows[0].audit;
   assert.ok(audit.column_grants.some(g=>g.table_name==='works'&&g.column_name==='id'&&g.grantee==='anon'));
   assert.ok(audit.table_grants.some(g=>g.table_name==='episodes'&&g.grantee==='service_role'));
+  assert.ok(audit.sequence_grants.some(g=>g.sequence_name==='audit_sequence'&&g.grantee==='service_role'&&g.privilege_type==='USAGE'));
+  assert.ok(audit.default_privileges.some(d=>d.schema==='public'&&d.object_type==='r'&&
+    d.grants.some(g=>g.grantee==='service_role'&&g.privilege_type==='SELECT')));
+  assert.ok(audit.default_privileges.some(d=>d.schema===null&&d.object_type==='S'&&
+    d.grants.some(g=>g.grantee==='service_role'&&g.privilege_type==='USAGE')));
+  await db.exec('reset role; alter default privileges in schema public revoke select on tables from service_role; alter default privileges revoke usage on sequences from service_role; set role audit_reader');
+  const withoutDefaults=(await db.query(await read('database/p0/000_preflight.sql'))).rows[0].audit;
+  assert.deepEqual(withoutDefaults.default_privileges,[]);
+  assert.ok(withoutDefaults.sequence_grants.some(g=>g.sequence_name==='audit_sequence'&&g.grantee==='service_role'));
  } finally {await db.close();}
 });

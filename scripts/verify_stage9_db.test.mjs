@@ -103,9 +103,22 @@ test('stage 10 reader profile migration is repeatable and service-only',async()=
       .rows[0].n,1);
   }finally{await db.close();}
 });
-test('stage 10 P0 lockdown denies direct private reads after the verified gate',async()=>{
+test('P0 explicit grants support service access without automatic public grants and deny browser private reads',async()=>{
   const {db}=await setup();
   try{
+    // Supabase's October 30 change: fresh tables/sequences have no API-role defaults.
+    for(const role of ['anon','authenticated','service_role']){
+      const privileges=(await db.query(`select
+        has_table_privilege($1,'public.works','SELECT') as table_select,
+        has_sequence_privilege($1,'public.works_id_seq','USAGE') as sequence_usage`,[role])).rows[0];
+      assert.deepEqual(privileges,{table_select:false,sequence_usage:false});
+    }
+    // The four new public tables must work from their creation migration alone.
+    await db.exec('set role service_role');
+    for(const table of ['p0_migration_status','secure_episode_contents','p0_episode_entitlements','p0_identity_verifications'])
+      await db.query(`select * from public.${table} limit 1`);
+    await assert.rejects(db.query('select * from public.works'),e=>e.code==='42501');
+    await db.exec('reset role');
     await db.exec(`alter table authors add column if not exists username text,
       add column if not exists profile_image text,
       add column if not exists bio text;
@@ -119,6 +132,13 @@ test('stage 10 P0 lockdown denies direct private reads after the verified gate',
     await db.exec("set webnovels.p0_cutover_verified='true'");
     await db.exec(sql);
     assert.equal((await db.query('select phase from p0_migration_status')).rows[0].phase,'locked');
+    await db.exec('set role service_role');
+    for(const table of ['works','episodes','authors','readers','admin_users','p0_migration_status',
+      'secure_episode_contents','p0_episode_entitlements','p0_identity_verifications'])
+      await db.query(`select * from public.${table} limit 1`);
+    assert.equal((await db.query("select nextval('public.works_id_seq')::int id")).rows[0].id,30);
+    assert.equal((await db.query("select nextval('public.episodes_id_seq')::int id")).rows[0].id,300);
+    await db.exec('reset role');
     await db.exec('set role anon');
     assert.deepEqual((await db.query('select id from works order by id')).rows.map(row=>row.id),[10]);
     assert.deepEqual((await db.query('select id from episodes order by id')).rows.map(row=>row.id),[100]);
