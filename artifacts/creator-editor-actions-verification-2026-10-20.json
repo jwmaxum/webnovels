@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-20",
+  "status": "PASS",
+  "scope": "Creator private save, independent server/device/legacy copy recovery, saved-revision preview and publication capability handling",
+  "parentCommit": "a36a5d8eb7f2a5f3f068d735282304f18e23af1f",
+  "node": "v24.19.0",
+  "research": {
+    "approach": "Extended existing DraftEngine, CreatorDraftEditor, CreatorPublications and shared modal; reused installed parse5 for shipped-HTML regression fixture.",
+    "newDependencies": [],
+    "externalSearch": "Not needed for repository-internal defects; repository source/contracts/tests and read-only researcher used."
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "isolatedSource": true,
+    "privateEnvironmentFilesExcluded": true,
+    "formalTests": 661,
+    "passed": 661,
+    "failed": 0,
+    "skipped": 0,
+    "nodeTestProcesses": 66,
+    "cloudflareFunctionBundles": 6,
+    "bundleCheck": true,
+    "prismaAndTypeScript": "PASS",
+    "logSha256": "d3725af0e09cbcdb1ee53b92d0b0026a0176efcf4da9ecfe49b30a5661b431ee"
+  },
+  "finalFollowup": {
+    "reason": "After the full-build snapshot, publication checklist readiness and list-outage preview fallback were finalized; only these runtime changes, their regression file and the contract differ from that snapshot.",
+    "files": [
+      "docs/launch/creator-first-serial-contract.md",
+      "public/js/creator/creator-publications.js",
+      "scripts/verify_creator_editor_actions.test.mjs"
+    ],
+    "command": "node --experimental-test-coverage --test-coverage-include=public/js/creator/creator-editor.js --test-coverage-include=public/js/creator/creator-publications.js --test-coverage-include=public/js/creator/creator-readiness.js --test-coverage-include=public/js/creator/draft-engine.js --test scripts/verify_draft_engine.test.mjs scripts/verify_draft_ui.test.mjs scripts/verify_creator_editor_actions.test.mjs scripts/verify_stage15_autosave.test.mjs scripts/verify_stage15_readiness.test.mjs scripts/verify_stage15_publication_flow.test.mjs scripts/verify_creator_publications_ui.test.mjs",
+    "exitCode": 0,
+    "tests": 52,
+    "passed": 52,
+    "failed": 0,
+    "skipped": 0,
+    "logSha256": "6c6e3dfa38a383f9a97096e1f10a25be3b76b531791fd46aafd6b469777c3d1b",
+    "testedFinalSourceMatchesWorkingTree": true
+  },
+  "typeCheck": {
+    "command": "tsc --noEmit",
+    "exitCode": 0,
+    "isolatedFinalSource": true
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "alternative": "11 changed JavaScript/test syntax checks passed; TypeScript, static security patterns and diff review passed."
+  },
+  "coverage": {
+    "scope": [
+      "creator-editor.js",
+      "creator-publications.js",
+      "creator-readiness.js",
+      "draft-engine.js"
+    ],
+    "line": 89.91,
+    "branch": 78.53,
+    "functions": 77.49,
+    "wholeProject": false,
+    "browser": false
+  },
+  "security": {
+    "credentialOrPrivateKeyPatternFindings": 0,
+    "conflictMarkers": 0,
+    "noNewEndpoints": true,
+    "serverOwnershipAndRevisionGatesPreserved": true,
+    "publicationRequestsBlockedInPreviewOnlyMode": true
+  },
+  "diffReview": {
+    "status": "PASS",
+    "gitDiffCheck": 0,
+    "changedSourceSyntaxChecks": 11,
+    "existingUntrackedSkillDirectoriesPreserved": true
+  },
+  "preservation": {
+    "serverDraftsAndVersions": "No deletion or migrations",
+    "deviceHeads": "Explicit server reload creates a fresh branch; previous snapshot and pending request remain in original head",
+    "legacyDrafts": "Explicit owner-verified import; original retained",
+    "ambiguousPublicationRequests": "Retained while publishing disabled or publication list unavailable"
+  },
+  "notPerformed": [
+    "localhost/browser validation",
+    "actual Supabase/Storage changes or acceptance",
+    "production feature-flag activation",
+    "production publication acceptance"
+  ],
+  "nextServiceStep": "Validate hosted publication prerequisites including reviewed DB migrations/configuration, then explicitly accept real author publication -> reader access -> device recovery.",
+  "sourceHashEncoding": "UTF-8 with CRLF normalized to LF",
+  "sourceSha256": {
+    "docs/launch/creator-first-serial-contract.md": "1b005cc184d2cc9dd36534ab4672c5b86eb7706dc986a88e496392820fe4929b",
+    "improve15.md": "401e4e6b5b07cc0e4318db4d65b46932b4eeb47e57aba1beac0be73191b5b443",
+    "package.json": "d12716a7a6004779b5434399cdb8dc9f1e45039b24637ddebc07763590cf32bf",
+    "public/index.html": "bde338a55da6696f453719cfaf3ba3b58a4d2c4c45df75600e7c2c7392f0ff03",
+    "public/js/core/role-modules.js": "7c8468abcb766259f850d33e41bd15e912351151e1fd871599de2ebd11df955e",
+    "public/js/core/ui-utils.js": "2a4bf232dbf83d8fef4c94b60f24d41b598f40c1401b94f0ec3fbbed78f0377a",
+    "public/js/creator/creator-editor.js": "c21aa58b6ea5b54ee79ec9dd3027bca20b025ea42af99b39752e5a3479908be7",
+    "public/js/creator/creator-publications.js": "b24c64a8fa42742bb7512ca98b3ad15f21e2cbd3344a5592ea848316fb8cd687",
+    "public/js/creator/creator-readiness.js": "28318794ecc25cc91c582ff8e244e903593c613cda38a8a84d7c58c103005499",
+    "public/js/creator/draft-engine.js": "af5f85d583c5363b7cf522ce85d7e3b570bc63bdd13149a5d5de3b6221dd60ac",
+    "public/styles.css": "2eaf98e2cf8e7393b2c6483923e8e0697071b2c9b7b82609ad7b42e5108c3596",
+    "scripts/verify_draft_engine.test.mjs": "2677336a85aee970970189869c353a9b9d7bd80bd6ac737760dee8ac9017776f",
+    "scripts/verify_draft_ui.test.mjs": "0fc7d8ac69d5e13b913bd9b8a01a71fa971f35f465b01c3d27360ad1ebd139e3",
+    "scripts/verify_stage15_autosave.test.mjs": "03f7cf610dec43b79047558071a9db781399c502af6db8274686a8d403f8b9df",
+    "scripts/verify_stage15_publication_flow.test.mjs": "a97281d923695b773b1f08e5205cc1fffd5fbf4d62f1f0273b1364d63f4cff5d",
+    "scripts/verify_creator_editor_actions.test.mjs": "acfb1e774fa6f3e2de1086e3e18fe1c1b1af9a4645c2304d17d4d67c0c7b3a07"
+  }
+}

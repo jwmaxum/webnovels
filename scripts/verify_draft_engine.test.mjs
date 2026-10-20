@@ -13,6 +13,23 @@ test('A → B → A and immediate transition preserve identity and clear a fresh
   const {engine:e,rows}=setup();const a=await e.open('u','A');e.edit({content:'A 원고'});const b=await e.open('u','B');assert.equal(b.snapshot.content,'');e.edit({content:'B 원고'});await e.open('u','A',a.id);
   assert.equal(e.current.snapshot.content,'A 원고');assert.equal(rows.get(b.id+':'+b.branch).snapshot.content,'B 원고');assert.equal(rows.get(a.id+':'+a.branch).workId,'A');
 });
+
+test('explicit server reload uses a new branch and keeps typing and pending requests in the previous head',async()=>{
+  const held=deferred(),{engine:e,rows}=setup(()=>held.promise);
+  const old=await e.open('u','A','d',{localOnly:true});e.edit({content:'before reload'});
+  old.pending={key:'retry-key',seq:1,data:{expectedRevision:'0',content:'before reload'}};
+  const loading=e.open('u','A','d',{refresh:true});await new Promise(r=>setImmediate(r));
+  e.edit({content:'typed during reload'});held.resolve({draft:{revision:'7',content:'fresh server',lifecycle:'ACTIVE'}});
+  const fresh=await loading;assert.notEqual(fresh.branch,old.branch);assert.equal(fresh.snapshot.content,'fresh server');assert.equal(fresh.revision,'7');
+  const saved=rows.get(old.id+':'+old.branch);assert.equal(saved.snapshot.content,'typed during reload');assert.equal(saved.pending.key,'retry-key');
+  assert.equal(saved.pending.data.content,'before reload');assert.equal(fresh.pending,null);
+});
+
+test('failed device checkpoint refuses server reload and leaves current draft available',async()=>{
+  const {engine:e,store}=setup();const current=await e.open('u','A');e.edit({content:'keep me'});
+  store.save=async()=>{throw Error('QUOTA');};await assert.rejects(e.open('u','A',current.id,{refresh:true}),/QUOTA/);
+  assert.equal(e.current,current);assert.equal(e.current.snapshot.content,'keep me');
+});
 test('late save response acknowledges only sent snapshot, not subsequent typing or another work',async()=>{
   const pending=deferred(),{engine:e}=setup(()=>pending.promise);const a=await e.open('u','A');e.edit({content:'sent'});const sync=e.sync();await new Promise(r=>setImmediate(r));e.edit({content:'later'});const b=await e.open('u','B');e.edit({content:'B'});pending.resolve({draft:{revision:'1'}});await sync;
   assert.equal(a.serverSeq,1);assert.equal(a.seq,2);assert.equal(a.snapshot.content,'later');assert.equal(e.current,b);assert.equal(b.snapshot.content,'B');

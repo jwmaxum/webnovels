@@ -27,7 +27,8 @@
     ];
   }
   function draftItems(c) {
-    return [item('원고 제목·본문',c.snapshot.title.trim()&&(c.snapshot.webtoon?c.snapshot.webtoon.assetIds.length>0:c.snapshot.content.trim())?'done':'pending',c.snapshot.webtoon?'제목과 처리 완료된 이미지를 등록해주세요.':'제목과 본문을 입력해주세요.'),
+    const complete=!!(c.snapshot.title.trim()&&(c.snapshot.webtoon?c.snapshot.webtoon.assetIds.length>0:c.snapshot.content.trim()));
+    return [item('원고 제목·본문',complete?'done':'pending',complete?'제목과 본문이 입력됐습니다. 미리보기에서 내용을 확인해주세요.':c.snapshot.webtoon?'제목과 처리 완료된 이미지를 등록해주세요.':'제목과 본문을 입력해주세요.'),
       item('저장 버전',c.conflict?'blocked':c.serverSeq===c.seq&&!c.pending&&c.revision!=='0'?'done':'pending',
         c.conflict?'충돌한 양쪽 사본을 비교하고 해결해주세요.':c.lifecycle!=='ACTIVE'?'보관 원고입니다. 다음 원고는 새로 시작해주세요.':c.serverSeq===c.seq&&!c.pending?'서버 버전 '+c.revision:'기기 사본을 보존하며 서버 동기화를 기다립니다.')];
   }

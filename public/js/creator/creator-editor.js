@@ -3,7 +3,7 @@
   'use strict';
   const $=id=>document.getElementById(id), fields={title:'newEpTitle',content:'newEpContent',authorComment:'newEpAuthorComment'};
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let timer,remoteTimer,maxTimer,deadlineContext=null,dirtySince=null,composing=false,epoch=0,selected=null,works=[];
+  let timer,remoteTimer,maxTimer,deadlineContext=null,dirtySince=null,composing=false,epoch=0,copiesRevision=0,selected=null,works=[];
   const actor=()=>window.WebNovelsAuth?.getActor(), toast=m=>window.showToast?.(m);
   function error(e) {
     const message=(e.code||e.message)==='DRAFT_COMPOSING'?'한글 입력을 마친 뒤 저장·미리보기를 다시 실행해주세요.':e.code==='AUTHOR_DRAFTS_NOT_ACTIVATED'?'서버 원고 저장 기능이 아직 활성화되지 않았습니다.':e.code==='DRAFT_CONFLICT'?'다른 곳에서 수정한 원고가 있습니다. 양쪽 내용을 비교해주세요.':'저장 또는 불러오기에 실패했습니다. 원고를 다운로드하고 다시 시도해주세요.';
@@ -21,6 +21,7 @@
   }
   function status(c) {
     if(actor()?.userId!==c.userId)return;
+    window.CreatorPublications?.refreshAvailability();
     $('creatorDraftStatus').textContent=c.conflict?'충돌 · 양쪽 사본 보존':c.error?'저장 실패 · 다운로드 가능':c.localSeq<c.seq?'기기에 저장 중…':c.serverSeq<c.seq?'기기 저장 완료 · 서버 미동기화':'기기·서버 저장 완료';
     $('draftConflict').hidden=!c.conflict;
     $('draftIdentity').textContent=`원고 ${c.id} · 서버 버전 ${c.revision}${c.lifecycle!=='ACTIVE'?' · 보관 원고 (읽기 전용)':''}`;
@@ -60,14 +61,14 @@
     if(actor()?.userId!==user)throw Error('SESSION_CHANGED');works=all;
     $('newEpWorkSelect').innerHTML='<option value="">작품을 선택해주세요</option>'+all.filter(w=>!w.trashed_at).map(w=>`<option value="${esc(w.id)}">${esc(w.title)}</option>`).join('');
   }
-  async function openWork(workId,id=null,{fresh=false,record=null,localOnly=false}={}) {
+  async function openWork(workId,id=null,{fresh=false,record=null,localOnly=false,refresh=false}={}) {
     window.CreatorRecovery?.reset();const turn=++epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
     stop();composing=false;await engine.checkpoint();selected=null;window.closeModal?.('modalDraftDiff');
     if(!works.some(w=>w.id===String(workId)))await loadWorks();
     const work=works.find(w=>w.id===String(workId));if(!work)throw Error('WORK_NOT_FOUND');
     if(turn!==epoch||user!==actor()?.userId)return;
     if(!id&&!fresh)id=[...engine.contexts.values()].find(c=>c.userId===user&&c.workId===String(workId)&&c.lifecycle==='ACTIVE')?.id||null;
-    const c=await engine.open(user,String(workId),id,{localOnly});
+    const c=await engine.open(user,String(workId),id,{localOnly,refresh});
     if(!c||turn!==epoch||user!==actor()?.userId)return;
     if(record)await engine.recover(record);
     if(work.content_type==='WEBTOON'&&!c.snapshot.webtoon&&c.revision==='0'&&window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true)engine.edit({...c.snapshot,content:'',webtoon:window.CreatorWebtoon.empty()},c);
@@ -78,41 +79,51 @@
     $('creatorDraftError').textContent='';if(record||c.seq>0)schedule(c);await listCopies(c);$('newEpTitle')?.focus();
   }
   async function listCopies(c=engine.current) {
-    if(!c)return;const turn=epoch;
-    const local=await DraftStore.heads(c.userId,c.workId);
-    if(turn!==epoch||actor()?.userId!==c.userId)return;
+    const request=++copiesRevision;
     const box=$('draftCopies');box.replaceChildren();
-    if($('draftCopyDetails'))$('draftCopyDetails').open=local.some(r=>r.branch!==c.branch&&r.seq>r.serverSeq);
-    function button(label,fn){const b=document.createElement('button');b.type='button';b.className='btn btn-outline btn-sm';b.textContent=label;b.onclick=safe(fn);box.append(b);}
-    for(const row of local.filter(r=>r.branch!==c.branch)){
-      if(row.lifecycle==='PUBLISHED')button('보관 사본을 새 원고로 복사: '+(row.snapshot.title||'무제'),async()=>{
+    if(!c){box.textContent='작품을 선택하면 서버 원고와 이 계정의 기기 사본을 확인할 수 있습니다.';return;}
+    const turn=epoch,authorId=actor()?.author?.id;
+    const valid=()=>request===copiesRevision&&turn===epoch&&engine.current===c&&actor()?.userId===c.userId;
+    function section(label){const node=document.createElement('section'),title=document.createElement('strong'),state=document.createElement('p');title.textContent=label;state.textContent='불러오는 중…';state.setAttribute('role','status');node.append(title,state);box.append(node);return {node,state};}
+    const device=section('기기 사본'),server=section('서버 원고'),old=section('이전 편집기 원고');
+    function button(node,label,fn){const b=document.createElement('button');b.type='button';b.className='btn btn-outline btn-sm';b.textContent=label;b.onclick=safe(async()=>{if(valid())await fn();});node.append(b);}
+    async function load(part,read,render,empty){try{const rows=await read();if(!valid())return;part.state.textContent=rows.length?`${rows.length}개` :empty;render(rows);}catch{if(valid())part.state.textContent='목록을 불러오지 못했습니다. 원본은 보존됩니다. 원고 목록 새로고침으로 다시 시도해주세요.';}}
+    await Promise.all([
+    load(device,async()=>(await DraftStore.heads(c.userId,c.workId)).filter(r=>r.branch!==c.branch),local=>{
+    if(local.some(r=>r.seq>r.serverSeq)&&$('draftCopyDetails'))$('draftCopyDetails').open=true;
+    for(const row of local){
+      if(row.lifecycle!=='ACTIVE'||(row.id===c.id&&c.lifecycle!=='ACTIVE')){button(device.node,'보관 사본을 새 원고로 복사: '+(row.snapshot.title||'무제'),async()=>{
         if(!window.confirm('보관 원고를 유지하고 새 원고에 내용을 복사합니다. 계속할까요?'))return;
         await openWork(row.workId,null,{fresh:true,record:{...row,lifecycle:'ACTIVE',pending:null}});
-      });
-      button('기기 사본 복구: '+(row.snapshot.title||'무제')+' · '+row.id.slice(0,8),async()=>{
+      });continue;}
+      button(device.node,'기기 사본 복구: '+(row.snapshot.title||'무제')+' · '+row.id.slice(0,8),async()=>{
       if(!window.confirm('현재 원고를 먼저 백업한 뒤 이 사본을 복구합니다. 계속할까요?'))return;
       if(row.id===engine.current?.id){await engine.recover(row);form(engine.current.snapshot);status(engine.current);schedule();}
       else {
         await openWork(row.workId,row.id,{record:row,localOnly:true});
       }
       });
-    }
-    try {
-      const result=await api('list',{workId:c.workId,userId:c.userId});if(turn!==epoch||actor()?.userId!==c.userId)return;
-      for(const row of result.drafts)button('서버 원고: '+(row.title||'무제')+' · '+row.lifecycle,()=>openWork(c.workId,row.id));
-    }catch(e){if(turn===epoch)error(e);}
-    const legacy=await DraftStore.legacy(actor()?.author?.id,c.workId);
-    if(turn!==epoch||actor()?.userId!==c.userId)return;
-    for(const row of legacy)button('이전 편집기 원고 가져오기: '+(row.title||row.key),async()=>{
+    }},'다른 기기 사본이 없습니다. 현재 편집 중인 원고는 위 저장 상태에서 확인하세요.'),
+    load(server,async()=>(await api('list',{workId:c.workId,userId:c.userId})).drafts,rows=>{
+      for(const row of rows)button(server.node,'서버 원고: '+(row.title||'무제')+' · '+row.lifecycle,async()=>{
+        if(!window.confirm('현재 원고를 기기 사본으로 보존한 뒤 서버에 저장된 원고를 다시 불러옵니다. 계속할까요?'))return;
+        await openWork(c.workId,row.id,{refresh:true});
+      });
+    },'이 작품에 저장된 서버 원고가 없습니다.'),
+    load(old,()=>DraftStore.legacy(authorId,c.workId),legacy=>{
+    for(const row of legacy)button(old.node,'이전 편집기 원고 가져오기: '+(row.title||row.key),async()=>{
       const verified=await window.WebNovelsAuth.api('/api/v2/creator/works/'+c.workId);
-      if(!verified.work||actor()?.userId!==c.userId)throw Error('OWNER_MISMATCH');
-      const imported=await DraftStore.importLegacy(c.userId,actor().author.id,c.workId,row);
+      if(!verified.work||!valid()||actor()?.author?.id!==authorId)throw Error('OWNER_MISMATCH');
+      const imported=await DraftStore.importLegacy(c.userId,authorId,c.workId,row);
       // Stable mapping survives repeated imports; never delete the source.
       let localOnly=false;try{await api('get',{workId:c.workId,id:imported.id,userId:c.userId});}catch(e){if(e.status===404)localOnly=true;else throw e;}
       await openWork(c.workId,imported.id,{record:imported,localOnly});
-    });
+    });},'이 계정·작품에 일치하는 이전 편집기 원고가 없습니다. 다른 계정의 원고는 표시하지 않습니다.')
+    ]);
   }
-  async function save(){const c=engine.current;if(!c)throw Error('작품을 선택해주세요.');if(composing)throw Error('DRAFT_COMPOSING');await engine.flush(c);await requestSave(c);}
+  async function save(){const c=engine.current;if(!c)throw Error('작품을 선택해주세요.');if(composing)throw Error('DRAFT_COMPOSING');await engine.flush(c);await requestSave(c);
+    if(active(c)&&c.serverSeq===c.seq&&!c.pending&&c.revision!=='0'){$('creatorDraftError').textContent='';toast('비공개 원고를 서버에 저장했습니다. 버전 '+c.revision);}
+  }
   async function preparePublication(){
     window.CreatorRichEditor?.assertValid();
     if(window.CreatorWebtoon?.hasPending?.())throw Error('WEBTOON_PROCESSING_PENDING');
@@ -216,6 +227,7 @@
     const bind=(id,fn)=>$(id)?.addEventListener('click',safe(fn));
     bind('btnDraftDownload',()=>download());bind('btnLegacyDraftExport',exportLegacy);bind('btnDraftNew',()=>openWork(engine.current?.workId||$('newEpWorkSelect').value,null,{fresh:true}));
     bind('btnDraftRefresh',()=>listCopies());bind('btnSaveDraftVersion',async()=>{const c=engine.current;if(c)await DraftStore.backup(c,c.snapshot,'manual');});
+    $('draftCopyDetails')?.addEventListener('toggle',()=>{if($('draftCopyDetails').open)safe(()=>listCopies())();});
     bind('btnDraftSettings',async()=>{const c=engine.current;if(!c)return;stop();composing=false;await engine.checkpoint();window.navigateTo?.('/creator/works/'+c.workId+'/settings');});
     bind('btnRestoreDraftVersion',openDiffModal);bind('btnConfirmRestoreRevision',async()=>{if(selected){await engine.replace(selected);form(engine.current.snapshot);schedule();window.closeModal?.('modalDraftDiff');}});
     bind('btnFormatIndent',()=>transform('indent'));bind('btnFormatDialogue',()=>transform('dialogue'));bind('btnFormatClean',()=>transform('clean'));

@@ -6,12 +6,14 @@
   class DraftEngine {
     constructor({store,api,uuid,onChange=()=>{}}) { Object.assign(this,{store,api,uuid,onChange});this.current=null;this.epoch=0;this.contexts=new Map(); }
     emit(c) { if(this.current===c)this.onChange(c); }
-    async open(userId,workId,id=null,{localOnly=false}={}) {
+    async open(userId,workId,id=null,{localOnly=false,refresh=false}={}) {
       const epoch=++this.epoch;
       if(this.current)await this.flush(this.current);
       id=id||this.uuid();
       const key=userId+':'+id;
-      let c=this.contexts.get(key);
+      // Explicit server reload uses a new branch; the old head (including pending
+      // request data) remains recoverable instead of being overwritten in place.
+      let c=refresh?null:this.contexts.get(key);
       if(c&&c.workId!==workId)throw Error('WORK_MISMATCH');
       if(!c) {
         let remote=null;

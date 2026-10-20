@@ -39,7 +39,7 @@
   <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
-  <link rel="stylesheet" href="/styles.css?v=125">
+  <link rel="stylesheet" href="/styles.css?v=126">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 <link rel="stylesheet" href="/css/growth.css?v=121">
 <link rel="stylesheet" href="/css/policies.css?v=20261011">
@@ -771,6 +771,7 @@
                 <button type="submit" class="btn btn-outline" id="btnSubmitNewEpisode">비공개 저장</button>
                 <button type="button" class="btn btn-primary" id="btnOpenPublication">미리보기 후 발행</button>
                 <button type="button" class="btn btn-outline" id="btnDraftSettings">작품 정보·연재 방식 설정</button>
+                <p id="creatorPublicationNotice" class="text-muted small" role="status"></p>
                 <div id="creatorDraftChecklist" aria-label="원고 준비 상태"></div>
                 <p class="text-muted small">초안 저장은 비공개입니다. 게시 전 저장 버전·작품 정보·권리를 다시 확인합니다.</p>
               </form>
@@ -2437,8 +2438,8 @@
 
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
-  <script src="/js/core/ui-utils.js?v=122"></script>
-  <script src="/js/core/role-modules.js?v=124"></script>
+  <script src="/js/core/ui-utils.js?v=126"></script>
+  <script src="/js/core/role-modules.js?v=126"></script>
   <script src="/js/core/router.js?v=125"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
@@ -2525,6 +2526,7 @@
             <div id="publicationPreviewBody"></div>
             <div id="publicationPreviewComment"></div>
           </article>
+          <div id="publicationControls">
           <fieldset>
             <legend>공개 방식</legend>
             <label><input type="radio" name="publicationMode" value="NOW" checked> <span id="publicationNowLabel">즉시 무료 게시</span></label>
@@ -2536,6 +2538,7 @@
           </div>
           <label class="publication-rights"><input type="checkbox" id="publicationRights"> 이 원고의 게시 권리가 있으며 작품 정보·등급·AI 표기를 확인했습니다.</label>
           <button type="button" id="publicationCommit" class="btn btn-primary">선택한 버전 게시</button>
+          </div>
         </section>
         <section id="publicationResult" hidden>
           <p id="publicationResultText"></p>
@@ -2543,7 +2546,7 @@
           <button type="button" id="publicationCopy" class="btn btn-outline">링크 복사</button>
           <button type="button" id="publicationNext" class="btn btn-primary">다음 회차 쓰기</button>
         </section>
-        <section>
+        <section id="publicationListSection">
           <h4>공개·예약 회차</h4>
           <div id="publicationList"></div>
         </section>

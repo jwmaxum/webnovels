@@ -54,8 +54,15 @@ test('publishing confirmation survives local backup and catalog list failures, a
 });
 test('wrong work and inactive/limited actor cannot reconcile private pending request or publish',async()=>{
   const s=setup();s.storage.set(s.key,JSON.stringify(s.pending));s.draft.workId='20';await s.window.CreatorPublications.open('10');assert.equal(s.storage.size,1);assert.equal(s.prepares,0);assert.equal(s.get('publicationRetryPanel').hidden,true);
-  const off=setup();off.window.WEBNOVELS_CONFIG.authorPublishEnabled=false;await assert.rejects(off.window.CreatorPublications.open('10'),/AUTHOR_PUBLISH_NOT_ACTIVATED/);assert.equal(off.calls.length,0);
-  const limited=setup();limited.setActor({userId:'user-a',author:{id:'101',status:'APPROVED'},authorWorkspaceReady:true});await assert.rejects(limited.window.CreatorPublications.open('10'),/AUTHOR_PUBLISH_NOT_ACTIVATED/);assert.equal(limited.calls.length,0);
+  for(const limited of [false,true]){
+    const off=setup();off.storage.set(off.key,JSON.stringify(off.pending));
+    if(limited)off.setActor({userId:'user-a',author:{id:'101',status:'APPROVED'},authorWorkspaceReady:true});
+    else off.window.WEBNOVELS_CONFIG.authorPublishEnabled=false;
+    await off.window.CreatorPublications.open('10');assert.equal(off.get('publicationPreviewBody').textContent,'body');
+    assert.equal(off.get('publicationControls').hidden,true);assert.equal(off.get('publicationListSection').hidden,true);
+    await off.get('publicationCommit').onclick();await off.get('publicationRetry').onclick();
+    assert.equal(off.calls.filter(call=>call.path.includes('/publications')).length,0);assert.equal(off.storage.size,1);
+  }
 });
 for(const mode of ['list','retry'])test(`cancelled request confirmed by ${mode} refreshes draft state and never reports it published`,async()=>{
   const s=setup();s.storage.set(s.key,JSON.stringify(s.pending));s.fixture.publishStatus='CANCELLED';

@@ -6,7 +6,7 @@ const read=p=>readFile(new URL('../public/js/creator/'+p,import.meta.url),'utf8'
 const sources=await Promise.all(['draft-engine.js','draft-diff.js','creator-editor.js'].map(read));
 function setup(){
   const elements=new Map(),listeners={},heads=new Map(),backups=[];let uuid=0,user={userId:'u',author:{id:1,status:'APPROVED'}};
-  function element(){return {value:'',textContent:'',innerHTML:'',style:{},children:[],events:{},classList:{toggle(){},remove(){}},addEventListener(k,v){this.events[k]=v;},replaceChildren(){this.children=[];this.innerHTML='';this.textContent='';},append(x){this.children.push(x);},focus(){},scrollIntoView(){},click(){}};}
+  function element(){return {value:'',textContent:'',innerHTML:'',style:{},children:[],events:{},classList:{toggle(){},remove(){}},addEventListener(k,v){this.events[k]=v;},setAttribute(){},replaceChildren(){this.children=[];this.innerHTML='';this.textContent='';},append(...items){this.children.push(...items);},focus(){},scrollIntoView(){},click(){}};}
   const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
   const context={URLSearchParams,Blob,URL,console,crypto:{randomUUID:()=>String(++uuid)},setTimeout:()=>++uuid,clearTimeout(){},location:{search:''},history:{replaceState(){}},
     document:{readyState:'complete',getElementById:get,createElement:element,addEventListener(k,v){listeners[k]=v;},documentElement:{style:{setProperty(){}}}},
@@ -30,7 +30,7 @@ test('UI work selection captures old identity; fresh draft clears all fields; re
 test('auth loss clears form and history; another account never sees previous local copies',async()=>{
   const s=setup();await s.editor.openWork('10');s.get('newEpContent').value='private A';s.get('newEpContent').events.input();await s.editor.beforeAccountChange();s.editor.onAuthLost();
   assert.equal(s.get('newEpContent').value,'');assert.equal(s.get('newEpContent').disabled,true);assert.equal(s.get('diffVersionList').children.length,0);
-  s.setUser({userId:'B',author:{id:2,status:'APPROVED'}});await s.editor.openWork('10');assert.equal(s.get('newEpContent').value,'');assert.equal(s.get('draftCopies').children.length,0);
+  s.setUser({userId:'B',author:{id:2,status:'APPROVED'}});await s.editor.openWork('10');assert.equal(s.get('newEpContent').value,'');assert.equal(s.get('draftCopies').children.flatMap(section=>section.children).filter(node=>node.type==='button').length,0);
   assert.ok([...s.heads.values()].some(r=>r.userId==='u'&&r.snapshot.content==='private A'));
 });
 test('UI restore tools await backup and IME composition does not schedule synchronization',async()=>{

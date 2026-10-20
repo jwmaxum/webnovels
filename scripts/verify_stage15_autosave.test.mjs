@@ -10,7 +10,7 @@ function setup({put=async()=>{},getRemote=async x=>x,workType='NOVEL'}={}){
   let now=0,uuid=0,timerId=0,user={userId:'user-a',author:{id:'101',status:'APPROVED'}},active=0,maxActive=0,engine;
   const jobs=new Map(),elements=new Map(),listeners={},heads=new Map(),backups=[],writes=[],remotes=new Map(),receipts=new Map(),messages=[];
   const element=()=>({value:'',textContent:'',innerHTML:'',style:{},events:{},children:[],classList:{remove(){},toggle(){}},
-    addEventListener(k,v){this.events[k]=v;},replaceChildren(){this.textContent='';this.innerHTML='';this.children=[];},append(x){this.children.push(x);},focus(){}});
+    addEventListener(k,v){this.events[k]=v;},setAttribute(){},replaceChildren(){this.textContent='';this.innerHTML='';this.children=[];},append(...items){this.children.push(...items);},focus(){}});
   const el=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
   const context={URLSearchParams,Blob,URL,console,crypto:{randomUUID:()=>`id-${++uuid}`},Date:class extends Date{static now(){return now;}},
     setTimeout:(fn,ms)=>{jobs.set(++timerId,{fn,at:now+ms});return timerId;},clearTimeout:id=>jobs.delete(id),
@@ -117,7 +117,7 @@ test('edits after publish request are backed up; next episode opens a new UUID a
   assert.ok(s.backups.some(x=>x.reason==='after-publish-edits'&&x.snapshot.content==='later edits'));
   await s.editor.startNext('10');assert.notEqual(s.editor.getFileContext().id,expected.id);assert.equal(s.el('newEpContent').value,'');
   assert.ok([...s.heads.values()].some(x=>x.id===expected.id&&x.lifecycle==='PUBLISHED'&&x.snapshot.content==='later edits'));
-  const copy=s.el('draftCopies').children.find(x=>x.textContent.startsWith('보관 사본을 새 원고로 복사'));
+  const copy=s.el('draftCopies').children.flatMap(section=>section.children).find(x=>x.textContent.startsWith('보관 사본을 새 원고로 복사'));
   await copy.onclick();assert.notEqual(s.editor.getFileContext().id,expected.id);assert.equal(s.engine.current.lifecycle,'ACTIVE');assert.equal(s.engine.current.revision,'0');assert.equal(s.el('newEpContent').value,'later edits');
   assert.ok([...s.heads.values()].some(x=>x.id===expected.id&&x.lifecycle==='PUBLISHED'));
 });

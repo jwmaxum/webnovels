@@ -5649,6 +5649,8 @@ body.portal-fullscreen-mode .main-content-wrapper {
 /* Draft focus mode stays above studio chrome and inside the mobile visual viewport. */
 .draft-focus { position: fixed; inset: 0; z-index: 900; height: var(--draft-viewport, 100dvh); overflow: auto; background: var(--bg-color, #17171c); padding: 12px; }
 .draft-copy-list { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 0; }
+.draft-copy-list section { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; }
+.draft-copy-list section p { margin: 0; color: var(--text-muted); }
 #draftConflict { padding: 16px; border: 1px solid #d9a441; border-radius: 8px; }
 #creatorDraftError { color: var(--accent-danger); overflow-wrap: anywhere; }
 #creatorTab-new-ep .form-input { max-width: 100%; }
