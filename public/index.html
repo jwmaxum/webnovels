@@ -39,7 +39,7 @@
   <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
-  <link rel="stylesheet" href="/styles.css?v=124">
+  <link rel="stylesheet" href="/styles.css?v=125">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 <link rel="stylesheet" href="/css/growth.css?v=121">
 <link rel="stylesheet" href="/css/policies.css?v=20261011">
@@ -112,6 +112,14 @@
 
         <div class="sidebar-nav-divider"></div>
 
+        <div class="sidebar-nav-group" id="authorStudioNavigation" data-account-portal="creator" hidden>
+          <div class="sidebar-group-label">작가 전용</div>
+          <a href="/creator" class="sidebar-nav-item" data-side-target="view-creator" onclick="handleDirectPortalClick(event, 'creator')">
+            <i data-lucide="feather" class="sidebar-nav-icon"></i>
+            <span>작가 스튜디오</span>
+          </a>
+        </div>
+
         <!-- 3. 내 서재 -->
         <div class="sidebar-nav-group">
           <div class="sidebar-group-label">내 서재</div>
@@ -153,6 +161,7 @@
 
           <!-- Header Actions: 포인트 🪙 1,000P + 👤 프로필/로그인 -->
           <div class="header-actions">
+            <a href="/creator" class="btn btn-outline btn-sm" id="headerCreatorLink" data-account-portal="creator" hidden onclick="handleDirectPortalClick(event, 'creator')">작가 스튜디오</a>
             <div class="user-points-badge" id="headerPointsBadge" style="display:none">
               🪙 <span id="headerPointsValue">0P</span>
             </div>
@@ -2309,7 +2318,7 @@
           <div class="mobile-more-section mb-3">
             <div class="mobile-more-title">창작 및 관리 포털 분리 접속</div>
             <div class="mobile-more-list">
-              <a href="/creator" class="mobile-more-list-item" id="linkMoreCreator" onclick="handleDirectPortalClick(event, 'creator')">
+              <a href="/creator" class="mobile-more-list-item" id="linkMoreCreator" data-account-portal="creator" hidden onclick="handleDirectPortalClick(event, 'creator')">
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <span class="portal-icon-box creator"><i data-lucide="feather"></i></span>
                   <div>
@@ -2430,7 +2439,7 @@
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=122"></script>
   <script src="/js/core/role-modules.js?v=124"></script>
-  <script src="/js/core/router.js?v=124"></script>
+  <script src="/js/core/router.js?v=125"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
   <script src="/js/reader/reader-content.js?v=124"></script>
@@ -2438,7 +2447,7 @@
   <script src="/js/reader/reader-discovery.js?v=124"></script>
   <script src="/js/reader/reader-webtoon.js?v=118"></script>
   <script src="/js/reader/reader-position.js?v=116"></script>
-  <script src="/js/reader/reader.js?v=124"></script>
+  <script src="/js/reader/reader.js?v=125"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>
@@ -2548,8 +2557,8 @@
   <script src="/js/core/auth-session.js?v=121"></script>
   <script src="/js/core/account-access.js?v=114"></script>
   <script src="/js/core/appeals.js?v=117"></script>
-  <script src="/js/core/auth-ui.js?v=120"></script>
+  <script src="/js/core/auth-ui.js?v=125"></script>
   <script src="/js/core/service-status.js?v=114"></script>
-  <script src="/app.js?v=120"></script>
+  <script src="/app.js?v=125"></script>
 </body>
 </html>

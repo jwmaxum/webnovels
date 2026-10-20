@@ -406,6 +406,10 @@ async function initWebNovelsApp() {
     console.error('[bindWebNovelsEvents Error]', e);
   }
 
+  // Account portals enter immediately; legacy public routes still need the catalog.
+  const initialRoute = typeof initRouteHandler === 'function'
+    ? await initRouteHandler({ deferPublic: true }) : null;
+
   // 1. [즉시 동기 렌더링] 기본 10개 작품 즉시 화면 표출 (0.01초 렌더링)
   try {
     if (typeof renderHomeWorks === 'function') renderHomeWorks();
@@ -522,7 +526,7 @@ async function initWebNovelsApp() {
   window.addEventListener('webnovels:authors-changed', onAuthorsChanged);
   window.addEventListener('webnovels:creators-changed', onAuthorsChanged);
 
-  if (typeof initRouteHandler === 'function') initRouteHandler();
+  if (typeof initialRoute === 'function') await initialRoute();
 
   // 로그인 프로필 세션 복원 및 헤더 동기화
   if (typeof loadMyProfile === 'function') await loadMyProfile();

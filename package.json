@@ -32,7 +32,7 @@
     "test:cloudflare-bundle": "esbuild \"functions/api/[[path]].js\" \"functions/api/public-config.js\" \"functions/api/v2/[[path]].js\" \"functions/sitemap.xml.js\" \"functions/share/[id].js\" \"functions/sitemaps/[bucket]/index.xml.js\" --bundle --platform=browser --format=esm --target=es2022 --outbase=functions --outdir=scratch/step11-cloudflare-bundle && node scripts/verify_cloudflare_bundle.mjs",
     "audit:p0-schema": "node scripts/p0_schema_audit.cjs",
     "test:authoring-schema": "node scripts/verify_authoring_schema.test.mjs",
-    "test:auth": "node scripts/verify_auth_session.test.mjs && node scripts/verify_auth_onboarding.test.mjs",
+    "test:auth": "node scripts/verify_auth_session.test.mjs && node scripts/verify_auth_navigation.test.mjs && node scripts/verify_auth_onboarding.test.mjs",
     "test:creator-works": "node scripts/verify_creator_work_api.test.mjs && node scripts/verify_creator_work_ui.test.mjs && node scripts/verify_creator_works.test.mjs",
     "test:drafts": "node scripts/verify_draft_engine.test.mjs && node scripts/verify_draft_store.test.mjs && node scripts/verify_draft_ui.test.mjs && node scripts/verify_creator_draft_api.test.mjs && node scripts/verify_creator_drafts_db.test.mjs",
     "test:naming": "node scripts/verify_author_creator_contract.test.mjs",

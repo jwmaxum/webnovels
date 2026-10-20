@@ -56,6 +56,7 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
           showToast('가입이 완료되었습니다.');
         }
         closeModal('modalAuthCompletion');
+        if (!reset) await window.openAccountHome();
       } catch(error) { document.getElementById('authCompletionMessage').textContent = window.WebNovelsAuth.message(error); }
       finally { button.disabled = false; }
     };

@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-20",
+  "baseCommit": "eef6a8ccba323b7f66d69a23344abe1a725e45b0",
+  "scope": "Author studio entry after password login, onboarding and session restoration; public routes and existing identity contracts preserved.",
+  "baseline": {
+    "productionCommit": "eef6a8ccba323b7f66d69a23344abe1a725e45b0",
+    "reproducedFailures": 3,
+    "cases": [
+      "Restored author stays on public root",
+      "Forged presentation role changes the header",
+      "Late bootstrap cancels pending studio entry"
+    ]
+  },
+  "checks": {
+    "build": {
+      "command": "npm run build",
+      "status": "PASS",
+      "environment": "Fresh source copy without private env or initial scratch; existing local dependencies; Windows junction-capable execution",
+      "reportedNodeTests": 649,
+      "passed": 649,
+      "failed": 0,
+      "skipped": 0,
+      "cloudflareFunctionsBundles": 6,
+      "prismaGenerate": "PASS",
+      "typescriptCompile": "PASS"
+    },
+    "typeCheck": {
+      "command": "tsc --noEmit",
+      "status": "PASS"
+    },
+    "lint": {
+      "status": "NOT_CONFIGURED",
+      "javascriptSyntax": "PASS"
+    },
+    "focusedTests": {
+      "status": "PASS",
+      "tests": 48,
+      "newAuthNavigationTests": 20
+    },
+    "coverage": {
+      "scope": [
+        "public/js/core/auth-session.js",
+        "public/js/core/router.js",
+        "public/js/core/role-modules.js"
+      ],
+      "method": "Node experimental test coverage of production VM scripts",
+      "linePercent": 82.25,
+      "branchPercent": 75.25,
+      "functionPercent": 71.64
+    },
+    "security": {
+      "credentialLiteralScan": "PASS",
+      "conflictMarkerScan": "PASS",
+      "serverActorAuthority": "PRESERVED"
+    },
+    "diffReview": "PASS",
+    "initialSandboxBuild": {
+      "status": "ENVIRONMENT_BLOCKED",
+      "reason": "Stage26 Windows junction creation returned EPERM; rerun passed with appropriate execution permissions"
+    }
+  },
+  "boundaries": {
+    "productionDatabaseChanged": false,
+    "authAccountMappingChanged": false,
+    "featureFlagsChanged": false,
+    "newDependencies": false,
+    "browserAcceptancePerformed": false,
+    "hostedAcceptancePerformed": false,
+    "syntheticDatabaseTests": true
+  },
+  "preservedUntrackedDirectories": [
+    ".agents/skills/search-first/",
+    ".agents/skills/security-review/",
+    ".agents/skills/verification-loop/"
+  ],
+  "validatedSourceSha256": {
+    "package.json": "71c65ebf72330257528afc8bad7bfbeb06cd55404dadd9a0cfc5e0a3bc114456",
+    "public/app.js": "29a41b7563365cd4c1d26cd91a750c08e7aaf9bfbb7b10c5a2147c8fd103d190",
+    "public/index.html": "76384710d5e8ad27aaa2c1aac9263c12252e9eaf0701863d052578601e6d31d1",
+    "public/js/core/router.js": "189e445dc50bc9847a4f862a6cb377d0dd9928f65bd70bd43713d267147a139f",
+    "public/js/core/auth-ui.js": "a9cf3f97b66f4e1f34e7038453ff60ac0b2cc8139db0b46716e9bb6f02e42ef7",
+    "public/js/reader/reader.js": "c370785586de04c6bc7c060d204af073bf2009b40f7a8795611f9e33da0b3734",
+    "public/styles.css": "5f8869ebfde018d68b9e8b037cbb0984f967a40391dd2e9a85e035181a76e3fc",
+    "scripts/verify_auth_navigation.test.mjs": "74d87f866449d0a12875bfb70ee26ac22726abe9b9056c2386e743a93b34bf7f"
+  },
+  "next": "After deployment, accept real author re-login, refresh, desktop/mobile studio entry and existing draft access; check verified account linkage if the server actor lacks author."
+}

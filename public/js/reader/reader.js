@@ -1809,8 +1809,8 @@ async function handleMemberLogin() {
   try {
     const actor = await window.WebNovelsAuth.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
     closeAllModals();
-    switchWebNovelsView(actor.admin ? 'view-admin-cms' : actor.author ? 'view-creator' : 'view-mypage');
-    showToast('로그인되었습니다.');
+    await window.openAccountHome();
+    if (window.WebNovelsAuth.getActor() === actor) showToast('로그인되었습니다.');
   } catch (error) {
     showToast(window.WebNovelsAuth.message(error));
     if (error.code === 'ACCOUNT_NOT_LINKED') window.showAuthOnboarding();
@@ -1950,13 +1950,20 @@ function getCurrentCreatorSession() {
 async function loadMyProfile() { await window.WebNovelsAuth.init(); }
 
 function updateMemberHeader(user) {
+  const actor = window.WebNovelsAuth?.getActor();
+  // The argument and localStorage are presentation compatibility only.
+  user = actor ? { ...(actor.admin || actor.author || actor.reader),
+    role: actor.admin?.role || (actor.author ? 'AUTHOR' : 'READER') } : null;
+  document.querySelectorAll('[data-account-portal="creator"]').forEach(el => {
+    el.hidden = actor?.author?.status !== 'APPROVED';
+  });
   const profileMenu = document.getElementById('userProfileMenu');
   const navCreatorLinks = document.querySelectorAll('.desktop-nav a[data-target="view-creator"], .desktop-nav a[href="#creator"], .cp-nav-link.nav-highlight');
   const navAdminLinks = document.querySelectorAll('.desktop-nav a[data-target="view-admin-cms"], .desktop-nav a[href="#admin"], .cp-nav-link.nav-admin');
 
   if (user) {
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'SUB_ADMIN' || isAdminLoggedIn;
-    const isAuthor = !isAdmin && ((user.role === 'CREATOR' || user.role === 'AUTHOR') || !!user.pen_name);
+    const isAdmin = !!actor.admin;
+    const isAuthor = !isAdmin && !!actor.author;
     const isReader = !isAdmin && !isAuthor;
 
     // [중요 요건] body data-user-role 속성 설정 (CSS Guard 및 JS 이중 보장)
@@ -1990,10 +1997,10 @@ function updateMemberHeader(user) {
           </div>
         `;
       } else if (isAuthor) {
-        const displayName = `${escapeHtml(user.pen_name || user.nickname || "")} 작가님`;
+        const displayName = `${escapeHtml(user.pen_name || user.nickname || '작가')} 작가님`;
         profileMenu.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
-            <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-creator')" style="display: flex; align-items: center; gap: 6px;">
+            <button class="btn btn-outline btn-sm author-profile-entry" onclick="switchWebNovelsView('view-creator')" style="display: flex; align-items: center; gap: 6px;">
               <i data-lucide="feather"></i>
               <span>${displayName}</span>
             </button>

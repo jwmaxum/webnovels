@@ -8,10 +8,13 @@
 // - 사이드바 및 모바일/PC 네비게이션 라우팅 연동
 // ============================================================
 
+let routeRevision = 0;
+
 /**
  * 1. SPA 메인 뷰 전환기 (switchWebNovelsView)
  */
 function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
+  routeRevision++;
   window.WebNovelsModules?.cancel();
   window.CreatorDraftEditor?.checkpoint();
   window.CreatorFiles?.reset();
@@ -135,6 +138,7 @@ window.switchWebNovelsView = switchWebNovelsView;
  * 2. 계층적 Semantic URL 라우터 해석기 (resolveRoute)
  */
 function resolveRoute(pathname, isInitial = false) {
+  routeRevision++;
   const route = new URL(pathname || window.location.href || '/', window.location.origin);
   const rawPath = route.pathname.toLowerCase();
   const hash = rawPath === '/' ? (window.location.hash || '').toLowerCase() : '';
@@ -249,19 +253,55 @@ function navigateTo(path, pushState = true) {
       window.history.pushState({ path }, '', path);
     } catch (e) {}
   }
-  resolveRoute(path, false);
+  return resolveRoute(path, false);
 }
 window.navigateTo = navigateTo;
+
+// One entry policy for password login, onboarding and a restored session.
+// Only the server-validated actor selects an account portal; names and cached roles do not.
+function openAccountHome({ restore = false } = {}) {
+  const actor = window.WebNovelsAuth?.getActor();
+  const route = new URL(window.location.href, window.location.origin);
+  const currentPath = route.pathname + route.search;
+  if (restore && (route.pathname !== '/' || route.hash || route.searchParams.has('auth') || !actor))
+    return resolveRoute(currentPath, true);
+  if (!actor) return;
+
+  const requestedPath = route.pathname === '/' && /^#(?:creator|author|admin)$/i.test(route.hash)
+    ? '/' + route.hash.slice(1).toLowerCase() : route.pathname;
+  const requestedPortal = (/^\/(?:creator|author)(?:\/|$)/i.test(requestedPath) && actor.author) ||
+    (/^\/admin(?:\/|$)/i.test(requestedPath) && actor.admin);
+  const destination = requestedPortal ? requestedPath + route.search :
+    actor.admin ? '/admin' : actor.author ? '/creator' : '/library';
+  // Readers keep the public home on restoration; explicit login opens their library.
+  if (restore && !actor.admin && !actor.author) return resolveRoute(currentPath, true);
+  if (restore) {
+    try { window.history.replaceState({ path: destination }, '', destination); } catch (e) {}
+    return resolveRoute(destination, true);
+  }
+  return navigateTo(destination);
+}
+window.openAccountHome = openAccountHome;
 
 /**
  * 4. 라우터 리스너 초기화 (initRouteHandler)
  */
-function initRouteHandler() {
-  resolveRoute(window.location.pathname + window.location.search, true);
+function initRouteHandler({ deferPublic = false } = {}) {
+  const route = new URL(window.location.href, window.location.origin);
+  const actor = window.WebNovelsAuth?.getActor();
+  const portal = /^\/(?:creator|author|admin)(?:\/|$)/i.test(route.pathname) ||
+    (route.pathname === '/' && !route.hash && !route.searchParams.has('auth') && (actor?.author || actor?.admin));
+  const revision = routeRevision;
+  // Legacy public detail/reading routes need the catalog. A later navigation,
+  // including a still-loading portal, must win over this deferred initial route.
+  const initialRoute = deferPublic && !portal ? () => {
+    if (routeRevision === revision) return openAccountHome({ restore: true });
+  } : openAccountHome({ restore: true });
 
   window.addEventListener('popstate', () => {
     resolveRoute(window.location.pathname + window.location.search, false);
   });
+  return initialRoute;
 }
 window.initRouteHandler = initRouteHandler;
 
