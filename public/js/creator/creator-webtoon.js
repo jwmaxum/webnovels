@@ -104,5 +104,6 @@
   const m=c.snapshot.webtoon,panels=(m?.assetIds||[]).flatMap(id=>result.assets.find(a=>a.id===id&&a.state==='READY')?.panels||[]);
   return window.ReaderWebtoon.render(root,panels,{valid,load:(panel,format,signal)=>window.WebNovelsAuth.api(url(c,'panel',panel.assetId)+'&panelId='+panel.id+'&format='+format,{responseType:'blob',signal})});
  }
- window.CreatorWebtoon={empty,mount,reset,renderPreview,move,select,hasPending:()=>!!context&&(context.batch||files.size>0||running.size>0)};
+ function focusUpload(){const root=$('creatorWebtoon');root?.scrollIntoView?.({block:'start'});const input=root?.querySelector?.('input[type="file"]');if(input&&!input.disabled){input.focus();input.click();}else{const text='작품을 선택하고 이미지 업로드 연결 상태를 확인해주세요.';message(text);window.showToast?.(text);}}
+ window.CreatorWebtoon={empty,mount,reset,renderPreview,move,select,focusUpload,hasPending:()=>!!context&&(context.batch||files.size>0||running.size>0)};
 })();

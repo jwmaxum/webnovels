@@ -1,17 +1,45 @@
 import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';import * as fflate from 'fflate';import {DOMParser} from '@xmldom/xmldom';import {hwpx,paragraph} from './fixtures/hwpx-fixtures.mjs';import {resolve} from 'node:path';
 const code=await Promise.all(['file-codec.js','file-import-queue.js','creator-files.js'].map(p=>readFile('public/js/creator/'+p,'utf8')));
 function setup(){
- const elements=new Map(),saved=new Map(),calls=[];let uid='u',id=0;
+ const elements=new Map(),saved=new Map(),calls=[],nav=['import','cover','export'].map(fileSection=>({dataset:{fileSection},setAttribute(k,v){this[k]=v;}}));let uid='u',id=0;
  function element(tag='div'){return {tag,children:[],value:'',textContent:'',disabled:false,checked:false,style:{},append(...items){this.children.push(...items);},replaceChildren(){this.children=[];this.textContent='';},setAttribute(){},click(){calls.push({download:this.download});},getContext:()=>({clearRect(){},fillRect(){},drawImage(bitmap){calls.push({bitmap});}})};}
  const get=id=>{if(!elements.has(id))elements.set(id,element());return elements.get(id);};
  const c={WEBNOVELS_CONFIG:{authorFilesEnabled:true,authorRecoveryEnabled:true},fflate,DOMParser,TextDecoder,TextEncoder,btoa,Blob,URL,Uint8Array,crypto:{randomUUID:()=>String(++id)},setTimeout(){},
-  document:{readyState:'complete',getElementById:get,createElement:element,createTextNode:text=>({text})},openModal(){},closeModal(){},confirm:()=>true,
+  document:{readyState:'complete',getElementById:get,createElement:element,createTextNode:text=>({text}),querySelectorAll:()=>nav},openModal(){},closeModal(){},confirm:()=>true,
   DraftStore:{saveFileJob:async j=>saved.set(j.key,structuredClone(j)),fileJobs:async(u,w)=>[...saved.values()].filter(j=>j.userId===u&&j.workId===w)},
   WebNovelsAuth:{getActor:()=>uid?{userId:uid,author:{id:1,status:'APPROVED'}}:null,api:async(path,options)=>{calls.push({path,options});if(path.startsWith('/api/v2/creator/works/'))return {work:{id:'10',title:'작품',version:'1'}};if(path.includes('/import?'))return {draft:{id:'imported'}};return {files:[]};}},
   CreatorDraftEditor:{getFileContext:()=>({userId:uid,workId:'10',id:'d',seq:3}),replaceFromFile:async(s,e)=>calls.push({replace:s,expected:e})}};
- c.window=c;vm.createContext(c);code.forEach((s,i)=>vm.runInContext(s,c,{filename:resolve('public/js/creator/'+['file-codec.js','file-import-queue.js','creator-files.js'][i])}));return {c,get,saved,calls,setUser:x=>uid=x};
+ c.window=c;vm.createContext(c);code.forEach((s,i)=>vm.runInContext(s,c,{filename:resolve('public/js/creator/'+['file-codec.js','file-import-queue.js','creator-files.js'][i])}));return {c,get,saved,calls,nav,setUser:x=>uid=x};
 }
 const file=(name,content)=>({name,size:new TextEncoder().encode(content).length,arrayBuffer:async()=>new TextEncoder().encode(content).buffer});
+
+test('cover shortcut opens only the cover section; switching tools preserves import jobs without executing them',async()=>{
+ const s=setup();await s.c.CreatorFiles.open('10');await s.get('creatorFileInput').onchange({target:{files:[file('원고.txt','보존할 내용')]}});
+ const original=[...s.saved.values()][0];
+ await s.c.CreatorFiles.open('10',{section:'cover'});
+ assert.equal(s.get('creatorFileSection-cover').hidden,false);assert.equal(s.get('creatorFileSection-import').hidden,true);
+ assert.equal(s.get('creatorImportList').children.length,0);assert.equal(s.nav[1]['aria-pressed'],'true');
+ await s.nav[0].onclick();assert.equal(s.get('creatorFileSection-import').hidden,false);
+ assert.equal(s.get('creatorImportList').children.length,1);
+ assert.deepEqual([...s.saved.values()][0],original);assert.ok(!s.calls.some(c=>c.options?.method==='POST'));
+ await s.nav[2].onclick();assert.equal(s.get('creatorFileSection-export').hidden,false);assert.equal(s.get('creatorFileSection-cover').hidden,true);
+});
+
+test('an unavailable cover connection gives visible feedback without opening or writing files',async()=>{
+ const s=setup(),messages=[];s.c.WEBNOVELS_CONFIG.authorFilesEnabled=false;s.c.showToast=t=>messages.push(t);
+ await s.c.CreatorFiles.open('10',{section:'cover'});
+ assert.match(messages[0],/아직 활성화되지/);assert.equal(s.calls.length,0);
+});
+
+test('completed cover opens the visible stored-file section when checking the new thumbnail',async()=>{
+ const s=setup();s.saved.set('cover',{key:'cover',userId:'u',workId:'10',kind:'cover',state:'COMMITTED',filename:'표지.png'});
+ const api=s.c.WebNovelsAuth.api;
+ s.c.WebNovelsAuth.api=async(p,o)=>p.includes('/files?')?{files:[{state:'COMMITTED',fileId:'original',derivativeId:'thumbnail',filename:'표지.png'}]}:api(p,o);
+ await s.c.CreatorFiles.open('10',{section:'cover'});
+ const button=s.get('creatorImportList').children[0].children.find(n=>n.textContent==='새 표지 확인');await button.onclick();
+ assert.equal(s.get('creatorFileSection-export').hidden,false);
+ assert.ok(s.get('creatorOriginalFiles').children.some(n=>n.textContent.startsWith('표지 미리보기:')));
+});
 test('HWPX import requires preview confirmation, keeps exact original bytes and defaults to a new draft',async()=>{
  const s=setup(),bytes=hwpx({sections:[paragraph('한글 😀')+'<hp:p><hp:run><hp:tbl>'+paragraph('제외')+'</hp:tbl></hp:run></hp:p>']});await s.c.CreatorFiles.open('10');
  await s.get('creatorFileInput').onchange({target:{files:[{name:'원고.hwpx',size:bytes.length,arrayBuffer:async()=>bytes.buffer}]}});

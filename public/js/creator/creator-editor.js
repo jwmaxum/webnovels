@@ -12,7 +12,10 @@
   const canonical=value=>JSON.stringify((function ordered(v){return Array.isArray(v)?v.map(ordered):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,ordered(v[k])])):v;})(value));
   const safe=fn=>(...args)=>Promise.resolve().then(()=>fn(...args)).catch(error);
   function data(){return {...Object.fromEntries(Object.entries(fields).map(([k,id])=>[k,$(id)?.value||''])),...(window.CreatorRichEditor?.snapshot()||{}),...(engine.current?.snapshot.webtoon?{webtoon:engine.current.snapshot.webtoon,content:''}:{})};}
-  function form(value={},readOnly=engine.current?.lifecycle!=='ACTIVE'){for(const [k,id]of Object.entries(fields))if($(id)){$(id).value=value[k]||'';$(id).disabled=readOnly;}const work=works.find(w=>w.id===engine.current?.workId);window.CreatorRichEditor?.mount(value,readOnly,work?.content_type);window.CreatorWebtoon?.mount(work,engine.current,readOnly);counts();}
+  function form(value={},readOnly=engine.current?.lifecycle!=='ACTIVE'){for(const [k,id]of Object.entries(fields))if($(id)){$(id).value=value[k]||'';$(id).disabled=readOnly;}const work=works.find(w=>w.id===engine.current?.workId);window.CreatorRichEditor?.mount(value,readOnly,work?.content_type);window.CreatorWebtoon?.mount(work,engine.current,readOnly);
+    if($('btnStudioImages')){$('btnStudioImages').hidden=work?.content_type!=='WEBTOON';$('btnStudioImages').disabled=readOnly;}
+    if($('btnStudioCover'))$('btnStudioCover').disabled=!work||work.moderation_state!=='CLEAR'||!!work.trashed_at;
+    counts();}
   function counts(){const s=$('newEpContent')?.value||'';if($('creatorWordCount'))$('creatorWordCount').textContent=`공백 포함 ${s.length}자 · 제외 ${s.replace(/\s/g,'').length}자`;if($('creatorWordProgress'))$('creatorWordProgress').style.width=Math.min(100,s.length/45)+'%';}
   async function api(action,args) {
     if(args.userId && actor()?.userId!==args.userId)throw Object.assign(Error('SESSION_CHANGED'),{code:'SESSION_CHANGED'});
@@ -227,6 +230,9 @@
     const bind=(id,fn)=>$(id)?.addEventListener('click',safe(fn));
     bind('btnDraftDownload',()=>download());bind('btnLegacyDraftExport',exportLegacy);bind('btnDraftNew',()=>openWork(engine.current?.workId||$('newEpWorkSelect').value,null,{fresh:true}));
     bind('btnDraftRefresh',()=>listCopies());bind('btnSaveDraftVersion',async()=>{const c=engine.current;if(c)await DraftStore.backup(c,c.snapshot,'manual');});
+    bind('btnDraftLoad',async()=>{if(!engine.current){toast('작품을 먼저 선택해주세요.');$('newEpWorkSelect')?.focus();return;}$('draftCopyDetails').open=true;await listCopies();$('draftCopyDetails').scrollIntoView?.({block:'nearest'});});
+    bind('btnStudioCover',()=>{const c=engine.current;if(c)return window.CreatorFiles?.open(c.workId,{section:'cover'});toast('작품을 먼저 선택해주세요.');});
+    bind('btnStudioImages',()=>window.CreatorWebtoon?.focusUpload());
     $('draftCopyDetails')?.addEventListener('toggle',()=>{if($('draftCopyDetails').open)safe(()=>listCopies())();});
     bind('btnDraftSettings',async()=>{const c=engine.current;if(!c)return;stop();composing=false;await engine.checkpoint();window.navigateTo?.('/creator/works/'+c.workId+'/settings');});
     bind('btnRestoreDraftVersion',openDiffModal);bind('btnConfirmRestoreRevision',async()=>{if(selected){await engine.replace(selected);form(engine.current.snapshot);schedule();window.closeModal?.('modalDraftDiff');}});

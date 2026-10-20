@@ -7,6 +7,7 @@
   const previewNotice='저장본 미리보기는 사용할 수 있습니다. 공개 발행은 서비스 연결 준비 중이며 현재 원고는 비공개로 보존됩니다.';
   function refreshAvailability(){
     if($('btnOpenPublication'))$('btnOpenPublication').textContent=canPublish()?'미리보기 후 발행':'원고 미리보기';
+    if($('btnSchedulePublication')){$('btnSchedulePublication').disabled=!canPublish();$('btnSchedulePublication').title=canPublish()?'저장한 원고를 확인하고 발행 시각을 선택합니다.':previewNotice;}
     if($('creatorPublicationNotice'))$('creatorPublicationNotice').textContent=canPublish()?'':previewNotice;
   }
   const pendingKey = (user,id) => 'creator-publication:' + user + ':' + id;
@@ -124,7 +125,7 @@
     if(!rows.length)list.textContent='아직 공개하거나 예약한 회차가 없습니다.';
     return rows;
   }
-  async function open(workId) {
+  async function open(workId,{mode='NOW'}={}) {
     if(busy)throw Error('PUBLICATION_IN_PROGRESS');
     const turn=++epoch,user=actor()?.userId;
     if(!user||actor()?.author?.status!=='APPROVED')throw Error('AUTHOR_REQUIRED');
@@ -195,6 +196,7 @@
     $('publicationNowLabel').textContent=context.episodeId?'수정 검토 요청 (승인 후 반영)':'지금 무료 발행 (사전 검수 없음)';
     $('publicationScheduledLabel').textContent=context.episodeId?'공개본 수정은 승인 시 반영됩니다':'예약 무료 발행';
     const scheduled=document.querySelector('input[name="publicationMode"][value="SCHEDULED"]');if(scheduled)scheduled.disabled=!!context.episodeId;
+    if(mode==='SCHEDULED'&&!previewOnly&&!context.episodeId){document.querySelector('input[name="publicationMode"][value="NOW"]').checked=false;scheduled.checked=true;$('publicationScheduleFields').hidden=false;$('publicationCommit').textContent='예약 발행';}
     $('publicationRights').checked=false;
     checklist();
     message(previewOnly?previewMessage:'미리보기는 이 계정의 저장된 초안 버전입니다. 공개 전 내용을 확인하세요.');
@@ -247,6 +249,7 @@
   }
   function init(){
     refreshAvailability();
+    if($('btnSchedulePublication'))$('btnSchedulePublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(!c){window.showToast?.('작품을 선택하고 원고를 작성해주세요.');return;}return open(c.workId,{mode:'SCHEDULED'}).catch(e=>{if(actor()?.userId===user){message(errorText(e));window.showToast?.(errorText(e));}});};
     $('btnOpenPublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(!c){window.showToast?.('작품을 선택하고 원고를 작성해주세요.');return;}return open(c.workId).catch(e=>{if(actor()?.userId===user&&e.message!=='SESSION_CHANGED'){const text=(e.message==='AUTHOR_PUBLISH_NOT_ACTIVATED'?'최초 발행은 관리자 사전 검수 없이 진행합니다. 현재 공개 서비스 연결이 준비되지 않아 발행할 수 없습니다. 원고 저장은 계속 이용할 수 있습니다.':errorText(e));message(text);window.showToast?.(text);const notice=$('creatorDraftError');if(notice)notice.textContent=text;}});};
     $('publicationDesktop').onclick=()=>$('publicationPreview').classList.remove('is-mobile');
     $('publicationMobile').onclick=()=>$('publicationPreview').classList.add('is-mobile');

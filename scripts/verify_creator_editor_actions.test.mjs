@@ -16,7 +16,7 @@ const gate=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {prom
 
 // Deliberately limited DOM adapter built from the shipped HTML, not invented IDs.
 // This verifies wiring in Node; native browser/IndexedDB acceptance is separate.
-function setup({publish=true,workspace=false}={}){
+function setup({publish=true,workspace=false,contentType='NOVEL'}={}){
   const ids=new Map(),radios=[],heads=new Map(),backups=[],calls=[],storage=new Map(),remotes=new Map(),legacy=[];
   let uuid=0,actor={userId:'user-a',author:{id:'101',status:'APPROVED'},authorWorkspaceReady:workspace};
   const node=(tag='div',attrs=[])=>{
@@ -42,7 +42,7 @@ function setup({publish=true,workspace=false}={}){
   }
   const ast=parse(html);for(const child of ast.childNodes)convert(child);
   const get=id=>ids.get(id)||null;
-  const work=id=>({id,title:'작품 '+id,description:'소개',content_type:'NOVEL',rating:'ALL',ai_usage_type:'NONE',moderation_state:'CLEAR',publication_missing:[]});
+  const work=id=>({id,title:'작품 '+id,description:'소개',content_type:contentType,rating:'ALL',ai_usage_type:'NONE',moderation_state:'CLEAR',publication_missing:[]});
   const fixture={localError:false,legacyError:false,listError:false,listGate:null,publicationListError:false};
   const store={
     save:async c=>heads.set(c.userId+':'+c.id+':'+c.branch,clone(c)),
@@ -143,6 +143,47 @@ test('copy sources show empty states and refresh when details is opened',async()
   s.remotes.set('server',{revision:'2',title:'저장된 원고',content:'body',authorComment:'',lifecycle:'ACTIVE'});
   s.get('draftCopyDetails').open=true;await s.get('draftCopyDetails').emit('toggle');await settle();
   assert.ok(s.buttons().some(b=>b.textContent.includes('서버 원고: 저장된 원고')));
+});
+
+test('load shortcut opens saved manuscripts without replacing the unsaved branch; cover targets the selected work',async()=>{
+  const s=setup();await s.editor.openWork('10');await s.type('newEpContent','아직 저장하지 않은 작업');
+  const before=clone(s.editor.getFileContext()),opens=[];
+  s.context.CreatorFiles={open:(...args)=>opens.push(args)};
+  s.remotes.set('saved',{revision:'2',title:'저장한 원고',content:'서버 사본',lifecycle:'ACTIVE'});
+  await s.get('btnDraftLoad').emit('click');assert.equal(s.get('draftCopyDetails').open,true);
+  assert.ok(s.buttons().some(b=>b.textContent.includes('저장한 원고')));
+  assert.equal(s.editor.getFileContext().id,before.id);assert.equal(s.get('newEpContent').value,'아직 저장하지 않은 작업');
+  assert.equal(s.calls.filter(c=>c.options?.method==='PUT').length,0);
+  await s.get('btnStudioCover').emit('click');assert.deepEqual(clone(opens),[['10',{section:'cover'}]]);
+  assert.equal(s.get('btnStudioImages').hidden,true);
+});
+
+test('schedule shortcut saves the exact current draft and opens scheduling without sending a publication',async()=>{
+  const s=setup();await s.editor.openWork('10');await s.type('newEpTitle','예약 원고');await s.type('newEpContent','예약할 내용');
+  await s.get('btnSchedulePublication').emit('click');
+  assert.equal(s.get('modalCreatorPublication').hidden,false);assert.equal(s.get('publicationScheduleFields').hidden,false);
+  assert.equal(s.context.document.querySelector('input[name="publicationMode"][value="SCHEDULED"]').checked,true);
+  assert.equal(s.get('publicationCommit').textContent,'예약 발행');
+  assert.equal(s.remotes.get(s.editor.getFileContext().id).content,'예약할 내용');
+  assert.equal(s.calls.filter(c=>c.path.includes('/publish/')).length,0);
+  assert.equal(s.get('publicationRights').checked,false);
+});
+
+test('image shortcut is limited to webtoon drafts and forwards to the existing ordered uploader',async()=>{
+  const s=setup({contentType:'WEBTOON'});let uploads=0;
+  s.context.CreatorWebtoon={mount(){},focusUpload(){uploads++;},reset(){}};
+  await s.editor.openWork('10');assert.equal(s.get('btnStudioImages').hidden,false);
+  await s.get('btnStudioImages').emit('click');assert.equal(uploads,1);
+  assert.equal(s.calls.filter(c=>c.options?.method==='PUT').length,0);
+  s.editor.onAuthLost();assert.equal(s.get('btnStudioImages').hidden,true);
+});
+
+for(const config of [{publish:false},{workspace:true}])test(`schedule shortcut cannot bypass runtime publication limits ${JSON.stringify(config)}`,async()=>{
+  const s=setup(config);await s.editor.openWork('10');await s.type('newEpContent','비공개 보존');
+  assert.equal(s.get('btnSchedulePublication').disabled,true);
+  await s.get('btnSchedulePublication').emit('click');await s.get('publicationCommit').emit('click');
+  assert.equal(s.get('publicationControls').hidden,true);
+  assert.equal(s.calls.filter(c=>c.path.includes('/publish/')).length,0);
 });
 
 test('IDB source errors do not block server list; server error does not block device and legacy copies',async()=>{

@@ -205,7 +205,7 @@ function resolveRoute(pathname, isInitial = false) {
 
   // 6. 작가센터 경로 (/author 또는 /creator)
   if (parts[0] === 'author' || parts[0] === 'creator' || hash === '#author' || hash === '#creator') {
-    const subTab = parts[1] || ((window.CreatorDashboard?.active() || window.CreatorOperations?.active()) ? 'home' : 'works');
+    const subTab = parts[1] || 'works';
     switchWebNovelsView('view-creator', null, false);
     if (currentActiveView !== 'view-creator') return;
     if (subTab === 'works' && parts[2]) { switchCreatorTab('works', false); return; }

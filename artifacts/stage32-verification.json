@@ -1,0 +1,115 @@
+{
+  "checkedAt": "2026-10-20T06:48:28.934Z",
+  "sourceBaseCommit": "68b5484db14be63d8bd58a8605be066d50e674a6",
+  "codeVerification": "PASS",
+  "build": {
+    "command": "npm run build:compile",
+    "result": "PASS"
+  },
+  "types": {
+    "command": "tsc --noEmit",
+    "result": "PASS"
+  },
+  "lint": {
+    "status": "NOT_CONFIGURED",
+    "syntaxFiles": 13,
+    "syntaxResult": "PASS"
+  },
+  "checks": [
+    {
+      "script": "test:naming",
+      "status": 0,
+      "durationMs": 6424
+    },
+    {
+      "script": "test:auth",
+      "status": 0,
+      "durationMs": 16460
+    },
+    {
+      "script": "test:creator-works",
+      "status": 0,
+      "durationMs": 36178
+    },
+    {
+      "script": "test:drafts",
+      "status": 0,
+      "durationMs": 15659
+    },
+    {
+      "script": "test:files",
+      "status": 0,
+      "durationMs": 26963
+    },
+    {
+      "script": "test:publication",
+      "status": 0,
+      "durationMs": 31382
+    },
+    {
+      "script": "test:stage15",
+      "status": 0,
+      "durationMs": 4906
+    },
+    {
+      "script": "test:stage16",
+      "status": 0,
+      "durationMs": 33852
+    },
+    {
+      "script": "test:stage18",
+      "status": 0,
+      "durationMs": 16006
+    },
+    {
+      "script": "test:launch",
+      "status": 0,
+      "durationMs": 59083
+    },
+    {
+      "script": "test:author-publishing",
+      "status": 0,
+      "durationMs": 10313
+    },
+    {
+      "script": "test:stage32",
+      "status": 0,
+      "durationMs": 19238
+    },
+    {
+      "script": "test:p0",
+      "status": 0,
+      "durationMs": 5761
+    },
+    {
+      "script": "test:cloudflare-bundle",
+      "status": 0,
+      "durationMs": 5122
+    }
+  ],
+  "followup": {
+    "command": "node --test scripts/verify_creator_files_ui.test.mjs",
+    "passed": 10,
+    "failed": 0,
+    "reason": "Verify new-cover link reveals its destination after file tools were separated"
+  },
+  "coverage": {
+    "status": "NO_CONFIGURED_REPOSITORY_COVERAGE_GATE",
+    "aggregatePercent": null
+  },
+  "security": {
+    "changedFileSecretFindings": 0,
+    "review": "Existing verified Author identity, ownership, revision and publication permission gates reused; no remote apply path in rehearsal command"
+  },
+  "diffReview": "PASS",
+  "browserAcceptance": false,
+  "localhostExecuted": false,
+  "productionDatabaseApplied": false,
+  "flagsChanged": false,
+  "serviceLaunch": "NO_GO",
+  "remaining": [
+    "HOSTED_RESTORE_ACCEPTANCE",
+    "LEGACY_CONTENT_CONFLICT_AND_NEW_PUBLICATION_SCOPE",
+    "STORAGE_IMAGES_AND_SCHEDULER_ACCEPTANCE"
+  ]
+}

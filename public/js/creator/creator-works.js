@@ -130,9 +130,9 @@
       ${work.moderation_state==='RESTRICTED'?`<p role="alert">운영 제한: ${e(work.moderation_reason)}</p>`:''}
       <p>최초 공개 전 확인: ${work.publication_missing?.length?e(work.publication_missing.join(', ')):'기본 정보 입력 완료 (게시 검증은 별도)'}</p></div></header>
       <section aria-label="첫 연재 준비"><h4>첫 연재 준비</h4>${window.CreatorReadiness?.render(window.CreatorReadiness.workItems(work),true)||''}</section>
-      <nav class="cw-toolbar" aria-label="작품 관리">${nav}${workspace?'':'<button type="button" class="btn btn-outline" id="cwFiles">파일·표지·내보내기</button><button type="button" class="btn btn-outline" id="cwPublications">공개·예약 회차</button>'}</nav>${body}<p id="cwMessage" role="status"></p>
-      <div class="cw-danger"><p>휴지통 이동·비공개 전환 시 공개가 중단되고 대기 중인 예약은 취소됩니다. 회차·원고·파일은 보존됩니다. 복구해도 비공개이며 예약은 자동 재개되지 않습니다.</p>
-      <button type="button" class="btn btn-outline" id="cwTrash">${work.trashed_at?'비공개로 복구':'휴지통으로 이동'}</button></div>
+      <nav class="cw-toolbar" aria-label="작품 관리">${nav}<button type="button" class="btn btn-outline" id="cwCover">썸네일 변경</button>${workspace?'':'<button type="button" class="btn btn-outline" id="cwFiles">원고 가져오기</button><button type="button" class="btn btn-outline" id="cwPublications">발행·예약 관리</button>'}</nav>${body}<p id="cwMessage" role="status"></p>
+      <details class="cw-danger"><summary>삭제·비공개 관리</summary><p>발행 이력이 있는 작품의 변경은 관리자 승인 후 반영됩니다. 회차·원고·파일은 보존되며, 복구 시 예약은 자동 재개되지 않습니다.</p>
+      <button type="button" class="btn btn-outline" id="cwTrash">${work.trashed_at?'비공개로 복구':'휴지통으로 이동'}</button></details>
       <button type="button" class="btn btn-ghost" id="cwReload">최신 내용 불러오기 (입력 초기화)</button>`;
   }
   async function loadDetail(id,tab='episodes') {
@@ -152,6 +152,7 @@
       if(tab==='settings'&&result.distributionEnabled===true)window.CreatorDistribution?.mount(root().querySelector('#cwDistributionPanel'),current);
       const drafts=root().querySelector('#cwDrafts');if(drafts)drafts.onclick=()=>window.CreatorDraftEditor.openWork(id);
       const files=root().querySelector('#cwFiles');if(files)files.onclick=()=>window.CreatorFiles.open(id);
+      const coverButton=root().querySelector('#cwCover');if(coverButton)coverButton.onclick=()=>window.CreatorFiles.open(id,{section:'cover'});
       const publications=root().querySelector('#cwPublications');if(publications)publications.onclick=()=>window.CreatorPublications.open(id);
       root().querySelectorAll('[data-ready-action]').forEach(button=>button.onclick=()=>{
         const action=button.dataset.readyAction;

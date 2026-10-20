@@ -29,6 +29,8 @@ window.switchCreatorTab = function(tabKey, shouldPushState = true) {
   document.querySelectorAll('#creatorTabsBar [data-creator-tab]').forEach(b => b.classList.remove('active'));
   const activeBtn = document.querySelector(`#creatorTabsBar [data-creator-tab="${tabKey}"]`);
   if (activeBtn) activeBtn.classList.add('active');
+  const more = document.getElementById('creatorMoreNav');
+  if (more) more.open = ['home','earnings','profile'].includes(tabKey);
 
   document.querySelectorAll('.creator-tab-panel').forEach(p => p.style.display = 'none');
   const targetPanel = document.getElementById(`creatorTab-${tabKey}`);
@@ -94,12 +96,12 @@ window.fetchCreatorDashboardData = async function({loadContent=true}={}) {
   if (/^\/(creator|author)\/works(?:\/|$)/.test(location.pathname))
     return window.CreatorWorks.loadFromRoute();
   if (window.CreatorDashboard?.active()) {
-    const section=/^\/(creator|author)\/([^/]+)/.exec(location.pathname)?.[2]||'home';
+    const section=/^\/(creator|author)\/([^/]+)/.exec(location.pathname)?.[2]||'works';
     if(section==='episodes')return;
     return window.switchCreatorTab(section,false);
   }
   if (window.CreatorOperations?.active() && /^\/(creator|author)\/?$/.test(location.pathname))
-    return window.CreatorOperations.home();
+    return window.switchCreatorTab('works',false);
 };
 async function handleCreatorSettlementReq() {
   showToast('정산 신청 기능은 현재 사용할 수 없습니다.');

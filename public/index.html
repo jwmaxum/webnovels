@@ -39,7 +39,7 @@
   <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
-  <link rel="stylesheet" href="/styles.css?v=126">
+  <link rel="stylesheet" href="/styles.css?v=132">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 <link rel="stylesheet" href="/css/growth.css?v=121">
 <link rel="stylesheet" href="/css/policies.css?v=20261011">
@@ -653,10 +653,13 @@
 
           <!-- Primary author navigation; legacy routes remain addressable. -->
           <div class="cdg-genre-bar mb-4" id="creatorTabsBar">
-            <button class="cdg-genre-pill active" data-creator-tab="home">대시보드</button>
-            <button class="cdg-genre-pill" data-creator-tab="works">내 작품</button>
-            <button class="cdg-genre-pill" data-creator-tab="earnings">수익 내역</button>
-            <button class="cdg-genre-pill" data-creator-tab="profile">내 정보·정산 계좌</button>
+            <button type="button" class="cdg-genre-pill active" data-creator-tab="works">내 작품</button>
+            <button type="button" class="cdg-genre-pill" data-creator-tab="new-ep">원고 작성</button>
+            <details class="studio-more-nav" id="creatorMoreNav"><summary>내 정보·활동</summary><div>
+              <button type="button" class="cdg-genre-pill" data-creator-tab="home">활동 요약</button>
+              <button type="button" class="cdg-genre-pill" data-creator-tab="earnings">수익 내역</button>
+              <button type="button" class="cdg-genre-pill" data-creator-tab="profile">내 정보·정산 계좌</button>
+            </div></details>
           </div>
           <div class="creator-tab-panel" id="creatorTab-earnings" style="display:none;">
             <div class="card glass-panel p-4" id="creatorEarningsContent"></div>
@@ -699,26 +702,27 @@
                 <h3 style="margin:0;"><i data-lucide="file-plus" style="color:var(--cdg-pink);"></i> 원고 작성</h3>
                 <button type="button" id="btnDraftFocus" class="btn btn-outline">집중 편집</button>
               </div>
-              <p class="text-muted small mb-4">원고는 비공개로 저장됩니다. 작품과 원고를 선택해 이어 쓰거나 기기 사본을 복구할 수 있습니다.</p>
+              <p class="text-muted small mb-4">작품을 선택하고 바로 작성하세요. 저장한 원고는 불러오기로 이어 쓸 수 있습니다.</p>
 
               <form id="formCreateEpisode" onsubmit="handleCreateEpisodeSubmit(event)">
                 <div class="form-group mb-3">
-                  <label class="small text-muted mb-1 block">내 연재 작품 선택 (실제 DB 연동)</label>
+                  <label for="newEpWorkSelect" class="small text-muted mb-1 block">작성할 작품</label>
                   <select id="newEpWorkSelect" class="form-input" style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
                     <!-- Injected dynamically by author's real works -->
                   </select>
                 </div>
-                <div class="form-group mb-3"><label for="newEpTitle">원고 제목</label><input id="newEpTitle" class="form-input" maxlength="200" autocomplete="off"></div>
-                <p id="draftIdentity" class="small text-muted"></p>
-                <div class="creator-editor-actions">
-                  <button type="button" id="btnDraftNew" class="btn btn-outline">새 원고</button>
-                  <button type="button" id="btnDraftRefresh" class="btn btn-outline">원고 목록 새로고침</button>
-                  <button type="button" id="btnDraftDownload" class="btn btn-outline">원고 다운로드</button>
-                  <button type="button" id="btnCreatorFiles" class="btn btn-outline">파일 가져오기·표지·내보내기</button>
-                  <button type="button" id="btnLegacyDraftExport" class="btn btn-outline">이전 편집기 원고 백업</button>
-                  <button type="button" id="btnDraftUndo" class="btn btn-outline">서식·복구 실행 취소</button>
+                <div class="studio-action-bar" role="group" aria-label="원고 관리">
+                  <button type="button" id="btnDraftNew" class="btn btn-outline">새로 작성</button>
+                  <button type="button" id="btnDraftLoad" class="btn btn-outline" aria-controls="draftCopyDetails">불러오기</button>
+                  <button type="submit" class="btn btn-primary" id="btnSubmitNewEpisode">저장</button>
+                  <button type="button" class="btn btn-outline" id="btnOpenPublication">발행</button>
+                  <button type="button" class="btn btn-outline" id="btnSchedulePublication">예약 발행</button>
+                  <button type="button" id="btnStudioCover" class="btn btn-outline">썸네일 변경</button>
+                  <button type="button" id="btnStudioImages" class="btn btn-outline" hidden>이미지 업로드</button>
                 </div>
-                <details id="draftCopyDetails"><summary>서버 원고·기기 사본·이전 편집기 원고</summary><div id="draftCopies" class="draft-copy-list"></div></details>
+                <div class="studio-save-state"><span id="creatorDraftStatus" class="creator-draft-status" role="status" aria-live="polite">원고를 선택해주세요</span><span class="text-muted small">저장한 원고는 발행 전까지 비공개입니다.</span></div>
+                <p id="creatorPublicationNotice" class="text-muted small" role="status"></p>
+                <details id="draftCopyDetails" class="studio-fold"><summary>저장한 원고 불러오기</summary><button type="button" id="btnDraftRefresh" class="btn btn-outline btn-sm">목록 새로고침</button><div id="draftCopies" class="draft-copy-list"></div></details>
                 <p id="creatorDraftError" role="alert"></p>
                 <div id="draftConflict" hidden role="alert">
                   <p>다른 곳에서 수정한 원고가 있습니다. 양쪽 사본은 보존됩니다.</p>
@@ -726,15 +730,15 @@
                   <button type="button" id="btnConflictLocal">현재 원고로 저장</button>
                   <button type="button" id="btnConflictRemote">서버 원고로 복구</button>
                 </div>
+                <div class="form-group mb-3"><label for="newEpTitle">회차 제목</label><input id="newEpTitle" class="form-input" maxlength="200" autocomplete="off"></div>
                 <div class="form-group mb-3 creator-editor-group">
                   <div class="creator-editor-label-row">
                     <label class="small text-muted mb-1 block" for="newEpContent">원고 본문</label>
-                    <span id="creatorDraftStatus" class="creator-draft-status" role="status" aria-live="polite">초안 준비됨</span>
                   </div>
                   <div class="creator-editor-toolbar" aria-label="원고 작성 도구">
                     <span id="creatorWordCount" class="creator-word-count">공백 포함 0자 · 제외 0자 · 0문단</span>
                     <span class="creator-word-goal" aria-label="권장 분량">권장 4,500~5,500자</span>
-                    <div class="creator-editor-actions">
+                    <details class="studio-format-more"><summary>서식·버전 도구</summary><div class="creator-editor-actions">
                       <div class="creator-format-group" role="group" aria-label="서식 정돈 도구">
                         <button type="button" class="btn btn-ghost btn-sm btn-format-tool" id="btnFormatIndent" title="각 문단 첫머리 들여쓰기 정돈"><i data-lucide="indent"></i> 들여쓰기</button>
                         <button type="button" class="btn btn-ghost btn-sm btn-format-tool" id="btnFormatDialogue" title="대화문 앞뒤 빈 줄 정돈"><i data-lucide="message-square"></i> 대화문</button>
@@ -744,7 +748,7 @@
                         <button type="button" class="btn btn-ghost btn-sm" id="btnSaveDraftVersion"><i data-lucide="bookmark-plus"></i> 버전 저장</button>
                         <button type="button" class="btn btn-ghost btn-sm" id="btnRestoreDraftVersion"><i data-lucide="history"></i> 버전 비교·복구</button>
                       </div>
-                    </div>
+                    </div></details>
                   </div>
                   <div class="creator-word-progress" aria-hidden="true"><span id="creatorWordProgress"></span></div>
                   <section id="creatorRichEditor" hidden aria-label="Word 서식 원고 편집기">
@@ -768,12 +772,17 @@
                 </div>
 
                 <p class="creator-publish-policy">새 회차는 작가가 직접 발행합니다. 이미 발행된 작품의 수정·삭제는 관리자 승인 후 반영됩니다.</p>
-                <button type="submit" class="btn btn-outline" id="btnSubmitNewEpisode">비공개 저장</button>
-                <button type="button" class="btn btn-primary" id="btnOpenPublication">미리보기 후 발행</button>
-                <button type="button" class="btn btn-outline" id="btnDraftSettings">작품 정보·연재 방식 설정</button>
-                <p id="creatorPublicationNotice" class="text-muted small" role="status"></p>
-                <div id="creatorDraftChecklist" aria-label="원고 준비 상태"></div>
-                <p class="text-muted small">초안 저장은 비공개입니다. 게시 전 저장 버전·작품 정보·권리를 다시 확인합니다.</p>
+                <details class="studio-fold"><summary>작품 설정·파일·백업</summary>
+                  <div class="creator-editor-actions">
+                    <button type="button" class="btn btn-outline" id="btnDraftSettings">작품 정보</button>
+                    <button type="button" id="btnCreatorFiles" class="btn btn-outline">원고 파일 가져오기</button>
+                    <button type="button" id="btnDraftDownload" class="btn btn-outline">원고 다운로드</button>
+                    <button type="button" id="btnLegacyDraftExport" class="btn btn-outline">이전 원고 백업</button>
+                    <button type="button" id="btnDraftUndo" class="btn btn-outline">서식·복구 실행 취소</button>
+                  </div>
+                  <p id="draftIdentity" class="small text-muted"></p>
+                  <div id="creatorDraftChecklist" aria-label="원고 준비 상태"></div>
+                </details>
               </form>
             </div>
           </div>
@@ -2439,8 +2448,8 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=126"></script>
-  <script src="/js/core/router.js?v=125"></script>
+  <script src="/js/core/role-modules.js?v=132"></script>
+  <script src="/js/core/router.js?v=132"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
   <script src="/js/reader/reader-content.js?v=124"></script>
@@ -2457,14 +2466,21 @@
       <div class="modal-header"><h3 id="creatorFilesWorkTitle">작품 파일 관리</h3><button type="button" class="modal-close" aria-label="파일 관리 닫기">×</button></div>
       <div class="modal-body">
         <p id="creatorFilesMessage" role="status" aria-live="polite"></p>
+        <nav class="studio-file-tabs" aria-label="작품 파일 작업">
+          <button type="button" class="btn btn-outline" data-file-section="import" aria-pressed="true">원고 가져오기</button>
+          <button type="button" class="btn btn-outline" data-file-section="cover" aria-pressed="false">썸네일 변경</button>
+          <button type="button" class="btn btn-outline" data-file-section="export" aria-pressed="false">백업·다운로드</button>
+        </nav>
+        <section id="creatorFileSection-import">
         <h4>원고 가져오기</h4>
         <p>TXT·DOCX·HWPX 파일을 선택해 제목·순서·변환 결과를 확인하세요. 파일당 2MiB, 본문 200,000자, 한 번에 20개까지 가능합니다. HWPX는 평문으로 가져오며 표·그림·서식 등 누락 경고를 확인해주세요. 암호화·스크립트 문서는 지원하지 않습니다. HWP 파일은 한글에서 HWPX 또는 TXT로 저장해주세요.</p>
         <div id="creatorFileDrop" class="creator-file-drop"><label for="creatorFileInput">TXT·DOCX·HWPX 원고를 놓거나 선택하세요</label><input type="file" id="creatorFileInput" accept=".txt,.docx,.hwpx" multiple></div>
         <p>새 비공개 초안으로 저장합니다. 저장 중 실패한 파일은 같은 요청으로 재시도합니다. 동일 파일을 다시 선택하면 별도의 새 초안으로 가져옵니다.</p>
         <button type="button" id="creatorImportRun" class="btn btn-primary">확인한 파일 저장·재시도</button>
         <button type="button" id="creatorImportStop" class="btn btn-outline">나머지 파일 중단</button>
-        <div id="creatorImportList"></div>
-        <h4>표지 선택·자르기</h4>
+        </section>
+        <section id="creatorFileSection-cover" hidden>
+        <h4>썸네일 선택·자르기</h4>
         <p>JPEG·PNG, 최대 4MB·1,200만 픽셀. 2:3 비율로 자른 표지를 서버에서 다시 인코딩합니다. 원본은 비공개이며 작품이 공개되어야 공개 표지가 표시됩니다.</p>
         <input type="file" id="creatorCoverInput" accept="image/jpeg,image/png" aria-label="표지 파일 선택">
         <canvas id="creatorCoverCanvas" width="600" height="900" aria-label="표지 자르기 미리보기"></canvas>
@@ -2472,6 +2488,8 @@
         <label>가로 위치 <input id="creatorCoverX" type="range" min="0" max="100" value="50"></label>
         <label>세로 위치 <input id="creatorCoverY" type="range" min="0" max="100" value="50"></label>
         <button type="button" id="creatorCoverSave" class="btn btn-primary">표지 저장</button>
+        </section>
+        <section id="creatorFileSection-export" hidden>
         <h4>원고 백업</h4>
         <button type="button" id="creatorExportCurrent" class="btn btn-outline">편집 중 원고 TXT</button>
         <button type="button" id="creatorExportList" class="btn btn-outline">저장된 회차·초안 TXT 선택</button>
@@ -2479,6 +2497,8 @@
         <button type="button" id="creatorExportAll" class="btn btn-outline">작품 전체 ZIP (회차·초안·목록)</button>
         <p>ZIP에는 서버에 저장된 본문과 제목·회차 순서·공개/초안 상태·작가의 말이 포함됩니다. 편집 중 미동기 내용은 TXT로 별도 보관해주세요.</p>
         <div id="creatorOriginalFiles"></div>
+        </section>
+        <div id="creatorImportList" aria-label="파일 처리 내역"></div>
       </div>
     </div>
   </div>

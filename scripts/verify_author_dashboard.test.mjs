@@ -93,14 +93,14 @@ test('bank envelope decrypts only with the correct secret and owner binding, use
  assert.equal(await decrypt(owner),number);await assert.rejects(decrypt(other+':2'));
 });
 
-test('dashboard clears private forms on reset and suppresses late account responses; four navigation menus only',async()=>{
+test('dashboard clears private forms on reset and suppresses late account responses; writing menus lead secondary account navigation',async()=>{
  let who={userId:author,author:{status:'APPROVED'},authorWorkspaceReady:true},resolve;
  const nodes=Object.fromEntries(['creatorHomeContent','creatorEarningsContent','creatorProfileContent'].map(id=>[id,{innerHTML:'',replaceChildren(){this.innerHTML='';}}]));
  const c={document:{getElementById:id=>nodes[id]},WebNovelsAuth:{getActor:()=>who,api:()=>new Promise(r=>resolve=r)}};c.window=c;vm.createContext(c);vm.runInContext(read('public/js/creator/creator-dashboard.js'),c);
  const pending=c.CreatorDashboard.profile();c.CreatorDashboard.reset();who={reader:{}};resolve({profile:{email:'private@example.test'}});await pending;
  assert.equal(nodes.creatorProfileContent.innerHTML,'');assert.equal(c.CreatorDashboard.active(),false);
  const html=read('public/index.html'),nav=html.split('id="creatorTabsBar"')[1].split('</div>')[0];
- assert.deepEqual([...nav.matchAll(/data-creator-tab="([^"]+)"/g)].map(m=>m[1]),['home','works','earnings','profile']);
+ assert.deepEqual([...nav.matchAll(/data-creator-tab="([^"]+)"/g)].map(m=>m[1]),['works','new-ep','home','earnings','profile']);
  const loader=read('public/js/core/role-modules.js');
  const dashboard=loader.indexOf('creator-dashboard.js');assert.ok(dashboard>=0 && dashboard<loader.indexOf('creator.js?'));
  assert.match(read('public/js/core/auth-session.js'),/CreatorDashboard\?\.reset/);
@@ -108,12 +108,12 @@ test('dashboard clears private forms on reset and suppresses late account respon
  assert.match(read('public/styles.css'),/#view-creator:not\(\.stage8-creator\):not\(\.private-author-workspace\) #creatorTabsBar/);
 });
 
-test('author entry from the reader home opens the dashboard; deep routes defer to the router',async()=>{
+test('author entry opens owned works; deep routes retain their selected section',async()=>{
  const calls=[],c={location:{pathname:'/home'},document:{getElementById:()=>null},
    WebNovelsAuth:{getActor:()=>({author:{pen_name:'Writer'}})},CreatorDashboard:{active:()=>true}};
  c.window=c;vm.createContext(c);vm.runInContext(read('public/js/creator/creator.js'),c);
  c.switchCreatorTab=(...args)=>calls.push(args);
- await c.fetchCreatorDashboardData();assert.equal(calls.at(-1)[0],'home');
+ await c.fetchCreatorDashboardData();assert.equal(calls.at(-1)[0],'works');
  c.location.pathname='/creator/profile';await c.fetchCreatorDashboardData();assert.equal(calls.at(-1)[0],'profile');
  const count=calls.length;await c.fetchCreatorDashboardData({loadContent:false});assert.equal(calls.length,count);
 });

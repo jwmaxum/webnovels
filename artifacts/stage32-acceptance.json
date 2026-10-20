@@ -1,0 +1,86 @@
+{
+  "format": "webnovels-stage32-rehearsal-v1",
+  "checkedAt": "2026-10-20T06:40:11.775Z",
+  "preparation": {
+    "format": "webnovels-restore-preparation-v1",
+    "sourceProjectRef": "ghwabesnydktumeyejnm",
+    "targetProjectRef": null,
+    "logicalSnapshotSha256": "13f7e8d237801e8c857bfffb843a8ed3f657d572b85d85d4827a6d599a1a7443",
+    "nativeArchiveSha256": "ac074ccbcc7d1e7916d46e635a9dfaf050caf7e23b854337d6f025945e4d9012",
+    "requestedSchemas": [
+      "public",
+      "auth",
+      "storage",
+      "authoring",
+      "launch_recovery",
+      "commerce",
+      "growth"
+    ],
+    "tables": 105,
+    "independentSnapshotTimes": true,
+    "combinedConsistentSnapshotConfirmed": false,
+    "targetConfigured": false,
+    "targetOwnershipVerified": false,
+    "restoreExecuted": false,
+    "hostedRestoreAccepted": false,
+    "pending": [
+      "CONFIRM_ISOLATED_PROJECT_OWNERSHIP_AND_COST",
+      "REVIEW_MANAGED_SCHEMA_AND_CLUSTER_ROLE_RESTORE",
+      "OFF_DEVICE_ENCRYPTED_BACKUP",
+      "RESTORE_NATIVE_ARCHIVE_IN_ISOLATED_PROJECT",
+      "VERIFY_ROWS_ACL_RLS_RPC_AUTH_STORAGE",
+      "VERIFY_EXTERNAL_IMAGE_BYTES_AND_RIGHTS",
+      "ROLE_AND_FREE_RUNTIME_ACCEPTANCE"
+    ],
+    "limitations": [
+      "Logical and native backups are independent consistent DB captures; equal table inventory does not prove equal row state.",
+      "Native pg_dump excludes cluster roles, provider configuration and Storage/external file bytes.",
+      "Supplied manifests and archive checks do not authenticate hosted restore or project ownership."
+    ]
+  },
+  "expansion": {
+    "engine": "PGlite isolated in-memory PostgreSQL",
+    "migration": "database/p0/001_expand_identity_content.sql",
+    "migrationSha256": "9bdf6a068df7e37548b86abebbcb1f6b0569f647f71a986cc7323db15172aa1c",
+    "result": "LEGACY_CONTENT_CONFLICT",
+    "originalRowsMatch": true,
+    "tablesVerified": 105,
+    "rowsVerified": 1415,
+    "failedExpansionRolledBack": true,
+    "productionApplied": false,
+    "hostedRestoreAccepted": false,
+    "fullSchemaRestore": false,
+    "limitations": [
+      "This is an isolated data/constraint reconstruction, not hosted Auth, ACL, RLS, Storage, RPC or full native restore acceptance.",
+      "Even successful local expansion is not permission to activate publishing or apply subsequent migrations."
+    ]
+  },
+  "productionApplied": false,
+  "flagsChanged": false,
+  "browserAcceptance": false,
+  "hostedRestoreAccepted": false,
+  "launchDecision": "NO_GO",
+  "pending": [
+    "HOSTED_NATIVE_AUTH_STORAGE_ROLE_ACCEPTANCE",
+    "REVIEWED_PUBLICATION_SCOPE_AND_MIGRATIONS",
+    "CLOUDFLARE_IMAGES_AND_PRIVATE_STORAGE_ACCEPTANCE",
+    "CLOUDFLARE_SCHEDULED_WORKER_ACCEPTANCE"
+  ],
+  "hostedTarget": {
+    "format": "webnovels-restore-target-v1",
+    "checkedAt": "2026-10-20T06:40:12.016Z",
+    "sourceRef": "ghwabesnydktumeyejnm",
+    "targetRef": null,
+    "kind": "HOSTED_READ_ONLY_PREFLIGHT",
+    "status": "BLOCKED",
+    "accessible": false,
+    "emptyTargetVerified": false,
+    "restoreExecuted": false,
+    "restoreAllowed": false,
+    "hostedRestoreAccepted": false,
+    "flagsChanged": false,
+    "blockers": [
+      "ISOLATED_TARGET_NOT_CONFIGURED"
+    ]
+  }
+}

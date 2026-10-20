@@ -5667,7 +5667,6 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .stage8-creator #creatorAuthorBadge,
 .service-status { margin: 16px; padding: 16px; border: 1px solid var(--border-color); border-radius: 10px; }
 .service-status:not([hidden]) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-.stage8-creator #creatorTabsBar [data-creator-tab="new-ep"],
 .stage8-creator #creatorTabsBar [data-creator-tab="status"],
 .stage8-creator #creatorTabsBar [data-creator-tab="stats"],
 .stage8-creator #creatorTabsBar [data-creator-tab="ad-rev"],
@@ -5683,7 +5682,7 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .va-account form label {display:block;margin:.7rem 0;}
 .va-account form input,.va-account form textarea {display:block;width:100%;margin-top:.4rem;}
 .main-view.account-only > :not(.account-access-summary) {display:none!important;}
-.private-author-workspace #creatorTabsBar [data-creator-tab]:not([data-creator-tab="works"]):not([data-creator-tab="home"]):not([data-creator-tab="earnings"]):not([data-creator-tab="profile"]),
+.private-author-workspace #creatorTabsBar [data-creator-tab]:not([data-creator-tab="works"]):not([data-creator-tab="new-ep"]):not([data-creator-tab="home"]):not([data-creator-tab="earnings"]):not([data-creator-tab="profile"]),
 .private-author-workspace #creatorAuthorDetails,
 .private-author-workspace #btnCreatorFiles {display:none!important;}
 .account-access-summary p {margin:1rem 0;}
@@ -5789,6 +5788,20 @@ body.portal-fullscreen-mode .main-content-wrapper {
 @media (prefers-reduced-motion:reduce) { .discovery-card,.discovery-episode {transition:none;animation:none;} html {scroll-behavior:auto;} }
 
 /* Author publishing and equal novel/webtoon discovery. */
+#creatorTabsBar{align-items:center;flex-wrap:wrap;overflow:visible;}
+.studio-action-bar{display:flex;flex-wrap:wrap;gap:.5rem;padding:.85rem;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;margin:1rem 0 .65rem;}
+.studio-action-bar .btn{min-height:44px;}
+.studio-save-state{display:flex;gap:.7rem;justify-content:space-between;flex-wrap:wrap;margin-bottom:.75rem;}
+.studio-fold{margin:1rem 0;padding:.8rem 1rem;border:1px solid var(--border-color);border-radius:10px;}
+.studio-fold>summary,.studio-format-more>summary,.studio-more-nav>summary{cursor:pointer;font-weight:600;padding:.35rem 0;color:var(--text-primary);}
+.studio-fold[open]>summary{margin-bottom:.8rem;}
+.studio-more-nav{margin-left:auto;position:relative;}.studio-more-nav>summary{min-height:44px;display:list-item;align-content:center;}
+.studio-more-nav[open]>div{display:flex;flex-wrap:wrap;gap:.5rem;padding:.6rem 0;}
+.studio-format-more>.creator-editor-actions{padding:.6rem 0;}
+.studio-file-tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;}
+.studio-file-tabs [aria-pressed="true"]{border-color:var(--cdg-pink);color:var(--cdg-pink);background:var(--bg-subtle);}
+[id^="creatorFileSection-"][hidden],.studio-action-bar [hidden]{display:none!important;}
+@media(max-width:600px){.studio-action-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}.studio-action-bar .btn{padding:.7rem .45rem;white-space:normal;}.studio-more-nav{margin-left:0;}.studio-save-state{display:grid;}}
 .discovery-type-tabs,.rich-toolbar {display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;}
 .creator-rich-body {min-height:420px;padding:1.25rem;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);font-size:18px;line-height:1.9;overflow-wrap:anywhere;}
 .creator-rich-body:focus {outline:2px solid var(--primary-color);outline-offset:2px;}

@@ -1,25 +1,31 @@
 (function(){
  'use strict';
  const $=id=>document.getElementById(id),actor=()=>window.WebNovelsAuth?.getActor();
- let epoch=0,coverSelection=0,work=null,jobs=[],cover=null,editorContext=null;
+ let epoch=0,coverSelection=0,work=null,jobs=[],cover=null,editorContext=null,section='import';
  const errors={PUBLICATION_REVIEW_PENDING:'표지 변경 검토를 접수했습니다. 승인 전까지 기존 표지를 유지합니다. 승인 후 같은 항목에서 결과를 확인해주세요.',DOCX_CHECKSUM_INVALID:'DOCX 파일의 체크섬이 일치하지 않습니다. 원본에서 다시 저장해주세요.',DOCX_ARCHIVE_INVALID:'DOCX 압축 구조가 손상되었거나 지원하지 않는 압축 형식입니다.',DOCX_SIGNATURE_INVALID:'DOCX 확장자와 실제 파일 형식이 일치하지 않습니다.',DOCX_PACKAGE_INVALID:'Word 본문 또는 문서 형식 정보가 없습니다.',DOCX_XML_INVALID:'DOCX 내부 문서가 손상되었습니다.',DOCX_BODY_MISSING:'지원하는 Word 문서 본문을 찾지 못했습니다.',IMAGE_INVALID:'유효한 PNG 또는 JPEG 이미지가 아닙니다.',IMAGE_PIXEL_LIMIT:'이미지는 1,200만 픽셀, 가로·세로 각 8,192픽셀까지 지원합니다.',STORAGE_UPLOAD_FAILED:'파일 업로드에 실패했습니다. 원본과 기존 표지는 유지됩니다. 같은 항목에서 재시도해주세요.',EXPORT_TOO_LARGE:'묶음 내보내기는 총 본문 500만 자·2,000개까지 지원합니다. 원고를 개별 내보내기 해주세요.',IMPORT_CANCELLED:'취소된 가져오기 요청입니다. 다시 가져오려면 파일을 새로 선택해주세요.',ALREADY_COMMITTED:'이미 저장된 파일입니다. 원고 목록에서 결과를 확인해주세요.',SESSION_CHANGED:'계정이 변경되어 작업을 중단했습니다.',FILE_TOO_LARGE:'파일 용량이 제한을 초과했습니다.',TEXT_TOO_LONG:'원고는 200,000자까지 가져올 수 있습니다.',TEXT_ENCODING_INVALID:'문자 인코딩을 확인해주세요.',TEXT_BINARY_OR_INVALID:'텍스트로 읽을 수 없는 문자가 있습니다.',DOCX_EXPANSION_LIMIT:'DOCX 압축 해제 한도를 초과했습니다.',DOCX_ACTIVE_CONTENT:'매크로·실행 요소가 있는 문서는 지원하지 않습니다.',WORK_CONFLICT:'작품이 변경되었습니다. 최신 설정을 확인해주세요. 기존 표지는 유지됩니다.',AUTHOR_FILES_NOT_ACTIVATED:'파일 저장 기능이 아직 활성화되지 않았습니다.',IMAGE_PROCESSOR_NOT_CONFIGURED:'표지 처리 서비스가 아직 연결되지 않았습니다.',EDIT_CHANGED_DURING_IMPORT:'미리보기 이후 원고가 변경되었습니다. 원고를 다시 확인해주세요.'};
  Object.assign(errors,{FILE_TYPE_UNSUPPORTED:'TXT·DOCX·HWPX 원고를 지원합니다. HWP 파일은 한글에서 HWPX 또는 TXT로 저장해주세요.',HWPX_SIGNATURE_INVALID:'HWPX 확장자와 실제 파일 형식이 일치하지 않습니다.',HWPX_ARCHIVE_INVALID:'HWPX 압축 구조가 손상되었거나 지원하지 않는 형식입니다.',HWPX_CHECKSUM_INVALID:'HWPX 파일이 손상되었습니다. 원본에서 다시 저장해주세요.',HWPX_PACKAGE_INVALID:'HWPX 본문 구역이나 문서 구조를 확인할 수 없습니다.',HWPX_XML_INVALID:'HWPX 내부 문서가 손상되었습니다.',HWPX_NAMESPACE_UNSUPPORTED:'지원하는 HWPX 문서 구조가 아닙니다. TXT 또는 DOCX로 저장하여 가져와주세요.',HWPX_SECTION_COUNT_MISMATCH:'HWPX 구역 수가 본문과 일치하지 않습니다. 원본에서 다시 저장해주세요.',HWPX_EXTERNAL_REFERENCE:'외부 파일을 참조하는 HWPX 본문은 가져올 수 없습니다.',HWPX_EXPANSION_LIMIT:'HWPX 압축 해제 한도를 초과했습니다.',HWPX_ACTIVE_CONTENT:'스크립트·실행 요소가 있는 HWPX는 지원하지 않습니다. TXT 또는 DOCX로 저장하여 가져와주세요.',HWPX_ENCRYPTED_DOCUMENT:'암호화된 HWPX는 지원하지 않습니다. 한글에서 암호를 해제한 사본을 저장해주세요.'});
  const warnings={FORMATTING_IGNORED:'글꼴·서식 제외: 평문으로 가져옵니다',UNSUPPORTED_BLOCK_IGNORED:'지원하지 않는 문서 블록 제외',ENCODING_CONFIRM_REQUIRED:'UTF-8로 읽히지 않아 EUC-KR 후보를 표시합니다. 인코딩을 확인해주세요.',TABLE_IGNORED:'표 내용 제외',IMAGE_IGNORED:'이미지 제외',FOOTNOTE_IGNORED:'각주/미주 제외',COMMENT_IGNORED:'주석 제외',EXTERNAL_REFERENCES_IGNORED:'외부 링크/리소스 연결 제외',HEADER_FOOTER_IGNORED:'머리글/바닥글 제외',EMBEDDED_CONTENT_IGNORED:'삽입 문서 제외',DELETED_TEXT_IGNORED:'삭제된 변경 추적 내용 제외',FIELD_CODE_IGNORED:'필드 코드 제외'};
- function message(e){$('creatorFilesMessage').textContent=errors[e.code||e.message]||('처리 실패: '+(e.code||e.message||'다시 시도해주세요.'));}
+ function message(e){const text=errors[e.code||e.message]||('처리 실패: '+(e.code||e.message||'다시 시도해주세요.'));$('creatorFilesMessage').textContent=text;if(!$('modalCreatorFiles')?.classList?.contains('active'))window.showToast?.(text);}
  const safe=fn=>(...args)=>Promise.resolve().then(()=>fn(...args)).catch(message);
  async function api(action,args={}){return window.WebNovelsAuth.api('/api/v2/creator/files'+(action?'/'+action:'')+(args.id?'/'+args.id:'')+'?workId='+args.workId,
   ['import','cover','cancel'].includes(action)?{method:'POST',headers:args.key?{'Idempotency-Key':args.key}:{},body:JSON.stringify(args.body||{})}:{});}
  const queue=new CreatorFileQueue({store:DraftStore,api,actor,onChange:()=>{if(work&&actor()?.userId===work.userId)render();}});
  function assertOpen(turn,user){if(turn!==epoch||actor()?.userId!==user)throw Error('SESSION_CHANGED');}
  function button(label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.className='btn btn-outline btn-sm';b.onclick=safe(fn);return b;}
- async function open(workId){
+ function showSection(value){
+  section=['import','cover','export'].includes(value)?value:'import';
+  for(const name of ['import','cover','export'])if($('creatorFileSection-'+name))$('creatorFileSection-'+name).hidden=name!==section;
+  for(const b of document.querySelectorAll?.('[data-file-section]')||[])b.setAttribute('aria-pressed',String(b.dataset.fileSection===section));
+  render();
+ }
+ async function open(workId,{section:initialSection='import'}={}){
   if(actor()?.author?.status!=='APPROVED')throw Error('AUTHOR_REQUIRED');
   if(window.WEBNOVELS_CONFIG?.authorFilesEnabled!==true)throw Error('AUTHOR_FILES_NOT_ACTIVATED');
   reset();const turn=epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
   const data=await window.WebNovelsAuth.api('/api/v2/creator/works/'+workId);assertOpen(turn,user);work={...data.work,userId:user};
   editorContext=window.CreatorDraftEditor.getFileContext();jobs=(await DraftStore.fileJobs(user,String(workId))).filter(j=>j.kind==='import'||j.kind==='cover');assertOpen(turn,user);
   $('creatorFilesWorkTitle').textContent=work.title;$('creatorFilesMessage').textContent='';cover=null;$('creatorCoverCanvas').getContext('2d').clearRect(0,0,600,900);
-  render();window.openModal('modalCreatorFiles');await listOriginals();
+  showSection(initialSection);window.openModal('modalCreatorFiles');await listOriginals();
  }
  async function convert(job,encoding='auto'){
   if(job.locked)throw Error('IMPORT_ALREADY_SENT');const bytes=job.bytes;
@@ -40,7 +46,7 @@
  }
  function render(){
   const list=$('creatorImportList');if(!list)return;list.replaceChildren();
-  for(const job of jobs){
+  for(const job of jobs.filter(j=>section==='cover'?j.kind==='cover':section==='import'?j.kind==='import':false)){
    const row=document.createElement('section');row.className='creator-file-row';const label=document.createElement('p');label.textContent=job.filename+' · '+job.state+(job.error?' · '+(errors[job.error]||job.error):'');row.append(label);
    if(job.kind==='import'){
     const title=document.createElement('input');title.value=job.title;title.maxLength=200;title.disabled=job.locked;title.setAttribute('aria-label','가져올 원고 제목');title.onchange=safe(async()=>{if(job.locked)return;job.title=title.value;if(job.payload)job.payload.title=title.value;await queue.persist(job);});row.append(title);
@@ -60,7 +66,7 @@
    }
    if(job.result?.draft)row.append(button('저장된 원고 열기',async()=>{window.closeModal('modalCreatorFiles');await window.CreatorDraftEditor.openWork(job.workId,job.result.draft.id);}));
    if(job.result?.draft&&window.CreatorRecovery&&window.WEBNOVELS_CONFIG?.authorRecoveryEnabled===true)row.append(button("원래 회차 복구 검토",()=>reviewRecovery(job.workId,job.result.draft.id)));
-   if(job.state==='COMMITTED'&&job.kind==='cover')row.append(button('새 표지 확인',listOriginals));list.append(row);
+   if(job.state==='COMMITTED'&&job.kind==='cover')row.append(button('새 표지 확인',()=>{showSection('export');return listOriginals();}));list.append(row);
   }
  }
  async function reviewRecovery(workId,draftId){const user=actor()?.userId;window.closeModal('modalCreatorFiles');await window.CreatorDraftEditor.openWork(workId,draftId);if(actor()?.userId!==user)throw Error('SESSION_CHANGED');await window.CreatorRecovery.open(workId,draftId);}
@@ -96,9 +102,10 @@
  function exportCurrent(){const c=window.CreatorDraftEditor.getFileContext();if(!c||c.userId!==actor()?.userId)throw Error('원고를 먼저 열어주세요.');download(c.snapshot.content,CreatorFileCodec.safeName(c.snapshot.title||'원고')+'.txt','text/plain;charset=utf-8');}
  function reset(){window.CreatorRecovery?.reset();epoch++;coverSelection++;queue.stop();work=null;jobs=[];editorContext=null;cover?.bitmap?.close();cover=null;for(const id of ['creatorImportList','creatorOriginalFiles','creatorExportItems','creatorFilesMessage','creatorFilesWorkTitle'])$(id)?.replaceChildren();if($('creatorFileInput'))$('creatorFileInput').value='';if($('creatorCoverInput'))$('creatorCoverInput').value='';$('creatorCoverCanvas')?.getContext('2d').clearRect(0,0,600,900);window.closeModal?.('modalCreatorFiles');}
  function init(){
+  for(const b of document.querySelectorAll?.('[data-file-section]')||[])b.onclick=()=>showSection(b.dataset.fileSection);
   $('creatorFileInput').onchange=safe(e=>addFiles(e.target.files));$('creatorCoverInput').onchange=safe(e=>selectCover(e.target.files[0]));
   const zone=$('creatorFileDrop');zone.ondragover=e=>e.preventDefault();zone.ondrop=safe(e=>{e.preventDefault();return addFiles(e.dataTransfer.files);});
-  $('creatorImportRun').onclick=safe(()=>queue.run(jobs));$('creatorImportStop').onclick=()=>{queue.stop();$('creatorFilesMessage').textContent='진행 중 요청 결과를 확인한 뒤 나머지 파일은 멈춥니다.';};
+  $('creatorImportRun').onclick=safe(()=>queue.run(jobs.filter(j=>j.kind==='import')));$('creatorImportStop').onclick=()=>{queue.stop();$('creatorFilesMessage').textContent='진행 중 요청 결과를 확인한 뒤 나머지 파일은 멈춥니다.';};
   $('creatorCoverSave').onclick=safe(saveCover);for(const id of ['creatorCoverZoom','creatorCoverX','creatorCoverY'])$(id).oninput=drawCover;
   $('creatorExportAll').onclick=safe(exportAll);$('creatorExportList').onclick=safe(exportItems);$('creatorExportCurrent').onclick=safe(exportCurrent);$('btnCreatorFiles').onclick=safe(()=>{const c=window.CreatorDraftEditor.getFileContext();if(!c)throw Error('작품을 먼저 선택해주세요.');return open(c.workId);});
  }
