@@ -9,6 +9,7 @@ import { stage9Api } from './stage9-api.mjs';
 import { stage9AppealApi } from './stage9-appeal-api.mjs';
 import { adminWorkflowApi } from './admin-workflow-api.mjs';
 import { accountApi } from './account-api.mjs';
+import { authorEnrollmentApi } from './author-enrollment-api.mjs';
 import { discoveryEnabled, publicContent } from './stage16-api.mjs';
 import { paidEpisodeApi } from './paid-episode-api.mjs';
 import { growthApi,measurementEnabled } from './growth-api.mjs';
@@ -64,6 +65,8 @@ async function readBody(request) {
 }
 export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   return async function handle(request, env) {
+    const enrollmentResponse = await authorEnrollmentApi(request, env, { fetchImpl, now });
+    if (enrollmentResponse) return enrollmentResponse;
     const accountResponse = await accountApi(request, env, { fetchImpl });
     if (accountResponse) return accountResponse;
     const requestId = crypto.randomUUID();
@@ -210,6 +213,7 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         if (Object.keys(body).some(k => !['kind','displayName'].includes(k))) fail(400, 'FIELD_NOT_ALLOWED');
         if (!['reader','author'].includes(body.kind) || typeof body.displayName !== 'string' ||
           body.displayName.trim().length < 2 || body.displayName.trim().length > 40 || /[<>\x00-\x1f\x7f]/.test(body.displayName)) fail(400, 'INVALID_SIGNUP');
+        if (body.kind === 'author') fail(403, 'AUTHOR_IDENTITY_REQUIRED');
         const result = await db('rpc/complete_authoring_signup', {}, { method: 'POST', body: {
           p_user_id: user.id, p_kind: body.kind, p_display_name: body.displayName.trim()
         }});

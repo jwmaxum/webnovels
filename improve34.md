@@ -1,5 +1,9 @@
 # 34단계 — 작가 저작권 확약·PASS 본인확인·복수 필명 가입
 
+구현 기록: [가입 절차·연동 안내](docs/launch/stage34-author-enrollment.md),
+[DB 인수 결과](artifacts/stage34-acceptance.json). 2026-10-21 사용자는 PASS 미계약 상태로
+구현 후 연동 준비를 선택했다. 실제 제공자 인증과 기능 활성화는 [35단계](improve35.md)에서 인수한다.
+
 2026-10-21 사용자 요청으로 기존 기기 UX 인수 단계보다 우선한다.
 상세 계약은 [작가 가입·본인확인 계획](docs/launch/author-identity-copyright-plan.md)을 따른다.
 

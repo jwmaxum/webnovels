@@ -151,17 +151,19 @@ test('onboarding requires activation, exact Origin, confirmed Auth and distribut
   const unconfirmed=setup({user:{id:uid,email:'new@example.test'}});
   assert.equal((await unconfirmed.request('/onboarding',onboarding)).status,403);
 });
-test('onboarding ignores no authority fields, retries with server identity and returns actor',async()=>{
+test('legacy onboarding cannot bypass author identity; reader completion still validates fields and retries',async()=>{
   const s=setup({user:{id:uid,email:'new@example.test',email_confirmed_at:'2026-09-20'},tables:{readers:[]}});
   for(const extra of [{role:'SUPER_ADMIN'},{userId:'other'},{status:'APPROVED'},{email:'other@example.test'}]) {
     assert.equal((await s.request('/onboarding',{...onboarding,body:{...onboarding.body,...extra}})).status,400);
   }
+  assert.equal((await s.request('/onboarding',onboarding)).status,403);
+  assert.ok(!s.calls.some(c=>c.url.pathname.endsWith('/complete_authoring_signup')));
   for(let i=0;i<2;i++) {
-    const response=await s.request('/onboarding',onboarding);assert.equal(response.status,200);
+    const response=await s.request('/onboarding',{...onboarding,body:{...onboarding.body,kind:'reader'}});assert.equal(response.status,200);
     assert.ok(response.headers.get('X-Request-ID'));assert.equal((await response.json()).actor.author.id,20);
   }
   const writes=s.calls.filter(c=>c.url.pathname.endsWith('/complete_authoring_signup'));
-  assert.equal(writes.length,2);assert.deepEqual(writes[0].body,{p_user_id:uid,p_kind:'author',p_display_name:'작가이름'});
+  assert.equal(writes.length,2);assert.deepEqual(writes[0].body,{p_user_id:uid,p_kind:'reader',p_display_name:'작가이름'});
 });
 test('upstream auth failure differs from expired session and includes safe request identifier',async()=>{
   const s=setup({authStatus:500});const response=await s.request('/me');assert.equal(response.status,503);

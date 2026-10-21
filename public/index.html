@@ -39,7 +39,7 @@
   <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
-  <link rel="stylesheet" href="/styles.css?v=132">
+  <link rel="stylesheet" href="/styles.css?v=134">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 <link rel="stylesheet" href="/css/growth.css?v=121">
 <link rel="stylesheet" href="/css/policies.css?v=20261011">
@@ -1759,6 +1759,7 @@
           </form>
 
           <form class="auth-form" id="authForm-signup-author" style="max-height: 440px; overflow-y: auto; padding-right: 5px;">
+            <p class="text-muted small">이메일 확인 후 저작권 확약과 PASS 실명 본인확인을 거쳐 가입합니다. 같은 본인도 별도 이메일 ID·필명으로 가입할 수 있으며, 각 계정의 작품 권한은 분리됩니다.</p>
             <label>Nickname / 필명 (별명)</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
               <input type="text" id="authorPenName" class="form-control" style="margin-bottom: 0;" placeholder="예: 판타지마스터" required>
@@ -2577,10 +2578,11 @@
   <script src="/supabase-public-config.js?v=1"></script>
   <script src="/api/public-config.js"></script>
   <script src="/supabase-admin.js?v=116"></script>
-  <script src="/js/core/auth-session.js?v=121"></script>
+  <script src="/js/core/auth-session.js?v=134"></script>
+  <script src="/js/core/author-enrollment.js?v=134"></script>
   <script src="/js/core/account-access.js?v=114"></script>
   <script src="/js/core/appeals.js?v=117"></script>
-  <script src="/js/core/auth-ui.js?v=125"></script>
+  <script src="/js/core/auth-ui.js?v=134"></script>
   <script src="/js/core/service-status.js?v=114"></script>
   <script src="/app.js?v=125"></script>
 </body>

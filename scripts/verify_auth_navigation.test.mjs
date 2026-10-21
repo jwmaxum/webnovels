@@ -29,7 +29,7 @@ function fixture({who=author(), url='/', holdScripts=false, signedIn=true}={}) {
     'moduleLoadStatus','userProfileMenu','headerCreatorLink','authorStudioNavigation','linkMoreCreator',
     'loginEmail','loginPassword','modalAuthCompletion','authCompletionTitle','authCompletionProfile',
     'authCompletionPassword','authCompletionName','authCompletionKind','authNewPassword',
-    'authNewPasswordConfirm','authCompletionMessage','authCompletionForm']) nodes.set(id,element('div'));
+    'authNewPasswordConfirm','authCompletionMessage','authCompletionForm','authAuthorEnrollment']) nodes.set(id,element('div'));
   const portals=['headerCreatorLink','authorStudioNavigation','linkMoreCreator'].map(id=>nodes.get(id));
   portals.forEach(n=>n.hidden=true);
   nodes.get('loginEmail').value='writer@example.test'; nodes.get('loginPassword').value='test-password';
@@ -122,6 +122,7 @@ test('forged cached Author/Creator/Writer labels never expose author navigation 
 
 test('finishing author onboarding opens the same studio route as password login',async()=>{
   const app=fixture();await app.c.WebNovelsAuth.init();app.c.showAuthOnboarding();
+  app.c.AuthorEnrollment={complete:async()=>app.c.WebNovelsAuth.validate()};
   app.nodes.get('authCompletionKind').value='author';app.nodes.get('authCompletionName').value='Writer';
   await app.nodes.get('authCompletionForm').onsubmit({preventDefault(){},target:{querySelector:()=>({disabled:false})}});
   assert.equal(app.c.location.pathname,'/creator');assert.equal(app.c.currentActiveView,'view-creator');

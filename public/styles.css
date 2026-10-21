@@ -5812,3 +5812,12 @@ body.portal-fullscreen-mode .main-content-wrapper {
 .webtoon-viewer-box {width:100%;min-width:0;}
 .webtoon-panel img {max-width:100%;}
 @media(max-width:600px){.creator-rich-body{padding:.75rem;min-height:320px;} .webtoon-viewer-box{max-width:100%;} .reader-container.is-webtoon{padding-inline:0;}}
+/* Stage 34: enrollment remains usable inside the existing mobile authentication dialog. */
+.author-enrollment-panel { border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin: 16px 0; min-width: 0; }
+.author-enrollment-panel p { line-height: 1.7; overflow-wrap: anywhere; }
+.author-enrollment-panel details { padding: 10px 0; }
+.author-enrollment-panel summary { cursor: pointer; font-weight: 600; }
+.author-enrollment-panel .author-consent { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; }
+.author-consent input { width: auto; flex: 0 0 auto; margin-top: 5px; }
+.author-enrollment-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#modalAuthCompletion .modal-dialog { max-height: 90dvh; overflow-y: auto; }

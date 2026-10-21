@@ -20,7 +20,16 @@
     DATABASE_SECURITY_MIGRATION_REQUIRED: '계정 서비스를 점검 중입니다. 잠시 후 다시 이용해주세요.',
     ONBOARDING_NOT_ACTIVATED: '신규 가입을 준비 중입니다. 서비스 오픈 안내를 확인해주세요.',
     ACCOUNT_SERVICE_NOT_ACTIVATED: '계정 서비스를 준비 중입니다. 잠시 후 다시 시도해주세요.',
-    AUTH_SYNC_REQUIRED: '계정의 인증 상태를 다시 동기화해야 합니다. 관리자에게 문의해주세요.'
+    AUTH_SYNC_REQUIRED: '계정의 인증 상태를 다시 동기화해야 합니다. 관리자에게 문의해주세요.',
+    AUTHOR_ENROLLMENT_NOT_READY: 'PASS 본인확인과 작가 가입을 준비 중입니다.',
+    AUTHOR_IDENTITY_REQUIRED: '저작권 동의와 PASS 본인확인을 먼저 완료해주세요.',
+    AUTHOR_CONSENT_REQUIRED: '저작권 확약과 개인정보 동의를 각각 선택해주세요.',
+    AUTHOR_CONSENT_STALE: '동의 문서가 변경되었습니다. 가입 화면을 다시 열고 확인해주세요.',
+    IDENTITY_NOT_VERIFIED: '인증이 아직 완료되지 않았습니다. PASS를 완료한 뒤 다시 확인해주세요.',
+    IDENTITY_ATTEMPT_EXPIRED: '인증 유효시간이 지났습니다. 새 인증을 시작해주세요.',
+    IDENTITY_ATTEMPT_INVALID: '유효한 인증 시도를 찾지 못했습니다. 새 인증을 시작해주세요.',
+    TEST_IDENTITY_NOT_ACCEPTED: 'TEST 인증은 실제 작가 가입에 사용할 수 없습니다.',
+    AUTHOR_IDENTITY_ATTRIBUTES_REQUIRED: '본인확인에 필요한 정보를 제공받지 못했습니다. 고객지원에 문의해주세요.'
   };
   function error(code, status, requestId) { return Object.assign(new Error(messages[code] || '인증 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.'), { code, status, requestId }); }
   function sdk() {
@@ -28,6 +37,7 @@
     return supabaseClient.auth;
   }
   function clear() {
+    window.AuthorEnrollment?.reset();
     window.WebNovelsModules?.cancel();
     window.CreatorDraftEditor?.onAuthLost();
     generation++; actor = null;
@@ -136,7 +146,7 @@
   function checkName(name) { return typeof name === 'string' && name.trim().length >= 2 && name.trim().length <= 40 && !/[<>\x00-\x1f\x7f]/.test(name); }
   async function signup(kind, email, password, displayName) {
     if (!['reader','author'].includes(kind) || !checkName(displayName) || password.length < 8 || !email.includes('@')) throw error('INVALID_SIGNUP',400);
-    const readiness = await fetch('/api/v2/auth/readiness', { credentials: 'omit' });
+    const readiness = await fetch('/api/v2/auth/readiness'+(kind==='author'?'?kind=author':''), { credentials: 'omit' });
     if (!readiness.ok) throw error('ONBOARDING_NOT_ACTIVATED',503);
     if (authMutation) throw error('AUTH_IN_PROGRESS',409);
     await window.CreatorDraftEditor?.beforeAccountChange();
@@ -148,11 +158,18 @@
       const { data, error: e } = await sdk().signUp({ email: email.trim().toLowerCase(), password,
         options: { emailRedirectTo: location.origin + '/?auth=confirm' } });
       if (e) throw providerError(e);
-      if (data?.session) { await complete(kind,displayName); return '가입이 완료되었습니다.'; }
+      if (data?.session) {
+        if(kind==='author'){window.showAuthOnboarding?.();return '저작권 동의와 PASS 본인확인을 완료해주세요.';}
+        await complete(kind,displayName); return '가입이 완료되었습니다.';
+      }
       return '확인 메일을 확인해주세요. 링크를 연 뒤 로그인하여 가입 유형과 필명을 입력하면 가입을 마칠 수 있습니다.';
     } finally { authMutation = false; }
   }
   async function complete(kind,displayName) {
+    if(kind==='author'){
+      if(!window.AuthorEnrollment)throw error('AUTHOR_IDENTITY_REQUIRED',403);
+      return window.AuthorEnrollment.complete(displayName);
+    }
     const result = await api('/api/v2/onboarding', { method: 'POST', body: JSON.stringify({ kind,displayName }) });
     return publish(result.actor);
   }
@@ -180,7 +197,7 @@
         // Do not await SDK methods inside its auth callback.
         if (event === 'TOKEN_REFRESHED') setTimeout(() => validate().catch(() => {}),0);
       });
-      try { await validate(); }
+      try { await validate(); if(new URLSearchParams(location.search).get('auth')==='author-identity')window.showAuthOnboarding?.(); }
       catch(e) { if (e.code === 'ACCOUNT_NOT_LINKED') window.showAuthOnboarding?.(); else if (e.status !== 401) window.showToast?.(e.message); }
     })().catch(e => { clear(); window.showToast?.(messages.AUTH_UNAVAILABLE || '인증 서비스를 사용할 수 없습니다.'); });
     return initFlight;

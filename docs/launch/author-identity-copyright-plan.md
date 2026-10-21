@@ -1,7 +1,9 @@
 # 작가 가입·권리 확약·PASS 계획
 
-기준일 2026-10-21. 다음 34단계의 구현·인수 계약이며 **현재 가입 화면에 적용된 약관이나
-완료된 PASS 서비스가 아니다.** [Author/Creator 계약](author-creator-contract.md)을 유지한다.
+기준일 2026-10-21. 34단계의 구현·인수 계약이다. [구현 기록](stage34-author-enrollment.md)에
+가입 화면·서버·DB 절차가 있으며, 사용자는 미계약 상태로 연동 준비를 선택했다.
+**실제 PASS 서비스를 개시하거나 아래 초안의 법률 검토가 완료된 것은 아니다.**
+[Author/Creator 계약](author-creator-contract.md)을 유지한다.
 
 ## 가입 흐름과 동의 문안 초안
 

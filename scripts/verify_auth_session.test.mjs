@@ -75,8 +75,10 @@ test('signup stops before provider when closed; confirmed account can resume wit
   await s.api.signup('author','writer@example.test','password','작가이름');
   const signup=s.calls.find(c=>c[0]==='signup')[1];assert.equal(signup.options.emailRedirectTo,'https://app.test/?auth=confirm');assert.equal(signup.options.data,undefined);
   await s.api.login('writer@example.test','password');
-  s.respond(Response.json({created:false,actor:s.actor}));
-  await s.api.complete('author','작가이름');assert.equal(s.api.getActor().author.id,12);
+  s.respond(Response.json(s.actor));
+  await assert.rejects(s.api.complete('author','작가이름'),e=>e.code==='AUTHOR_IDENTITY_REQUIRED');
+  let authorCompletions=0;s.context.AuthorEnrollment={complete:async(name)=>{assert.equal(name,'작가이름');authorCompletions++;return s.api.validate();}};
+  await s.api.complete('author','작가이름');assert.equal(authorCompletions,1);assert.equal(s.api.getActor().author.id,12);
   assert.equal(s.calls.filter(c=>c[0]==='signup').length,1);
 });
 test('reset uses same-origin redirect; password update requires recovery event and signs out',async()=>{
@@ -96,7 +98,7 @@ test('late reply cannot restore a logged-out actor',async()=>{
 
 test('network failure does not retry a mutation with unknown outcome',async()=>{
   const s=setup();let requests=0;s.context.fetch=async()=>{requests++;throw new TypeError('network offline');};
-  await assert.rejects(s.api.complete('author','작가이름'));assert.equal(requests,1);
+  await assert.rejects(s.api.complete('reader','독자이름'));assert.equal(requests,1);
 });
 
 test('account changes during token lookup prevent mutation dispatch',async()=>{

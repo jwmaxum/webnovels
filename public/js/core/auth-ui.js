@@ -20,11 +20,12 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
         <div class="modal-body"><form id="authCompletionForm">
           <div id="authCompletionProfile"><p>확인한 이메일로 로그인한 뒤 가입을 마쳐주세요. 기존 작가 계정 연결은 운영자에게 문의해주세요.</p>
             <label for="authCompletionKind">가입 유형</label><select id="authCompletionKind" class="form-control"><option value="author">작가</option><option value="reader">독자</option></select>
+            <div id="authAuthorEnrollment"></div>
             <label for="authCompletionName">필명 / 별명 (2~40자)</label><input id="authCompletionName" class="form-control" minlength="2" maxlength="40" autocomplete="nickname">
           </div>
           <div id="authCompletionPassword"><label for="authNewPassword">새 비밀번호</label><input id="authNewPassword" class="form-control" type="password" minlength="8" autocomplete="new-password">
             <label for="authNewPasswordConfirm">비밀번호 확인</label><input id="authNewPasswordConfirm" class="form-control" type="password" minlength="8" autocomplete="new-password"></div>
-          <p id="authCompletionMessage" role="status"></p><button type="submit" class="btn btn-primary">저장</button>
+          <p id="authCompletionMessage" role="status"></p><button type="submit" class="btn btn-primary">가입 완료</button>
         </form></div></div>`;
       document.body.appendChild(backdrop);
     }
@@ -40,6 +41,17 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
     document.getElementById('authNewPassword').disabled = !reset;
     document.getElementById('authNewPasswordConfirm').disabled = !reset;
     document.getElementById('authCompletionMessage').textContent = '';
+    const submitButton=document.getElementById('authCompletionForm').querySelector('button[type="submit"]');
+    if(submitButton)submitButton.textContent=reset?'비밀번호 저장':'가입 완료';
+    const currentAuthor=window.WebNovelsAuth.getActor()?.author;
+    document.getElementById('authCompletionName').readOnly=!reset&&!!currentAuthor;
+    if(!reset&&currentAuthor)document.getElementById('authCompletionName').value=currentAuthor.pen_name;
+    const enrollment=document.getElementById('authAuthorEnrollment');
+    const selectKind=()=>{
+      enrollment.hidden=reset||document.getElementById('authCompletionKind').value!=='author';
+      if(!enrollment.hidden)window.AuthorEnrollment?.mount(enrollment);else window.AuthorEnrollment?.reset();
+    };
+    document.getElementById('authCompletionKind').onchange=selectKind;selectKind();
     document.getElementById('authCompletionForm').onsubmit = async event => {
       event.preventDefault();
       const button = event.target.querySelector('button[type="submit"]');

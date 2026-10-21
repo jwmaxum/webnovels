@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-10-21T01:22:30.803Z",
+  "snapshotSha256": "490a111ee1495cbe407ec7ed66f016c671a031297945615f704df33d372ec3d1",
+  "migrationSha256": "5ce81bc3acb9c1ebc37f5b49817947817bf030ba48754d56f75533f18c0a5d7f",
+  "files": [
+    "database/authoring/023_author_enrollment.sql",
+    "database/launch/014_author_enrollment_accounts.sql"
+  ],
+  "rehearsal": {
+    "engine": "PGlite with actual backup rows, defaults, sequences and app routines/triggers",
+    "originalTables": 110,
+    "originalRows": 1631,
+    "originalRowsMatch": true,
+    "repeatableMigration": true,
+    "accountWorkspaceRegistrationPreserved": true,
+    "multiAccountSignup": true,
+    "webtoonRegistration": true,
+    "crossAccountAccessDenied": true,
+    "sourceChangeRejected": true,
+    "providerCalled": false,
+    "hostedAcceptance": false,
+    "multiConnectionAcceptance": false
+  },
+  "productionApplied": true,
+  "flagsChanged": false,
+  "passContractReady": false,
+  "providerAcceptance": false,
+  "browserAcceptance": false,
+  "productionVerification": {
+    "checkedAt": "2026-10-21T01:28:24.675Z",
+    "originalTablesChecked": 110,
+    "originalRowsMatch": true,
+    "mismatches": [],
+    "state": {
+      "enrollment_enabled": false,
+      "identity_attempts": 0,
+      "verified_accounts": 0,
+      "public_enabled": false,
+      "installed": true,
+      "direct_grants": 0
+    },
+    "capabilities": {
+      "launch_accounts_ready": true,
+      "launch_author_workspace_ready": true,
+      "launch_work_registration_ready": true,
+      "author_enrollment_launch_ready": true
+    }
+  }
+}

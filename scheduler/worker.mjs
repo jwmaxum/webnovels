@@ -1,10 +1,10 @@
 // Deploy separately from Pages. Only the scheduled event can call the service-only RPC.
 export default {
   async scheduled(_event, env, context) {
-    if (env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true') return;
+    if (env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true' && env.AUTHOR_IDENTITY_ENABLED !== 'true') return;
     if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(env.SUPABASE_URL || '') ||
         !env.SUPABASE_SECRET_KEY) throw Error('Scheduler configuration missing');
-    const invoke=async name=>{
+    const invoke=async (name,payload={p_limit:20})=>{
     const response = await fetch(new URL('/rest/v1/rpc/'+name, env.SUPABASE_URL), {
       method: 'POST',
       headers: {
@@ -12,7 +12,8 @@ export default {
         ...(env.SUPABASE_SECRET_KEY.startsWith('eyJ') ? { Authorization: 'Bearer ' + env.SUPABASE_SECRET_KEY } : {}),
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ p_limit: 20 }),
+      body: JSON.stringify(payload),
+      redirect: 'manual',
       signal: AbortSignal.timeout(20000)
     });
     if (!response.ok) throw Error('Schedule RPC failed: ' + response.status);
@@ -26,6 +27,7 @@ export default {
     // Separate disabled-by-default preparation job. It never changes a tier or sends messages.
     // Run jobs independently so a publication failure cannot starve the growth batch.
     const jobs=[];
+    if(env.AUTHOR_IDENTITY_ENABLED==='true')jobs.push(invoke('cleanup_author_enrollment',{}));
     if(env.AUTHOR_PUBLISH_ENABLED==='true')jobs.push(invoke(env.WEBTOON_SERVICE_ENABLED==='true'?'run_creator_schedules_v18':'run_creator_schedules'));
     if(env.GROWTH_SERVICE_ENABLED==='true')jobs.push(invoke('run_growth_evaluations'));
     if(env.GROWTH_SERVICE_ENABLED==='true'&&env.GROWTH_MEASUREMENT_ENABLED==='true')jobs.push(invoke('prune_growth_measurements'));
