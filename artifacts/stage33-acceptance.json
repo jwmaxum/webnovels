@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-10-21T00:20:49.056Z",
+  "snapshotSha256": "01e26ea029b23e47c10bae8acd89e8f4c285b8f53b4e2ef38495e2bcdc8366bb",
+  "registrationSqlSha256": "16b90809b2f094d1a926e2249b750790cc81409af0e3bf33511a66b91cc4f3fe",
+  "registrationFiles": [
+    "database/launch/010_multiformat_registration.sql",
+    "database/launch/011_new_serial_foundation.sql"
+  ],
+  "publicationFiles": [
+    "database/launch/013_free_serial_prerequisites.sql",
+    "database/authoring/002_private_storage.sql",
+    "database/authoring/007_creator_files.sql",
+    "database/authoring/008_creator_publications.sql",
+    "database/authoring/009_creator_reader_operations.sql",
+    "database/authoring/010_admin_operations.sql",
+    "database/authoring/011_reader_profile_cutover.sql",
+    "database/authoring/012_creator_distribution.sql",
+    "database/authoring/013_reader_discovery.sql",
+    "database/authoring/014_admin_workflow.sql",
+    "database/authoring/015_webtoon.sql",
+    "database/authoring/021_manuscript_documents.sql",
+    "database/authoring/022_publication_change_review.sql",
+    "database/launch/012_new_serial_publication_scope.sql"
+  ],
+  "rehearsal": {
+    "engine": "PGlite with actual backup rows and reconstructed application functions",
+    "originalRowsMatch": true,
+    "originalTables": 105,
+    "originalRows": 1418,
+    "works": 30,
+    "episodes": 180,
+    "drafts": 6,
+    "revisions": 21,
+    "bothTypesSameAuthor": true,
+    "receiptRetry": true,
+    "ownershipAndDraftRevisions": true,
+    "sourceChangeRejected": true,
+    "registrationRepeatable": true,
+    "freePublicationDependenciesAppliedLocally": true,
+    "scopeRepeatable": true,
+    "actualSchemaFirstPublicationAndReader": true,
+    "actualSchemaComments": true,
+    "actualSchemaReview": true,
+    "originalP0MarkerAbsent": true,
+    "publicActivation": false,
+    "hostedSupabaseAcceptance": false,
+    "multiConnectionAcceptance": false
+  },
+  "productionApplied": true,
+  "publicationApplied": false,
+  "flagsChanged": false,
+  "browserAcceptance": false,
+  "productionState": [
+    {
+      "legacy_works": 30,
+      "legacy_episodes": 180,
+      "drafts": 6,
+      "revisions": 21,
+      "public_enabled": false,
+      "p0_marker": null
+    }
+  ],
+  "productionVerification": {
+    "checkedAt": "2026-10-21T00:22:33.363Z",
+    "originalTablesChecked": 105,
+    "originalRowsMatch": true,
+    "mismatches": [],
+    "capabilities": {
+      "launch_accounts_ready": true,
+      "launch_author_workspace_ready": true,
+      "launch_work_registration_ready": true
+    }
+  }
+}

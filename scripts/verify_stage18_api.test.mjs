@@ -88,9 +88,11 @@ test('public projection emits only app URLs and whitelisted metadata; NOVEL and 
  assert.equal(validReadingPosition({versionId:version,panelIndex:0,offset:0.5},true),true);assert.equal(validReadingPosition({versionId:version,panelIndex:0,offset:0.5}),false);
  assert.throws(()=>projectWebtoon({schemaVersion:1,panels:[{id:p,width:900,height:1}]},'100',version,fail));
 });
-test('create API only accepts webtoon type with all launch gates enabled',async()=>{
+test('create API accepts typed registration with a registration capability or full publication readiness',async()=>{
  let body;const request=()=>new Request('https://app.test/api/v2/creator/works',{method:'POST',headers:{Origin:'https://app.test','Idempotency-Key':uid()},body:JSON.stringify({title:'웹툰',contentType:'WEBTOON'})});
  const args={actor:async()=>({userId:admin,author:{status:'APPROVED'}}),readBody:r=>r.json(),fail,db:async(_a,_b,o)=>{body=o.body;return {work:{id:'10'}};}};
- await assert.rejects(creatorWorkApi({...args,request:request(),env:{AUTHOR_WORKS_ENABLED:'true'}}),e=>e.code==='FIELD_NOT_ALLOWED');
+ await assert.rejects(creatorWorkApi({...args,request:request(),env:{AUTHOR_WORKS_ENABLED:'true'}}),e=>e.code==='WORK_REGISTRATION_NOT_ACTIVATED');
+ await creatorWorkApi({...args,request:request(),env:{AUTHOR_WORKS_ENABLED:'true'},db:async(route,_q,o)=>route==='rpc/launch_work_registration_ready'?true:args.db(route,_q,o)});
+ assert.equal(body.p_data.contentType,'WEBTOON');
  await creatorWorkApi({...args,request:request(),env:flags});assert.equal(body.p_data.contentType,'WEBTOON');assert.equal(body.p_user_id,admin);
 });

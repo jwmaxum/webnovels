@@ -38,3 +38,11 @@
 21단계 로컬 준비: [017_growth_experiments.sql](017_growth_experiments.sql). 검토된 **015**와 backup/review gate 후 private 추천 설정·동의·정책·KST 평가 snapshot·DRY_RUN outbox·새 공개 공급 기록을 추가한다. 016 결제 SQL은 선행 조건이 아니다. 정책 seed·실제 등급 변경·알림 발송은 없다. [성장 계약](../../docs/launch/growth-experiments-contract.md)에 따라 `npm run test:stage21`은 합성 DB/HTTP/DOM VM/Cron 검증만 실행한다. 실제 DB에는 미적용이며 GROWTH_SERVICE_ENABLED는 기본 false다.
 
 22단계 로컬 준비: [018_growth_measurement.sql](018_growth_measurement.sql). 검토된 **017**와 backup/review gate 후 별도 선택 동의·24시간 카드 receipt·신고 기반 화면 노출/공유 표식·동의 구간별 첫 서버 본문 제공·안정적 ID 구간 sitemap을 추가한다. [계측 계약](../../docs/launch/growth-measurement-contract.md)을 따른다. GROWTH_MEASUREMENT_ENABLED는 기본 false다. `npm run test:stage22`는 합성 DB/HTTP/DOM VM, `npm run audit:stage22`는 실제 읽기 전용 집계다. 실제 SQL 적용·기능 활성화·복원/기기 인수·28일 실험은 완료하지 않았다.
+
+33단계는 [현재 DB 등록·신규 공개 범위 계약](../../docs/launch/stage33-acceptance.md)을 따른다.
+운영에는 launch/010(복수 유형 등록)·011(과거 ID와 신규 생성 범위)만 적용했다. 무료 공개 후보는
+launch/013 호환 SQL → 실제 authoring 의존성 → 마지막 launch/012 범위 정책 순서다.
+`scripts/prepare_stage33.mjs`의 `publicationFiles`를 기준으로 하며 번호순 일괄 실행은 하지 않는다.
+과거 본문 충돌을 보존하고 P0 표식을 위조하지 않는다. `NEW_SERIALS_ENABLED`는 기본 false이고
+hosted·Storage·Images·Cron 인수 전에는 공개를 활성화하지 않는다. `npm run test:stage33`은
+합성 DB/API 검증이고 실제 백업 리허설/운영 적용 기록과 구분한다.

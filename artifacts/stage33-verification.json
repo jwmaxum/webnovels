@@ -1,0 +1,29 @@
+{
+  "stage": 33,
+  "date": "2026-10-21",
+  "status": "PASS",
+  "releaseContracts": {
+    "allPackageReleaseScriptsPassed": true,
+    "execution": "Initial npm run build completed through stage32, then stopped on a UUID/text cast in the new synthetic cover fixture. After correcting that fixture, stage33 and every remaining release script ran successfully. Focused final API/auth/UI and coverage tests also passed.",
+    "finalFocusedApiAuthUiTests": 43,
+    "newScopeDatabaseTests": 3,
+    "newScopeDatabaseCoverage": ["same-author novel and webtoon creation", "typed idempotency and ownership", "legacy heads, images, covers and schedules excluded", "public metadata RLS and private-body ACL", "first publication and scheduled publication", "published changes retain review", "flag closure, scope replay and rollback"]
+  },
+  "compile": {"command": "npm run build:compile", "status": "PASS"},
+  "types": {"command": "tsc --noEmit", "status": "PASS"},
+  "cloudflareBundle": {"command": "npm run test:cloudflare-bundle", "status": "PASS"},
+  "syntax": {"files": 8, "status": "PASS"},
+  "lint": {"dedicatedRepositoryLintGate": false, "diffWhitespaceCheck": "PASS"},
+  "coverage": {
+    "scope": ["server/account-api.mjs", "server/author-workspace-api.mjs", "server/creator-work-api.mjs", "server/secure-api.mjs"],
+    "tests": 36,
+    "linePercent": 90.51,
+    "branchPercent": 78.46,
+    "functionPercent": 95.45,
+    "wholeRepositoryCoverage": false
+  },
+  "security": {"changedCodeSecretScan": "PASS", "environmentFileIgnored": true, "privateBackingDataCommitted": false, "ownershipAndRoleContracts": "PASS"},
+  "actualDatabase": {"evidence": "artifacts/stage33-acceptance.json", "registrationApplied": true, "publicationApplied": false, "originalTablesCompared": 105, "originalRowsMatch": true, "flagsChanged": false},
+  "limitations": {"localhostTests": false, "browserAcceptance": false, "hostedRestoreAccepted": false, "storageImagesCronAccepted": false, "multipleDatabaseConnectionsAccepted": false, "vercelDeployment": false},
+  "nextStage": "improve34.md"
+}

@@ -100,9 +100,17 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         if (response.status === 204) return [];
         return response.json();
       }
-      const version = one(await db('p0_migration_status', { select: 'version,phase', version: 'eq.' + SCHEMA_VERSION, limit: '1' }));
-      if (version?.phase !== 'locked') fail(503, 'DATABASE_SECURITY_MIGRATION_REQUIRED');
-      if (url.pathname === '/api/v2/health' && request.method === 'GET') return reply({ status: 'ok', securityVersion: SCHEMA_VERSION });
+      const newSerials = env.NEW_SERIALS_ENABLED === 'true';
+      if (newSerials) {
+        if (!webtoonEnabled(env) || env.AUTHOR_PUBLICATION_REVIEW_ENABLED !== 'true' || env.AUTHOR_RICH_TEXT_ENABLED !== 'true')
+          fail(503, 'NEW_SERIAL_CONFIGURATION_REQUIRED');
+        if (await db('rpc/new_serials_ready', {}, {method:'POST',body:{}}) !== true)
+          fail(503, 'NEW_SERIAL_MIGRATION_REQUIRED');
+      } else {
+        const version = one(await db('p0_migration_status', { select: 'version,phase', version: 'eq.' + SCHEMA_VERSION, limit: '1' }));
+        if (version?.phase !== 'locked') fail(503, 'DATABASE_SECURITY_MIGRATION_REQUIRED');
+      }
+      if (url.pathname === '/api/v2/health' && request.method === 'GET') return reply({ status: 'ok', securityVersion: newSerials ? 'new-serials-20261021' : SCHEMA_VERSION });
 
       let userPromise;
       async function authenticatedUser() {
@@ -207,13 +215,25 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         }});
         return reply({ ...result, actor: await actor() });
       }
-      if (path === '/api/v2/me' && request.method === 'GET') return reply(await actor());
+      if (path === '/api/v2/me' && request.method === 'GET') {
+        const who=await actor();let multiFormatWorksEnabled=webtoonEnabled(env);
+        if(who.author&&!multiFormatWorksEnabled)try {
+          multiFormatWorksEnabled=await db('rpc/launch_work_registration_ready',{}, {method:'POST',body:{}})===true;
+        }catch{}
+        return reply({...who,multiFormatWorksEnabled:!!who.author&&multiFormatWorksEnabled});
+      }
       // Superseded endpoints cannot bypass the versioned creator and administrator RPCs.
       if (path === '/api/v2/admin/readers' || path === '/api/v2/admin/config' ||
           path === '/api/v2/works' || /^\/api\/v2\/works\/\d+$/.test(path))
         fail(410, 'LEGACY_API_CLOSED');
       let match = path.match(/^\/api\/v2\/episodes\/(\d+)\/content$/);
       if (match && request.method === 'GET') {
+        if (newSerials) {
+          await actor(false);
+          return reply(publicContent(await db('rpc/stage18_episode_content', {}, {
+            method:'POST',body:{p_episode_id:validId(match[1])}
+          }),fail,env));
+        }
         const who = await actor(false); const episode = await getEpisode(match[1]); const work = await getWork(episode.work_id);
         const editor = owns(who, work);
         if (discoveryEnabled(env)) {

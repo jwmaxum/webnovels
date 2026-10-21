@@ -186,6 +186,7 @@ revoke all on function authoring.stage8_visible(bigint,bigint) from public,anon,
 
 create or replace function public.stage8_reader(p_user uuid,p_action text,p_data jsonb default '{}')
 returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_column
 declare r public.readers; w public.works; ep public.episodes; h authoring.publication_heads;
  policy authoring.comment_policies; c public.comments; v authoring.publication_versions;
  v_work_id bigint; v_episode_id bigint; idx integer; snippet text; content text;
@@ -294,7 +295,7 @@ begin
     from (select c.id,c.parent_id,c.content,c.nickname_snapshot nickname,
       c.likes_count+(select count(*) from authoring.comment_likes l where l.comment_id=c.id) likes_count,
       c.quote_text,c.anchor_paragraph,c.anchor_version_id,c.anchor_hash,c.is_spoiler,c.created_at,
-      case when c.user_id=p_user then true else false end "mine"
+      case when c.user_id::text=p_user::text then true else false end "mine"
       from public.comments c where c.episode_id=v_episode_id and c.work_id=v_work_id
       and not c.is_deleted and not c.is_blocked and not c.is_hidden_by_author
       order by c.created_at limit 200) x),'[]'::jsonb),

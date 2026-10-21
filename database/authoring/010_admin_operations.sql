@@ -388,12 +388,12 @@ begin
       union all
       select 'COMMENT_REPORT',r.id::text,'댓글 신고',r.created_at
         from authoring.comment_reports r join public.comments c on c.id=r.comment_id
-        where r.status='REVIEWED' and (r.reporter_user_id=p_user or c.user_id=p_user)
+        where r.status='REVIEWED' and (r.reporter_user_id=p_user or c.user_id::text=p_user::text)
       union all
       select 'REPORT',r.id::text,'신고',r.created_at from public.reports r
-        where r.status::text<>'PENDING' and (r.reporter_id=p_user or
+        where r.status::text<>'PENDING' and (r.reporter_id::text=p_user::text or
           exists(select 1 from public.comments c where r.target_type='COMMENT'
-            and c.id::text=r.target_id and c.user_id=p_user))
+            and c.id::text=r.target_id and c.user_id::text=p_user::text))
       union all
       select 'WORK_MODERATION',wa.id::text,'작품 노출 제한',wa.created_at
         from authoring.admin_work_actions wa join authoring.work_state ws on ws.work_id=wa.work_id
@@ -421,11 +421,11 @@ begin
      where cr.id=appeal_source_id and cr.status::text<>'PENDING' and au.auth_user_id=p_user)
    when 'COMMENT_REPORT' then exists(select 1 from authoring.comment_reports r
      join public.comments c on c.id=r.comment_id where r.id=appeal_source_id and r.status='REVIEWED'
-       and (r.reporter_user_id=p_user or c.user_id=p_user))
+       and (r.reporter_user_id=p_user or c.user_id::text=p_user::text))
    when 'REPORT' then exists(select 1 from public.reports r where r.id=appeal_source_id
-     and r.status::text<>'PENDING' and (r.reporter_id=p_user or exists(select 1
+     and r.status::text<>'PENDING' and (r.reporter_id::text=p_user::text or exists(select 1
        from public.comments c where r.target_type='COMMENT' and c.id::text=r.target_id
-         and c.user_id=p_user)))
+         and c.user_id::text=p_user::text)))
    else exists(select 1 from authoring.admin_work_actions wa
      join authoring.work_state ws on ws.work_id=wa.work_id
      join public.works w on w.id=wa.work_id join public.authors au on au.id=w.author_id

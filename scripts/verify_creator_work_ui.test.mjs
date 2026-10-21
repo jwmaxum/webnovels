@@ -74,3 +74,23 @@ test('saved metadata is also escaped in the existing reader catalog card',async(
   const html=context.renderCdgWorkCardHtml({id:1,title:'" onmouseover="bad <img src=x>',genre:'<script>bad</script>'});
   assert.doesNotMatch(html,/title="" onmouseover=/);assert.doesNotMatch(html,/<script>/);assert.match(html,/&lt;img src=x&gt;/);
 });
+
+test('private author workspace offers both work types independently of public webtoon readiness',async()=>{
+  const s=setup({path:'/creator/works/new'});
+  s.setActor({userId:'user-a',author:{id:1},authorWorkspaceReady:true,multiFormatWorksEnabled:true});
+  await s.ui.loadFromRoute();
+  assert.match(s.root.innerHTML,/<option value="WEBTOON"/);assert.match(s.root.innerHTML,/기존 작품의 발행 이력과 관계없이/);
+  assert.match(s.root.innerHTML,/이미지 업로드와 발행/);
+  assert.match(s.ui.renderCard({...work,content_type:'WEBTOON'}),/웹툰/);
+  assert.match(s.ui.renderCard({...work,content_type:'NOVEL'}),/웹소설/);
+});
+
+test('uncertain webtoon creation retains its type across retry and never changes existing novel work',async()=>{
+  const storage=new Map(),first=setup({storage,responses:[new Error('response lost')]});
+  first.node('cwType').value='WEBTOON';await assert.rejects(first.ui.create('웹툰 신작'));
+  const second=setup({storage,responses:[{work:{...work,content_type:'WEBTOON'}}]});
+  await second.ui.create('다른 제목','NOVEL');
+  assert.equal(second.calls[0].options.body,first.calls[0].options.body);
+  assert.equal(JSON.parse(second.calls[0].options.body).contentType,'WEBTOON');
+  assert.equal(second.calls[0].options.method,'POST');
+});

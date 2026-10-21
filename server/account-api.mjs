@@ -58,8 +58,11 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
     const actor=await rpc('launch_account_actor',{p_user:user.id});
     if(me){
       if(request.method!=='GET')fail(405,'METHOD_NOT_ALLOWED');
+      const authorWorkspaceReady=!!actor.author&&await workspaceReady();
+      let multiFormatWorksEnabled=false;
+      if(authorWorkspaceReady)try{multiFormatWorksEnabled=await rpc('launch_work_registration_ready')===true;}catch{}
       return reply({...actor,accountServiceReady:true,accountServiceOnly:true,
-        authorWorkspaceReady:!!actor.author&&await workspaceReady()});
+        authorWorkspaceReady,multiFormatWorksEnabled});
     }
     if(dashboard)return reply(await authorDashboardApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
     if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));

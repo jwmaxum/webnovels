@@ -33,7 +33,7 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
     else if (request.method === 'POST' && id && match[2]) action = match[2];
     else fail(405, 'METHOD_NOT_ALLOWED');
     data = await readBody(request);
-    const allowed = action === 'create' ? ['title',...(webtoonEnabled(env)?['contentType']:[])] : action === 'update'
+    const allowed = action === 'create' ? ['title','contentType'] : action === 'update'
       ? ['title','description','genre','tags','rating','ai_usage_type','serial_state','visibility','version'] : ['version'];
     if (!Object.keys(data).length || Object.keys(data).some(k => !allowed.includes(k))) fail(400, 'FIELD_NOT_ALLOWED');
     if (action === 'create') {
@@ -42,6 +42,11 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
       if (!('title' in data)) fail(400, 'INVALID_FIELD');
     } else if (!decimal(data.version)) fail(400, 'VERSION_REQUIRED');
     if ('contentType' in data && !['NOVEL','WEBTOON'].includes(data.contentType)) fail(400,'INVALID_FIELD');
+    if (action==='create' && 'contentType' in data && !webtoonEnabled(env)) {
+      let registrationReady=false;
+      try { registrationReady=await db('rpc/launch_work_registration_ready',{}, {method:'POST',body:{}})===true; } catch {}
+      if(!registrationReady)fail(503,'WORK_REGISTRATION_NOT_ACTIVATED');
+    }
     if ('title' in data && (typeof data.title !== 'string' || !data.title.trim() || data.title.trim().length>200)) fail(400, 'INVALID_FIELD');
     if ('description' in data && (typeof data.description !== 'string' || data.description.length>5000)) fail(400, 'INVALID_FIELD');
     for (const name of ['genre','tags']) if (name in data && (!Array.isArray(data[name]) || data[name].length>10 || data[name].some(v => typeof v!=='string' || !v.trim() || v.trim().length>30))) fail(400, 'INVALID_FIELD');

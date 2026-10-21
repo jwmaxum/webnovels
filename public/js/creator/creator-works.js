@@ -15,6 +15,7 @@
     SCHEDULE_RUNNING:'예약 발행 처리 중입니다. 잠시 후 다시 시도해주세요.',
     WORK_TRASHED:'휴지통에서 먼저 복구해주세요.', RATING_REVIEW_REQUIRED:'공개 작품의 이용등급 변경은 운영 검토가 필요합니다.',
     AUTHOR_WORKS_NOT_ACTIVATED:'작품 관리 서비스가 아직 활성화되지 않았습니다.',
+    WORK_REGISTRATION_NOT_ACTIVATED:'작품 유형 등록 기능을 연결 중입니다. 입력을 보존했습니다. 잠시 후 같은 요청으로 다시 시도해주세요.',
     WORK_STATE_MIGRATION_REQUIRED:'기존 작품의 관리 정보 확인이 필요합니다. 운영자에게 문의해주세요.',
     IDEMPOTENCY_CONFLICT:'이전 등록 요청과 내용이 다릅니다. 목록에서 등록 결과를 먼저 확인해주세요.',
     INVALID_FIELD:'입력 길이와 선택 항목을 확인해주세요.'
@@ -30,7 +31,7 @@
   function status(work) { return work.trashed_at?'휴지통':work.visibility==='PUBLIC'?'공개':'비공개 / 초안'; }
   function card(work) {
     return `<article class="cw-card">${cover(work)}<div><h4>${e(work.title)}</h4>
-      <p>${status(work)} · ${{ONGOING:'연재 중',HIATUS:'휴재',COMPLETED:'완결'}[work.serial_state]||'확인 필요'} · ${e(work.episode_count)}화</p>
+      <p>${work.content_type==='WEBTOON'?'웹툰':'웹소설'} · ${status(work)} · ${{ONGOING:'연재 중',HIATUS:'휴재',COMPLETED:'완결'}[work.serial_state]||'확인 필요'} · ${e(work.episode_count)}화</p>
       ${work.moderation_state==='RESTRICTED'?'<p class="cw-notice">운영 제한</p>':''}
       <button type="button" class="btn btn-outline" data-work-id="${e(work.id)}">작품 관리</button></div></article>`;
   }
@@ -75,9 +76,10 @@
     ++epoch;current=null;
     const saved=pending();
     root().innerHTML=`<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><h3>새 작품 시작하기</h3>
-      <p>제목만 입력하면 비공개 작품이 만들어집니다. 소개와 장르, 이용등급은 이후에 설정할 수 있습니다.</p>
+      <p>작품마다 웹소설 또는 웹툰을 선택할 수 있습니다. 같은 작가 계정으로 두 종류를 모두 등록할 수 있으며, 기존 작품의 발행 이력과 관계없이 새 작품을 시작할 수 있습니다.</p>
       <form id="cwCreateForm"><label for="cwTitle">작품명</label><input id="cwTitle" class="form-control" maxlength="200" required value="${e(saved?.title||'')}" ${saved?'readonly':''}>
-        <label for="cwType">작품 유형</label><select id="cwType" class="form-control" ${saved?'disabled':''}><option value="NOVEL">웹소설</option>${window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true||saved?.contentType==='WEBTOON'?'<option value="WEBTOON" '+(saved?.contentType==='WEBTOON'?'selected':'')+'>웹툰</option>':''}</select><p>생성한 작품의 유형은 변경할 수 없습니다.</p>
+        <label for="cwType">작품 유형</label><select id="cwType" class="form-control" ${saved?'disabled':''}><option value="NOVEL">웹소설</option>${actor()?.multiFormatWorksEnabled===true||window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true||saved?.contentType==='WEBTOON'?'<option value="WEBTOON" '+(saved?.contentType==='WEBTOON'?'selected':'')+'>웹툰</option>':''}</select><p>제목과 유형으로 비공개 작품을 만듭니다. 생성한 작품의 유형은 변경할 수 없습니다.</p>
+        ${actor()?.multiFormatWorksEnabled===true&&window.WEBNOVELS_CONFIG?.webtoonServiceEnabled!==true?'<p class="cw-notice">웹툰 작품 등록과 소개 설정이 가능합니다. 이미지 업로드와 발행은 연결이 완료되면 이용할 수 있습니다.</p>':''}
         <p id="cwMessage" role="status">${saved?'이전 요청의 등록 결과를 확인하지 못했습니다. 같은 요청을 다시 확인합니다.':''}</p>
         <button type="submit" class="btn btn-primary">${saved?'등록 결과 확인 / 재시도':'비공개 작품 만들기'}</button></form>`;
     root().querySelector('#cwBack').onclick=()=>navigate('/creator/works');
@@ -94,11 +96,11 @@
     event.preventDefault();if(busy)return;
     const title=document.getElementById('cwTitle'),button=event.target.querySelector('button[type="submit"]');
     if(!title.value.trim())return;
-    busy=true;button.disabled=true;title.readOnly=true;const user=actor()?.userId,seq=epoch;
+    busy=true;button.disabled=true;title.readOnly=true;const type=document.getElementById('cwType');if(type)type.disabled=true;const user=actor()?.userId,seq=epoch;
     try {const result=await create(title.value);if(validRequest(seq,user))navigate('/creator/works/'+result.work.id+'/settings');}
     catch(error){if(validRequest(seq,user)){
       document.getElementById('cwMessage').textContent=message(error);
-      if(error.status===400){sessionStorage.removeItem(pendingKey());title.readOnly=false;}
+      if(error.status===400){sessionStorage.removeItem(pendingKey());title.readOnly=false;if(type)type.disabled=false;}
     }}
     finally{busy=false;button.disabled=false;}
   }
@@ -151,6 +153,11 @@
       }
       if(tab==='settings'&&result.distributionEnabled===true)window.CreatorDistribution?.mount(root().querySelector('#cwDistributionPanel'),current);
       const drafts=root().querySelector('#cwDrafts');if(drafts)drafts.onclick=()=>window.CreatorDraftEditor.openWork(id);
+      if(current.content_type==='WEBTOON'&&window.WEBNOVELS_CONFIG?.webtoonServiceEnabled!==true){
+        const note=document.createElement('p');note.className='cw-help';
+        note.textContent='웹툰 작품이 등록되었습니다. 지금은 작품 정보와 비공개 글 원고를 준비할 수 있습니다. 이미지 업로드·발행은 서비스 준비 완료 후 사용할 수 있습니다.';
+        root().append(note);
+      }
       const files=root().querySelector('#cwFiles');if(files)files.onclick=()=>window.CreatorFiles.open(id);
       const coverButton=root().querySelector('#cwCover');if(coverButton)coverButton.onclick=()=>window.CreatorFiles.open(id,{section:'cover'});
       const publications=root().querySelector('#cwPublications');if(publications)publications.onclick=()=>window.CreatorPublications.open(id);

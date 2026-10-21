@@ -1,0 +1,41 @@
+{
+  "createdAt": "2026-10-21T00:07:25.824Z",
+  "projectRef": "ghwabesnydktumeyejnm",
+  "tool": "pg_dump (PostgreSQL) 17.11",
+  "requestedSchemas": [
+    "public",
+    "auth",
+    "storage",
+    "authoring",
+    "launch_recovery",
+    "commerce",
+    "growth"
+  ],
+  "absentSchemas": [
+    "commerce",
+    "growth"
+  ],
+  "schemas": [
+    "auth",
+    "authoring",
+    "launch_recovery",
+    "public",
+    "storage"
+  ],
+  "bytes": 642987,
+  "sha256": "27955d7659902df9ae9f6f630417910592898cb596862c1f485a881b886032db",
+  "format": "PostgreSQL custom archive",
+  "tableDataEntries": 105,
+  "archiveReadable": true,
+  "hostedRestoreVerified": false,
+  "providerLoginReadOnly": true,
+  "credentialTtlSeconds": 300,
+  "tlsMode": "verify-full",
+  "certificateUrl": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+  "certificateSha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+  "limitations": [
+    "Cluster roles and provider-managed internals/configuration are not included.",
+    "Storage file bytes and external assets are separate.",
+    "Off-device copy and hosted Supabase restoration not yet verified."
+  ]
+}
