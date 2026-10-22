@@ -1,0 +1,114 @@
+{
+  "format": "requested-author-publication-v1",
+  "completedAt": "2026-10-22T06:41:54.261Z",
+  "productionApplied": true,
+  "author": {
+    "penName": "비즈피어",
+    "actualAccountCreated": true,
+    "requestedPasswordLoginVerified": true,
+    "emailConfirmationBasis": "operator provisioning after user confirmed ownership",
+    "passVerified": false,
+    "legalNameInvented": false,
+    "bankDetailsInvented": false
+  },
+  "work": {
+    "id": "32",
+    "url": "https://webnovels-db4.pages.dev/works/32",
+    "title": "조선 로맨스",
+    "author": "비즈피어",
+    "status": "COMPLETED",
+    "is_completed": true,
+    "ai_usage_type": "GENERATED",
+    "content_type": "NOVEL",
+    "view_count": 0,
+    "like_count": 0,
+    "episodes": 10,
+    "bodyCharacters": 23580,
+    "allEpisodesFree": true,
+    "aiGeneratedCover": true
+  },
+  "verification": {
+    "verifiedAt": "2026-10-22T06:41:06.429Z",
+    "realAuthLogin": true,
+    "realPublicHttpChapters": 10,
+    "chapterBodiesMatch": true,
+    "publicCompletedCatalog": true,
+    "publicCoverBytes": 127815,
+    "publicCoverSha256": "c04c5562ebdc9b976dde93b7f7da594ed3b96af4d84b56dc2b9dce9a8cfcaeda",
+    "adminProfilesPreserved": true,
+    "signup_enabled": false,
+    "serials_enabled": true,
+    "identity_accounts": 0,
+    "authors": 1,
+    "works": 1,
+    "review_requests": 0,
+    "browserAcceptance": false,
+    "published_drafts": 10,
+    "versions": 10,
+    "publication_consents": 10,
+    "homeCompletedSection": true,
+    "detailApi": true,
+    "episodeList": true,
+    "workPageHttp200": true,
+    "localSyntheticRehearsal": true,
+    "hostedRestoreAcceptance": false
+  },
+  "runtime": {
+    "deploymentId": "b762d658-4ae6-4365-bd07-dc288d5f1856",
+    "codeCommit": "f51963c997f08ad9447b0ee2fa4a6ce29109e9ec",
+    "deployStatus": "success",
+    "publicSignupEnabled": false,
+    "paymentEnabled": false,
+    "passEnabled": false,
+    "schedulerPublishingEnabled": false,
+    "otherCloudflareConfigurationPreserved": true
+  },
+  "backup": {
+    "tableCount": 164,
+    "snapshotSha256": "da802968031e125cb5b5ec57e8da3ad3a7358c5b94e794c1c6db13ff8b73a56f"
+  },
+  "sourceChecksums": [
+    {
+      "episode": 1,
+      "sha256": "c6f538bca34791ea6ab2869f1dd299ab59531406c110359303ba3c41494629ab"
+    },
+    {
+      "episode": 2,
+      "sha256": "13dfbe0eb229b2599fdc72abf26adc36473907066acb9122308983b29338a40d"
+    },
+    {
+      "episode": 3,
+      "sha256": "b4aa7b293a5a99ca9751e17183921fa8f0e2742197d780e47502155c8f9069f8"
+    },
+    {
+      "episode": 4,
+      "sha256": "b8b77adc044e4c07ac6cfb285c6fc96e8ccb01d6844fded3087cb2a98816b4a8"
+    },
+    {
+      "episode": 5,
+      "sha256": "79f860f5dfdb3ea34f6bbb9b6c69636eb8ff8e304341b01f6eb66aa63dd0b134"
+    },
+    {
+      "episode": 6,
+      "sha256": "fe676246fd19b39748ef405821aed8738c35ad08d9c11a35c0d84afc8efae1ef"
+    },
+    {
+      "episode": 7,
+      "sha256": "12d9a663adf9601fe6857b3740333667e2bcaad281eeae0947658be75129f999"
+    },
+    {
+      "episode": 8,
+      "sha256": "826c855d5acfa990172dd94cfe8caa278438bb0842c252753ea5c6fe16a9eab5"
+    },
+    {
+      "episode": 9,
+      "sha256": "9f17df3e5f695812e0651ab6f5a83a565294cc58b9b0c4bac008b2df1d9e3b77"
+    },
+    {
+      "episode": 10,
+      "sha256": "20ae5d9bad3b3372403bf07d8ce664d0322b25864d2f59b7e950b6a6a6f54123"
+    }
+  ],
+  "codeChanges": false,
+  "nextStep": "SMTP confirmation and recovery acceptance, followed by external beta onboarding; preserve this requested production content"
+}
