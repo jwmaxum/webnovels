@@ -51,7 +51,8 @@ export function assertActivation(report,projectRef,now=Date.now()) {
 export async function inspectCloudflare(api,{createdInThisRun=[]}={}) {
  const base='/accounts/'+api.accountId,candidates=[];
  for(let page=1;page<=100;page++) {
-  const projects=await api.request(base+'/pages/projects?per_page=100&page='+page);
+  // Use the Pages default page size instead of assuming another Cloudflare API's limit.
+  const projects=await api.request(base+'/pages/projects?page='+page);
   if(!Array.isArray(projects.result))error('CLOUDFLARE_PROJECT_LIST_INVALID');
   candidates.push(...projects.result.filter(p=>p.subdomain===TARGET_SUBDOMAIN));
   if(page>=(projects.result_info?.total_pages||1))break;

@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-10-22T04:36:15.744Z",
+  "imageBinding": {
+    "service": "webnovels-image-processor",
+    "environment": "production"
+  },
+  "encryptedProviderMaster": true,
+  "encryptedImageSharedSecret": true,
+  "imageWorkerBindingTypes": [
+    "secret_text",
+    "images"
+  ],
+  "schedulerPublishEnabled": false,
+  "schedulerSchedule": {
+    "schedules": [
+      {
+        "cron": "* * * * *",
+        "created_on": "2026-10-22T04:36:12.983517Z",
+        "modified_on": "2026-10-22T04:36:12.983517Z"
+      }
+    ]
+  },
+  "freeBetaEnabled": false,
+  "authOnboardingEnabled": false,
+  "publicActivation": false
+}

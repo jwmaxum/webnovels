@@ -4,8 +4,8 @@
 이에 무료 웹소설·웹툰을 먼저 운영하는 방향으로 35단계를 변경한다.
 
 **현재 실제 무료 베타 공개는 활성화하지 않았다.** 테스트 데이터 초기화, DB 준비 마이그레이션,
-Auth 공개 주소 변경은 적용했다. SMTP는 사용자 요청으로 추후 준비하고, Cloudflare 관리 API 접근권한 확인과
-이미지 Worker·Cron·Pages 연결의 실제 적용이 남아 있다. PASS·PG 계약 없이 무료 베타를 운영할 수 있도록
+Auth 공개 주소 변경과 Cloudflare 이미지 Worker·Cron·Pages 연결 설정은 적용했다. SMTP는 사용자 요청으로 추후 준비하고,
+새 인프라 설정을 반영한 Pages 재배포와 실제 기능 인수가 남아 있다. PASS·PG 계약 없이 무료 베타를 운영할 수 있도록
 구현했지만 이메일 확인과 서버·Storage 준비를 생략한 공개를 의미하지 않는다.
 
 ## 구현한 제공 범위
@@ -16,14 +16,14 @@ Auth 공개 주소 변경은 적용했다. SMTP는 사용자 요청으로 추후
 - 공개된 작품의 수정·삭제는 관리자 검토. 독자 탐색·본문·댓글·선호작은 기존 서버 계약을 사용한다.
 - 결제·유료 후원·성인 인증·정산·은행계좌 입력은 베타에서 닫는다.
 - 관리자 설정의 Toss/PASS 키는 암호화하여 저장하고 키 원문을 다시 반환하지 않는다.
-  저장만으로 서비스를 켜지 않는다. Cloudflare 서버 암호화 키의 실제 설정과 운영 저장 인수는 남아 있다.
+  저장만으로 서비스를 켜지 않는다. Cloudflare 서버 암호화 키는 설정했으며 Pages 재배포 후 운영 저장 인수가 남아 있다.
   [설정 안내](stage35-provider-settings.md)를 따른다.
 
 위 목록은 코드의 제공 범위다. 실제 공개 가입·이미지 처리·예약 발행 인수를 완료했다는 의미는 아니다.
 
 ## 실제 적용 결과
 
-2026-10-22 운영 Supabase 점검 기준이다. 산출물에는 비밀키와 원본 개인정보를 포함하지 않는다.
+2026-10-22 운영 Supabase 및 Cloudflare 점검 기준이다. 산출물에는 비밀키와 원본 개인정보를 포함하지 않는다.
 
 | 항목 | 확인된 결과 | 근거 |
 | --- | --- | --- |
@@ -35,11 +35,18 @@ Auth 공개 주소 변경은 적용했다. SMTP는 사용자 요청으로 추후
 | DB 준비 판정 | `launch_accounts_ready`, `launch_author_workspace_ready`, `launch_work_registration_ready`, `free_beta_enrollment_launch_ready`는 `true`. `new_serials_ready`와 공개 활성화는 `false` | [DB 인수](../../artifacts/stage35-db-acceptance.json) |
 | Auth 공개 주소 | 사이트 주소와 이메일 확인·비밀번호 복구 redirect 2개 적용 및 재조회 확인. 이메일 확인 필수 유지 | [Auth 설정](../../artifacts/stage35-auth-config.json) |
 | SMTP·메일 수신 | `smtpReady=false`, `emailConfigReady=false`, `deliveryVerified=false`. SMTP 입력 없이 주소만 적용 | [Auth 설정](../../artifacts/stage35-auth-config.json) |
-| Cloudflare 인프라·공개 | 기존 토큰의 `active` 상태 확인. Pages·Workers 목록 조회 401(`10000`), 토큰 정책 조회 403으로 관리 API 접근권한 미확인. 실제 배포와 공개 활성화 미완료 | 실제 관리 API 조회 및 [Cloudflare 적용 절차](stage35-image-processing.md) |
+| Cloudflare 인프라 | 새 토큰으로 실제 접근·적용 성공. 비공개 이미지 Worker·예약 Worker 업로드, 매분 Cron, Pages Service binding, 관리자 설정 암호화 master key·공유 비밀값 설정 및 재조회 완료 | [Cloudflare 적용](../../artifacts/stage35-cloudflare.json) |
+| Cloudflare 노출·설정 보존 | Workers.dev·preview 공개 접근 차단. 기존 Pages preview 설정과 무관한 변수 보존 재조회 통과 | [Cloudflare 적용 절차](stage35-image-processing.md) 및 실제 적용 재조회 |
+| Cloudflare 공개 전환 | `applied=true`, `activated=false`, `redeploymentRequired=true`. 새 설정을 반영한 Pages 재배포와 실제 기능 인수 미완료 | [Cloudflare 적용](../../artifacts/stage35-cloudflare.json) |
 
 관리자 프로필 4개와 관리자 Auth 1개는 서로 다른 수치다. 기존 관리자 행을 보존했다는 사실을
 4개의 로그인 계정이나 새 관리자 매핑 생성으로 해석하지 않는다.
 준비 산출물의 `authDeletionPending: 41`은 Auth 삭제 **전** 기록이며, 이후 Auth 정리 산출물에서 삭제 완료를 확인했다.
+
+Cloudflare의 기존 Pages·Workers 조회 401(`10000`) 및 토큰 정책 조회 403은 이전 접근 시도의 기록이다.
+새 토큰으로 접근 문제를 해결하고 2026-10-22 04:36:15 UTC에 인프라 적용 재조회를 완료했다.
+산출물 `workers.*.exists=false`는 생성 전 조사 결과이며, `steps`의 업로드·설정 완료와 `applied=true`가 적용 결과다.
+기존 커밋 `6b8db3f`의 CI·Pages production 배포 성공과 이번 인프라 설정을 반영할 후속 재배포는 별개다.
 
 ## 테스트 데이터 정리
 
@@ -56,11 +63,9 @@ CASCADE와 ID 재사용을 하지 않았다. 관리자 프로필·연결된 Auth
 
 ## 공개 전 남은 조건
 
-1. 사용자가 허용 IP를 추가하고 재사용을 지정한 기존 Cloudflare 토큰의 관리 API 권한·허용 IP를 확인한다.
-   계정 토큰 검증의 200·`active` 결과만으로 Pages·Workers 접근 성공을 간주하지 않는다. 확인된 토큰·계정을
-   적용 도구의 `CLOUDFLARE_API_TOKEN`·`CLOUDFLARE_ACCOUNT_ID` 입력으로 사용하여 [이미지 Worker](stage35-image-processing.md),
-   예약 발행 Cron, Pages Service binding 및 서버 암호화 키를 적용한다.
-   `configure_stage35_cloudflare.mjs --apply`는 인프라 준비이며 공개 기능을 켜지 않는다.
+1. 적용한 Cloudflare production 설정을 반영하여 Pages를 재배포하고 Service binding·서버 설정의 실제 동작을 확인한다.
+   [이미지 Worker](stage35-image-processing.md), 예약 발행 Cron, Pages Service binding과 서버 암호화 키 설정은 완료했다.
+   `configure_stage35_cloudflare.mjs --apply`는 인프라 준비이며 공개 기능을 켜지 않았다.
 2. 사용자 요청에 따라 추후 [SMTP 설정 절차](stage35-auth-email-setup.md)의 여섯 `BETA_SMTP_*` 입력을 준비한다.
    이미 적용한 공개 주소를 유지하면서 SMTP를 연결하고 실제 확인 메일 수신·가입·복구를 인수한다.
    현재 기본 Supabase 발송기의 제한을 일반 공개 베타 준비 완료로 간주하지 않는다.
@@ -74,14 +79,16 @@ CASCADE와 ID 재사용을 하지 않았다. 관리자 프로필·연결된 Auth
 ## 검증 범위와 한계
 
 - 실제 운영 반영: 백업 확보, 테스트 DB 초기화·준비 마이그레이션, Auth 41개 삭제, 관리자 보존 재조회,
-  공개 Auth 주소·redirect 적용 및 재조회.
+  공개 Auth 주소·redirect 적용 및 재조회, Cloudflare 비공개 Worker 2개 업로드·매분 Cron·Pages Service binding·서버 비밀값 설정 및 재조회.
 - 로컬 검증: 실제 snapshot의 PGlite 복원·준비 리허설, 서버 대역·VM DOM 기반 기능 및 회귀 검증.
-- 미수행: 공개 신규 가입 완료, 실제 메일 수신, Cloudflare 이미지 디코딩·업로드·독자 표시,
-  예약 발행의 실제 Cron 실행, PASS·PG 호출, 별도 Supabase 전체 복원 인수.
+- 미수행: 새 Cloudflare 설정을 반영한 Pages 재배포 확인, 공개 신규 가입 완료, 실제 메일 수신,
+  Cloudflare 이미지 디코딩·업로드·독자 표시, 실제 Cron을 통한 예약 원고 발행 인수,
+  관리자 제공자 설정의 실제 저장 인수, PASS·PG 호출, 별도 Supabase 전체 복원 인수.
 - 브라우저 및 localhost 검증은 수행하지 않았다. 로컬 대역·VM DOM 검증은 실제 사용자 인수를 대신하지 않는다.
 
 전체 release 테스트 722개와 빌드, 별도 `tsc --noEmit`이 통과했다. 마지막 대시보드 수정 이후 관련
 UI·DB/API·명칭 호환 14개, 설정 도구 12개, 라우터·권한·초기화 목록 6개 검증도 통과했다.
+Cloudflare Pages 조회의 `per_page` 쿼리 제거 이후 설정 도구 회귀 검증 7개도 통과했다.
 추가 실행은 전체 테스트와 중복되므로 합산한 고유 테스트 수로 해석하지 않는다.
 [검증 결과](../../artifacts/stage35-verification.json)에 적용 범위와 미완료 조건을 기록했다.
 이 문서의 DB 준비 완료를 전체 서비스 공개 완료로 해석하지 않는다.

@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-10-22T04:36:04.494Z",
+  "project": "webnovels",
+  "publicOrigin": "https://webnovels-db4.pages.dev",
+  "accountId": "7c88b2d2b3fe9baf32dc744ac0a631b3",
+  "productionBranch": "main",
+  "applied": true,
+  "activated": false,
+  "requestedActivation": false,
+  "steps": [
+    "webnovels-image-processor:private-bootstrap",
+    "webnovels-image-processor:uploaded",
+    "webnovels-authoring-scheduler:private-bootstrap",
+    "webnovels-authoring-scheduler:uploaded",
+    "scheduler:cron-configured",
+    "pages:production-configured"
+  ],
+  "privateBackupDirectory": "C:\\Users\\Microsoft\\Projects\\webnovels\\scratch\\launch\\cloudflare-stage35\\2026-10-22T04-36-04-485Z",
+  "workers": {
+    "webnovels-image-processor": {
+      "exists": true,
+      "publicDomains": 0,
+      "workersDevEnabled": false,
+      "previewsEnabled": false
+    },
+    "webnovels-authoring-scheduler": {
+      "exists": true,
+      "publicDomains": 0,
+      "workersDevEnabled": false,
+      "previewsEnabled": false
+    }
+  },
+  "publicRoutes": 0,
+  "changedVariables": [
+    "AUTHOR_IDENTITY_ENABLED",
+    "MONETIZATION_SANDBOX_ENABLED",
+    "GROWTH_SERVICE_ENABLED",
+    "GROWTH_MEASUREMENT_ENABLED",
+    "ADMIN_ROLE_CHANGES_ENABLED",
+    "PROVIDER_SETTINGS_SOURCE",
+    "PROVIDER_SETTINGS_KEY_VERSION",
+    "SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "SUPABASE_SECRET_KEY",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  ],
+  "smtpAcceptanceRequiredForActivation": true,
+  "redeploymentRequired": true,
+  "verifiedAt": "2026-10-22T04:36:15.744Z",
+  "workersBefore": {
+    "webnovels-image-processor": {
+      "exists": false,
+      "publicDomains": 0
+    },
+    "webnovels-authoring-scheduler": {
+      "exists": false,
+      "publicDomains": 0
+    }
+  }
+}

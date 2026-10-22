@@ -83,7 +83,10 @@ test('first private deploy bootstraps harmless code, disables public previews be
 test('inspection never writes, new absent Workers need no Zone permissions, existing routes are detected',async()=>{
  const calls=[],api={accountId,request:async(path,options={})=>{
   calls.push({path,options});assert.equal(options.method,undefined);
-  if(path.includes('/pages/projects?'))return {result:[project(),{...project(),name:'unrelated',subdomain:'other.pages.dev'}],result_info:{total_pages:1}};
+  if(path.includes('/pages/projects?')){
+   assert.equal(path,'/accounts/'+accountId+'/pages/projects?page=1');
+   return {result:[project(),{...project(),name:'unrelated',subdomain:'other.pages.dev'}],result_info:{total_pages:1}};
+  }
   if(path.endsWith('/pages/projects/webnovels'))return {result:project()};
   if(path.endsWith('/settings'))return null;
   if(path.includes('/domains?'))return {result:[]};
@@ -94,4 +97,19 @@ test('inspection never writes, new absent Workers need no Zone permissions, exis
  assert.equal(calls.some(c=>c.path.startsWith('/zones')),false);assert.doesNotThrow(()=>assertPrivateTargets(inspected));
  assert.throws(()=>assertPrivateTargets({...inspected,routes:[{script:IMAGE_WORKER}]}),/PUBLIC_ROUTE_REVIEW_REQUIRED/);
  inspected.workers[IMAGE_WORKER].domains.push({hostname:'example.test'});assert.throws(()=>assertPrivateTargets(inspected),/PUBLIC_ROUTE_REVIEW_REQUIRED/);
+});
+
+test('Pages discovery uses the default page size and follows metadata to find a later target',async()=>{
+ const pages=[],api={accountId,request:async(path)=>{
+  if(path.includes('/pages/projects?')){
+   const query=new URL('https://api.cloudflare.com'+path).searchParams;
+   assert.equal(query.has('per_page'),false);const page=Number(query.get('page'));pages.push(page);
+   return {result:page===1?[{...project(),name:'other',subdomain:'other.pages.dev'}]:[project()],result_info:{total_pages:2}};
+  }
+  if(path.endsWith('/pages/projects/webnovels'))return {result:project()};
+  if(path.endsWith('/settings'))return null;
+  if(path.includes('/domains?'))return {result:[]};
+  throw Error('unexpected read');
+ }};
+ assert.equal((await inspectCloudflare(api)).project.name,'webnovels');assert.deepEqual(pages,[1,2]);
 });

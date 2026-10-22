@@ -2,29 +2,65 @@
   "checkedAt": "2026-10-22T04:16:00Z",
   "build": "PASS",
   "typeCheckNoEmit": "PASS",
-  "releaseSuite": { "tests": 722, "passed": 722, "failed": 0 },
+  "releaseSuite": {
+    "tests": 722,
+    "passed": 722,
+    "failed": 0
+  },
   "additionalTargetedRuns": [
-    { "scope": "Cloudflare and Auth configuration", "passed": 12, "failed": 0 },
-    { "scope": "Final beta dashboard, author dashboard and naming regression", "passed": 14, "failed": 0 },
-    { "scope": "Final router, authorization and reset inventory", "passed": 6, "failed": 0 }
+    {
+      "scope": "Cloudflare and Auth configuration",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "scope": "Final beta dashboard, author dashboard and naming regression",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "scope": "Final router, authorization and reset inventory",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "scope": "Live API pagination repair and Cloudflare configuration regression",
+      "passed": 7,
+      "failed": 0
+    }
   ],
   "targetedRunsOverlapReleaseSuite": true,
-  "syntaxChecks": { "files": 37, "failed": 0 },
+  "syntaxChecks": {
+    "files": 37,
+    "failed": 0
+  },
   "lint": "No lint script configured; JavaScript syntax and git diff checks used",
-  "security": { "currentEnvironmentSecretMatches": 0, "criticalFindingsRemaining": 0 },
+  "security": {
+    "currentEnvironmentSecretMatches": 0,
+    "criticalFindingsRemaining": 0
+  },
   "coverage": {
     "wholeApplicationMeasured": false,
-    "providerServerModules": { "linePercent": 100, "branchPercent": 83.96 },
-    "imageModules": { "linePercent": 100, "branchPercentApproximate": 93 }
+    "providerServerModules": {
+      "linePercent": 100,
+      "branchPercent": 83.96
+    },
+    "imageModules": {
+      "linePercent": 100,
+      "branchPercentApproximate": 93
+    }
   },
   "hostedDatabaseApplied": true,
   "hostedDatabaseAcceptance": "stage35-db-acceptance.json",
   "cloudflare": {
+    "checkedAt": "2026-10-22T04:36:15.744Z",
     "accountTokenActive": true,
-    "pagesAccessHttpStatus": 401,
-    "workersAccessHttpStatus": 401,
-    "apiErrorCode": 10000,
-    "infrastructureApplied": false
+    "pagesAccessHttpStatus": 200,
+    "workersAccessHttpStatus": 200,
+    "infrastructureApplied": true,
+    "publicBetaActivated": false,
+    "acceptance": "stage35-cloudflare-acceptance.json",
+    "pagesRedeploymentPending": true
   },
   "smtp": "Deferred by user; public email delivery not accepted",
   "publicBetaActivated": false,

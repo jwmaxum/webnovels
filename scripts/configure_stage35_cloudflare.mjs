@@ -72,6 +72,9 @@ export async function configure({argv=process.argv.slice(2),env=access.loadEnv()
   if(fingerprint(after.project.deployment_configs.preview)!==fingerprint(snapshot.project.deployment_configs.preview))fail('CLOUDFLARE_PREVIEW_CHANGED');
   if(production.services?.IMAGE_PROCESSOR?.service!==IMAGE_WORKER)fail('CLOUDFLARE_BINDING_VERIFICATION_FAILED');
   for(const worker of Object.values(after.workers))if(worker.subdomain?.enabled!==false||worker.subdomain?.previews_enabled!==false)fail('CLOUDFLARE_PRIVATE_WORKER_REQUIRED');
+  report.workersBefore=report.workers;
+  report.workers=Object.fromEntries(Object.entries(after.workers).map(([name,w])=>[name,{exists:w.exists,
+   publicDomains:w.domains.length,workersDevEnabled:w.subdomain?.enabled,previewsEnabled:w.subdomain?.previews_enabled}]));
   report.applied=true;report.activated=activate;report.verifiedAt=new Date().toISOString();persist();return report;
  } catch(error) {
   report.failed=true;report.error=/^(?:CLOUDFLARE_|FREE_BETA_)[A-Z0-9_]+$/.test(error.message)?error.message:'CLOUDFLARE_OPERATION_FAILED';persist();throw Error(report.error);
