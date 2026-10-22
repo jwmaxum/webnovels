@@ -5,7 +5,7 @@
   const actor=()=>window.WebNovelsAuth?.getActor();
   const can=p=>actor()?.admin?.role==='SUPER_ADMIN'||actor()?.admin?.permissions?.includes(p);
   const permissions=[['OPERATIONS_READ','운영 대시보드'],['ACCOUNTS_READ','작가·독자 조회'],
-    ['CONTENT_METADATA_READ','작품·회차 조회'],['CASE_READ','신고·검수 조회'],['CASE_RESOLVE','신고 처리'],
+    ['CONTENT_METADATA_READ','작품·회차 조회'],['CASE_READ','신고·검수·문의 조회'],['CASE_RESOLVE','신고·문의 처리'],
     ['CONTENT_REVIEW','콘텐츠 검수'],['COMMENT_REPORT','댓글 신고 처리'],['CONTENT_MODERATE','작품 노출 제한'],
     ['CURATION_WRITE','홈 큐레이션'],['AUDIT_READ','감사 기록'],['ACCOUNT_MODERATE','계정 정지·복구'],['SETTLEMENTS_READ','정산 기록 조회']];
   const titles={dashboard:'운영 대시보드',works:'작품 CMS',episodes:'회차 CMS',accounts:'작가·독자 관리',
@@ -108,6 +108,7 @@
           const card=el(cards,'article',null,'cms-metric');el(card,'span',label);el(card,'strong',result[key]??'확인 필요');
         }
         notice(root,`원본 본문 확인이 필요한 회차: ${result.emptyOriginals??'확인 필요'}개. 등록 건수는 공개 가능 건수와 다릅니다.`);
+        if(can('OPERATIONS_READ')||can('CASE_READ'))button(root,'베타 운영 · 오류 및 문의 지원함',()=>window.AdminOperations?.navigate('beta-operations'));
         el(root,'h3','서비스 준비 상태');settings(root);window.GrowthStudio?.admin(root);return;
       }
       const items=result.items||[];

@@ -11,6 +11,22 @@ const lit = v => "'" + v.replaceAll("'", "''") + "'";
 const sha = v => crypto.createHash('sha256').update(v).digest('hex');
 const fingerprint = rows => sha([...rows].sort().join('\n'));
 
+async function restoreConstraintValidators(db,snapshot,constraints) {
+  // Stage 32 formatted-manuscript CHECKs depend on this pure, immutable validator.
+  // Restore its exact backed-up definition before validating the CHECKs; do not
+  // skip the constraints or execute migrations/triggers to make a backup pass.
+  if(!constraints.some(c=>c.type==='c'&&/\bauthoring\.document_valid\s*\(/.test(c.definition)))return 0;
+  const validators=(snapshot.functions||[]).filter(f=>f.schema==='authoring'&&f.signature?.replaceAll(' ','')==='authoring.document_valid(jsonb,text)');
+  if(validators.length!==1)throw Error('BACKUP_DOCUMENT_VALIDATOR_REQUIRED');
+  await db.exec(validators[0].definition);
+  const checked=(await db.query(`select p.provolatile='i' and not p.prosecdef and l.lanname='plpgsql'
+    and coalesce(p.proconfig @> array['search_path=""'],false) valid
+    from pg_proc p join pg_language l on l.oid=p.prolang where p.oid='authoring.document_valid(jsonb,text)'::regprocedure`)).rows[0];
+  if(checked?.valid!==true)throw Error('BACKUP_DOCUMENT_VALIDATOR_CONTRACT');
+  await db.exec('revoke all on function authoring.document_valid(jsonb,text) from public');
+  return 1;
+}
+
 export async function restoreSnapshot(snapshot) {
   const db = await PGlite.create();
   try {
@@ -30,6 +46,7 @@ export async function restoreSnapshot(snapshot) {
     }
     // Restore referenced keys in managed schemas too (e.g. auth.users.id).
     const constraints = (snapshot.constraints || []).filter(c => scope.applicationSchemas.includes(c.schema) || ['p','u'].includes(c.type));
+    const constraintValidators=await restoreConstraintValidators(db,snapshot,constraints);
     for (const c of constraints.filter(c => c.type !== 'f'))
       await db.exec(`alter table ${q(c.schema)}.${q(c.table)} add constraint ${q(c.name)} ${c.definition}`);
     // Composite referenced keys can be standalone unique indexes rather than constraints.
@@ -50,7 +67,7 @@ export async function restoreSnapshot(snapshot) {
       verified.push({ schema: t.schema, name: t.name, rows: rows.length, sha256: fingerprint(rows) });
     }
     return { db, verified, publicConstraints: constraints.filter(c=>c.schema==='public').length,
-      applicationConstraints: constraints.filter(c=>scope.applicationSchemas.includes(c.schema)).length,uniqueIndexes };
+      applicationConstraints: constraints.filter(c=>scope.applicationSchemas.includes(c.schema)).length,uniqueIndexes,constraintValidators };
   } catch (error) { await db.close(); throw error; }
 }
 
@@ -62,7 +79,7 @@ async function main() {
   const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json')));
   if (sha(bytes) !== manifest.snapshotSha256) throw Error('BACKUP_CHECKSUM_MISMATCH');
   const snapshot = JSON.parse(bytes);
-  const { db, verified, publicConstraints, applicationConstraints, uniqueIndexes } = await restoreSnapshot(snapshot);
+  const { db, verified, publicConstraints, applicationConstraints, uniqueIndexes, constraintValidators } = await restoreSnapshot(snapshot);
   await db.close();
   const report = { verifiedAt: new Date().toISOString(), snapshotSha256: sha(bytes),
     engine: 'PGlite isolated in-memory PostgreSQL', source: 'actual production rows',
@@ -70,6 +87,7 @@ async function main() {
     publicConstraintsVerified: publicConstraints, allRowsMatch: true,
     applicationConstraintsVerified: applicationConstraints,
     standaloneUniqueIndexesVerified: uniqueIndexes,
+    immutableConstraintValidatorsRestored: constraintValidators,
     fullSchemaRestore: false, hostedSupabaseRestore: false,
     limitations: ['Generated values restored as ordinary values; defaults, triggers, roles, ACLs, RLS, sequences, views and RPC behavior not restored or accepted.'],
     tables: verified };

@@ -41,6 +41,7 @@
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
   <link rel="stylesheet" href="/styles.css?v=134">
   <link rel="stylesheet" href="/css/free-beta.css?v=135">
+  <link rel="stylesheet" href="/css/beta-operations.css?v=136">
 <link rel="stylesheet" href="/css/webtoon.css?v=118">
 <link rel="stylesheet" href="/css/growth.css?v=121">
 <link rel="stylesheet" href="/css/policies.css?v=20261011">
@@ -166,6 +167,7 @@
             <div class="user-points-badge" id="headerPointsBadge" style="display:none">
               🪙 <span id="headerPointsValue">0P</span>
             </div>
+            <button type="button" class="btn btn-outline btn-sm beta-support-header-link" data-beta-support-open>문의·피드백</button>
             <div class="user-profile-menu" id="userProfileMenu">
               <button class="btn btn-primary btn-sm" id="btnHeaderLogin">로그인</button>
             </div>
@@ -660,6 +662,7 @@
               <button type="button" class="cdg-genre-pill" data-creator-tab="home">활동 요약</button>
               <button type="button" class="cdg-genre-pill" data-creator-tab="earnings">수익 내역</button>
               <button type="button" class="cdg-genre-pill" data-creator-tab="profile">내 정보·정산 계좌</button>
+              <button type="button" class="cdg-genre-pill" data-beta-support-open>문의·피드백</button>
             </div></details>
           </div>
           <div class="creator-tab-panel" id="creatorTab-earnings" style="display:none;">
@@ -1034,6 +1037,7 @@
               <button class="btn btn-outline w-full mt-3" id="btnOpenEditProfile" onclick="openEditProfileModal()">
                 <i data-lucide="user-cog"></i> 나의 정보 수정
               </button>
+              <button type="button" class="btn btn-outline w-full mt-3" data-beta-support-open>문의·피드백</button>
             </aside>
 
 
@@ -2356,6 +2360,7 @@
           <!-- Settings & Auth -->
           <div class="mobile-more-section">
             <div class="mobile-more-list">
+              <button type="button" class="mobile-more-list-item w-full text-left" data-beta-support-open>문의·피드백</button>
               <div class="mobile-more-list-item" style="display:none" onclick="toggleAdultContentMode()">
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <i data-lucide="shield-alert" style="color: var(--accent-danger);"></i>
@@ -2450,7 +2455,7 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=135"></script>
+  <script src="/js/core/role-modules.js?v=136"></script>
   <script src="/js/core/router.js?v=132"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
@@ -2575,14 +2580,24 @@
       </div>
     </div>
   </div>
+  <div class="beta-support-backdrop" id="betaSupportModal" hidden>
+    <section class="beta-support-dialog" role="dialog" aria-modal="true" aria-labelledby="betaSupportTitle" tabindex="-1">
+      <div class="beta-support-dialog-header">
+        <h2 id="betaSupportTitle">문의·피드백</h2>
+        <button type="button" class="btn btn-outline btn-sm" id="betaSupportClose" aria-label="문의·피드백 닫기">닫기</button>
+      </div>
+      <div id="betaSupportContent"></div>
+    </section>
+  </div>
   <!-- Supabase Extension & Bootstrap Entry -->
   <script src="/supabase-public-config.js?v=1"></script>
   <script src="/api/public-config.js"></script>
   <script src="/supabase-admin.js?v=116"></script>
-  <script src="/js/core/auth-session.js?v=135"></script>
+  <script src="/js/core/auth-session.js?v=136"></script>
   <script src="/js/core/author-enrollment.js?v=135"></script>
   <script src="/js/core/account-access.js?v=114"></script>
   <script src="/js/core/appeals.js?v=117"></script>
+  <script src="/js/core/beta-support.js?v=136"></script>
   <script src="/js/core/auth-ui.js?v=134"></script>
   <script src="/js/core/service-status.js?v=114"></script>
   <script src="/js/core/free-beta-ui.js?v=135"></script>

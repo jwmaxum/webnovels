@@ -14,8 +14,8 @@
       '/js/creator/creator-operations.js?v=124'
     ],
     admin: [
-      '/js/admin/admin.js?v=20261012', '/js/admin/admin-provider-settings.js?v=135', '/js/admin/admin-console.js?v=135',
-      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=124', '/js/admin/admin-workflow.js?v=124', '/js/admin/admin-operations.js?v=123',
+      '/js/admin/admin.js?v=20261012', '/js/admin/admin-provider-settings.js?v=135', '/js/admin/admin-console.js?v=136',
+      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=124', '/js/admin/admin-workflow.js?v=124', '/js/admin/admin-beta-operations.js?v=136', '/js/admin/admin-operations.js?v=136',
       '/js/admin/virtual-accounts.js?v=111'
     ]
   };

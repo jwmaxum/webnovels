@@ -1,7 +1,7 @@
 // Deploy separately from Pages. Only the scheduled event can call the service-only RPC.
 export default {
   async scheduled(_event, env, context) {
-    if (env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true' && env.AUTHOR_IDENTITY_ENABLED !== 'true') return;
+    if (env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true' && env.AUTHOR_IDENTITY_ENABLED !== 'true' && env.BETA_OPERATIONS_ENABLED !== 'true') return;
     if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(env.SUPABASE_URL || '') ||
         !env.SUPABASE_SECRET_KEY) throw Error('Scheduler configuration missing');
     const invoke=async (name,payload={p_limit:20})=>{
@@ -23,12 +23,22 @@ export default {
     });
     // Keep the invocation observable in Cloudflare cron logs without manuscript text.
     context.waitUntil(Promise.resolve(result));
+    return result;
     };
     // Separate disabled-by-default preparation job. It never changes a tier or sends messages.
     // Run jobs independently so a publication failure cannot starve the growth batch.
     const jobs=[];
+    if(env.BETA_OPERATIONS_ENABLED==='true')jobs.push(invoke('maintain_beta_operations',{}));
     if(env.AUTHOR_IDENTITY_ENABLED==='true')jobs.push(invoke('cleanup_author_enrollment',{}));
-    if(env.AUTHOR_PUBLISH_ENABLED==='true')jobs.push(invoke(env.WEBTOON_SERVICE_ENABLED==='true'?'run_creator_schedules_v18':'run_creator_schedules'));
+    if(env.AUTHOR_PUBLISH_ENABLED==='true')jobs.push((async()=>{
+      const start=Date.now();let status=200;
+      try{const result=await invoke(env.WEBTOON_SERVICE_ENABLED==='true'?'run_creator_schedules_v18':'run_creator_schedules');
+        if(result?.failedOrRetrying)status=503;
+      }catch(error){status=503;throw error;}
+      finally{if(env.BETA_OPERATIONS_ENABLED==='true')try{await invoke('record_beta_operation',{
+        p_request:crypto.randomUUID(),p_area:'SCHEDULER',p_status:status,p_duration:Math.min(60000,Math.max(0,Date.now()-start))
+      });}catch{/* Telemetry failure must not retry publication. */}}
+    })());
     if(env.GROWTH_SERVICE_ENABLED==='true')jobs.push(invoke('run_growth_evaluations'));
     if(env.GROWTH_SERVICE_ENABLED==='true'&&env.GROWTH_MEASUREMENT_ENABLED==='true')jobs.push(invoke('prune_growth_measurements'));
     const results=await Promise.allSettled(jobs);

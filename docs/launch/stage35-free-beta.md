@@ -5,7 +5,7 @@
 
 **현재 실제 무료 베타 공개는 활성화하지 않았다.** 테스트 데이터 초기화, DB 준비 마이그레이션,
 Auth 공개 주소 변경과 Cloudflare 이미지 Worker·Cron·Pages 연결 설정은 적용했다. SMTP는 사용자 요청으로 추후 준비하고,
-새 인프라 설정을 반영한 Pages 재배포와 실제 기능 인수가 남아 있다. PASS·PG 계약 없이 무료 베타를 운영할 수 있도록
+Pages 재배포는 후속 조회에서 성공을 확인했으며 실제 기능 인수가 남아 있다. PASS·PG 계약 없이 무료 베타를 운영할 수 있도록
 구현했지만 이메일 확인과 서버·Storage 준비를 생략한 공개를 의미하지 않는다.
 
 ## 구현한 제공 범위
@@ -37,7 +37,7 @@ Auth 공개 주소 변경과 Cloudflare 이미지 Worker·Cron·Pages 연결 설
 | SMTP·메일 수신 | `smtpReady=false`, `emailConfigReady=false`, `deliveryVerified=false`. SMTP 입력 없이 주소만 적용 | [Auth 설정](../../artifacts/stage35-auth-config.json) |
 | Cloudflare 인프라 | 새 토큰으로 실제 접근·적용 성공. 비공개 이미지 Worker·예약 Worker 업로드, 매분 Cron, Pages Service binding, 관리자 설정 암호화 master key·공유 비밀값 설정 및 재조회 완료 | [Cloudflare 적용](../../artifacts/stage35-cloudflare.json) |
 | Cloudflare 노출·설정 보존 | Workers.dev·preview 공개 접근 차단. 기존 Pages preview 설정과 무관한 변수 보존 재조회 통과 | [Cloudflare 적용 절차](stage35-image-processing.md) 및 실제 적용 재조회 |
-| Cloudflare 공개 전환 | `applied=true`, `activated=false`, `redeploymentRequired=true`. 새 설정을 반영한 Pages 재배포와 실제 기능 인수 미완료 | [Cloudflare 적용](../../artifacts/stage35-cloudflare.json) |
+| Cloudflare 공개 전환 | `applied=true`, `activated=false`. 산출물 작성 시 재배포가 필요했으나 36단계 시작 시 `5f5e934`의 Pages production 성공 확인. 실제 기능 인수는 미완료 | [Cloudflare 적용](../../artifacts/stage35-cloudflare.json), [후속 조회](stage36-operations-runbook.md) |
 
 관리자 프로필 4개와 관리자 Auth 1개는 서로 다른 수치다. 기존 관리자 행을 보존했다는 사실을
 4개의 로그인 계정이나 새 관리자 매핑 생성으로 해석하지 않는다.
@@ -45,7 +45,7 @@ Auth 공개 주소 변경과 Cloudflare 이미지 Worker·Cron·Pages 연결 설
 
 Cloudflare의 기존 Pages·Workers 조회 401(`10000`) 및 토큰 정책 조회 403은 이전 접근 시도의 기록이다.
 새 토큰으로 접근 문제를 해결하고 2026-10-22 04:36:15 UTC에 인프라 적용 재조회를 완료했다.
-산출물 `workers.*.exists=false`는 생성 전 조사 결과이며, `steps`의 업로드·설정 완료와 `applied=true`가 적용 결과다.
+산출물 `workersBefore.*.exists=false`는 생성 전 조사 결과이며, `workers`의 재조회·`steps`의 업로드·설정 완료와 `applied=true`가 적용 결과다.
 기존 커밋 `6b8db3f`의 CI·Pages production 배포 성공과 이번 인프라 설정을 반영할 후속 재배포는 별개다.
 
 ## 테스트 데이터 정리
@@ -63,7 +63,7 @@ CASCADE와 ID 재사용을 하지 않았다. 관리자 프로필·연결된 Auth
 
 ## 공개 전 남은 조건
 
-1. 적용한 Cloudflare production 설정을 반영하여 Pages를 재배포하고 Service binding·서버 설정의 실제 동작을 확인한다.
+1. Cloudflare production 재배포 성공은 36단계 시작 시 확인했다. Service binding·서버 설정의 실제 기능 동작 인수를 이어간다.
    [이미지 Worker](stage35-image-processing.md), 예약 발행 Cron, Pages Service binding과 서버 암호화 키 설정은 완료했다.
    `configure_stage35_cloudflare.mjs --apply`는 인프라 준비이며 공개 기능을 켜지 않았다.
 2. 사용자 요청에 따라 추후 [SMTP 설정 절차](stage35-auth-email-setup.md)의 여섯 `BETA_SMTP_*` 입력을 준비한다.
@@ -81,7 +81,8 @@ CASCADE와 ID 재사용을 하지 않았다. 관리자 프로필·연결된 Auth
 - 실제 운영 반영: 백업 확보, 테스트 DB 초기화·준비 마이그레이션, Auth 41개 삭제, 관리자 보존 재조회,
   공개 Auth 주소·redirect 적용 및 재조회, Cloudflare 비공개 Worker 2개 업로드·매분 Cron·Pages Service binding·서버 비밀값 설정 및 재조회.
 - 로컬 검증: 실제 snapshot의 PGlite 복원·준비 리허설, 서버 대역·VM DOM 기반 기능 및 회귀 검증.
-- 미수행: 새 Cloudflare 설정을 반영한 Pages 재배포 확인, 공개 신규 가입 완료, 실제 메일 수신,
+- 후속 확인: 36단계 시작 시 `5f5e934` GitHub CI 및 Cloudflare Pages production 재배포 성공.
+- 미수행: 공개 신규 가입 완료, 실제 메일 수신,
   Cloudflare 이미지 디코딩·업로드·독자 표시, 실제 Cron을 통한 예약 원고 발행 인수,
   관리자 제공자 설정의 실제 저장 인수, PASS·PG 호출, 별도 Supabase 전체 복원 인수.
 - 브라우저 및 localhost 검증은 수행하지 않았다. 로컬 대역·VM DOM 검증은 실제 사용자 인수를 대신하지 않는다.

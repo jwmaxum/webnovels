@@ -1,0 +1,52 @@
+{
+  "format": "webnovels-stage36-preparation-v1",
+  "checkedAt": "2026-10-22T05:34:01.962Z",
+  "projectRef": "ghwabesnydktumeyejnm",
+  "snapshotSha256": "6a13dcad22185059c7939c9589502f9cc7b33f2344554c4572a0fc7ba494b69f",
+  "migrationSha256": "e7b98ded90267756328d92d852fd48819b78506d85bd63bb5129b8cca9b182b9",
+  "files": [
+    "database/authoring/026_beta_support.sql",
+    "database/authoring/027_beta_operations.sql"
+  ],
+  "rehearsal": {
+    "engine": "PGlite restored snapshot rows, constraints, defaults and application routines",
+    "originalTables": 157,
+    "originalRows": 209,
+    "originalRowsMatch": true,
+    "migrationMarkersAddedOnly": true,
+    "flagsUnchanged": true,
+    "migrationRepeatable": true,
+    "sourceDriftRejected": true,
+    "privateTables": 7,
+    "serviceOnlyRpcs": 4,
+    "explicitGrants": true,
+    "rlsEnabled": true,
+    "roleChecks": true,
+    "sourceIsolation": "REPEATABLE READ",
+    "managedProviderWritesFrozen": false,
+    "postApplyDriftRequiresReview": true,
+    "destructiveReset": false,
+    "hostedRestoreAcceptance": false,
+    "multiConnectionAcceptance": false,
+    "browserAcceptance": false
+  },
+  "native": {
+    "nativeArchiveSha256": "dc9b6c1cfccb66dc4dc3d395988645e04a4677792a22473c3043e7991d9d1b6c",
+    "nativeArchiveVerified": true,
+    "nativeTables": 157,
+    "independentSnapshotTimes": true,
+    "combinedConsistentSnapshotConfirmed": false,
+    "hostedRestoreAccepted": false
+  },
+  "applied": true,
+  "productionApplied": true,
+  "flagsChanged": false,
+  "destructiveReset": false,
+  "browserAcceptance": false,
+  "productionState": {
+    "originalRowsMatch": true,
+    "flagsUnchanged": true,
+    "privateTableAcl": true,
+    "serviceOnlyRpcs": true
+  }
+}

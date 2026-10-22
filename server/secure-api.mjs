@@ -14,6 +14,7 @@ import { freeBetaEnrollmentApi } from './free-beta-enrollment-api.mjs';
 import { discoveryEnabled, publicContent } from './stage16-api.mjs';
 import { paidEpisodeApi } from './paid-episode-api.mjs';
 import { growthApi,measurementEnabled } from './growth-api.mjs';
+import {observeOperation} from './beta-operations.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
@@ -65,7 +66,7 @@ async function readBody(request) {
   return body;
 }
 export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
-  return async function handle(request, env) {
+  const handle=async function(request, env) {
     const betaEnrollmentResponse = await freeBetaEnrollmentApi(request, env, { fetchImpl, now });
     if (betaEnrollmentResponse) return betaEnrollmentResponse;
     const enrollmentResponse = await authorEnrollmentApi(request, env, { fetchImpl, now });
@@ -290,6 +291,7 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
       return reply({ error: error instanceof ApiError ? error.code : 'SERVICE_UNAVAILABLE', requestId }, error instanceof ApiError ? error.status : 503);
     }
   };
+  return (request,env,context)=>observeOperation(request,env,()=>handle(request,env),{fetchImpl,now,context});
 }
 
 export const handleSecureApi = createSecureApi();

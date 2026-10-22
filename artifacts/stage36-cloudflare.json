@@ -1,0 +1,94 @@
+{
+  "checkedAt": "2026-10-22T05:34:45.897Z",
+  "project": "webnovels",
+  "publicOrigin": "https://webnovels-db4.pages.dev",
+  "projectRef": "ghwabesnydktumeyejnm",
+  "applied": true,
+  "publicActivation": false,
+  "steps": [
+    "scheduler:operations-configured",
+    "pages:operations-configured"
+  ],
+  "changedVariables": [
+    "BETA_OPERATIONS_ENABLED"
+  ],
+  "redeploymentRequired": true,
+  "pagesOperationFlagBefore": {
+    "present": false
+  },
+  "schedulerOperationFlagBefore": {
+    "present": false
+  },
+  "closedFlagsPreserved": true,
+  "privateWorkers": true,
+  "cronCount": 1,
+  "closedPagesFlags": {
+    "FREE_BETA_ENABLED": {
+      "present": false
+    },
+    "P0_API_ENABLED": {
+      "present": false
+    },
+    "NEW_SERIALS_ENABLED": {
+      "present": false
+    },
+    "AUTH_ONBOARDING_ENABLED": {
+      "present": false
+    },
+    "AUTHOR_IDENTITY_ENABLED": {
+      "present": true,
+      "type": "plain_text",
+      "enabled": false,
+      "disabled": true
+    },
+    "MONETIZATION_SANDBOX_ENABLED": {
+      "present": true,
+      "type": "plain_text",
+      "enabled": false,
+      "disabled": true
+    }
+  },
+  "closedSchedulerFlags": {
+    "AUTHOR_PUBLISH_ENABLED": {
+      "present": true,
+      "type": "plain_text",
+      "enabled": false,
+      "disabled": true
+    },
+    "AUTHOR_IDENTITY_ENABLED": {
+      "present": true,
+      "type": "plain_text",
+      "enabled": false,
+      "disabled": true
+    },
+    "GROWTH_SERVICE_ENABLED": {
+      "present": true,
+      "type": "plain_text",
+      "enabled": false,
+      "disabled": true
+    },
+    "GROWTH_MEASUREMENT_ENABLED": {
+      "present": true,
+      "type": "plain_text",
+      "enabled": false,
+      "disabled": true
+    }
+  },
+  "pagesSecretNames": [
+    "IMAGE_PROCESSOR_SHARED_SECRET",
+    "PROVIDER_SETTINGS_MASTER_KEY",
+    "SUPABASE_ACCESS_TOKEN",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY"
+  ],
+  "schedulerSecretNames": [
+    "SUPABASE_SECRET_KEY"
+  ],
+  "databaseReady": true,
+  "privateBackupDirectory": "scratch/launch/cloudflare-stage36/run-GTRS3K",
+  "operationFlagsAfter": {
+    "pages": true,
+    "scheduler": true
+  },
+  "verifiedAt": "2026-10-22T05:34:55.741Z"
+}

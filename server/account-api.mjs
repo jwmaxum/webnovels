@@ -4,6 +4,8 @@ import {adminConsoleApi} from './admin-console-api.mjs';
 import {authorWorkspaceApi} from './author-workspace-api.mjs';
 import {authorDashboardApi} from './author-dashboard-api.mjs';
 import {providerSettingsApi} from './provider-settings-api.mjs';
+import {betaSupportApi} from './beta-support-api.mjs';
+import {betaOperationsApi} from './beta-operations.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch}={}) {
@@ -11,7 +13,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
   const me=path==='/api/v2/me'&&env.P0_API_ENABLED!=='true';
   const workspace=env.P0_API_ENABLED!=='true'&&/^\/api\/v2\/creator\/(works|drafts)(\/|$)/.test(path);
   const dashboard=path==='/api/v2/creator/dashboard';
-  if(!me&&!workspace&&!dashboard&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/providers'].includes(path))return null;
+  if(!me&&!workspace&&!dashboard&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
@@ -69,6 +71,8 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
     if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));
     if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail,env}));
     if(path==='/api/v2/admin/providers')return reply(await providerSettingsApi({request,user,actor,remote,rpc,fail,env}));
+    if(path==='/api/v2/support'||path==='/api/v2/admin/support')return reply(await betaSupportApi({request,user,actor,rpc,fail,env}));
+    if(path==='/api/v2/admin/beta-operations')return reply(await betaOperationsApi({request,user,actor,rpc,fail,env}));
     if(!actor.admin?.is_active||actor.admin.role!=='SUPER_ADMIN')fail(403,'ADMIN_FORBIDDEN');
     if([...url.searchParams.keys()].some(k=>k!=='action'))fail(400,'INVALID_QUERY');
     const action=url.searchParams.get('action')||'list';

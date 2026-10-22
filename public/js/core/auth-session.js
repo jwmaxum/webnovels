@@ -39,6 +39,8 @@
   }
   function clear() {
     window.AuthorEnrollment?.reset();
+    window.BetaSupport?.reset();
+    window.AdminBetaOperations?.reset();
     window.WebNovelsModules?.cancel();
     window.CreatorDraftEditor?.onAuthLost();
     generation++; actor = null;

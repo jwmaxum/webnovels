@@ -1,0 +1,267 @@
+{
+  "format": "webnovels-stage36-verification-v1",
+  "checkedAt": "2026-10-22T05:40:24.075Z",
+  "codeVerified": true,
+  "databaseApplied": true,
+  "cloudflareConfigured": true,
+  "release": {
+    "passed": true,
+    "commands": 39,
+    "nodeTestCases": 767,
+    "additionalScriptContractChecks": true,
+    "stage36Tests": 35,
+    "failed": 0,
+    "skipped": 0,
+    "execution": "Successful original prefix through stage25 plus complete stage26-through-final continuation and build:compile.",
+    "environmentRetry": "The initial stage26 junction fixture was denied by the Windows workspace sandbox (EPERM); the unchanged full stage26 test and remaining checks passed in approved local execution.",
+    "checks": [
+      {
+        "name": "test:data",
+        "exitCode": 0
+      },
+      {
+        "name": "test:p0",
+        "exitCode": 0
+      },
+      {
+        "name": "test:auth",
+        "exitCode": 0
+      },
+      {
+        "name": "test:naming",
+        "exitCode": 0
+      },
+      {
+        "name": "test:authoring-schema",
+        "exitCode": 0
+      },
+      {
+        "name": "test:creator-works",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage14",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage15",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage16",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage17",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage18",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage19",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage20",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage21",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage22",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage23",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage24",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage25",
+        "exitCode": 0
+      },
+      {
+        "name": "test:stage26",
+        "exitCode": 0,
+        "elapsedMs": 2986
+      },
+      {
+        "name": "test:stage27",
+        "exitCode": 0,
+        "elapsedMs": 3363
+      },
+      {
+        "name": "test:stage28",
+        "exitCode": 0,
+        "elapsedMs": 26663
+      },
+      {
+        "name": "test:stage29",
+        "exitCode": 0,
+        "elapsedMs": 25846
+      },
+      {
+        "name": "test:stage30",
+        "exitCode": 0,
+        "elapsedMs": 72355
+      },
+      {
+        "name": "test:stage31",
+        "exitCode": 0,
+        "elapsedMs": 89484
+      },
+      {
+        "name": "test:stage32",
+        "exitCode": 0,
+        "elapsedMs": 15868
+      },
+      {
+        "name": "test:stage33",
+        "exitCode": 0,
+        "elapsedMs": 17418
+      },
+      {
+        "name": "test:stage34",
+        "exitCode": 0,
+        "elapsedMs": 24139
+      },
+      {
+        "name": "test:stage35",
+        "exitCode": 0,
+        "elapsedMs": 43205
+      },
+      {
+        "name": "test:stage36",
+        "exitCode": 0,
+        "elapsedMs": 42816
+      },
+      {
+        "name": "test:drafts",
+        "exitCode": 0,
+        "elapsedMs": 16506
+      },
+      {
+        "name": "test:files",
+        "exitCode": 0,
+        "elapsedMs": 17281
+      },
+      {
+        "name": "test:publication",
+        "exitCode": 0,
+        "elapsedMs": 24196
+      },
+      {
+        "name": "test:operations",
+        "exitCode": 0,
+        "elapsedMs": 22276
+      },
+      {
+        "name": "test:admin-operations",
+        "exitCode": 0,
+        "elapsedMs": 26587
+      },
+      {
+        "name": "test:stage11",
+        "exitCode": 0,
+        "elapsedMs": 2131
+      },
+      {
+        "name": "test:stage13",
+        "exitCode": 0,
+        "elapsedMs": 2030
+      },
+      {
+        "name": "test:launch",
+        "exitCode": 0,
+        "elapsedMs": 49778
+      },
+      {
+        "name": "test:cloudflare-bundle",
+        "exitCode": 0,
+        "elapsedMs": 14528
+      },
+      {
+        "name": "test:author-publishing",
+        "exitCode": 0,
+        "elapsedMs": 25248
+      },
+      {
+        "name": "build:compile",
+        "exitCode": 0,
+        "elapsedMs": 22361
+      }
+    ]
+  },
+  "build": {
+    "prismaGenerate": true,
+    "typescriptCompile": true,
+    "typecheckNoEmit": true,
+    "cloudflareFunctionsBundled": 6
+  },
+  "lint": {
+    "dedicatedLintScript": false,
+    "changedJavaScriptSyntax": true,
+    "diffWhitespace": true
+  },
+  "coverage": {
+    "scope": [
+      "server/beta-operations.mjs",
+      "server/beta-support-api.mjs",
+      "scheduler/worker.mjs"
+    ],
+    "linePercent": 96,
+    "branchPercent": 79.44,
+    "functionPercent": 94.44,
+    "wholeRepository": false
+  },
+  "security": {
+    "privateUiClearedOnSessionChange": true,
+    "plainTextSupportRendering": true,
+    "serverAndDatabaseAuthorizationTests": true,
+    "secretScan": "Required for every staged file by the commit helper; values are never printed."
+  },
+  "database": {
+    "evidence": "artifacts/stage36-preparation.json",
+    "originalTables": 157,
+    "originalRows": 209,
+    "originalRowsPreserved": true,
+    "privateRlsTablesAdded": 7,
+    "serviceOnlyRpcs": 4,
+    "explicitGrants": true,
+    "destructiveReset": false,
+    "flagsUnchanged": true,
+    "logicalBackup": "artifacts/stage36-data-backup.json",
+    "nativeBackup": "artifacts/stage36-native-backup.json",
+    "localSnapshotRehearsal": "artifacts/stage36-data-restore.json"
+  },
+  "cloudflare": {
+    "evidence": "artifacts/stage36-cloudflare.json",
+    "internalObservationEnabled": true,
+    "publicActivation": false,
+    "closedFlagsPreserved": true,
+    "privateWorkers": true,
+    "cronCount": 1,
+    "schedulerHeartbeatObservedAt": "2026-10-22T05:35:52.05811Z",
+    "heartbeatIsPublicationSuccess": false,
+    "pagesSourceDeployment": "Verify the stage36 commit after push; configuration alone does not deploy the Pages source."
+  },
+  "acceptance": {
+    "browser": false,
+    "localhost": false,
+    "mailDelivery": false,
+    "authenticatedHostedSupportFlow": false,
+    "multiConnectionRace": false,
+    "separateHostedDatabaseAndStorageRestore": false,
+    "pass": false,
+    "toss": false,
+    "postPushReadOnlySmoke": "scratch/stage36-verification/runtime-acceptance.json (generated after deployment; local evidence)"
+  },
+  "nextStage": "improve37.md"
+}

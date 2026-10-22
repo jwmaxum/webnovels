@@ -1,0 +1,43 @@
+/* Stage 36 support uses the site's light palette and works on narrow screens. */
+.beta-support-backdrop[hidden] { display: none !important; }
+.beta-support-backdrop { position: fixed; inset: 0; z-index: 11000; padding: 24px; display: grid; place-items: center; background: rgba(24, 32, 51, .42); }
+.beta-support-dialog { width: min(880px, 100%); max-height: 92dvh; overflow: auto; overscroll-behavior: contain; padding: 24px; border-radius: 18px; background: #fff; color: #20283c; box-shadow: 0 24px 80px #19213733; }
+.beta-support-dialog-header, .beta-support-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.beta-support-dialog-header h2, .beta-support-toolbar h3 { margin: 0; }
+.beta-support-dialog-header { padding-bottom: 16px; border-bottom: 1px solid #d9dfec; }
+.beta-support-form { display: grid; gap: 16px; margin-top: 20px; }
+.beta-support-field { display: grid; gap: 7px; min-width: 0; font-weight: 600; color: #36435f; }
+.beta-support-field input, .beta-support-field select, .beta-support-field textarea { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd4e5; border-radius: 8px; background: #fff; color: #20283c; font: inherit; font-weight: 400; }
+.beta-support-field textarea { resize: vertical; line-height: 1.65; }
+.beta-support-field :focus-visible, .beta-support-dialog button:focus-visible, .beta-operations-panel button:focus-visible { outline: 3px solid #8156bd; outline-offset: 3px; }
+.beta-support-field :disabled { background: #f2f4f9; }
+.beta-support-check { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border: 1px solid #e4c8d3; border-radius: 10px; background: #fff6f9; line-height: 1.7; }
+.beta-support-check[hidden] { display: none; }
+.beta-support-check input { flex: 0 0 auto; margin-top: 6px; width: 18px; height: 18px; }
+.beta-support-note, .beta-support-error { padding: 12px 14px; border-radius: 8px; line-height: 1.7; font-size: .92rem; background: #f1f4fb; color: #445370; }
+.beta-support-error, .beta-support-form [role="alert"] { color: #9f2147; background: #fff2f5; }
+.beta-support-note button { margin: 8px 8px 0 0; }
+.beta-support-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.beta-support-filters > label { flex: 1; min-width: 150px; }
+.beta-support-card { display: grid; gap: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid #d9dfec; border-radius: 12px; background: #fff; overflow-wrap: anywhere; }
+.beta-support-card > button { justify-self: start; text-align: left; height: auto; white-space: normal; min-height: 44px; }
+.beta-support-card p, .beta-support-message p { margin: 0; }
+.beta-support-badge { color: #8c2351; font-weight: 600; font-size: .88rem; }
+.beta-support-meta { color: #63708a; font-size: .85rem; overflow-wrap: anywhere; line-height: 1.6; }
+.beta-support-history { list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 12px; }
+.beta-support-message { padding: 16px; background: #f7f8fc; border-left: 3px solid #d6c5e7; border-radius: 8px; }
+.beta-support-message-body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; padding-top: 8px; }
+.beta-operations-panel { padding: 20px; margin: 20px 0; border: 1px solid #d9dfec; border-radius: 12px; background: #fff; color: #20283c; }
+.beta-operations-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.beta-operations-metrics strong { font-size: 1.4rem; color: #8d2757; }
+.beta-operations-areas { padding-left: 20px; line-height: 1.8; overflow-wrap: anywhere; }
+.beta-support-header-link { white-space: nowrap; }
+@media (max-width: 640px) {
+  .beta-support-backdrop { padding: 8px; }
+  .beta-support-dialog { padding: 16px; max-height: 96dvh; border-radius: 12px; }
+  .beta-support-field input, .beta-support-field textarea, .beta-support-field select { font-size: 16px; }
+  .beta-operations-panel { padding: 14px; }
+  .beta-operations-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .beta-support-toolbar > h3 { flex-basis: 100%; }
+  .beta-support-header-link { display: none; }
+}
