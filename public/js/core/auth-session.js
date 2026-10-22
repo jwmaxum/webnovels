@@ -22,8 +22,9 @@
     ACCOUNT_SERVICE_NOT_ACTIVATED: '계정 서비스를 준비 중입니다. 잠시 후 다시 시도해주세요.',
     AUTH_SYNC_REQUIRED: '계정의 인증 상태를 다시 동기화해야 합니다. 관리자에게 문의해주세요.',
     AUTHOR_ENROLLMENT_NOT_READY: 'PASS 본인확인과 작가 가입을 준비 중입니다.',
+    FREE_BETA_NOT_READY: '무료 베타 가입을 준비 중입니다. 잠시 후 다시 확인해주세요.',
     AUTHOR_IDENTITY_REQUIRED: '저작권 동의와 PASS 본인확인을 먼저 완료해주세요.',
-    AUTHOR_CONSENT_REQUIRED: '저작권 확약과 개인정보 동의를 각각 선택해주세요.',
+    AUTHOR_CONSENT_REQUIRED: '가입 화면의 필수 동의 사항을 확인하고 선택해주세요.',
     AUTHOR_CONSENT_STALE: '동의 문서가 변경되었습니다. 가입 화면을 다시 열고 확인해주세요.',
     IDENTITY_NOT_VERIFIED: '인증이 아직 완료되지 않았습니다. PASS를 완료한 뒤 다시 확인해주세요.',
     IDENTITY_ATTEMPT_EXPIRED: '인증 유효시간이 지났습니다. 새 인증을 시작해주세요.',
@@ -159,7 +160,7 @@
         options: { emailRedirectTo: location.origin + '/?auth=confirm' } });
       if (e) throw providerError(e);
       if (data?.session) {
-        if(kind==='author'){window.showAuthOnboarding?.();return '저작권 동의와 PASS 본인확인을 완료해주세요.';}
+        if(kind==='author'){window.showAuthOnboarding?.();return '작가 가입 화면에서 저작권 동의와 가입 절차를 완료해주세요.';}
         await complete(kind,displayName); return '가입이 완료되었습니다.';
       }
       return '확인 메일을 확인해주세요. 링크를 연 뒤 로그인하여 가입 유형과 필명을 입력하면 가입을 마칠 수 있습니다.';

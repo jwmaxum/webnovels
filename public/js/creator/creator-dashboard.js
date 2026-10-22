@@ -3,7 +3,13 @@
   let generation=0;
   const ids=['creatorHomeContent','creatorEarningsContent','creatorProfileContent'];
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const active=()=>window.WebNovelsAuth?.getActor()?.author?.status==='APPROVED'&&window.WebNovelsAuth.getActor().authorWorkspaceReady===true;
+  const beta=()=>window.WEBNOVELS_CONFIG?.freeBetaEnabled===true;
+  const active=()=>{
+    const actor=window.WebNovelsAuth?.getActor();
+    // The public beta actor does not carry the private-workspace readiness marker.
+    // Keep account-only rollout restrictions intact; the dashboard API verifies readiness.
+    return actor?.author?.status==='APPROVED'&&(actor.authorWorkspaceReady===true||(beta()&&actor.accountServiceOnly!==true));
+  };
   const api=(action,data)=>window.WebNovelsAuth.api('/api/v2/creator/dashboard?action='+action,data?{method:'POST',body:JSON.stringify(data)}:undefined);
   function reset(){generation++;ids.forEach(id=>document.getElementById(id)?.replaceChildren());}
   function message(e){return ({PROFILE_CONFLICT:'다른 곳에서 정보가 변경되었습니다. 새로고침 후 다시 수정해주세요.',INVALID_PROFILE:'필명은 2~40자, 소개는 2,000자 이하로 입력해주세요.',INVALID_BANK_DETAILS:'은행명, 실명과 8~20자리 계좌번호를 확인해주세요.',BANK_REAUTH_REQUIRED:'현재 로그인 계정의 비밀번호를 확인해주세요. 추가 인증이 설정된 계정은 운영자에게 문의해주세요.',RATE_LIMITED:'확인 요청이 많습니다. 15분 후 다시 시도해주세요.'})[e?.code]||'정보를 처리하지 못했습니다. 다시 조회하여 저장 상태를 확인해주세요.';}
@@ -18,10 +24,10 @@
     const state=begin(ids[0]);if(!state)return;
     try{
       const data=await api('home');if(!state.valid())return;
-      state.root.innerHTML=`<div class="author-section-heading"><div><h2>작가 대시보드</h2><p class="text-muted">작품 현황과 수익, 내 정보를 한곳에서 관리하세요.</p></div><button type="button" class="btn btn-outline" id="adRefresh">새로고침</button></div>
-        <div class="author-dashboard-stats">${[['내 작품',data.counts.works,'편'],['등록 회차',data.counts.episodes,'화'],['작성 중 원고',data.counts.drafts,'개'],['예상수익','집계 전','']].map(([label,n,unit])=>`<div class="author-stat"><span>${esc(label)}</span><strong>${esc(n)}<small>${esc(unit)}</small></strong></div>`).join('')}</div>
-        <div class="author-dashboard-actions"><button type="button" class="btn btn-primary" data-go="works">작품 관리·원고 작성</button><button type="button" class="btn btn-outline" data-go="earnings">수익 내역 조회</button><button type="button" class="btn btn-outline" data-go="profile">내 정보·정산 계좌</button></div>
-        <p class="text-muted">수익 집계는 광고·결제 연동 후 시작됩니다. ${data.bankRegistered?'정산 계좌가 등록되어 있습니다. 계좌 확인은 대기 중입니다.':'정산을 위한 본인 명의 계좌를 등록해주세요.'}</p>
+      state.root.innerHTML=`<div class="author-section-heading"><div><h2>작가 대시보드</h2><p class="text-muted">${beta()?'작품 현황과 내 정보를 관리하세요.':'작품 현황과 수익, 내 정보를 한곳에서 관리하세요.'}</p></div><button type="button" class="btn btn-outline" id="adRefresh">새로고침</button></div>
+        <div class="author-dashboard-stats">${[['내 작품',data.counts.works,'편'],['등록 회차',data.counts.episodes,'화'],['작성 중 원고',data.counts.drafts,'개'],...(beta()?[]:[['예상수익','집계 전','']])].map(([label,n,unit])=>`<div class="author-stat"><span>${esc(label)}</span><strong>${esc(n)}<small>${esc(unit)}</small></strong></div>`).join('')}</div>
+        <div class="author-dashboard-actions"><button type="button" class="btn btn-primary" data-go="works">작품 관리·원고 작성</button>${beta()?'':'<button type="button" class="btn btn-outline" data-go="earnings">수익 내역 조회</button>'}<button type="button" class="btn btn-outline" data-go="profile">${beta()?'내 정보':'내 정보·정산 계좌'}</button></div>
+        <p class="text-muted">${beta()?'무료 베타에서는 결제와 정산을 제공하지 않으며 계좌 정보를 받지 않습니다.':`수익 집계는 광고·결제 연동 후 시작됩니다. ${data.bankRegistered?'정산 계좌가 등록되어 있습니다. 계좌 확인은 대기 중입니다.':'정산을 위한 본인 명의 계좌를 등록해주세요.'}`}</p>
         <h3>최근 작품</h3><div class="author-recent-works">${data.recentWorks.length?data.recentWorks.map(w=>`<button type="button" class="btn btn-outline" data-work="${esc(w.id)}"><span>${esc(w.title)}</span><small>${w.visibility==='PUBLIC'?'공개':'비공개'}</small></button>`).join(''):'<p>첫 작품을 등록해보세요.</p>'}</div>`;
       state.root.querySelector('#adRefresh').onclick=home;
       state.root.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>window.switchCreatorTab(b.dataset.go));
@@ -31,6 +37,7 @@
   }
   async function earnings(month='',page=0){
     const state=begin(ids[1]);if(!state)return;
+    if(beta()){state.root.innerHTML='<h2>무료 베타 안내</h2><p>현재 무료 연재를 제공하며 결제·유료 후원·정산 기능은 추후 제공됩니다.</p>';return;}
     try{
       const data=await api('earnings&month='+encodeURIComponent(month)+'&page='+page);if(!state.valid())return;
       const money=n=>n===null?'—':Number(n).toLocaleString('ko-KR',{maximumFractionDigits:2})+'원';
@@ -52,7 +59,7 @@
     try{
       const data=await api('profile');if(!state.valid())return;
       let profileVersion=data.profile.version,bankRevision=data.bank?.revision||'0';
-      state.root.innerHTML=`<div class="author-section-heading"><h2>내 정보·정산 계좌</h2><button type="button" class="btn btn-outline" id="adProfileRefresh">새로고침</button></div>
+      state.root.innerHTML=`<div class="author-section-heading"><h2>${beta()?'내 정보':'내 정보·정산 계좌'}</h2><button type="button" class="btn btn-outline" id="adProfileRefresh">새로고침</button></div>
         <div class="author-profile-grid"><form id="adProfileForm" class="author-profile-form"><h3>작가 정보</h3>
           <label>로그인 이메일<input class="form-input" type="email" value="${esc(data.profile.email)}" readonly autocomplete="username"></label>
           <label>필명<input class="form-input" name="penName" value="${esc(data.profile.penName)}" required minlength="2" maxlength="40"></label>
@@ -79,6 +86,10 @@
           try{await window.WebNovelsAuth.validate();}catch{if(state.valid())status.textContent='저장되었습니다. 다시 로그인하면 변경한 필명이 표시됩니다.';}
         }catch(e){if(state.valid())status.textContent=message(e);}finally{if(state.valid())button.disabled=false;}
       };
+      if(beta()){
+        bankForm.replaceChildren();bankForm.hidden=true;
+        return;
+      }
       bankForm.onsubmit=async event=>{
         event.preventDefault();const button=bankForm.querySelector('button'),status=state.root.querySelector('#adBankStatus');if(button.disabled||!bankForm.elements.consent.checked)return;
         button.disabled=true;status.textContent='본인 확인 후 저장 중입니다.';

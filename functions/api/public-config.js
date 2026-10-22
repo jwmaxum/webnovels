@@ -25,5 +25,6 @@ export function onRequestGet({ env }) {
     adminRecoveryReviewEnabled: recoveryReviewEnabled(env),
     adminWorkflowEnabled: env.ADMIN_WORKFLOW_ENABLED === 'true' && env.ADMIN_OPERATIONS_ENABLED === 'true' && env.P0_API_ENABLED === 'true',
     adminRoleChangesEnabled: env.ADMIN_ROLE_CHANGES_ENABLED === 'true' };
+  config.freeBetaEnabled = env.FREE_BETA_ENABLED === 'true';
   return new Response('window.WEBNOVELS_CONFIG = Object.freeze(' + JSON.stringify(config).replace(/</g, '\\u003c') + ');', { headers });
 }

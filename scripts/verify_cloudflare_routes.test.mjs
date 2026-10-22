@@ -13,7 +13,8 @@ test('Pages .js config URL returns only public fields, not SPA HTML or bindings'
   const source = await response.text(); assert.ok(!source.includes(env.SUPABASE_SECRET_KEY));
   const context = { window: {} }; vm.runInNewContext(source, context);
   assert.deepEqual(Object.keys(context.window.WEBNOVELS_CONFIG).sort(),
-    ['adminOperationsEnabled','adminRecoveryReviewEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','authorRecoveryEnabled','authorRichTextEnabled','growthMeasurementEnabled','growthServiceEnabled','publicationChangeReviewEnabled','readerDiscoveryEnabled','readerServiceEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
+    ['adminOperationsEnabled','adminRecoveryReviewEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','authorRecoveryEnabled','authorRichTextEnabled','freeBetaEnabled','growthMeasurementEnabled','growthServiceEnabled','publicationChangeReviewEnabled','readerDiscoveryEnabled','readerServiceEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
+  assert.equal(context.window.WEBNOVELS_CONFIG.freeBetaEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorRichTextEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.publicationChangeReviewEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.webtoonServiceEnabled,false);

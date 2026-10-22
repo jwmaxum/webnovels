@@ -21,7 +21,7 @@ async function preserve(db,snapshot){
   assert.equal(hash(rows.sort().join('\n')),hash([...t.rows].sort().join('\n')),'STAGE34_ORIGINAL_ROWS_CHANGED');
  }
 }
-async function reconstruct(db,snapshot){
+export async function reconstruct(db,snapshot){
  await db.exec('create role anon;create role authenticated;create role service_role bypassrls;set check_function_bodies=false');
  for(const s of snapshot.sequences.filter(s=>['public','authoring','launch_recovery'].includes(s.schemaname))){
   await db.exec(`create sequence ${q(s.schemaname)}.${q(s.sequencename)}`);

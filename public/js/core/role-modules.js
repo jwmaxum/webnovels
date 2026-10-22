@@ -9,12 +9,12 @@
       '/js/creator/draft-diff.js?v=105', '/js/creator/creator-readiness.js?v=126',
       '/js/creator/creator-webtoon.js?v=132', '/vendor/manuscript-paste.js?v=124', '/js/creator/creator-rich-editor.js?v=124', '/js/creator/creator-editor.js?v=132',
       '/js/creator/creator-publications.js?v=132', '/js/creator/creator-recovery.js?v=123', '/js/creator/creator-files.js?v=132',
-      '/js/creator/creator-dashboard.js?v=121', '/js/creator/creator.js?v=132',
+      '/js/creator/creator-dashboard.js?v=135', '/js/creator/creator.js?v=132',
       '/js/creator/creator-works.js?v=132', '/js/creator/creator-distribution.js?v=124',
       '/js/creator/creator-operations.js?v=124'
     ],
     admin: [
-      '/js/admin/admin.js?v=20261012', '/js/admin/admin-console.js?v=121',
+      '/js/admin/admin.js?v=20261012', '/js/admin/admin-provider-settings.js?v=135', '/js/admin/admin-console.js?v=135',
       '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=124', '/js/admin/admin-workflow.js?v=124', '/js/admin/admin-operations.js?v=123',
       '/js/admin/virtual-accounts.js?v=111'
     ]

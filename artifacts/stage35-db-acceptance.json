@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-22T03:57:29.294Z",
+  "adminRowsUnchanged": true,
+  "counts": {
+    "admins": 4,
+    "auth_users": 1,
+    "authors": 0,
+    "readers": 0,
+    "works": 0,
+    "episodes": 0,
+    "drafts": 0,
+    "beta_accounts": 0,
+    "private_buckets": 3
+  },
+  "statuses": {
+    "launch_accounts_ready": true,
+    "launch_author_workspace_ready": true,
+    "launch_work_registration_ready": true,
+    "free_beta_enrollment_launch_ready": true,
+    "new_serials_ready": false
+  },
+  "publicActivation": false,
+  "providerCalled": false,
+  "realSignupAccepted": false,
+  "realImagesAccepted": false,
+  "browserExecuted": false
+}

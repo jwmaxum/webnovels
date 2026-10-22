@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-22T03:53:19.556Z",
+  "snapshotSha256": "f4eab11d9e16214c09d662971491180914f07bf01c1d23e49c7e76c6004d2912",
+  "migrationSha256": "dc632383b6b6ee99f141b2901d82128c43b7ad5ff0346d82f4437a37757fa4b3",
+  "files": [
+    "database/launch/013_free_serial_prerequisites.sql",
+    "database/authoring/002_private_storage.sql",
+    "database/authoring/007_creator_files.sql",
+    "database/authoring/008_creator_publications.sql",
+    "database/authoring/009_creator_reader_operations.sql",
+    "database/authoring/010_admin_operations.sql",
+    "database/authoring/011_reader_profile_cutover.sql",
+    "database/authoring/012_creator_distribution.sql",
+    "database/authoring/013_reader_discovery.sql",
+    "database/authoring/014_admin_workflow.sql",
+    "database/authoring/015_webtoon.sql",
+    "database/authoring/021_manuscript_documents.sql",
+    "database/authoring/022_publication_change_review.sql",
+    "database/launch/012_new_serial_publication_scope.sql",
+    "database/authoring/024_free_beta_enrollment.sql",
+    "database/launch/015_free_beta_accounts.sql",
+    "database/authoring/025_provider_settings.sql"
+  ],
+  "rehearsal": {
+    "engine": "PGlite actual snapshot, constraints, defaults and app routines",
+    "originalTables": 117,
+    "clearedTables": 68,
+    "adminProfilesPreserved": 4,
+    "authUsersPreservedDuringDatabaseMigration": true,
+    "freeSignup": true,
+    "novelAndWebtoonRegistration": true,
+    "novelFirstPublishAndRead": true,
+    "consentReceipt": true,
+    "activationRemainsOff": true,
+    "hostedAcceptance": false,
+    "browserAcceptance": false
+  },
+  "adminProfiles": 4,
+  "authRetained": 1,
+  "authDeletionPending": 41,
+  "productionApplied": true,
+  "activated": false
+}

@@ -14,6 +14,8 @@ export async function authorDashboardApi({request,env,actor,user,rpc,remote,fail
   if(actor.author?.status!=='APPROVED')fail(403,'AUTHOR_REQUIRED');
   if(!ready)fail(503,'AUTHOR_WORKSPACE_NOT_ACTIVATED');
   const url=new URL(request.url),action=url.searchParams.get('action')||'home';
+  // Free beta has no payouts; do not collect bank details or password reauthentication.
+  if(env.FREE_BETA_ENABLED==='true'&&action==='save-bank')fail(503,'FREE_BETA_FEATURE_UNAVAILABLE');
   if([...url.searchParams.keys()].some(k=>!['action','month','page'].includes(k)) ||
      [...url.searchParams.keys()].some(k=>url.searchParams.getAll(k).length!==1))fail(400,'INVALID_QUERY');
   const call=(a,data={})=>rpc('launch_author_dashboard',{p_user:user.id,p_action:a,p_data:data});

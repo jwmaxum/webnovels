@@ -1,5 +1,6 @@
 import {enrollmentDocuments} from './author-enrollment-policy.mjs';
 import {verifyPortOneAuthor} from './providers/portone-identity.mjs';
+import {resolveStoredProviderSettings} from './provider-settings-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ATTEMPT=/^ae_[a-f0-9]{32}$/;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
@@ -27,7 +28,7 @@ export async function authorEnrollmentApi(request,env,{fetchImpl=fetch,now=()=>D
   if(request.method!==(['readiness','policy','status'].includes(action)?'GET':'POST'))fail(405,'METHOD_NOT_ALLOWED');
   if(request.method==='POST'&&request.headers.get('origin')!==url.origin)fail(403,'ORIGIN_REQUIRED');
   const documents=await enrollmentDocuments();
-  const enabled=env.AUTHOR_IDENTITY_ENABLED==='true'&&env.AUTH_ONBOARDING_ENABLED==='true'&&env.ACCOUNT_API_DISABLED!=='true';
+  const enabled=env.FREE_BETA_ENABLED!=='true'&&env.AUTHOR_IDENTITY_ENABLED==='true'&&env.AUTH_ONBOARDING_ENABLED==='true'&&env.ACCOUNT_API_DISABLED!=='true';
   if(!enabled){if(action==='policy')return reply({enabled:false,documents});fail(503,'AUTHOR_ENROLLMENT_NOT_READY');}
   const base=env.SUPABASE_URL||env.NEXT_PUBLIC_SUPABASE_URL,secret=env.SUPABASE_SECRET_KEY||env.SUPABASE_SERVICE_ROLE_KEY;
   if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(base||'')||!secret)fail(503,'SERVER_CONFIGURATION_REQUIRED');
@@ -44,6 +45,13 @@ export async function authorEnrollmentApi(request,env,{fetchImpl=fetch,now=()=>D
    if(result?.error)fail([400,401,403,404,409,429,503].includes(result.status)?result.status:503,
     /^[A-Z_]{1,80}$/.test(result.error)?result.error:'AUTHOR_ENROLLMENT_NOT_READY');return result;
   };
+  if(env.PROVIDER_SETTINGS_SOURCE==='database'){
+   let stored;try{stored=await resolveStoredProviderSettings({provider:'PASS',mode:env.AUTHOR_IDENTITY_MODE,env,rpc});}
+   catch{fail(503,'AUTHOR_ENROLLMENT_NOT_READY');}
+   env={...env,PORTONE_STORE_ID:stored.storeId,AUTHOR_IDENTITY_CHANNEL_KEY:stored.channelKey,PORTONE_API_SECRET:stored.apiSecret,
+    AUTHOR_IDENTITY_PG_PROVIDER:stored.pgProvider,AUTHOR_IDENTITY_IDENTIFIER_TYPE:stored.identifierType,
+    AUTHOR_IDENTITY_HMAC_KEY:stored.hmacKey,AUTHOR_IDENTITY_KEY_VERSION:stored.keyVersion};
+  }
   const config=await rpc('author_enrollment_config');
   const matches=config?.enabled===true&&config.store_id===env.PORTONE_STORE_ID&&config.channel_key===env.AUTHOR_IDENTITY_CHANNEL_KEY&&
    config.mode===env.AUTHOR_IDENTITY_MODE&&config.pg_provider===env.AUTHOR_IDENTITY_PG_PROVIDER&&

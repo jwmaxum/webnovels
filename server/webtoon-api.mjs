@@ -1,5 +1,6 @@
 // Private originals, immutable derivatives, resumable one-panel processing. No remote URL input.
 import '../public/js/creator/file-image.js';
+import {imageProcessorReady,imageInfo,panelImage} from './image-processing.mjs';
 export const webtoonEnabled=env=>env.WEBTOON_SERVICE_ENABLED==='true' &&
  ['P0_API_ENABLED','AUTHOR_WORKS_ENABLED','AUTHOR_DRAFTS_ENABLED','AUTHOR_FILES_ENABLED','AUTHOR_PUBLISH_ENABLED','READER_SERVICE_ENABLED','READER_DISCOVERY_ENABLED'].every(k=>env[k]==='true');
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -106,21 +107,20 @@ export async function webtoonApi({request,env,actor,db,fetchImpl,base,serviceHea
   if([400,409].includes(response.status)){const prior=await storage(bucket,path);if(prior.ok&&await imageHash(await readBytes(prior,16777216,fail))===digest)return;}
   fail(503,'STORAGE_UPLOAD_FAILED');
  }
- if(!env.IMAGES?.input||!env.IMAGES?.info)fail(503,'IMAGE_PROCESSOR_NOT_CONFIGURED');
+ if(!imageProcessorReady(env,true))fail(503,'IMAGE_PROCESSOR_NOT_CONFIGURED');
  const job=await call('claim');if(job.asset.state==='READY')return job;
  try{
   const source=await storage('authoring-originals',job.source);if(!source.ok)fail(503,'STORAGE_UNAVAILABLE');
   const bytes=await readBytes(source,8388608,fail);if(await imageHash(bytes)!==job.sha)fail(409,'SOURCE_HASH_MISMATCH');
-  const header=inspectSource(bytes),info=await env.IMAGES.info(new Blob([bytes]).stream());
+  const header=inspectSource(bytes),info=await imageInfo(env,bytes);
   const mime=value=>value?.startsWith('image/')?value:'image/'+value;
   if(mime(info.format)!==header.type||info.fileSize!==bytes.length||info.width!==header.width||info.height!==header.height||info.width!==job.asset.width||info.height!==job.asset.height)fail(400,'IMAGE_DECODE_MISMATCH');
   const geometry=sliceGeometry(info.width,info.height,job.asset.cursor),hashes={};let finalHeight=null;
   // At most one decoded panel/output is held at a time. Hash paths preserve retry outputs.
   for(const format of ['webp','png']){
-   const output=await env.IMAGES.input(new Blob([bytes]).stream()).transform({trim:geometry.trim}).transform({width:geometry.width,fit:'scale-down'})
-    .output({format:'image/'+format,quality:90,anim:false});
-   const derivative=await readBytes(output.response(),16777216,fail),digest=await imageHash(derivative);
-   const actual=await env.IMAGES.info(new Blob([derivative]).stream());
+   const output=await panelImage(env,bytes,geometry,format);
+   const derivative=await readBytes(output,16777216,fail),digest=await imageHash(derivative);
+   const actual=await imageInfo(env,derivative);
    if(mime(actual.format)!=='image/'+format||actual.width!==geometry.width||!Number.isInteger(actual.height)||actual.height<1||actual.height>4096||Math.abs(actual.height-geometry.height)>1||
     (finalHeight!==null&&finalHeight!==actual.height))fail(503,'IMAGE_OUTPUT_MISMATCH');finalHeight=actual.height;
    await put('authoring-webtoons','webtoon/'+work+'/'+assetId+'/'+job.asset.cursor+'/'+digest+'.'+format,derivative,'image/'+format,digest);hashes[format+'Sha']=digest;

@@ -10,6 +10,7 @@ import { stage9AppealApi } from './stage9-appeal-api.mjs';
 import { adminWorkflowApi } from './admin-workflow-api.mjs';
 import { accountApi } from './account-api.mjs';
 import { authorEnrollmentApi } from './author-enrollment-api.mjs';
+import { freeBetaEnrollmentApi } from './free-beta-enrollment-api.mjs';
 import { discoveryEnabled, publicContent } from './stage16-api.mjs';
 import { paidEpisodeApi } from './paid-episode-api.mjs';
 import { growthApi,measurementEnabled } from './growth-api.mjs';
@@ -65,6 +66,8 @@ async function readBody(request) {
 }
 export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   return async function handle(request, env) {
+    const betaEnrollmentResponse = await freeBetaEnrollmentApi(request, env, { fetchImpl, now });
+    if (betaEnrollmentResponse) return betaEnrollmentResponse;
     const enrollmentResponse = await authorEnrollmentApi(request, env, { fetchImpl, now });
     if (enrollmentResponse) return enrollmentResponse;
     const accountResponse = await accountApi(request, env, { fetchImpl });
@@ -139,6 +142,12 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
         if (!actorPromise) actorPromise = (async () => {
           const user = await authenticatedUser();
           if (!user.email_confirmed_at) fail(403, 'EMAIL_CONFIRMATION_REQUIRED');
+          if (env.FREE_BETA_ENABLED === 'true') {
+            const result = await db('rpc/launch_account_actor', {}, {method:'POST', body:{p_user:user.id}});
+            if (result?.error) fail([401,403,503].includes(result.status)?result.status:503,result.error);
+            if (result?.userId !== user.id) fail(503, 'IDENTITY_MAPPING_INVALID');
+            return result;
+          }
           const filter = { auth_user_id: 'eq.' + user.id, limit: '2' };
           const [readers, authors, admins] = await Promise.all([
             db('readers', { ...filter, select: READER_FIELDS }), db('authors', { ...filter, select: AUTHOR_FIELDS }), db('admin_users', { ...filter, select: ADMIN_FIELDS })

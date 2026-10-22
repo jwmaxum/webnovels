@@ -1,16 +1,25 @@
 import {episodeTossRequest} from './providers/toss.mjs';
+import {resolveStoredProviderSettings} from './provider-settings-api.mjs';
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const reads={quote:['episodeId'],order:['orderId'],orders:[],earnings:[],review:[],audit:['orderId']};
 const writes={create:['episodeId','requestId','offerVersion','policyVersion','expectedAmountKrw'],
  confirm:['orderId','paymentKey'],reconcile:['orderId'],'admin-reconcile':['orderId'],refund:['orderId','reason']};
-export const paidEpisodeSandboxEnabled=env=>env.P0_API_ENABLED==='true' &&
+const sandboxRequested=env=>env.FREE_BETA_ENABLED!=='true' && env.P0_API_ENABLED==='true' &&
  env.MONETIZATION_SANDBOX_ENABLED==='true' && env.MONETIZATION_ENVIRONMENT==='TEST' &&
- ['LOCAL_SIMULATED','PROVIDER_TEST'].includes(env.MONETIZATION_EVIDENCE_SOURCE) &&
+ ['LOCAL_SIMULATED','PROVIDER_TEST'].includes(env.MONETIZATION_EVIDENCE_SOURCE);
+export const paidEpisodeSandboxEnabled=env=>sandboxRequested(env) &&
  /^test_(?:g)?sk_/.test(env.TOSS_TEST_SECRET_KEY||'') && !env.TOSS_TEST_SECRET_KEY.includes('_docs_') &&
  /^[A-Za-z0-9_-]{1,200}$/.test(env.TOSS_TEST_MERCHANT_ID||'');
 
 export async function paidEpisodeApi({request,env,actor,db,readBody,fail,fetchImpl}) {
+ if(sandboxRequested(env)&&env.PROVIDER_SETTINGS_SOURCE==='database'){
+  await actor();let stored;
+  try{stored=await resolveStoredProviderSettings({provider:'TOSS',mode:'TEST',env,
+   rpc:(name,data)=>db('rpc/'+name,{}, {method:'POST',body:data})});}
+  catch{fail(503,'PROVIDER_AND_LEDGER_NOT_READY');}
+  env={...env,TOSS_TEST_SECRET_KEY:stored.secretKey,TOSS_TEST_MERCHANT_ID:stored.merchantId};
+ }
  // Even with a LIVE key/flag this module cannot open live commerce or existing settlement APIs.
  if(!paidEpisodeSandboxEnabled(env)) {await actor();fail(503,'PROVIDER_AND_LEDGER_NOT_READY');}
  const url=new URL(request.url),action=url.pathname.slice('/api/v2/payments/'.length);

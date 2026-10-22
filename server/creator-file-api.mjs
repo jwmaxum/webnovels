@@ -1,6 +1,7 @@
 import '../public/js/creator/file-image.js';
 import '../public/js/creator/file-codec.js';
 import * as fflate from 'fflate';
+import {imageProcessorReady,coverImage} from './image-processing.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decimal=x=>typeof x==='string'&&/^[1-9]\d{0,18}$/.test(x)&&BigInt(x)<=9223372036854775807n;
 const sha=async bytes=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
@@ -63,11 +64,11 @@ export async function creatorFileApi({request,env,actor,db,fetchImpl,base,servic
   Object.assign(payload,{draftId:body.draftId,title:body.title,content:body.content,order:body.order,batchId:body.batchId});
  }else{
   if(!decimal(body.version))fail(400,'INVALID_VERSION');
-  if(!env.IMAGES?.input)fail(503,'IMAGE_PROCESSOR_NOT_CONFIGURED');
+  if(!imageProcessorReady(env))fail(503,'IMAGE_PROCESSOR_NOT_CONFIGURED');
   const cropped=decode(body.cropped,2097152);let info;
   try{globalThis.CreatorFileImage.dimensions(original);info=globalThis.CreatorFileImage.dimensions(cropped);}catch(e){fail(400,e.message);}
   if(info.width!==600||info.height!==900)fail(400,'COVER_CROP_REQUIRED');
-  try{const output=await env.IMAGES.input(new Blob([cropped]).stream()).transform({width:600,height:900,fit:'cover'}).output({format:'image/jpeg',quality:85,anim:false});derivative=await limited(output.response(),2097152,fail);}catch(e){if(e.status)throw e;fail(503,'IMAGE_PROCESSING_FAILED');}
+  try{derivative=await limited(await coverImage(env,cropped),2097152,fail);}catch(e){if(e.status)throw e;fail(503,'IMAGE_PROCESSING_FAILED');}
   Object.assign(payload,{version:body.version,derivativeSha:await sha(derivative),derivativeSize:derivative.length});
  }
  const prepared=await rpc('prepare',payload,key);if(prepared.state==='COMMITTED')return prepared.result;if(prepared.state==='ABANDONED')fail(409,'IMPORT_CANCELLED');

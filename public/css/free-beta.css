@@ -1,0 +1,9 @@
+.free-beta-notice{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 24px;padding:14px 18px;border:1px solid #c8ddcb;border-radius:12px;background:#f3faf4;color:#234d30;font-size:.9rem}
+.free-beta-notice p{flex:1;min-width:200px;margin:0;line-height:1.6}
+.free-beta-badge{white-space:nowrap;padding:5px 10px;border-radius:999px;background:#d9efde;color:#20522e;font-size:.8rem}
+.free-beta-notice a{color:#20522e;text-decoration:underline;text-underline-offset:3px}
+.free-beta-email-help{margin-top:16px;padding:10px 12px;border-radius:8px;background:var(--bg-secondary,#f3f5f9);font-size:.85rem;line-height:1.6}
+.free-beta-email-help summary{cursor:pointer;font-weight:600}
+.free-beta-email-help p{margin:8px 0}
+html[data-free-beta="true"] :is([data-beta-unavailable],[onclick*="openWalletModal"],[onclick*="SupportCreator"],[onclick*="handlePassAdultVerify"],[onclick*="toggleAdultContentMode"],[onclick*="switchCreatorTab('settlements')"],#boxPassVerify,#btnStartPassVerify,#headerPointsBadge,#mMorePointBadge,#mMoreAdultStatus,#modalPassAdultVerify,#modalSupportCreator,#modalAdUnlock,#adBankForm,[data-creator-tab="earnings"],[data-go="earnings"]){display:none!important}
+@media(max-width:640px){.free-beta-notice{margin:12px 14px;padding:12px;gap:10px;font-size:.82rem}.free-beta-notice p{flex-basis:100%;min-width:0}.free-beta-notice a{margin-left:auto}}
