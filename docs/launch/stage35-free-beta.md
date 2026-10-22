@@ -94,4 +94,6 @@ UI·DB/API·명칭 호환 14개, 설정 도구 12개, 라우터·권한·초기�
 계정 탈퇴와 동의/원고 보존 정책, 별도 환경에서 백업·이미지 복원 및 운영자 대응 인수.
 37단계: 실제 이용 지표와 작가 통계, 조작 방지·승격 기준 검증.
 38단계: PASS·PG 계약 이후 실기기 본인확인, 통신판매업 등 운영 정보, 결제·환불·원장·정산 인수.
-Vercel은 사용하지 않는다.
+Vercel은 사용하지 않는다. GitHub 연결에 남아 있던 자동 배포를 막기 위해 `vercel.json`의
+`git.deploymentEnabled=false`를 설정했다. 이 설정은 기존 배포를 삭제하거나 수동 CLI 배포를 차단하지는 않는다.
+설정 기준: [Vercel Git configuration](https://vercel.com/docs/project-configuration/git-configuration).
