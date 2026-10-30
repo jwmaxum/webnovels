@@ -192,6 +192,43 @@ window.applyHomeCuration = function(work) {
 };
 async function renderHomeWorks() {
   if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.home();
+  // The legacy public feed uses the same two primary shelves when discovery is off.
+  const recentGrid = document.getElementById('recentNovelsGrid');
+  if (recentGrid?.classList?.contains('reader-work-grid')) {
+    const works = getPublishedWorks().filter(work => work.episodes?.length > 0);
+    const render = (id, type, empty) => {
+      const grid = document.getElementById(id); if (!grid) return;
+      const selected = works.filter(work => (work.contentType || work.content_type || 'NOVEL') === type).slice(0, 6);
+      grid.replaceChildren(); grid.setAttribute('aria-busy', 'false');
+      for (const work of selected) {
+        const card = document.createElement('a'); card.className = 'cdg-work-card discovery-card';
+        card.href = '/works/' + encodeURIComponent(work.id);
+        card.onclick = event => {
+          if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button > 0) return;
+          event.preventDefault(); window.navigateTo(card.getAttribute('href'));
+        };
+        const cover = document.createElement('div'); cover.className = 'cdg-card-cover';
+        const image = document.createElement('img'); image.className = 'cdg-card-cover-img'; image.src = getWorkCover(work); image.alt = ''; image.loading = 'lazy'; cover.append(image);
+        const info = document.createElement('div'); info.className = 'cdg-card-info';
+        const title = document.createElement('h3'); title.className = 'cdg-card-title'; title.textContent = work.title;
+        const author = document.createElement('p'); author.className = 'small text-muted'; author.textContent = getAuthorName(work);
+        const state = document.createElement('p'); state.className = 'small'; state.textContent = `${work.isCompleted || work.is_completed || work.status === 'COMPLETED' ? '완결' : work.status === 'PAUSED' ? '휴재' : '연재 중'} · 공개 ${work.episodes.length}화`;
+        info.append(title, author, state); card.append(cover, info); grid.append(card);
+      }
+      if (!selected.length) { const message = document.createElement('p'); message.className = 'text-muted'; message.textContent = empty; grid.append(message); }
+    };
+    const heading = document.getElementById('recentNovelsHeading'); if (heading) heading.textContent = '공개된 웹소설';
+    const webtoonHeading = document.getElementById('recentWebtoonsHeading'); if (webtoonHeading) webtoonHeading.textContent = '공개된 웹툰';
+    render('recentNovelsGrid', 'NOVEL', '표시할 작품이 없습니다. 새로운 연재를 기다려 주세요.');
+    if (window.WEBNOVELS_CONFIG?.webtoonServiceEnabled === true) render('webtoonsGrid', 'WEBTOON', '아직 공개된 웹툰이 없습니다.');
+    else { const grid = document.getElementById('webtoonsGrid'); if (grid) { grid.textContent = '웹툰 공개 서비스는 준비 중입니다.'; grid.setAttribute('aria-busy', 'false'); } }
+    for (const id of ['recentNovelsSection','webtoonsSection']) { const section = document.getElementById(id); if (section) section.hidden = false; }
+    for (const id of ['heroFeaturedSection','editorialSpotlightSection','trendingWorksSection','newWorksSection','completedWorksSection','goldenBestSection','todayFreeSection','genreRecSection']) {
+      const section = document.getElementById(id); if (section) section.hidden = true;
+    }
+    const notice = document.getElementById('homeCatalogStatus'); if (notice) { notice.replaceChildren(); notice.hidden = true; }
+    return;
+  }
   try {
     if (!getPublishedWorks() || getPublishedWorks().length === 0) {
       ['trendingWorksGrid', 'newWorksGrid', 'webtoonsGrid', 'completedWorksGrid', 'todayFreeGrid', 'genreWorksGrid', 'goldenBestWorksGrid'].forEach(id => {

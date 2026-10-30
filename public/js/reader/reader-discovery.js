@@ -36,7 +36,7 @@
     image.src = work.coverUrl; image.alt = ''; image.loading = 'lazy'; image.className = 'cdg-card-cover-img'; art.append(image);
     const info = node('div', null, 'cdg-card-info');
     info.append(node('span', work.genre || (work.contentType === 'WEBTOON' ? '웹툰' : '웹소설'), 'cdg-card-tag'), node('h3', work.title, 'cdg-card-title'),
-      node('p', work.author, 'text-muted small'), node('p', `${work.isCompleted ? '완결 · ' : ''}공개 ${work.episodeCount}화`, 'small'));
+      node('p', work.author, 'text-muted small'), node('p', `${work.contentType === 'WEBTOON' ? '웹툰' : '웹소설'} · ${work.isCompleted ? '완결' : work.status === 'PAUSED' ? '휴재' : '연재 중'} · ${work.rating === 'AGE_15' ? '15세 이상' : '전체이용가'} · 공개 ${work.episodeCount}화`, 'small'));
     if (popular && Number.isInteger(work.rankingReaders) && work.rankingReaders >= 5)
       info.append(node('p', `최근 7일 독자 ${work.rankingReaders}명`, 'small'));
     else info.append(node('p', `최근 공개 ${date(work.lastPublishedAt)}`, 'small text-muted'));
@@ -80,6 +80,25 @@
     return result;
   }
   function path(params) { const query = params.toString(); return '/discover' + (query ? '?' + query : ''); }
+  function summaries() {
+    const el = $('discoverActiveFilters'); if (!el) return;
+    el.replaceChildren(node('span', currentQuery.get('type') === 'WEBTOON' ? '웹툰' : '웹소설', 'discovery-type-summary'));
+    const labels = { q: '검색', genre: '장르', status: '상태', rating: '등급', epRange: '회차', sort: '정렬' };
+    const names = { ONGOING: '연재 중', COMPLETED: '완결', ALL_AGES: '전체이용가', AGE_15: '15세 이상', AGE_19: '19세 이상', latest: '최신 공개순', new: '첫 공개순', popular: '최근 7일 독자순', views: '최근 7일 독자순', episodes: '회차 많은순' };
+    for (const key of Object.keys(labels)) {
+      const value = currentQuery.get(key);
+      if (!value || value === 'ALL' || (key === 'sort' && value === 'latest')) continue;
+      const label = `${labels[key]}: ${names[value] || value}`;
+      const remove = button(label + ' ×', () => filter(key, ''));
+      remove.classList.add('discovery-condition'); remove.setAttribute('aria-label', label + ' 조건 해제'); el.append(remove);
+    }
+    for (const tag of [...new Set(currentQuery.getAll('tag'))].sort()) {
+      const control = $('discoverTagFilters')?.querySelectorAll('[data-discover-tag]') || [];
+      const label = [...control].find(item => item.dataset.discoverTag === tag)?.textContent || '#' + tag;
+      const remove = button(label + ' ×', () => toggleTag(tag));
+      remove.classList.add('discovery-condition'); remove.setAttribute('aria-label', label + ' 조건 해제'); el.append(remove);
+    }
+  }
   function syncControls() {
     window.updateDiscoverTypeControls?.(currentQuery.get('type') || 'NOVEL');
     const groups = [['discoverGenreFilters','genre','ALL'], ['filterStatusGroup','status','ALL'],
@@ -97,18 +116,27 @@
     if ($('selectDiscoverSort')) $('selectDiscoverSort').value = currentQuery.get('sort') || 'latest';
     if ($('discoverQuery')) $('discoverQuery').value = currentQuery.get('q') || '';
     if ($('discoverType')) $('discoverType').value = currentQuery.get('type') || 'NOVEL';
+    if ($('inputSearchHeader')) $('inputSearchHeader').value = currentQuery.get('q') || '';
+    if ($('inputSearchMobile')) $('inputSearchMobile').value = currentQuery.get('q') || '';
+    summaries(); window.syncReaderNavigation?.();
   }
   async function discover(search = window.location.search) {
     configure();
     const request = ++listRequest;
     currentQuery = parse(search); syncControls();
     const query = values(currentQuery), el = $('discoverWorksGrid');
-    status(el, '공개 작품을 찾고 있습니다.'); $('discoverPager')?.replaceChildren();
+    status(el, '공개 작품을 찾고 있습니다.'); el?.setAttribute('aria-busy', 'true'); $('discoverPager')?.replaceChildren();
     if ($('discoverResultsCount')) $('discoverResultsCount').textContent = '검색 중';
+    if ($('discoverQueryStatus')) $('discoverQueryStatus').textContent = '검색 중입니다.';
     try {
       const result = await window.ReaderCatalog.list(query);
       if (request !== listRequest) return;
       cards(el, result.works, query.sort === 'popular' || query.sort === 'views');
+      if (!result.works.length) {
+        if (query.type === 'WEBTOON' && window.WEBNOVELS_CONFIG?.webtoonServiceEnabled !== true)
+          status(el, '웹툰 공개 서비스는 준비 중입니다.');
+        else el?.append(button('검색 조건 초기화', () => window.ReaderDiscovery.reset()));
+      }
       if ($('discoverResultsCount')) $('discoverResultsCount').textContent = `이 페이지 ${result.works.length}개 작품`;
       if ($('discoveryRankingNote')) $('discoveryRankingNote').textContent = query.type === 'WEBTOON' && window.WEBNOVELS_CONFIG?.webtoonServiceEnabled!==true ? '웹툰 공개 서비스는 준비 중입니다.' :
         ['popular','views'].includes(query.sort) ? rankingText(result.ranking) : '최신 공개순은 최근 회차 공개 시각, 신작순은 첫 공개 시각을 기준으로 합니다.';
@@ -119,9 +147,10 @@
     } catch (error) {
       if (request !== listRequest) return;
       if ($('discoverResultsCount')) $('discoverResultsCount').textContent = '조회 실패';
+      if ($('discoverQueryStatus')) $('discoverQueryStatus').textContent = '검색 결과를 불러오지 못했습니다. 다시 시도해 주세요.';
       failure(el, () => discover(search));
       if (currentQuery.has('cursor')) el?.append(button('처음 페이지부터 다시 검색', () => filter('cursor', '')));
-    }
+    } finally { if (request === listRequest) el?.setAttribute('aria-busy', 'false'); }
   }
   function filter(key, value) {
     const params = new URLSearchParams(currentQuery); params.delete('cursor');
@@ -137,28 +166,84 @@
     configure();
     const request = ++homeRequest;
     const genreAtStart = genreRequest;
-    const grids = ['trendingWorksGrid','newWorksGrid','completedWorksGrid','todayFreeGrid','genreWorksGrid','editorialSpotlightGrid'];
-    try {
-      const result = await window.ReaderCatalog.home(); if (request !== homeRequest) return;
-      const hero = $('cdgHeroSlider');
-      if (typeof cdgHeroInterval !== 'undefined' && cdgHeroInterval) { clearInterval(cdgHeroInterval); cdgHeroInterval = null; }
-      cards(hero, result.sections.recommended); hero?.classList.add('discovery-recommendations');
-      if($('editorialSpotlightSection'))$('editorialSpotlightSection').hidden=!result.sections.spotlight?.length;
-      cards($('editorialSpotlightGrid'),result.sections.spotlight||[]);
-      cards($('trendingWorksGrid'), result.sections.popular, true);
-      window.GrowthStudio?.home();
-      cards($('newWorksGrid'), result.sections.new); cards($('completedWorksGrid'), result.sections.completed);
-      cards($('todayFreeGrid'), result.sections.new);
-      if (genreAtStart === genreRequest) cards($('genreWorksGrid'), result.sections.recommended);
-      if(window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true)cards($('webtoonsGrid'),result.sections.webtoons||[]);else status($('webtoonsGrid'), '웹툰 공개 서비스는 준비 중입니다.');
-      if ($('goldenBestSection')) $('goldenBestSection').hidden = true;
-      if ($('homeRankingNote')) $('homeRankingNote').textContent = rankingText(result.ranking);
-      if ($('homeRecommendationNote')) $('homeRecommendationNote').textContent = '편집 추천 · 운영자가 선정한 작품입니다.';
-    } catch {
-      if (request === homeRequest) ['cdgHeroSlider', ...grids].forEach(id => {
-        if (id !== 'genreWorksGrid' || genreAtStart === genreRequest) failure($(id), home);
-      });
-    }
+    const valid = () => request === homeRequest;
+    let summary = null, recent = null, summaryFailed = false, recentFailed = false;
+    const hasRecent = !!$('recentNovelsGrid');
+    const optional = [['heroFeaturedSection','cdgHeroSlider'],['editorialSpotlightSection','editorialSpotlightGrid'],['trendingWorksSection','trendingWorksGrid'],['newWorksSection','newWorksGrid'],['completedWorksSection','completedWorksGrid']];
+    for (const [section, grid] of optional) { if ($(section)) $(section).hidden = true; status($(grid), '공개 작품을 불러오는 중입니다.'); }
+    for (const id of ['goldenBestSection','todayFreeSection','genreRecSection']) if ($(id)) $(id).hidden = true;
+    for (const id of ['recentNovelsGrid','webtoonsGrid']) { status($(id), '공개 작품을 불러오는 중입니다.'); $(id)?.setAttribute('aria-busy', 'true'); }
+    if ($('homeCatalogStatus')) { $('homeCatalogStatus').hidden = false; status($('homeCatalogStatus'), '공개 작품을 불러오는 중입니다.'); }
+    if (typeof cdgHeroInterval !== 'undefined' && cdgHeroInterval) { clearInterval(cdgHeroInterval); cdgHeroInterval = null; }
+    const render = () => {
+      if (!valid()) return;
+      const used = new Set();
+      const unique = (works, limit = 6) => {
+        const result = [];
+        for (const work of works || []) {
+          const id = String(work.id); if (used.has(id)) continue;
+          used.add(id); result.push(work); if (result.length === limit) break;
+        }
+        return result;
+      };
+      const section = (id, grid, works, popular = false) => {
+        cards($(grid), works, popular); if ($(id)) $(id).hidden = works.length === 0;
+      };
+      if (summary) {
+        section('heroFeaturedSection', 'cdgHeroSlider', unique(summary.sections.recommended, 1));
+        const hero = $('cdgHeroSlider'); hero?.classList.add('discovery-recommendations');
+        hero?.children[0]?.classList.add('discovery-featured');
+        section('editorialSpotlightSection', 'editorialSpotlightGrid', unique(summary.sections.spotlight));
+      }
+      if (hasRecent) {
+        const grid = $('recentNovelsGrid'); grid.setAttribute('aria-busy', String(!recent && !recentFailed));
+        if (recent) {
+          const works = unique(recent.works.filter(work => work.contentType === 'NOVEL'));
+          cards(grid, works);
+          if (!recent.works.length) status(grid, '아직 공개된 웹소설이 없습니다. 새로운 연재를 기다려 주세요.');
+          if ($('recentNovelsSection')) $('recentNovelsSection').hidden = recent.works.length > 0 && works.length === 0;
+        } else {
+          if ($('recentNovelsSection')) $('recentNovelsSection').hidden = false;
+          if (recentFailed) failure(grid, home);
+        }
+      }
+      const webtoon = $('webtoonsGrid');
+      if ($('webtoonsSection')) $('webtoonsSection').hidden = false;
+      webtoon?.setAttribute('aria-busy', String(!summary && !summaryFailed));
+      if (window.WEBNOVELS_CONFIG?.webtoonServiceEnabled !== true) {
+        status(webtoon, '웹툰 공개 서비스는 준비 중입니다.'); webtoon?.setAttribute('aria-busy', 'false');
+      } else if (summary) {
+        const source = summary.sections.webtoons || [], works = unique(source);
+        cards(webtoon, works);
+        if (!source.length) status(webtoon, '아직 공개된 웹툰이 없습니다. 새로운 연재를 기다려 주세요.');
+        if ($('webtoonsSection')) $('webtoonsSection').hidden = source.length > 0 && works.length === 0;
+      } else if (summaryFailed) failure(webtoon, home);
+      if (summary) {
+        section('trendingWorksSection', 'trendingWorksGrid', unique(summary.sections.popular), true);
+        section('newWorksSection', 'newWorksGrid', unique(summary.sections.new));
+        section('completedWorksSection', 'completedWorksGrid', unique(summary.sections.completed));
+        // Hidden legacy grids retain their DOM contract, without duplicating visible shelves.
+        cards($('todayFreeGrid'), []);
+        if (genreAtStart === genreRequest) cards($('genreWorksGrid'), summary.sections.recommended);
+        if ($('homeRankingNote')) $('homeRankingNote').textContent = rankingText(summary.ranking);
+        if ($('homeRecommendationNote')) $('homeRecommendationNote').textContent = '편집 추천 · 운영자가 선정한 작품입니다.';
+      } else if (summaryFailed) {
+        for (const [, grid] of optional) failure($(grid), home);
+        if (genreAtStart === genreRequest) failure($('genreWorksGrid'), home);
+      }
+      const notice = $('homeCatalogStatus');
+      if (notice) {
+        notice.hidden = !!summary;
+        if (summaryFailed) { notice.hidden = false; failure(notice, home); }
+      }
+    };
+    const loadSummary = window.ReaderCatalog.home().then(result => {
+      if (!valid()) return; summary = result; render(); window.GrowthStudio?.home();
+    }, () => { if (valid()) { summaryFailed = true; render(); } });
+    const loadRecent = hasRecent ? window.ReaderCatalog.list({ type: 'NOVEL', sort: 'latest', limit: 6 }).then(result => {
+      if (!valid()) return; recent = result; render();
+    }, () => { if (valid()) { recentFailed = true; render(); } }) : Promise.resolve();
+    render(); await Promise.all([loadSummary, loadRecent]);
   }
   async function genre(value) {
     const request = ++genreRequest;

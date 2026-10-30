@@ -10,6 +10,67 @@
 
 let routeRevision = 0;
 
+// Reader navigation follows the accepted view, not the account's role.
+function syncReaderNavigation(viewId = window.currentActiveView, search = window.location.search) {
+  document.body?.setAttribute?.('data-active-view', viewId || 'view-home');
+  const params = new URLSearchParams(search || '');
+  const selected = viewId === 'view-home' ? 'home' : viewId === 'view-mypage' ? 'library' :
+    viewId === 'view-discover' ? (['popular', 'views'].includes(params.get('sort')) ? 'ranking' :
+      params.get('sort') === 'new' ? 'new' : params.get('status') === 'COMPLETED' ? 'completed' :
+        params.get('type') === 'WEBTOON' ? 'webtoon' : 'novel') : null;
+  document.querySelectorAll('[data-reader-route]').forEach(link => {
+    const key = link.dataset?.readerRoute || link.getAttribute('data-reader-route');
+    const active = key === 'discover' ? viewId === 'view-discover' : key === selected;
+    if (active) {
+      link.classList.add('active'); link.setAttribute?.('aria-current', 'page');
+    } else {
+      link.classList.remove('active'); link.removeAttribute?.('aria-current');
+    }
+  });
+  const query = viewId === 'view-discover' ? params.get('q') || '' : '';
+  for (const id of ['inputSearchHeader', 'inputSearchMobile']) {
+    const input = document.getElementById(id); if (input) input.value = query;
+  }
+}
+window.syncReaderNavigation = syncReaderNavigation;
+
+// Real links keep browser open-in-new-tab behavior and carry the complete query.
+function handleReaderRouteClick(event) {
+  const link = event?.currentTarget;
+  if (!link || event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button > 0)
+    return true;
+  const target = link.getAttribute('target');
+  if (target && target !== '_self') return true;
+  let route;
+  try { route = new URL(link.getAttribute('href'), window.location.origin); } catch { return true; }
+  if (route.origin !== window.location.origin || route.username || route.password ||
+      !/^\/(?:home|discover|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
+  event.preventDefault(); window.closeAllModals?.();
+  navigateTo(route.pathname + route.search); return false;
+}
+window.handleReaderRouteClick = handleReaderRouteClick;
+
+function submitReaderSearch(event) {
+  event?.preventDefault();
+  const form = event?.currentTarget || event?.target;
+  const input = form?.elements?.namedItem?.('q') || form?.querySelector?.('input[name="q"]');
+  const query = String(input?.value || '').trim().slice(0, 100);
+  if (input) input.value = query;
+  if (!window.ReaderDiscovery?.active()) {
+    window.openModal?.('modalSearch');
+    const modalInput = document.getElementById('globalSearchInput');
+    if (modalInput) { modalInput.value = query; modalInput.focus?.(); }
+    window.renderSearchResults?.(query); return false;
+  }
+  if (/^\/discover\/?$/i.test(window.location.pathname)) {
+    window.ReaderDiscovery.filter('q', query); return false;
+  }
+  const params = new URLSearchParams({ type: new URLSearchParams(window.location.search).get('type') === 'WEBTOON' ? 'WEBTOON' : 'NOVEL' });
+  if (query) params.set('q', query);
+  navigateTo('/discover?' + params); return false;
+}
+window.submitReaderSearch = submitReaderSearch;
+
 /**
  * 1. SPA 메인 뷰 전환기 (switchWebNovelsView)
  */
@@ -113,6 +174,8 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
     }
   }
 
+  syncReaderNavigation(viewId);
+
   // 데스크톱 사이드바 활성 탭 동기화
   if (window.ReaderDiscovery?.active()) {
     if (viewId === 'view-home') window.ReaderDiscovery.home();
@@ -164,6 +227,7 @@ function resolveRoute(pathname, isInitial = false) {
     switchWebNovelsView('view-discover', null, false);
     if (window.ReaderDiscovery?.active()) window.ReaderDiscovery.discover(route.search || window.location.search);
     else window.setDiscoverType?.(new URLSearchParams(route.search || window.location.search).get('type'), false);
+    syncReaderNavigation('view-discover', route.search || window.location.search);
     return;
   }
 

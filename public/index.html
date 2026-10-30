@@ -29,7 +29,7 @@
   <!-- SEO Meta Tags -->
   <meta name="description" content="WebNovels에서 공개된 무료 웹소설을 읽고 연재하세요.">
   <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#F7F8FC">
+  <meta name="theme-color" content="#F5F6F6">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='3' y1='3' x2='25' y2='25'%3E%3Cstop stop-color='%2325D1FF'/%3E%3Cstop offset='.6' stop-color='%239C65FF'/%3E%3Cstop offset='1' stop-color='%23FF4F9A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M5.8 4.1c0-1.2 1.4-1.9 2.4-1.3l14 9c1 .6 1 2.1 0 2.7l-14 9c-1 .7-2.4-.1-2.4-1.3V4.1Z' fill='url(%23g)'/%3E%3Cpath d='M9.3 8.2v11.6l8.9-5.8-8.9-5.8Z' fill='%23fff'/%3E%3C/svg%3E">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,8 +47,10 @@
 <link rel="stylesheet" href="/css/webtoon.css?v=20261031">
 <link rel="stylesheet" href="/css/growth.css?v=20261031">
 <link rel="stylesheet" href="/css/policies.css?v=20261031">
+  <link rel="stylesheet" href="/css/reader-shell.css?v=20261031r3">
 </head>
-<body class="theme-default" data-user-role="GUEST">
+<body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
+  <a class="reader-skip-link" href="#readerMain">본문으로 이동</a>
   <div id="moduleLoadStatus" role="status" aria-live="polite" hidden></div>
   <div id="app" class="app-shell">
     <!-- PC 전용 좌측 고정 사이드바 (UI_pc.md 레이아웃 표준: 240px 너비) -->
@@ -150,7 +152,7 @@
       <header class="webnovels-header" id="mainHeader">
         <div class="header-inner">
           <!-- 모바일 전용 브랜드 로고 -->
-          <a href="#home" class="brand-link cp-brand mobile-only-brand" id="brandLink" onclick="switchWebNovelsView('view-home')" title="webnovels 홈으로">
+          <a href="/home" class="brand-link cp-brand mobile-only-brand" id="brandLink" onclick="return handleReaderRouteClick(event)" title="webnovels 홈으로">
             <svg class="cdg-heart-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
@@ -158,13 +160,15 @@
           </a>
 
           <!-- PC 중앙 검색바 (UI_pc.md: 🔍 작품명, 작가명을 검색) -->
-          <div class="desktop-header-search" id="desktopHeaderSearch" onclick="openModal('modalSearch')">
-            <i data-lucide="search" class="search-input-icon"></i>
-            <input type="text" class="desktop-search-input" id="inputSearchHeader" placeholder="작품명, 작가명을 검색하세요" readonly>
-          </div>
+          <form class="desktop-header-search reader-header-search" id="desktopHeaderSearch" role="search" aria-label="작품 검색" action="/discover" method="get" onsubmit="submitReaderSearch(event)">
+            <label class="sr-only" for="inputSearchHeader">작품명·작가명 검색</label>
+            <input type="search" name="q" class="desktop-search-input" id="inputSearchHeader" maxlength="100" autocomplete="off" placeholder="작품명·작가명 검색">
+            <button type="submit" class="btn btn-ghost" aria-label="검색"><i data-lucide="search" aria-hidden="true"></i></button>
+          </form>
 
           <!-- Header Actions: 포인트 🪙 1,000P + 👤 프로필/로그인 -->
           <div class="header-actions">
+            <a href="/library" class="reader-header-library" id="readerHeaderLibrary" data-reader-route="library" onclick="return handleReaderRouteClick(event)"><i data-lucide="library" aria-hidden="true"></i><span>내 서재</span></a>
             <a href="/creator" class="btn btn-outline btn-sm" id="headerCreatorLink" data-account-portal="creator" hidden onclick="handleDirectPortalClick(event, 'creator')">작가 스튜디오</a>
             <div class="user-points-badge" id="headerPointsBadge" style="display:none">
               🪙 <span id="headerPointsValue">0P</span>
@@ -177,19 +181,23 @@
         </div>
 
         <!-- 모바일 직하단 검색 입력창 (UI_mobile.md: 🔍 작품명, 작가 검색) -->
-        <div class="mobile-search-bar-wrap" id="mobileSearchBarWrap" onclick="openModal('modalSearch')">
-          <div class="mobile-search-bar">
-            <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px; color: var(--text-secondary); margin-right: 10px; flex-shrink: 0;">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <span class="mobile-search-placeholder">작품명, 작가 검색</span>
-          </div>
-        </div>
+        <form class="mobile-search-bar-wrap reader-header-search" id="mobileSearchBarWrap" role="search" aria-label="작품 검색" action="/discover" method="get" onsubmit="submitReaderSearch(event)">
+          <label class="sr-only" for="inputSearchMobile">작품명·작가명 검색</label>
+          <input id="inputSearchMobile" name="q" type="search" maxlength="100" autocomplete="off" placeholder="작품명·작가명 검색">
+          <button type="submit" class="btn btn-ghost" aria-label="검색"><i data-lucide="search" aria-hidden="true"></i></button>
+        </form>
+        <nav class="reader-primary-nav" id="readerPrimaryNav" aria-label="독자 주요 메뉴">
+          <a href="/home" data-reader-route="home" aria-current="page" onclick="return handleReaderRouteClick(event)">홈</a>
+          <a href="/discover?type=NOVEL" data-reader-route="novel" onclick="return handleReaderRouteClick(event)">웹소설</a>
+          <a href="/discover?type=WEBTOON" data-reader-route="webtoon" onclick="return handleReaderRouteClick(event)">웹툰</a>
+          <a href="/discover?sort=popular" data-reader-route="ranking" onclick="return handleReaderRouteClick(event)">랭킹</a>
+          <a href="/discover?sort=new" data-reader-route="new" onclick="return handleReaderRouteClick(event)">신작</a>
+          <a href="/discover?status=COMPLETED" data-reader-route="completed" onclick="return handleReaderRouteClick(event)">완결</a>
+        </nav>
       </header>
 
       <!-- Main Content Area -->
-      <main class="webnovels-body">
+      <main class="webnovels-body" id="readerMain" tabindex="-1">
         <aside id="serviceStatus" class="service-status" role="status" aria-live="polite" hidden>
           <span id="serviceStatusMessage"></span>
           <button id="serviceStatusRetry" type="button" class="btn btn-outline btn-sm">연결 다시 확인</button>
@@ -197,18 +205,23 @@
 
         <!-- View 1: Home View (PC & Mobile 메인 홈) -->
         <section id="view-home" class="main-view active">
+          <div class="reader-home-intro">
+            <div><h1>오늘, 어떤 이야기를 읽을까요?</h1><p>웹소설부터 웹툰까지, 새로운 이야기를 만나보세요.</p></div>
+            <a href="/discover?type=NOVEL" class="btn btn-outline" onclick="return handleReaderRouteClick(event)">전체 작품 탐색</a>
+          </div>
+          <div id="homeCatalogStatus" class="reader-catalog-status" role="status" aria-live="polite"></div>
 
           <!-- 📖 계속 읽기 섹션 (UI_pc.md & UI_mobile.md 최상단 표준 배치) -->
           <div class="continue-reading-home-wrap" id="sectionContinueReading" style="display:none">
             <div class="continue-reading-card glass-panel" id="continueReadingCardHome" onclick="openTopContinueReading()">
-              <img src="/images/stormqueen_oath.jpg" alt="표지" class="continue-thumb" id="continueCardCover">
+              <img alt="" class="continue-thumb" id="continueCardCover">
               <div class="continue-info">
                 <div class="continue-badge-row">
                   <span class="badge badge-accent continue-badge"><i data-lucide="book-open" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> 계속 읽기</span>
                   <span class="continue-pct" id="continueCardPct"></span>
                 </div>
                 <h3 class="continue-title" id="continueCardTitle">작품 정보를 불러오는 중</h3>
-                <p class="continue-meta text-muted" id="continueCardMeta">제 1화 읽는 중 · 판타지</p>
+                <p class="continue-meta text-muted" id="continueCardMeta"></p>
                 <div class="progress-bar-bg continue-progress-bg">
                   <div class="progress-bar-fill continue-progress-fill" id="continueCardFill" style="width: 0%;"></div>
                 </div>
@@ -220,12 +233,23 @@
           </div>
 
           <!-- 1. HERO / Featured Works Carousel -->
-          <div class="cdg-hero-container" id="heroFeaturedSection">
+          <div class="cdg-hero-container" id="heroFeaturedSection" hidden>
+            <h2 class="cdg-section-title">편집 추천</h2>
             <p id="homeRecommendationNote" class="text-muted small"></p>
             <div class="cdg-hero-slider" id="cdgHeroSlider">
               <!-- Dynamic Hero Slides -->
             </div>
           </div>
+
+          <section class="cdg-section reader-primary-section" id="recentNovelsSection" aria-labelledby="recentNovelsHeading">
+            <div class="cdg-section-head"><h2 class="cdg-section-title" id="recentNovelsHeading">최근 공개한 웹소설</h2><a href="/discover?type=NOVEL&amp;sort=latest" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">웹소설 전체 보기</a></div>
+            <div class="reader-work-grid" id="recentNovelsGrid" aria-busy="true"><p class="text-muted">공개 작품을 불러오고 있습니다.</p></div>
+          </section>
+
+          <section class="cdg-section reader-primary-section" id="webtoonsSection" aria-labelledby="recentWebtoonsHeading">
+            <div class="cdg-section-head"><h2 class="cdg-section-title" id="recentWebtoonsHeading">최근 공개한 웹툰</h2><a href="/discover?type=WEBTOON&amp;sort=latest" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">웹툰 전체 보기</a></div>
+            <div class="reader-work-grid" id="webtoonsGrid"><p class="text-muted">공개 작품을 불러오고 있습니다.</p></div>
+          </section>
 
         <!-- 2. 🔥 지금 가장 많이 읽는 작품 (Top 4 Ranking) -->
         <section class="cdg-section" id="editorialSpotlightSection" hidden>
@@ -233,10 +257,10 @@
           <p class="text-muted small">편집부가 기간별로 선정한 작품입니다.</p>
           <div class="cdg-scroll-row" id="editorialSpotlightGrid"></div>
         </section>
-        <section class="cdg-section" id="trendingWorksSection">
+        <section class="cdg-section" id="trendingWorksSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title" id="homePopularHeading">🔥 지금 가장 많이 읽는 작품</h2>
-            <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">더보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
+            <h2 class="cdg-section-title" id="homePopularHeading">최근 7일 많이 읽은 작품</h2>
+            <a href="/discover?sort=popular" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">랭킹 전체 보기</a>
           </div>
           <p id="homeRankingNote" class="text-muted small" aria-live="polite"></p>
           <div class="cdg-scroll-row" id="trendingWorksGrid">
@@ -244,7 +268,7 @@
           </div>
         </section>
 
-        <section class="cdg-section" id="goldenBestSection">
+        <section class="cdg-section" id="goldenBestSection" hidden>
           <div class="cdg-section-head">
             <h2 class="cdg-section-title">🌟 Golden Best · 신인 첫걸음</h2>
             <span class="golden-best-badge-note" title="누적 조회수 몰아주기가 아닌 최근 24시간 독자 반응(정독률, 관심, 유효댓글) 품질 기반 알고리즘"><i data-lucide="sparkles" style="width:12px;height:12px;display:inline;"></i> 반응 품질 기반 추천 (투명 알고리즘) · 1~15화 신작</span>
@@ -254,10 +278,10 @@
 
         <section class="cdg-section" id="growthHome" hidden aria-label="새로운 연재 추천과 설정"></section>
         <!-- 3. ✨ 새로운 작품 (New Releases) -->
-        <section class="cdg-section" id="newWorksSection">
+        <section class="cdg-section" id="newWorksSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">✨ 새로운 작품</h2>
-            <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">더보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
+            <h2 class="cdg-section-title">새로 시작한 연재</h2>
+            <a href="/discover?sort=new" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">신작 전체 보기</a>
           </div>
           <div class="cdg-scroll-row" id="newWorksGrid">
             <!-- Dynamic New Releases Cards -->
@@ -265,7 +289,7 @@
         </section>
 
         <!-- 4. 장르별 추천 (Interactive Genre Filters) -->
-        <section class="cdg-section" id="genreRecSection">
+        <section class="cdg-section" id="genreRecSection" hidden>
           <div class="cdg-section-head">
             <h2 class="cdg-section-title">장르별 추천</h2>
           </div>
@@ -286,22 +310,11 @@
           </div>
         </section>
 
-        <!-- 5. 🎨 인기 웹툰 (Webtoons Section) -->
-        <section class="cdg-section" id="webtoonsSection">
-          <div class="cdg-section-head">
-            <h2 class="cdg-section-title">🎨 인기 웹툰</h2>
-            <span class="cdg-more-link" onclick="openWebtoonFilterHome()">더보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
-          </div>
-          <div class="cdg-scroll-row" id="webtoonsGrid">
-            <!-- Dynamic Webtoon Cards -->
-          </div>
-        </section>
-
         <!-- 6. 🏆 완결 명작 모음 (Completed Works) -->
-        <section class="cdg-section" id="completedWorksSection">
+        <section class="cdg-section" id="completedWorksSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">🏆 완결 명작 모음</h2>
-            <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">더보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
+            <h2 class="cdg-section-title">완결까지 읽는 이야기</h2>
+            <a href="/discover?status=COMPLETED" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">완결 작품 전체 보기</a>
           </div>
           <div class="cdg-scroll-row" id="completedWorksGrid">
             <!-- Dynamic Completed Work Cards -->
@@ -309,7 +322,7 @@
         </section>
 
         <!-- 7. 오늘의 무료 작품 (Today's Free Works & Ad Unlock Banner) -->
-        <section class="cdg-section" id="todayFreeSection">
+        <section class="cdg-section" id="todayFreeSection" hidden>
           <div class="cdg-section-head">
             <h2 class="cdg-section-title">🎁 오늘의 무료 작품</h2>
             <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">전체보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
@@ -337,10 +350,10 @@
         <div class="container section-padding">
           <div class="section-header discover-header">
             <div>
-              <h2 id="discoverHeading">웹소설 작품 탐색</h2>
+              <h1 id="discoverHeading">웹소설 작품 탐색</h1>
               <p class="text-muted">검색, 장르 필터, 정렬로 다음에 읽을 작품을 빠르게 찾으세요.</p>
             </div>
-            <button class="btn btn-outline" id="btnDiscoverSearch"><i data-lucide="search"></i> 작품/작가 검색</button>
+            <button type="button" class="btn btn-outline" id="btnDiscoverSearch"><i data-lucide="search" aria-hidden="true"></i> 검색창으로 이동</button>
           </div>
 
           <nav class="discovery-type-tabs" aria-label="작품 종류">
@@ -348,11 +361,10 @@
             <button type="button" class="pill" data-discover-type="WEBTOON" aria-pressed="false" onclick="setDiscoverType('WEBTOON')">웹툰</button>
           </nav>
           <form id="discoverySearchForm" class="discovery-search" hidden onsubmit="ReaderDiscovery.submit(event)">
-            <label for="discoverQuery">작품명·작가명 검색</label>
+            <label for="discoverQuery" class="sr-only">작품명·작가명 검색</label>
             <input id="discoverQuery" type="search" maxlength="100" autocomplete="off" placeholder="작품이나 작가를 입력하세요">
             <button type="submit" class="btn btn-primary">검색</button>
-            <label for="discoverType">작품 종류</label>
-            <select id="discoverType" onchange="ReaderDiscovery.filter('type', this.value)">
+            <select id="discoverType" aria-label="작품 종류" hidden onchange="ReaderDiscovery.filter('type', this.value)">
               <option value="NOVEL">웹소설</option><option value="WEBTOON">웹툰</option>
             </select>
           </form>
@@ -360,29 +372,31 @@
           <p id="discoveryRankingNote" class="text-muted small"></p>
 
           <!-- Genre Filter Pills -->
-          <div class="filter-pills mb-4" id="discoverGenreFilters">
+          <div class="filter-pills mb-4" id="discoverGenreFilters" role="group" aria-label="장르">
             <button type="button" class="pill active" onclick="setDiscoverGenreFilter('ALL', this)">전체</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('로맨스', this)">로맨스</button>
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('판타지', this)">판타지</button>
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('로맨스 판타지', this)">로맨스 판타지</button>
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('현대 판타지', this)">현대 판타지</button>
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('무협', this)">무협</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('SF', this)">SF</button>
+            <button type="button" class="pill" onclick="setDiscoverGenreFilter('호러', this)">호러</button>
             <button type="button" class="pill" onclick="setDiscoverGenreFilter('19+ 성인', this)" style="display:none">19+ 성인</button>
           </div>
 
           <!-- Comprehensive Multi-dimensional Filter Dashboard (improve3.md) -->
-          <div class="discover-filter-dashboard glass-panel mb-6" id="discoverFilterDashboard">
-            <div class="filter-dashboard-header">
-              <div class="filter-dashboard-title">
-                <i data-lucide="sliders-horizontal" class="icon-indigo"></i>
-                <span class="font-bold">상세 검색 필터</span>
-                <span class="results-counter" id="discoverResultsCount">총 0개 작품</span>
-              </div>
-              <div class="filter-dashboard-actions">
-                <button type="button" class="btn btn-sm btn-ghost" id="btnResetDiscoverFilters" onclick="resetDiscoverFilters()">
-                  <i data-lucide="rotate-ccw"></i> 필터 초기화
-                </button>
-              </div>
-            </div>
+          <div class="discovery-selection-bar">
+            <div id="discoverActiveFilters" class="discovery-active-filters" aria-label="선택한 탐색 조건"></div>
+            <button type="button" class="btn btn-sm btn-ghost" id="btnResetDiscoverFilters" onclick="resetDiscoverFilters()"><i data-lucide="rotate-ccw" aria-hidden="true"></i> 조건 초기화</button>
+          </div>
+          <details class="discover-filter-dashboard" id="discoverFilterDashboard">
+            <summary class="filter-dashboard-header">
+              <span class="filter-dashboard-title">
+                <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+                <span class="font-bold">상세 필터</span>
+              </span>
+              <span class="text-muted small">연재 상태 · 회차 · 연령 · 키워드</span>
+            </summary>
 
             <div class="filter-dashboard-body">
               <!-- Filter Row 1: Status & Episode Range & Age Rating & Sort -->
@@ -416,22 +430,12 @@
                   </div>
                 </div>
 
-                <div class="filter-group filter-group-sort">
-                  <span class="filter-label">정렬 기준</span>
-                  <select id="selectDiscoverSort" class="filter-sort-select" onchange="setDiscoverSortOrder(this.value)">
-                    <option value="latest">최신 공개순</option>
-                    <option value="new" id="discoveryNewSort" hidden>첫 공개순 (신작)</option>
-                    <option value="popular">인기순 (추천순)</option>
-                    <option value="views">누적 조회순</option>
-                    <option value="episodes">회차 많은순</option>
-                  </select>
-                </div>
               </div>
 
               <!-- Filter Row 2: Tag Multi-Select Filters -->
               <div class="filter-row filter-tags-row">
                 <div class="filter-tags-header">
-                  <span class="filter-label">키워드 태그 (다중 선택 교집합 AND)</span>
+                  <span class="filter-label">키워드 · 선택한 태그 모두 포함</span>
                   <span class="text-muted small" id="activeTagsCounter">선택된 태그: 0개</span>
                 </div>
                 <div class="filter-tag-chips-wrap" id="discoverTagFilters" aria-label="세부 태그 필터">
@@ -454,6 +458,13 @@
                 </div>
               </div>
             </div>
+          </details>
+
+          <div class="discovery-results-toolbar">
+            <p class="results-counter" id="discoverResultsCount" role="status" aria-live="polite">공개 작품을 찾고 있습니다.</p>
+            <div class="discovery-sort"><label for="selectDiscoverSort">정렬</label><select id="selectDiscoverSort" class="filter-sort-select" onchange="setDiscoverSortOrder(this.value)">
+              <option value="latest">최신 공개순</option><option value="new" id="discoveryNewSort" hidden>첫 공개순 (신작)</option><option value="popular">최근 7일 독자순</option><option value="views" hidden>최근 7일 독자순</option><option value="episodes">회차 많은순</option>
+            </select></div>
           </div>
 
           <div class="works-grid" id="discoverWorksGrid">
@@ -1011,7 +1022,7 @@
               <h2>내 서재</h2>
               <p class="text-muted">읽던 작품, 관심 작품과 구독 작가를 한 화면에서 관리합니다.</p>
             </div>
-            <button class="btn btn-outline" onclick="document.getElementById('btnSearchOpen').click()"><i data-lucide="search"></i> 새 작품 찾기</button>
+            <a href="/discover" class="btn btn-outline" onclick="return handleReaderRouteClick(event)"><i data-lucide="search" aria-hidden="true"></i> 새 작품 찾기</a>
           </div>
 
           <div class="library-layout mt-6">
@@ -2426,28 +2437,28 @@
       </div>
     </div>
 
-    <!-- Mobile Bottom Navigation Bar (UI_mobile.md 5대 고정 탭: 홈, 랭킹, 탐색, 서재, 더보기) -->
-    <nav class="cdg-mobile-bottom-nav" id="mobileBottomNav">
+    <!-- Reader navigation stays out of writing and full-screen reading surfaces. -->
+    <nav class="cdg-mobile-bottom-nav" id="mobileBottomNav" aria-label="모바일 독자 메뉴">
       <div class="cdg-bottom-nav-inner">
-        <a href="#home" class="bottom-nav-item active" data-target="view-home" id="bnavHome">
+        <a href="/home" class="bottom-nav-item active" data-target="view-home" data-reader-route="home" id="bnavHome" onclick="return handleReaderRouteClick(event)">
           <i data-lucide="home" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">홈</span>
         </a>
-        <a href="#ranking" class="bottom-nav-item" data-target="view-discover" data-sub="ranking" id="bnavRanking" onclick="openRankingFromNav(event)">
+        <a href="/discover?sort=popular" class="bottom-nav-item" data-target="view-discover" data-sub="ranking" id="bnavRanking" hidden onclick="openRankingFromNav(event)">
           <i data-lucide="trending-up" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">랭킹</span>
         </a>
-        <a href="#discover" class="bottom-nav-item" data-target="view-discover" id="bnavDiscover">
+        <a href="/discover" class="bottom-nav-item" data-target="view-discover" data-reader-route="discover" id="bnavDiscover" onclick="return handleReaderRouteClick(event)">
           <i data-lucide="compass" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">탐색</span>
         </a>
-        <a href="#library" class="bottom-nav-item" data-target="view-mypage" id="bnavLibrary">
+        <a href="/library" class="bottom-nav-item" data-target="view-mypage" data-reader-route="library" id="bnavLibrary" onclick="return handleReaderRouteClick(event)">
           <i data-lucide="bookmark" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">내 서재</span>
         </a>
         <button type="button" class="bottom-nav-item" id="bnavMore" onclick="openMobileMoreModal(event)">
-          <i data-lucide="more-horizontal" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">더보기</span>
+          <i data-lucide="user-round" class="bottom-nav-icon"></i>
+          <span class="bottom-nav-label">내 정보</span>
         </button>
       </div>
     </nav>
@@ -2458,15 +2469,15 @@
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
   <script src="/js/core/role-modules.js?v=136"></script>
-  <script src="/js/core/router.js?v=132"></script>
+  <script src="/js/core/router.js?v=20261031r3"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
   <script src="/js/reader/reader-content.js?v=124"></script>
   <script src="/js/reader/reader-catalog.js?v=117"></script>
-  <script src="/js/reader/reader-discovery.js?v=124"></script>
+  <script src="/js/reader/reader-discovery.js?v=20261031r3"></script>
   <script src="/js/reader/reader-webtoon.js?v=118"></script>
   <script src="/js/reader/reader-position.js?v=116"></script>
-  <script src="/js/reader/reader.js?v=20261031"></script>
+  <script src="/js/reader/reader.js?v=20261031r3"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>
@@ -2603,6 +2614,6 @@
   <script src="/js/core/auth-ui.js?v=134"></script>
   <script src="/js/core/service-status.js?v=114"></script>
   <script src="/js/core/free-beta-ui.js?v=135"></script>
-  <script src="/app.js?v=125"></script>
+  <script src="/app.js?v=20261031r3"></script>
 </body>
 </html>

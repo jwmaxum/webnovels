@@ -21,6 +21,8 @@ function bindWebNovelsEvents() {
   // Navigation (Header nav, Mobile bottom nav, Desktop sidebar)
   document.querySelectorAll('.nav-link, .bottom-nav-item, .cdg-sidebar-item').forEach(link => {
     link.addEventListener('click', (e) => {
+      // The reader link handler preserves its full URL and native modified clicks.
+      if (link.getAttribute('data-reader-route') !== null || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button > 0) return;
       const targetView = link.getAttribute('data-target');
       if (!targetView) return;
       e.preventDefault();
@@ -36,26 +38,8 @@ function bindWebNovelsEvents() {
     });
   });
 
-  // PC Desktop & Mobile Header Search Bars
-  const bindFastSearch = (inputId) => {
-    const el = document.getElementById(inputId);
-    if (!el) return;
-    const triggerSearchModal = () => {
-      if (typeof openModal === 'function') openModal('modalSearch');
-      const gInput = document.getElementById('globalSearchInput');
-      if (gInput) {
-        gInput.value = el.value || '';
-        if (typeof renderSearchResults === 'function') renderSearchResults(gInput.value);
-        setTimeout(() => gInput.focus(), 50);
-      }
-    };
-    el.addEventListener('focus', triggerSearchModal);
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') triggerSearchModal();
-    });
-  };
-  bindFastSearch('desktopHeaderSearchInput');
-  bindFastSearch('mobileSearchInput');
+  // Header search uses native forms and submitReaderSearch; focusing an input
+  // does not open a second modal or discard an in-progress search.
 
   // Header login button
   document.getElementById('btnHeaderLogin')?.addEventListener('click', () => {
@@ -69,7 +53,11 @@ function bindWebNovelsEvents() {
   });
 
   document.getElementById('btnDiscoverSearch')?.addEventListener('click', () => {
-    document.getElementById('btnSearchOpen')?.click();
+    const input = document.getElementById('discoverQuery');
+    if (window.ReaderDiscovery?.active() && input) { input.focus(); return; }
+    if (typeof openModal === 'function') openModal('modalSearch');
+    if (typeof renderSearchResults === 'function') renderSearchResults();
+    document.getElementById('globalSearchInput')?.focus();
   });
 
   document.getElementById('globalSearchInput')?.addEventListener('input', (event) => {
@@ -183,6 +171,8 @@ function bindWebNovelsEvents() {
 
   // Genre Filter Pills Event (Discover View)
   document.querySelectorAll('#discoverGenreFilters .pill').forEach(pill => {
+    // Current filters already declare their URL-backed action in the markup.
+    if (pill.getAttribute('onclick')) return;
     pill.addEventListener('click', () => {
       document.querySelectorAll('#discoverGenreFilters .pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');

@@ -1,0 +1,55 @@
+{
+  "stage": "UI-R3",
+  "date": "2026-10-31",
+  "result": "PASS",
+  "build": {
+    "command": "npm run build",
+    "startedAt": "2026-10-30T22:57:21.883Z",
+    "completedAt": "2026-10-30T23:11:46.659Z",
+    "exitCode": 0,
+    "error": null,
+    "log": "scratch/ui-r3/build.log",
+    "releaseCommands": 41,
+    "allStepsPassed": true,
+    "prismaAndTypescript": "PASS"
+  },
+  "types": "PASS: tsc in build:compile",
+  "syntax": "PASS: changed JavaScript syntax and reader-shell.css esbuild parse",
+  "tests": {
+    "newTests": 21,
+    "uiR2Tests": 5,
+    "releaseIntegration": "test:ui-r3 appended to test:release",
+    "coverage": "Not measured"
+  },
+  "lint": "No standalone lint script; CSS parsing, JS syntax and diff review used",
+  "security": {
+    "protectedViewsUnchanged": [
+      "view-creator",
+      "view-admin-cms",
+      "view-reader",
+      "view-work-detail"
+    ],
+    "protectedPathsUnchanged": [
+      "server/",
+      "database/",
+      "functions/",
+      "src/",
+      "public/_headers",
+      "public/js/shared/manuscript-document.js",
+      "public/js/creator/",
+      "public/js/core/auth-session.js"
+    ],
+    "filesScanned": 11,
+    "secretPatternMatches": 0,
+    "envLocalTracked": false,
+    "userFilePreserved": true,
+    "browserExecuted": false,
+    "liveDatabaseChanged": false
+  },
+  "limitations": [
+    "No browser or localhost verification",
+    "No live DB/API/configuration mutation",
+    "No measured browser accessibility or font/layout performance",
+    "Post-push CI/deployment status is reported separately"
+  ]
+}
