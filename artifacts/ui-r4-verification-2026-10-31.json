@@ -1,0 +1,162 @@
+{
+  "stage": "UI-R4",
+  "date": "2026-10-31",
+  "result": "PASS",
+  "build": {
+    "initial": {
+      "command": "npm run build",
+      "startedAt": "2026-10-30T23:29:26.411Z",
+      "completedAt": "2026-10-30T23:46:57.117Z",
+      "exitCode": 1,
+      "error": null,
+      "log": "scratch/ui-r4/build.log"
+    },
+    "resume": {
+      "initialPassed": [
+        "test:data",
+        "test:p0",
+        "test:auth",
+        "test:naming",
+        "test:authoring-schema",
+        "test:creator-works",
+        "test:stage14",
+        "test:stage15",
+        "test:stage16",
+        "test:stage17",
+        "test:stage18",
+        "test:stage19",
+        "test:stage20",
+        "test:stage21",
+        "test:stage22",
+        "test:stage23",
+        "test:stage24",
+        "test:stage25",
+        "test:stage26",
+        "test:stage27",
+        "test:stage28",
+        "test:stage29",
+        "test:stage30",
+        "test:stage31",
+        "test:stage32",
+        "test:stage33",
+        "test:stage34",
+        "test:stage35",
+        "test:stage36",
+        "test:drafts",
+        "test:files",
+        "test:publication",
+        "test:operations",
+        "test:admin-operations",
+        "test:stage11"
+      ],
+      "initialFailure": "Legacy protected-content gate must reject before view setup; gate ordering corrected without relaxing the existing test.",
+      "log": "scratch/ui-r4/resume.log",
+      "results": [
+        {
+          "command": "npm run test:stage13",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "npm run test:launch",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "npm run test:cloudflare-bundle",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "npm run test:author-publishing",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "npm run test:ui-r2",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "npm run test:ui-r3",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "npm run test:ui-r4",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "npm run build:compile",
+          "exitCode": 0,
+          "error": null
+        }
+      ],
+      "completed": true
+    },
+    "releaseCommands": 42,
+    "allStepsPassed": true,
+    "prismaAndTypescript": "PASS"
+  },
+  "types": "PASS: tsc in build:compile",
+  "syntax": "PASS: changed JavaScript and reader-experience.css parsing",
+  "tests": {
+    "newTests": 30,
+    "detail": 6,
+    "library": 8,
+    "webtoon": 7,
+    "readerAndLayout": 9,
+    "coverage": "Not measured",
+    "releaseIntegration": "test:ui-r4 appended to test:release",
+    "supplementalAfterNavigationFix": {
+      "stage16Routes": 7,
+      "stage16ReaderUi": 15,
+      "uiR4Reader": 9,
+      "authNavigation": 20,
+      "naming": 3,
+      "failed": 0
+    },
+    "afterProtectedGateFix": {
+      "stage13": 4,
+      "stage16ReaderUi": 15,
+      "uiR4Reader": 9,
+      "failed": 0
+    }
+  },
+  "lint": "No standalone lint script; JS syntax, CSS parsing and diff review used",
+  "security": {
+    "protectedViewsUnchanged": [
+      "view-creator",
+      "view-admin-cms",
+      "view-home",
+      "view-discover"
+    ],
+    "readerSessionAndPositionUnchanged": true,
+    "preferenceImplementationUnchanged": true,
+    "protectedPathsUnchanged": [
+      "server/",
+      "database/",
+      "functions/",
+      "src/",
+      "public/_headers",
+      "public/styles.css",
+      "public/js/shared/manuscript-document.js",
+      "public/js/reader/reader-content.js",
+      "public/js/creator/",
+      "public/js/core/auth-session.js"
+    ],
+    "filesScanned": 14,
+    "secretPatternMatches": 0,
+    "envLocalTracked": false,
+    "userFilePreserved": true,
+    "browserExecuted": false,
+    "liveDatabaseChanged": false
+  },
+  "limitations": [
+    "No browser or localhost verification",
+    "Document scroll, mobile image controls and assistive technology still need real-device acceptance",
+    "No live DB/API/configuration mutation",
+    "Post-push CI/deployment status is reported separately"
+  ]
+}

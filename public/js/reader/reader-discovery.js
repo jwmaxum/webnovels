@@ -280,20 +280,39 @@
       } catch { /* Invalid public links are omitted. */ }
     }
   }
+  function detailStatus(message) {
+    if ($('detailLoadStatus')) $('detailLoadStatus').textContent = message;
+  }
+  function episodeRow(ep, id) {
+    const row = link('', `/read/${id}/${ep.episodeNumber}`, 'episode-row discovery-episode');
+    const published = new Date(ep.published_at || ep.publishedAt || '');
+    row.append(node('span', `${ep.episodeNumber}화`, 'discovery-episode-number'),
+      node('span', ep.title, 'discovery-episode-title'),
+      node('span', '무료' + (Number.isFinite(published.getTime()) ? ` · 공개 ${published.toLocaleDateString('ko-KR')}` : ''), 'discovery-episode-meta'));
+    return row;
+  }
   async function loadEpisodes(id, request, append = false) {
     if (episodeBusy) return; episodeBusy = true;
     const el = $('detailEpisodeList'), pager = $('detailEpisodePager');
+    el?.setAttribute('aria-busy', 'true');
+    detailStatus(append ? '다음 공개 회차를 불러오는 중입니다.' : '공개 회차를 불러오는 중입니다.');
     pager?.replaceChildren(node('p', '회차를 불러오는 중입니다.', 'text-muted'));
     try {
       const result = await window.ReaderCatalog.episodes(id, append ? episodeCursor : undefined);
       if (request !== detailRequest || id !== detailId) return;
-      const rows = result.episodes.map(ep => link(`${ep.episodeNumber}화 · ${ep.title} · 무료`, `/read/${id}/${ep.episodeNumber}`, 'episode-row discovery-episode'));
+      const rows = result.episodes.map(ep => episodeRow(ep, id));
       if (append) el?.append(...rows); else el?.replaceChildren(...rows);
       if (!rows.length && !append) status(el, '공개된 회차가 없습니다.');
       episodeCursor = result.nextCursor; pager?.replaceChildren();
       if (episodeCursor) pager?.append(button('회차 더 보기', () => loadEpisodes(id, request, true)));
-    } catch { if (request === detailRequest) failure(pager, () => loadEpisodes(id, request, append)); }
-    finally { if (request === detailRequest) episodeBusy = false; }
+      detailStatus(!rows.length && !append ? '현재 공개된 회차가 없습니다.' : '작품 정보와 공개 회차를 표시했습니다.');
+    } catch {
+      if (request === detailRequest) {
+        if (!append) status(el, '공개 회차 목록을 불러오지 못했습니다. 아래에서 다시 시도해 주세요.');
+        failure(pager, () => loadEpisodes(id, request, append));
+        detailStatus('공개 회차 목록을 불러오지 못했습니다. 다시 시도할 수 있습니다.');
+      }
+    } finally { if (request === detailRequest) { episodeBusy = false; el?.setAttribute('aria-busy', 'false'); } }
   }
   async function detail(id, push = true) {
     window.switchWebNovelsView('view-work-detail', null, false);
@@ -301,21 +320,31 @@
     const request = ++detailRequest; detailId = String(id); episodeBusy = false; episodeCursor = null;
     if (push && window.location.pathname !== '/works/' + id) window.history.pushState({}, '', '/works/' + encodeURIComponent(id));
     activeWork = null; status($('detailEpisodeList'), '작품 정보를 불러오는 중입니다.');
+    $('view-work-detail')?.setAttribute('aria-busy', 'true');
+    $('detailEpisodeList')?.setAttribute('aria-busy', 'true');
+    detailStatus('작품 정보를 불러오는 중입니다.');
     $('detailEpisodePager')?.replaceChildren(); $('detailExternalLinks')?.replaceChildren();
     if($('detailShareLink')){$('detailShareLink').hidden=true;$('detailShareLink').removeAttribute('href');}
-    ['detailTitle','detailAuthor','detailGenreBadge','detailRatingBadge','detailAiBadge','detailDescription','detailDates'].forEach(key => { if ($(key)) $(key).textContent = ''; });
+    ['detailTitle','detailAuthor','detailGenreBadge','detailRatingBadge','detailAiBadge','detailDescription','detailDates','detailPublicationStatus','detailContentType'].forEach(key => { if ($(key)) $(key).textContent = ''; });
+    if ($('detailEpisodesHeading')) $('detailEpisodesHeading').textContent = '공개 회차';
     if ($('detailCoverImg')) $('detailCoverImg').removeAttribute('src');
-    for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) $(key).disabled = true;
+    for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) { $(key).disabled = true; $(key).textContent = '공개 회차 확인 중'; }
     try {
       const work = await window.ReaderCatalog.work(id);
       if (request !== detailRequest) return;
       activeWork = work;
       const text = { detailTitle: work.title, detailAuthor: `작가: ${work.author}`, detailGenreBadge: work.genre,
-        detailRatingBadge: work.rating === 'AGE_15' ? '15세 이상' : '전체이용가', detailAiBadge: `AI ${work.aiUsageType}`,
-        detailDescription: work.description, detailDates: `등록 ${date(work.createdAt)} · 첫 공개 ${date(work.firstPublishedAt)} · 최근 공개 ${date(work.lastPublishedAt)}` };
+        detailRatingBadge: work.rating === 'AGE_15' ? '15세 이상' : '전체이용가',
+        detailAiBadge: { NONE: 'AI 미사용', ASSISTED: 'AI 보조', GENERATED: 'AI 생성' }[work.aiUsageType] || 'AI 사용 정보 없음',
+        detailPublicationStatus: work.isCompleted ? '완결' : work.status === 'PAUSED' ? '휴재' : '연재 중',
+        detailContentType: work.contentType === 'WEBTOON' ? '웹툰' : '웹소설',
+        detailDescription: work.description || '등록된 작품 소개가 없습니다.',
+        detailEpisodesHeading: `공개 회차 · ${work.episodeCount}화`,
+        detailDates: `등록 ${date(work.createdAt)} · 첫 공개 ${date(work.firstPublishedAt)} · 최근 공개 ${date(work.lastPublishedAt)}` };
       for (const [key, value] of Object.entries(text)) if ($(key)) $(key).textContent = value || '';
       if ($('detailCoverImg')) { $('detailCoverImg').src = work.coverUrl; $('detailCoverImg').alt = work.title; }
-      for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) { $(key).disabled = !work.firstEpisodeNumber; $(key).textContent = work.firstEpisodeNumber ? `첫 공개 회차 읽기 (${work.firstEpisodeNumber}화)` : '공개 회차 없음'; }
+      const first = Number.isInteger(work.firstEpisodeNumber) && work.firstEpisodeNumber > 0 ? work.firstEpisodeNumber : null;
+      for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) { $(key).disabled = !first; $(key).textContent = first ? `첫 공개 회차 읽기 (${first}화)` : '공개 회차 없음'; }
       window.updateFavoriteButtons?.(work.id); window.updateSubscribeButtons?.(work);
       distribution(work); meta(work);
       window.GrowthStudio?.referral?.(work.id);
@@ -324,8 +353,12 @@
       await loadEpisodes(String(id), request);
     } catch (error) {
       if (request !== detailRequest) return;
-      if (error.status === 404) status($('detailEpisodeList'), '현재 공개된 작품을 찾을 수 없습니다.');
-      else failure($('detailEpisodeList'), () => detail(id, false));
+      activeWork = null;
+      for (const key of ['btnDetailReadFirst','btnStickyRead']) if ($(key)) { $(key).disabled = true; $(key).textContent = '공개 회차 없음'; }
+      if (error.status === 404) { status($('detailEpisodeList'), '현재 공개된 작품을 찾을 수 없습니다.'); detailStatus('현재 공개된 작품을 찾을 수 없습니다.'); }
+      else { failure($('detailEpisodeList'), () => detail(id, false)); detailStatus('작품 정보를 불러오지 못했습니다. 다시 시도할 수 있습니다.'); }
+    } finally {
+      if (request === detailRequest) { $('view-work-detail')?.setAttribute('aria-busy', 'false'); $('detailEpisodeList')?.setAttribute('aria-busy', 'false'); }
     }
   }
   function search(query = '') {

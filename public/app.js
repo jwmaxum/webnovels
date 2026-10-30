@@ -82,14 +82,34 @@ function bindWebNovelsEvents() {
   });
 
   // Library tabs
-  document.querySelectorAll('[data-library-tab]').forEach(tab => {
+  const libraryTabs=()=>Array.from(document.querySelectorAll('[data-library-tab]'));
+  const selectLibraryTab=(tab,focus=false,updateHistory=true)=>{
+    const tabName=tab.dataset.libraryTab;
+    for(const item of libraryTabs()){
+      const selected=item===tab;item.classList.toggle('active',selected);item.setAttribute('aria-selected',String(selected));item.tabIndex=selected?0:-1;
+    }
+    document.querySelectorAll('.library-tab-panel').forEach(panel=>panel.classList.remove('active'));
+    document.getElementById(`libraryTab-${tabName}`)?.classList.add('active');
+    if(focus)tab.focus?.();
+    if(updateHistory&&/^\/library(?:\/|$)/.test(window.location.pathname)){
+      const path=tabName==='continue'?'/library':'/library/'+tabName;
+      if(window.location.pathname!==path)window.history.pushState({path},'',path);
+    }
+    if(tabName==='appeals')window.WebNovelsAppeals?.mount(document.getElementById('readerAppeals'));
+  };
+  window.selectReaderLibraryTab=name=>{
+    const tab=libraryTabs().find(item=>item.dataset.libraryTab===name&&!item.hidden);
+    if(!tab)return false;selectLibraryTab(tab,false,false);return true;
+  };
+  libraryTabs().forEach(tab => {
     tab.addEventListener('click', () => {
-      const tabName = tab.dataset.libraryTab;
-      document.querySelectorAll('[data-library-tab]').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.library-tab-panel').forEach(panel => panel.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(`libraryTab-${tabName}`)?.classList.add('active');
-      if(tabName==='appeals')window.WebNovelsAppeals?.mount(document.getElementById('readerAppeals'));
+      selectLibraryTab(tab);
+    });
+    tab.addEventListener('keydown', event=>{
+      if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+      const tabs=libraryTabs().filter(item=>!item.hidden),index=tabs.indexOf(tab);if(index<0)return;
+      event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+      selectLibraryTab(tabs[next],true);
     });
   });
 
@@ -208,8 +228,9 @@ function bindWebNovelsEvents() {
 
   // Reader Events
   document.getElementById('btnReaderBack')?.addEventListener('click', () => {
-    if (window.ReaderDiscovery?.active() && activeWork) return openWorkDetailDirect(activeWork.id);
-    if (typeof switchWebNovelsView === 'function') switchWebNovelsView('view-work-detail');
+    const id=window.ReaderSession?.current?.workId||activeWork?.id;
+    if(id&&typeof openWorkDetailDirect==='function')return openWorkDetailDirect(id);
+    if (typeof switchWebNovelsView === 'function') switchWebNovelsView('view-home');
   });
   document.getElementById('btnReaderSettings')?.addEventListener('click', () => {
     if (typeof openModal === 'function') openModal('modalReaderSettings');

@@ -375,13 +375,17 @@ window.initRouteHandler = initRouteHandler;
 function openLibraryTabDirect(tabName, shouldPushState = true) {
   if (typeof closeModal === 'function') closeModal('modalMobileMore');
   switchWebNovelsView('view-mypage', null, false);
+  if(currentActiveView!=='view-mypage')return;
   if (shouldPushState) {
     const targetUrl = tabName === 'continue' ? '/library' : `/library/${tabName}`;
     if (window.location.pathname !== targetUrl) {
       try { window.history.pushState({ path: targetUrl }, '', targetUrl); } catch (e) {}
     }
   }
+  const revision=routeRevision,route=window.location.pathname+window.location.search;
   setTimeout(() => {
+    if(routeRevision!==revision||currentActiveView!=='view-mypage'||window.location.pathname+window.location.search!==route)return;
+    if(window.selectReaderLibraryTab){window.selectReaderLibraryTab(tabName);return;}
     const tabBtn = document.querySelector(`.library-tabs button[data-library-tab="${tabName}"]`);
     if (tabBtn) tabBtn.click();
     window.scrollTo({ top: 0, behavior: 'smooth' });

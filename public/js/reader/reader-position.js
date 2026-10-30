@@ -97,51 +97,90 @@
     const recent=document.getElementById('libraryContinueList'), favorites=document.getElementById('libraryFavoritesList');
     const authors=document.getElementById('libraryCreatorsList')||document.getElementById('libraryAuthorsList');
     const retry=()=>render(limit);
-    if(!account||!window.WebNovelsAuth?.getActor()?.reader){for(const el of [recent,favorites,authors])message(el,'독자 로그인 후 이용해주세요.');return;}
-    for(const el of [recent,favorites,authors])message(el,'서재를 불러오는 중입니다.');
+    const notice=text=>{const el=document.getElementById('libraryLoadStatus');if(el)el.textContent=text;};
+    const count=(ids,value)=>{for(const id of ids){const el=document.getElementById(id);if(el)el.textContent=String(value);}};
+    const groups=[['statReadingCount'],['statFavoriteCount'],['statAuthorCount','statCreatorCount']];
+    const more=(container,available)=>{
+      if(!container||!available)return;
+      const button=node('button','서재 더 보기','btn btn-outline library-more');button.type='button';
+      button.onclick=()=>{if(valid())return render(limit+20);};container.append(button);
+    };
+    for(const ids of groups)count(ids,'—');
+    if(!account||!window.WebNovelsAuth?.getActor()?.reader){
+      for(const el of [recent,favorites,authors]){message(el,'독자 로그인 후 이용해주세요.');el?.setAttribute('aria-busy','false');}
+      notice('독자 로그인 후 서재를 이용할 수 있습니다.');return;
+    }
+    for(const el of [recent,favorites,authors]){message(el,'서재를 불러오는 중입니다.');el?.setAttribute('aria-busy','true');}
+    notice('서재를 불러오는 중입니다.');
     try {
       const activity=await window.ReaderHub.activity(true);if(!valid())return;
       const unique=new Set(),history=(activity.readingHistory||[]).filter(item=>{
         if(unique.has(String(item.workId)))return false;unique.add(String(item.workId));return true;
       });
-      const entries=[];
-      for(let offset=0;offset<Math.min(history.length,limit);offset+=4){
-        entries.push(...await Promise.all(history.slice(offset,Math.min(offset+4,limit)).map(resolve)));if(!valid())return;
-      }
-      const favoriteWorks=[];
-      const ids=activity.favorites||[];
-      for(let offset=0;offset<Math.min(ids.length,limit);offset+=4){
-        favoriteWorks.push(...await Promise.all(ids.slice(offset,Math.min(offset+4,limit)).map(async id=>{
-          try{return await window.ReaderCatalog.work(id);}catch(error){if(missing(error))return null;throw error;}
-        })));if(!valid())return;
-      }
-      if(recent){
-        recent.replaceChildren();
-        for(const entry of entries.filter(Boolean)){
-          const {work,item}=entry,pct=Math.max(0,Math.min(100,Math.round(Number(item.progress)||0)));
-          const button=node('button',null,'library-row');button.type='button';
-          button.append(node('strong',work.title),node('span',`${item.episodeNumber}화 · 현재 회차 ${pct}% · 이어보기`));
-          button.onclick=()=>{if(valid())window.openReaderDirect(work.id,item.episodeNumber);};recent.append(button);
+      const ids=[...new Set((activity.favorites||[]).map(String))];
+      if(authors){authors.replaceChildren();for(const author of activity.subscriptions||[])authors.append(node('p',author.name,'library-author-card'));
+        if(!authors.children.length)message(authors,'구독 중인 작가가 없습니다.');authors.setAttribute('aria-busy','false');}
+      count(groups[2],(activity.subscriptions||[]).length);
+      let failed=false;
+      try {
+        const entries=[];
+        for(let offset=0;offset<Math.min(history.length,limit);offset+=4){
+          entries.push(...await Promise.all(history.slice(offset,Math.min(offset+4,limit)).map(async item=>{
+            try{return await resolve(item);}catch(error){if(error?.status===403)return null;throw error;}
+          })));if(!valid())return;
         }
-        if(!recent.children.length)message(recent,'이어볼 수 있는 공개 회차가 없습니다.');
-      }
-      if(favorites){
-        favorites.replaceChildren();
-        for(const work of favoriteWorks.filter(Boolean)){
-          const button=node('button',work.title,'library-row');button.type='button';
-          button.onclick=()=>{if(valid())window.openWorkDetailDirect(work.id);};favorites.append(button);
+        if(recent){
+          recent.replaceChildren();
+          for(const entry of entries.filter(Boolean)){
+            const {work,item}=entry,pct=Math.max(0,Math.min(100,Math.round(Number(item.progress)||0)));
+            const button=node('button',null,'library-row');button.type='button';
+            button.append(node('strong',work.title),node('span',`${item.episodeNumber}화 · 현재 회차 ${pct}% · 이어보기`));
+            button.onclick=()=>{if(valid())window.openReaderDirect(work.id,item.episodeNumber);};recent.append(button);
+          }
+          if(!recent.children.length)message(recent,history.length?'이어볼 수 있는 공개 회차가 없습니다.':'아직 읽은 작품이 없습니다. 작품 탐색에서 읽기를 시작해 보세요.');
+          more(recent,history.length>limit);
         }
-        if(!favorites.children.length)message(favorites,'등록된 공개 관심 작품이 없습니다.');
+        count(groups[0],history.length);
+      } catch(error) {
+        if(!valid())return;failed=true;message(recent,'이어보기 목록을 불러오지 못했습니다. 연결 상태를 확인하고 다시 시도해주세요.',retry);
+      } finally {if(valid())recent?.setAttribute('aria-busy','false');}
+      if(!valid())return;
+      try {
+        const favoriteWorks=[];
+        for(let offset=0;offset<Math.min(ids.length,limit);offset+=4){
+          favoriteWorks.push(...await Promise.all(ids.slice(offset,Math.min(offset+4,limit)).map(async id=>{
+            try{return window.ReaderCatalog?.active()?await window.ReaderCatalog.work(id):getPublishedWorks().find(work=>String(work.id)===id)||null;}
+            catch(error){if(error?.status===403||missing(error))return null;throw error;}
+          })));if(!valid())return;
+        }
+        if(favorites){
+          favorites.replaceChildren();
+          for(const work of favoriteWorks.filter(Boolean)){
+            const button=node('button',work.title,'library-row');button.type='button';
+            button.onclick=()=>{if(valid())window.openWorkDetailDirect(work.id);};favorites.append(button);
+          }
+          if(!favorites.children.length)message(favorites,'등록된 공개 관심 작품이 없습니다.');
+          more(favorites,ids.length>limit);
+        }
+        count(groups[1],ids.length);
+      } catch(error) {
+        if(!valid())return;failed=true;message(favorites,'관심 작품 목록을 불러오지 못했습니다. 연결 상태를 확인하고 다시 시도해주세요.',retry);
+      } finally {if(valid())favorites?.setAttribute('aria-busy','false');}
+      if(valid())notice(failed?'일부 서재 목록을 불러오지 못했습니다. 각 목록에서 다시 시도해 주세요.':'서재를 표시했습니다.');
+    } catch(error) {
+      if(valid()){
+        for(const el of [recent,favorites,authors]){message(el,'서재를 불러오지 못했습니다. 연결 상태를 확인하고 다시 시도해주세요.',retry);el?.setAttribute('aria-busy','false');}
+        notice('서재를 불러오지 못했습니다. 다시 시도할 수 있습니다.');
       }
-      if(authors){authors.replaceChildren();for(const author of activity.subscriptions||[]){
-        const label=node('p',author.name,'library-author-card');authors.append(label);
-      }if(!authors.children.length)message(authors,'구독 중인 작가가 없습니다.');}
-      for(const [id,count] of [['statReadingCount',history.length],['statFavoriteCount',ids.length],['statCreatorCount',(activity.subscriptions||[]).length]]){
-        const el=document.getElementById(id);if(el)el.textContent=String(count);
-      }
-      if(history.length>limit||ids.length>limit){const more=node('button','서재 더 보기','btn btn-outline');more.type='button';more.onclick=()=>{if(valid())render(limit+20);};recent?.append(more);}
-    } catch(error) {if(valid())for(const el of [recent,favorites,authors])message(el,'서재를 불러오지 못했습니다. 연결 상태를 확인하고 다시 시도해주세요.',retry);}
+    }
   }
-  function reset(){generation++;for(const id of ['libraryContinueList','libraryFavoritesList','libraryCreatorsList','libraryAuthorsList'])document.getElementById(id)?.replaceChildren();}
+  function reset(){
+    generation++;
+    for(const id of ['libraryContinueList','libraryFavoritesList','libraryCreatorsList','libraryAuthorsList']){
+      const el=document.getElementById(id);el?.replaceChildren();el?.setAttribute('aria-busy','false');
+    }
+    for(const id of ['statReadingCount','statFavoriteCount','statAuthorCount','statCreatorCount']){const el=document.getElementById(id);if(el)el.textContent='—';}
+    const status=document.getElementById('libraryLoadStatus');if(status)status.textContent='';
+  }
   window.ReaderLibrary=Object.freeze({resolve,latest,render,reset});
 })();

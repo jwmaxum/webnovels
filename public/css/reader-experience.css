@@ -1,0 +1,126 @@
+/* UI-R4: public detail, account library and reading surfaces. */
+.reader-load-status { color: var(--text-secondary); font-family: var(--font-ui); font-size: 14px; line-height: 1.6; margin: 16px 0; }
+.reader-load-status:empty, .reader-load-status[hidden] { display: none !important; }
+.reader-load-status p { margin: 0 0 12px; }
+#view-work-detail > .container, #view-mypage > .container { max-width: 1120px; padding: 32px 24px 48px; }
+#view-work-detail .work-detail-top-bar { margin-bottom: 24px; gap: 12px; flex-wrap: wrap; }
+#view-work-detail .work-detail-hero { display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: start; gap: 32px; padding: 24px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: 12px; box-shadow: none; backdrop-filter: none; }
+#view-work-detail .detail-cover-box { width: 100%; min-width: 0; }
+#view-work-detail .detail-cover-box img { display: block; width: 100%; height: auto; aspect-ratio: 2 / 3; object-fit: cover; border: 1px solid var(--border-default); border-radius: 8px; box-shadow: none; }
+#view-work-detail .detail-cover-box img:not([src]) { visibility: hidden; }
+#view-work-detail .detail-info-box { min-width: 0; gap: 12px; }
+#view-work-detail .detail-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+#view-work-detail .detail-badges .badge { font-size: 13px; background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-default); padding: 4px 8px; }
+#view-work-detail .detail-badges .badge:empty { display: none; }
+#view-work-detail .detail-title { margin: 0; font-size: clamp(24px, 3vw, 34px); font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+#view-work-detail .detail-author { margin: 0; font-size: 16px; }
+#view-work-detail .detail-synopsis { margin: 0; border-top: 1px solid var(--border-default); padding-top: 12px; }
+#view-work-detail .detail-synopsis summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
+#view-work-detail .detail-desc { margin: 8px 0 0; font-size: 16px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+#view-work-detail .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+#view-work-detail .detail-actions .btn { min-height: 48px; font-size: 15px; }
+#view-work-detail #btnDetailReadFirst { flex-basis: 100%; width: fit-content; }
+#view-work-detail .episodes-section { margin-top: 32px; }
+#view-work-detail .episodes-section h2 { font-size: 22px; font-weight: 700; }
+#view-work-detail #detailDates { line-height: 1.7; margin-bottom: 16px; }
+#view-work-detail .episode-list { border-top: 1px solid var(--border-default); }
+#view-work-detail .episode-row { margin: 0; padding: 16px; border: 0; border-bottom: 1px solid var(--border-default); border-radius: 0; min-height: 72px; background: var(--bg-elevated); color: var(--text-primary); text-decoration: none; gap: 16px; }
+#view-work-detail .discovery-episode { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; }
+#view-work-detail .episode-row:hover { background: var(--bg-subtle); }
+.discovery-episode-number { font-weight: 600; font-size: 14px; }
+.discovery-episode-title { font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+.discovery-episode-meta { color: var(--text-secondary); font-size: 14px; text-align: right; }
+#view-work-detail .sticky-bottom-cta { gap: 12px; padding: 12px 16px; background: var(--bg-elevated); backdrop-filter: none; }
+#view-mypage .library-panel-header { align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+#view-mypage .library-panel-header h1 { font-size: clamp(24px, 3vw, 30px); font-weight: 700; margin-bottom: 8px; }
+#view-mypage .library-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); align-items: start; gap: 32px; }
+#view-mypage .library-profile { padding: 20px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: 12px; box-shadow: none; backdrop-filter: none; }
+#view-mypage .user-profile-summary { gap: 12px; }
+#view-mypage .profile-avatar-lg { width: 44px; height: 44px; flex-shrink: 0; font-size: 20px; background: var(--selected-bg); color: var(--selected-fg); border: 0; box-shadow: none; }
+#view-mypage #myNickname { font-size: 18px; line-height: 1.4; overflow-wrap: anywhere; }
+#view-mypage #myEmail { font-size: 14px; overflow-wrap: anywhere; }
+#view-mypage .library-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 20px 0; }
+#view-mypage .library-stats strong { font-size: 20px; font-weight: 600; }
+#view-mypage .library-stats span { font-size: 13px; }
+#view-mypage .library-main { min-width: 0; }
+#view-mypage .library-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; border-bottom: 1px solid var(--border-default); background: transparent; margin-bottom: 16px; }
+#view-mypage .library-tabs button { min-height: 48px; padding: 10px 12px; font-size: 15px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; color: var(--text-secondary); background: transparent; }
+#view-mypage .library-tabs button[aria-selected="true"] { color: var(--selected-fg); border-bottom-color: var(--selected-fg); }
+#view-mypage .library-list, #view-mypage .library-author-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+#view-mypage .library-row { display: flex; align-items: flex-start; flex-direction: column; justify-content: center; gap: 8px; min-height: 80px; width: 100%; padding: 16px; margin: 0; border: 0; border-bottom: 1px solid var(--border-default); border-radius: 0; background: var(--bg-elevated); text-align: left; color: var(--text-primary); font: inherit; cursor: pointer; text-decoration: none; }
+#view-mypage .library-row strong { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+#view-mypage .library-row span { font-size: 14px; color: var(--text-secondary); overflow-wrap: anywhere; }
+#view-mypage .library-row:hover { background: var(--bg-subtle); }
+#view-mypage .library-author-card { padding: 20px 16px; border: 0; border-bottom: 1px solid var(--border-default); background: var(--bg-elevated); font-size: 16px; overflow-wrap: anywhere; }
+#view-mypage .library-list > .btn { justify-self: start; margin-top: 16px; }
+/* Keep window scroll as the sole geometry/position source used by ReaderPosition. */
+body[data-active-view="view-reader"] :is(.legal-footer, #freeBetaNotice, #serviceStatus) { display: none !important; }
+#view-reader.full-screen-reader { position: relative; inset: auto; z-index: auto; min-height: 100dvh; overflow: visible; }
+#view-reader .reader-header { height: auto; min-height: 64px; padding: 8px 24px; gap: 12px; background: var(--bg-surface); backdrop-filter: none; }
+#view-reader .reader-header-tools { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+#view-reader .reader-header, #view-reader .reader-bottom-nav, #view-reader .reader-comments-box, #view-reader .reader-recommend-box, #view-reader .author-comment-box, #readerProgressStatus { font-family: var(--font-ui); font-size: 16px; line-height: 1.6; }
+#view-reader .reader-title-info { text-align: left; padding: 0; }
+#view-reader .reader-title-info h4 { font-size: 16px; font-weight: 600; }
+#view-reader .reader-title-info span { font-size: 14px; color: var(--text-secondary); }
+#view-reader .reader-container { max-width: 760px; padding: 32px 20px 64px; }
+#view-reader .ep-heading { font-size: clamp(22px, 3vw, 28px); font-weight: 700; line-height: 1.5; margin: 0 0 24px; overflow-wrap: anywhere; }
+#view-reader .author-comment-box:empty { display: none; }
+#view-reader .author-comment-box { margin-top: 32px; padding: 16px; border-left-color: var(--control-border); white-space: pre-wrap; overflow-wrap: anywhere; }
+#view-reader .reader-bottom-nav { display: grid !important; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start !important; margin-top: 32px !important; gap: 12px !important; border-top: 1px solid var(--border-color); padding-top: 24px; }
+#view-reader .reader-bottom-nav > .btn { min-width: 0; white-space: normal; }
+#view-reader .reader-nav-center-btns { display: flex; flex-direction: column; gap: 8px; }
+#view-reader :is(.reader-comments-box, .reader-recommend-box) { margin-top: 32px; }
+#view-reader .reader-section-heading { font-size: 20px; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+#readerRecommendGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; overflow: visible; padding: 0; }
+.reader-recommend-card { display: block; min-width: 0; color: var(--text-primary); text-decoration: none; }
+.reader-recommend-card img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border: 1px solid var(--border-color); border-radius: 8px; }
+.reader-recommend-card h3 { font-size: 16px; font-weight: 600; line-height: 1.45; margin-top: 12px; overflow-wrap: anywhere; }
+.reader-recommend-card p { font-size: 14px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.reader-recommend-card:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+#view-reader .reader-container.is-webtoon { max-width: 800px; padding-inline: 0; }
+#view-reader .reader-container.is-webtoon .reader-paper { padding-inline: 0 !important; }
+#view-reader .reader-container.is-webtoon :is(.ep-heading, #readerProgressStatus, #readerChapterStatus, .reader-bottom-nav, .author-comment-box, .reader-comments-box, .reader-recommend-box) { margin-inline: 16px; }
+#view-reader #readerWebtoonViewer { max-width: 800px; width: 100%; }
+#view-reader #readerWebtoonViewer .webtoon-cut { max-width: 100% !important; margin: 0 !important; }
+#view-reader #readerWebtoonViewer .webtoon-cut img { margin: 0 !important; }
+#view-reader .webtoon-panel { background: var(--bg-main); }
+/* The same renderer is used in the author's preview; overlays never alter panel geometry. */
+.webtoon-panel-status { position: absolute; top: min(35%, 160px); left: 0; width: 100%; padding: 12px; margin: 0; text-align: center; color: var(--text-secondary); font: 14px/1.6 var(--font-ui); }
+.webtoon-panel-status:empty { display: none; }
+.webtoon-panel:has(button:not([hidden])) { overflow: visible; }
+.webtoon-panel:has(button:not([hidden])) .webtoon-panel-status { top: auto; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.webtoon-panel button { top: min(50%, 240px); z-index: 1; }
+#view-reader .webtoon-panel button { min-height: 44px; max-width: calc(100% - 32px); background: var(--control-bg); color: var(--control-fg); border: 1px solid var(--control-border); border-radius: 8px; font: 14px/1.5 var(--font-ui); }
+#modalReaderSettings .modal-header h3 { font-size: 20px; font-weight: 700; }
+#modalReaderSettings .modal-body { max-height: 70dvh; overflow-y: auto; }
+#modalReaderSettings .pref-btn, #modalReaderSettings .theme-btn { min-height: 44px !important; font-size: 14px !important; }
+@media (max-width: 800px) {
+  #view-mypage .library-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  #view-mypage .library-profile { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 1fr); gap: 12px 24px; }
+  #view-mypage .library-stats { margin: 0; }
+  #view-mypage .library-profile > .btn { margin: 0 !important; }
+}
+@media (max-width: 600px) {
+  #view-work-detail > .container, #view-mypage > .container { padding: 24px 16px 32px; }
+  #view-work-detail .work-detail-hero { grid-template-columns: 96px minmax(0, 1fr); gap: 16px; padding: 16px; }
+  #view-work-detail .detail-title { font-size: 24px; }
+  #view-work-detail .detail-info-box { display: contents; }
+  #view-work-detail .detail-cover-box { grid-column: 1; grid-row: 1 / 4; }
+  #view-work-detail .detail-badges, #view-work-detail .detail-title, #view-work-detail .detail-author { grid-column: 2; }
+  #view-work-detail .detail-synopsis, #view-work-detail .detail-actions { grid-column: 1 / -1; }
+  #view-work-detail .detail-actions .btn { flex: 1 1 auto; padding-inline: 12px; }
+  #view-work-detail .discovery-episode { grid-template-columns: 44px minmax(0, 1fr); gap: 8px 12px; padding: 16px 12px; }
+  .discovery-episode-meta { grid-column: 2; text-align: left; }
+  #view-mypage .library-profile { grid-template-columns: minmax(0, 1fr); }
+  #view-mypage .library-tabs { gap: 0; }
+  #view-mypage .library-tabs button { flex: 1; padding-inline: 8px; }
+  #view-reader .reader-header { padding-inline: 12px; gap: 8px; }
+  #view-reader .reader-header-tools { gap: 0; }
+  #view-reader #btnReaderEpisodes { display: none; }
+  #view-reader .reader-title-info h4 { font-size: 15px; }
+  #view-reader .reader-title-info span { font-size: 13px; }
+  #view-reader .reader-container { padding: 24px 0 40px; }
+  #readerRecommendGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #view-reader .comment-input-form { flex-wrap: wrap; }
+  #view-reader .comment-input-form input { min-width: 0; flex-basis: 100% !important; font-size: 16px; }
+}
