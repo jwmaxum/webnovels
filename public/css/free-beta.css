@@ -1,7 +1,7 @@
-.free-beta-notice{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 24px;padding:14px 18px;border:1px solid #c8ddcb;border-radius:12px;background:#f3faf4;color:#234d30;font-size:.9rem}
+.free-beta-notice{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 24px;padding:14px 18px;border:1px solid var(--text-success);border-radius:12px;background:var(--color-success-bg);color:var(--text-success);font-size:.9rem}
 .free-beta-notice p{flex:1;min-width:200px;margin:0;line-height:1.6}
-.free-beta-badge{white-space:nowrap;padding:5px 10px;border-radius:999px;background:#d9efde;color:#20522e;font-size:.8rem}
-.free-beta-notice a{color:#20522e;text-decoration:underline;text-underline-offset:3px}
+.free-beta-badge{white-space:nowrap;padding:5px 10px;border-radius:999px;background:var(--color-success-bg);color:var(--text-success);font-size:.8rem}
+.free-beta-notice a{color:var(--text-success);text-decoration:underline;text-underline-offset:3px}
 .free-beta-email-help{margin-top:16px;padding:10px 12px;border-radius:8px;background:var(--bg-secondary,#f3f5f9);font-size:.85rem;line-height:1.6}
 .free-beta-email-help summary{cursor:pointer;font-weight:600}
 .free-beta-email-help p{margin:8px 0}

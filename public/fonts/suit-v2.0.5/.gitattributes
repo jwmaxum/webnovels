@@ -1,0 +1,2 @@
+# Preserve upstream license bytes on Windows, including original whitespace.
+SUIT-LICENSE.txt text eol=lf -whitespace

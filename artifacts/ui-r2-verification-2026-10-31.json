@@ -1,0 +1,186 @@
+{
+  "stage": "UI-R2",
+  "date": "2026-10-31",
+  "result": "PASS",
+  "release": {
+    "commands": 40,
+    "passedBeforeEnvironmentBlock": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25"
+    ],
+    "resumed": [
+      {
+        "command": "npm run test:stage26",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage27",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage28",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage29",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage30",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage31",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage32",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage33",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage34",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage35",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage36",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:drafts",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:files",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:publication",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:operations",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:admin-operations",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage11",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:stage13",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:launch",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:author-publishing",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run test:ui-r2",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "npm run build:compile",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "initialBlock": "Existing stage26 junction test: EPERM inside Windows sandbox. Unmodified test and all remaining steps rerun with local permissions.",
+    "allStepsPassed": true
+  },
+  "build": "PASS: Prisma generation and TypeScript compilation",
+  "types": "PASS: tsc in build:compile",
+  "syntax": "PASS: 7 CSS files parsed by esbuild and modified reader JS checked",
+  "newRegressionTests": {
+    "command": "npm run test:ui-r2",
+    "tests": 5,
+    "passed": 5,
+    "coverage": "Not measured"
+  },
+  "lint": "No standalone lint script; CSS parser and diff checks used",
+  "security": {
+    "bodyContractsPreserved": 4,
+    "readerBehaviorNormalizedEqual": true,
+    "secretPatternFilesScanned": 15,
+    "secretPatternMatches": 0,
+    "envLocalTracked": false,
+    "protectedSourcePathsUnchanged": [
+      "server",
+      "database",
+      "functions",
+      "src",
+      "public/_headers",
+      "public/js/shared/manuscript-document.js",
+      "public/js/creator/creator-rich-editor.js",
+      "public/js/core/role-modules.js"
+    ]
+  },
+  "assets": {
+    "suitVersion": "v2.0.5",
+    "fontBytes": 624536,
+    "sha256": "aa894a204d5a6fbae259dac6868d350cbd373a390caee0313f92946af741df23",
+    "localLicenseIncluded": true
+  },
+  "limitations": [
+    "No browser or localhost verification",
+    "No live DB or API changes",
+    "No measured font performance or whole-site accessibility claim",
+    "Deployment status recorded separately after push"
+  ]
+}

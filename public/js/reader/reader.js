@@ -575,7 +575,7 @@ function renderDiscoverWorks(explicitGenre = null) {
       const viewFormatted = rawViews >= 1000 ? `${(rawViews / 1000).toFixed(1)}K` : `${rawViews}회`;
       const epCount = (w.episodes && w.episodes.length) ? w.episodes.length : (Number(w.episodeCount ?? w.episode_count ?? 1));
       const isCompleted = !!(w.isCompleted || w.is_completed || w.status === 'COMPLETED');
-      const statusBadge = isCompleted ? `<span class="badge-status completed" style="background:rgba(16,185,129,0.85);color:var(--text-on-accent);font-size:0.7rem;padding:2px 6px;border-radius:4px;">완결</span>` : `<span class="badge-status ongoing" style="background:rgba(99,102,241,0.85);color:var(--text-on-accent);font-size:0.7rem;padding:2px 6px;border-radius:4px;">${epCount}화</span>`;
+      const statusBadge = isCompleted ? `<span class="badge-status completed">완결</span>` : `<span class="badge-status ongoing">${epCount}화</span>`;
 
       return `
         <article class="feature-card cdg-discover-card" onclick="openWorkDetailDirect('${w.id}')" style="cursor:pointer;">
@@ -1846,10 +1846,10 @@ window.checkNicknameDuplicate = function() {
   if (msgEl) {
     msgEl.style.display = 'block';
     if (isDuplicated) {
-      msgEl.style.color = '#ef4444';
+      msgEl.style.color = 'var(--text-error)';
       msgEl.textContent = `❌ ${nickname} 은(는) 이미 사용 중인 별명입니다.`;
     } else {
-      msgEl.style.color = '#10b981';
+      msgEl.style.color = 'var(--text-success)';
       msgEl.textContent = `✓ ${nickname} 은(는) 사용 가능한 멋진 별명입니다!`;
     }
   }
@@ -1871,10 +1871,10 @@ window.checkAuthorPenNameDuplicate = function() {
   if (msgEl) {
     msgEl.style.display = 'block';
     if (isDuplicated) {
-      msgEl.style.color = '#ef4444';
+      msgEl.style.color = 'var(--text-error)';
       msgEl.textContent = `❌ ${penName} 은(는) 이미 등록된 필명입니다.`;
     } else {
-      msgEl.style.color = '#10b981';
+      msgEl.style.color = 'var(--text-success)';
       msgEl.textContent = `✓ ${penName} 은(는) 등록 가능한 작가 필명입니다!`;
     }
   }
@@ -1894,10 +1894,10 @@ function setupPasswordMatchCheckers() {
     }
     msg.style.display = 'block';
     if (pw1.value === pw2.value) {
-      msg.style.color = '#10b981';
+      msg.style.color = 'var(--text-success)';
       msg.textContent = '✓ 비밀번호가 일치합니다.';
     } else {
-      msg.style.color = '#ef4444';
+      msg.style.color = 'var(--text-error)';
       msg.textContent = '✗ 비밀번호가 일치하지 않습니다.';
     }
   }
@@ -1917,10 +1917,10 @@ function setupPasswordMatchCheckers() {
     }
     aMsg.style.display = 'block';
     if (aPw1.value === aPw2.value) {
-      aMsg.style.color = '#10b981';
+      aMsg.style.color = 'var(--text-success)';
       aMsg.textContent = '✓ 비밀번호가 일치합니다.';
     } else {
-      aMsg.style.color = '#ef4444';
+      aMsg.style.color = 'var(--text-error)';
       aMsg.textContent = '✗ 비밀번호가 일치하지 않습니다.';
     }
   }

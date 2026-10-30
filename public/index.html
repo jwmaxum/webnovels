@@ -34,17 +34,19 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&family=Outfit:wght@600;700;800;900&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
   <script src="/vendor/lucide/lucide-1.52.0.min.js" integrity="sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"></script>
   <!-- Supabase JS SDK -->
   <script src="/vendor/supabase/supabase-2.112.3.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"></script>
-  <link rel="stylesheet" href="/styles.css?v=134">
-  <link rel="stylesheet" href="/css/free-beta.css?v=135">
-  <link rel="stylesheet" href="/css/beta-operations.css?v=136">
-<link rel="stylesheet" href="/css/webtoon.css?v=118">
-<link rel="stylesheet" href="/css/growth.css?v=121">
-<link rel="stylesheet" href="/css/policies.css?v=20261011">
+  <link rel="preload" href="/fonts/suit-v2.0.5/SUIT-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/design-tokens.css?v=20261031">
+  <link rel="stylesheet" href="/styles.css?v=20261031">
+  <link rel="stylesheet" href="/css/free-beta.css?v=20261031">
+  <link rel="stylesheet" href="/css/beta-operations.css?v=20261031">
+<link rel="stylesheet" href="/css/webtoon.css?v=20261031">
+<link rel="stylesheet" href="/css/growth.css?v=20261031">
+<link rel="stylesheet" href="/css/policies.css?v=20261031">
 </head>
 <body class="theme-default" data-user-role="GUEST">
   <div id="moduleLoadStatus" role="status" aria-live="polite" hidden></div>
@@ -594,7 +596,7 @@
 
               <!-- Comment Input Form -->
               <div class="comment-input-form mb-4" style="display:flex; gap:8px;">
-                <input type="text" id="readerCommentInput" class="form-input" style="flex:1; background:var(--bg-subtle); border:1px solid var(--border-color); border-radius:8px; padding:10px 14px; color:var(--text-primary);" placeholder="작품과 작가를 응원하는 댓글을 남겨보세요.">
+                <input type="text" id="readerCommentInput" class="form-input" style="flex:1; background:var(--bg-subtle); border:1px solid var(--control-border); border-radius:8px; padding:10px 14px; color:var(--text-primary);" placeholder="작품과 작가를 응원하는 댓글을 남겨보세요.">
                 <button class="btn btn-primary" id="btnSubmitComment" onclick="submitReaderComment()">등록</button>
               </div>
 
@@ -711,7 +713,7 @@
               <form id="formCreateEpisode" onsubmit="handleCreateEpisodeSubmit(event)">
                 <div class="form-group mb-3">
                   <label for="newEpWorkSelect" class="small text-muted mb-1 block">작성할 작품</label>
-                  <select id="newEpWorkSelect" class="form-input" style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--border-color);" required>
+                  <select id="newEpWorkSelect" class="form-input" style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--control-border);" required>
                     <!-- Injected dynamically by author's real works -->
                   </select>
                 </div>
@@ -772,7 +774,7 @@
                 </div>
                 <div class="form-group mb-3">
                   <label class="small text-muted mb-1 block">작가의 말</label>
-                  <input type="text" id="newEpAuthorComment" maxlength="5000" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                  <input type="text" id="newEpAuthorComment" maxlength="5000" class="form-input" placeholder="독자들에게 전할 말을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); padding:10px; border-radius:8px; border:1px solid var(--control-border);">
                 </div>
 
                 <p class="creator-publish-policy">새 회차는 작가가 직접 발행합니다. 이미 발행된 작품의 수정·삭제는 관리자 승인 후 반영됩니다.</p>
@@ -804,7 +806,7 @@
                 <div style="display:flex; align-items:center; gap:10px;">
                   <i data-lucide="line-chart" style="color:var(--cdg-pink);"></i>
                   <span style="font-weight:700; color:var(--text-primary);">분석 대상 작품:</span>
-                  <select id="creatorAnalyticsWorkSelect" onchange="loadCreatorReaderAnalyticsVisuals(this.value)" class="form-input" style="padding:6px 12px; font-size:0.88rem; background:var(--bg-surface); color:var(--text-primary); border-radius:8px; border:1px solid var(--border-color); min-width:220px;">
+                  <select id="creatorAnalyticsWorkSelect" onchange="loadCreatorReaderAnalyticsVisuals(this.value)" class="form-input" style="padding:6px 12px; font-size:0.88rem; background:var(--bg-surface); color:var(--text-primary); border-radius:8px; border:1px solid var(--control-border); min-width:220px;">
                     <!-- Dynamically populated works -->
                   </select>
                 </div>
@@ -980,7 +982,7 @@
                 </div>
                 <div class="ledger-status-select" style="display:flex; align-items:center; gap:6px;">
                   <span class="text-muted small">상태:</span>
-                  <select id="creatorLedgerStatusFilter" onchange="filterCreatorLedgerStatus(this.value)" class="form-input" style="padding:4px 8px; font-size:0.8rem; background:var(--bg-surface); color:var(--text-primary); border-radius:6px; border:1px solid var(--border-color);">
+                  <select id="creatorLedgerStatusFilter" onchange="filterCreatorLedgerStatus(this.value)" class="form-input" style="padding:4px 8px; font-size:0.8rem; background:var(--bg-surface); color:var(--text-primary); border-radius:6px; border:1px solid var(--control-border);">
                     <option value="ALL">전체 상태</option>
                     <option value="CONFIRMED">CONFIRMED (확정)</option>
                     <option value="ESTIMATED">ESTIMATED (예상)</option>
@@ -1271,9 +1273,9 @@
                 <div class="card glass-panel p-3 mb-3" style="border-radius: 8px;">
                   <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px; align-items: center;">
                     <div style="position: relative;">
-                      <input type="text" id="adminWorkSearchInput" class="form-input" placeholder="🔍 작품명, 작가명 실시간 검색..." oninput="handleWorkSearchFilter(this.value)" style="width: 100%; padding: 7px 12px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                      <input type="text" id="adminWorkSearchInput" class="form-input" placeholder="🔍 작품명, 작가명 실시간 검색..." oninput="handleWorkSearchFilter(this.value)" style="width: 100%; padding: 7px 12px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 6px;">
                     </div>
-                    <select id="adminWorkGenreFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                    <select id="adminWorkGenreFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 6px;">
                       <option value="ALL">장르: 전체</option>
                       <option value="판타지">판타지</option>
                       <option value="무협">무협</option>
@@ -1283,12 +1285,12 @@
                       <option value="호러">호러</option>
                       <option value="성인">성인 (19+)</option>
                     </select>
-                    <select id="adminWorkPlatformFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                    <select id="adminWorkPlatformFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 6px;">
                       <option value="ALL">플랫폼: 전체</option>
                       <option value="NOVEL">웹소설</option>
                       <option value="WEBTOON">웹툰</option>
                     </select>
-                    <select id="adminWorkDayFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                    <select id="adminWorkDayFilter" class="form-input" onchange="applyAllWorkFilters()" style="padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 6px;">
                       <option value="ALL">발행주기: 전체</option>
                       <option value="MON">월요일</option>
                       <option value="TUE">화요일</option>
@@ -1388,17 +1390,17 @@
                   <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; align-items: center;">
                     <div>
                       <label class="small text-muted" style="display: block; margin-bottom: 4px;">대상 작품 선택 (실제 DB 10개 작품 연동)</label>
-                      <select id="adminEpisodeWorkSelect" class="form-input" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                      <select id="adminEpisodeWorkSelect" class="form-input" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 6px;">
                         <!-- Dynamic options injected by JS -->
                       </select>
                     </div>
                     <div>
                       <label class="small text-muted" style="display: block; margin-bottom: 4px;">회차 검색</label>
-                      <input type="text" id="adminEpSearchInput" class="form-input" placeholder="소제목 검색..." oninput="handleEpisodeSearchFilter(this.value)" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                      <input type="text" id="adminEpSearchInput" class="form-input" placeholder="소제목 검색..." oninput="handleEpisodeSearchFilter(this.value)" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 6px;">
                     </div>
                     <div>
                       <label class="small text-muted" style="display: block; margin-bottom: 4px;">유료 / 무료</label>
-                      <select id="adminEpFreeFilter" class="form-input" onchange="applyAllEpisodeFilters()" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+                      <select id="adminEpFreeFilter" class="form-input" onchange="applyAllEpisodeFilters()" style="width: 100%; padding: 7px 10px; font-size: 0.85rem; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 6px;">
                         <option value="ALL">전체 회차</option>
                         <option value="FREE">무료 회차</option>
                         <option value="PAID">유료 (100P / 광고)</option>
@@ -1839,11 +1841,11 @@
           <form id="formAdminLoginSubmit" onsubmit="event.preventDefault(); handleAdminLoginProcess();">
             <div class="form-group mb-3">
               <label>관리자 ID / 이메일</label>
-              <input type="text" id="adminLoginId" class="form-control" placeholder="관리자 아이디 (이메일)" autocomplete="username" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+              <input type="text" id="adminLoginId" class="form-control" placeholder="관리자 아이디 (이메일)" autocomplete="username" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
             </div>
             <div class="form-group mb-4">
               <label>비밀번호</label>
-              <input type="password" id="adminLoginPw" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+              <input type="password" id="adminLoginPw" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-full">
               <i data-lucide="lock"></i> 관리자 인증 로그인
@@ -1868,16 +1870,16 @@
             <div class="grid-2-col gap-4 mb-3">
               <div class="form-group">
                 <label>서브 관리자 Username / ID (이메일)</label>
-                <input type="text" id="newSubAdminId" class="form-control" placeholder="예: andysung@webnovel-admin.com" autocomplete="username" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+                <input type="text" id="newSubAdminId" class="form-control" placeholder="예: andysung@webnovel-admin.com" autocomplete="username" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
               </div>
               <div class="form-group">
                 <label>초기 비밀번호</label>
-                <input type="password" id="newSubAdminPw" class="form-control" placeholder="비밀번호 입력" autocomplete="new-password" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+                <input type="password" id="newSubAdminPw" class="form-control" placeholder="비밀번호 입력" autocomplete="new-password" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
               </div>
             </div>
             <div class="form-group mb-4">
               <label>담당자 닉네임 / 직책</label>
-              <input type="text" id="newSubAdminName" class="form-control" placeholder="예: 앤디성 (정산담당관)" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+              <input type="text" id="newSubAdminName" class="form-control" placeholder="예: 앤디성 (정산담당관)" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
             </div>
 
             <!-- 16 Menu Permission Selection Checklist -->
@@ -2090,16 +2092,16 @@
             <div class="grid-2-col gap-4 mb-3">
               <div class="form-group">
                 <label>회차 번호</label>
-                <input type="number" id="writeEpisodeNumber" class="form-control" placeholder="예: 5" min="1" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+                <input type="number" id="writeEpisodeNumber" class="form-control" placeholder="예: 5" min="1" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
               </div>
               <div class="form-group">
                 <label>회차 제목</label>
-                <input type="text" id="writeEpisodeTitle" class="form-control" placeholder="예: 제5화 결전의 서막" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+                <input type="text" id="writeEpisodeTitle" class="form-control" placeholder="예: 제5화 결전의 서막" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
               </div>
             </div>
             <div class="form-group mb-3">
               <label>회차 본문 내용</label>
-              <textarea id="writeEpisodeContent" class="form-control" rows="10" placeholder="소설 본문 내용을 입력하세요..." required style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color); font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
+              <textarea id="writeEpisodeContent" class="form-control" rows="10" placeholder="소설 본문 내용을 입력하세요..." required style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border); font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
             </div>
             <div class="small text-muted mb-4">
               💡 공개 전 미리보기와 예약 상태를 확인하세요. 현재 신규 유료·광고 해금은 제공하지 않습니다.
@@ -2123,7 +2125,7 @@
           <form id="formEditProfile" onsubmit="handleSaveProfile(event)">
             <div class="form-group mb-4">
               <label>닉네임</label>
-              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" minlength="2" maxlength="40" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color);">
+              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" minlength="2" maxlength="40" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
             </div>
 
             <p class="text-muted small mb-4">비밀번호는 로그인 화면의 재설정 메일로 변경할 수 있습니다.</p>
@@ -2238,7 +2240,7 @@
               <span class="text-muted" style="font-size:0.75rem;">(최소 1,000P ~ 최대 50,000P)</span>
             </div>
             <div style="position:relative;">
-              <input type="number" id="supportCustomAmount" class="form-input" min="1000" max="50000" step="500" value="5000" oninput="handleSupportCustomInput(this.value)" style="width:100%; padding:10px 40px 10px 12px; font-size:1.1rem; font-weight:700; color:var(--text-primary); background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
+              <input type="number" id="supportCustomAmount" class="form-input" min="1000" max="50000" step="500" value="5000" oninput="handleSupportCustomInput(this.value)" style="width:100%; padding:10px 40px 10px 12px; font-size:1.1rem; font-weight:700; color:var(--text-primary); background:var(--bg-surface); border:1px solid var(--control-border); border-radius:8px;">
               <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-weight:600;">P</span>
             </div>
           </div>
@@ -2246,7 +2248,7 @@
           <!-- Cheer Message -->
           <div class="form-group mb-4">
             <label class="small text-muted mb-1 block">작가님께 보낼 응원 한마디</label>
-            <input type="text" id="supportCheerMessage" class="form-input" maxlength="100" placeholder="작가님 항상 건필하세요! 다음 화 기대 중입니다." style="width:100%; padding:10px; font-size:0.9rem; background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px;">
+            <input type="text" id="supportCheerMessage" class="form-input" maxlength="100" placeholder="작가님 항상 건필하세요! 다음 화 기대 중입니다." style="width:100%; padding:10px; font-size:0.9rem; background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--control-border); border-radius:8px;">
           </div>
 
           <!-- Anonymous Option -->
@@ -2464,7 +2466,7 @@
   <script src="/js/reader/reader-discovery.js?v=124"></script>
   <script src="/js/reader/reader-webtoon.js?v=118"></script>
   <script src="/js/reader/reader-position.js?v=116"></script>
-  <script src="/js/reader/reader.js?v=125"></script>
+  <script src="/js/reader/reader.js?v=20261031"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>
