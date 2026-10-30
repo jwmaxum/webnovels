@@ -138,5 +138,20 @@ test('verified not-paid and partial/unsupported states never grant an entitlemen
  const p=await f.paid(),q=await f.claim(p.order.id,'claim-query');assert.equal((await f.apply(q.transport,{...f.receipt(q.transport),state:'REVIEW'})).order.status,'REVIEW');
  for(let i=0;i<10;i++){const query=await f.claim(p.order.id,'admin-query',{},admin);await f.apply(query.transport,{state:'UNKNOWN'});}
  assert.equal((await f.claim(p.order.id,'admin-query',{},admin)).error,'RATE_LIMITED');
- assert.equal((await f.call('audit',{orderId:p.order.id},admin)).events[0].action,'CREATE');
+ const audit=await f.call('audit',{orderId:p.order.id},admin);
+ assert.equal(audit.order.id,p.order.id);
+ // Equal created_at values are ordered by random UUID, not causal operation order.
+ assert.equal(audit.events.filter(event=>event.action==='CREATE').length,1);
+});
+
+test('audit retains each payment event when all timestamps are equal',async()=>{
+ await db.exec('begin');
+ try{
+  // PostgreSQL now() is fixed for the transaction: collisions must not depend on runner speed.
+  const p=await f.paid(),audit=await f.call('audit',{orderId:p.order.id},admin);
+  assert.equal(audit.order.id,p.order.id);
+  assert.equal(new Set(audit.events.map(event=>event.createdAt)).size,1);
+  assert.deepEqual(audit.events.map(event=>event.action).sort(),['CLAIM_CONFIRM','CREATE','OBSERVE']);
+  assert.equal(audit.events.filter(event=>event.action==='CREATE').length,1);
+ }finally{await db.exec('rollback');}
 });

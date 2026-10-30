@@ -182,5 +182,14 @@
     "No live DB or API changes",
     "No measured font performance or whole-site accessibility claim",
     "Deployment status recorded separately after push"
-  ]
+  ],
+  "ciRepair": {
+    "initialCommit": "e233e074d06e065fe474b67c3a6bc0797ca15808",
+    "failedRun": "https://github.com/jwmaxum/webnovels/actions/runs/41137300562",
+    "cause": "Existing stage20 audit test assumed CREATE sorts first even when timestamps tie and UUID breaks the tie.",
+    "change": "Assert one CREATE event and add fixed-transaction-time coverage of all three events; no production SQL or payment behavior change.",
+    "targetedCommand": "node --test --test-concurrency=1 scripts/verify_stage20_api.test.mjs scripts/verify_stage20_db.test.mjs scripts/verify_stage20_ui.test.mjs",
+    "passed": 25,
+    "failed": 0
+  }
 }
