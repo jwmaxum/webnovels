@@ -1,0 +1,281 @@
+{
+  "stage": "UI-R1",
+  "date": "2026-10-30",
+  "scope": "Design artifacts only; no service code or DB changes",
+  "result": "PASS",
+  "phases": {
+    "build": "NOT_APPLICABLE: product code unchanged",
+    "types": "NOT_APPLICABLE: no TypeScript changes",
+    "lint": "PASS: CSS parse and HTML parse",
+    "tests": "PASS: artifact references, tokens, contrast, dimensions, hashes; no product tests or coverage run",
+    "security": "PASS: static artifact and secret-pattern checks",
+    "diff": "PASS: 22 staged design/documentation files only; unrelated working changes excluded"
+  },
+  "tokens": {
+    "total": 47,
+    "originalUserValuesPreserved": 41,
+    "confirmedFocus": "#6E52FF"
+  },
+  "contrast": [
+    {
+      "name": "body-white",
+      "foreground": "#292B2B",
+      "background": "#FFFFFF",
+      "ratio": 14.24,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "heading-white",
+      "foreground": "#121212",
+      "background": "#FFFFFF",
+      "ratio": 18.7337,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "secondary-base",
+      "foreground": "#606567",
+      "background": "#F5F6F6",
+      "ratio": 5.4563,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "secondary-white",
+      "foreground": "#606567",
+      "background": "#FFFFFF",
+      "ratio": 5.9077,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "primary-button",
+      "foreground": "#FFFFFF",
+      "background": "#8F357C",
+      "ratio": 7.075,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "primary-hover",
+      "foreground": "#FFFFFF",
+      "background": "#4F1D45",
+      "ratio": 13.1733,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "bright-brand-label",
+      "foreground": "#121212",
+      "background": "#F55DD6",
+      "ratio": 6.6186,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "selected-tab",
+      "foreground": "#8F357C",
+      "background": "#FEEEFA",
+      "ratio": 6.342,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "link-on-base",
+      "foreground": "#8F357C",
+      "background": "#F5F6F6",
+      "ratio": 6.5344,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "success",
+      "foreground": "#137B29",
+      "background": "#E0F7E2",
+      "ratio": 4.7707,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "success-on-base",
+      "foreground": "#137B29",
+      "background": "#F5F6F6",
+      "ratio": 4.9823,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "warning",
+      "foreground": "#A33A13",
+      "background": "#FFEDE7",
+      "ratio": 5.8386,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "error",
+      "foreground": "#B71F1F",
+      "background": "#FFE4E4",
+      "ratio": 5.4098,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "info",
+      "foreground": "#174CB8",
+      "background": "#E4EDFF",
+      "ratio": 6.4642,
+      "minimum": 4.5,
+      "result": "PASS"
+    },
+    {
+      "name": "focus-on-white",
+      "foreground": "#6E52FF",
+      "background": "#FFFFFF",
+      "ratio": 4.868,
+      "minimum": 3,
+      "result": "PASS"
+    },
+    {
+      "name": "focus-on-base",
+      "foreground": "#6E52FF",
+      "background": "#F5F6F6",
+      "ratio": 4.496,
+      "minimum": 3,
+      "result": "PASS"
+    },
+    {
+      "name": "input-boundary",
+      "foreground": "#878F91",
+      "background": "#FFFFFF",
+      "ratio": 3.2977,
+      "minimum": 3,
+      "result": "PASS"
+    }
+  ],
+  "excludedCombinations": [
+    {
+      "name": "white-on-bright-pink",
+      "ratio": 2.8305,
+      "result": "EXCLUDED_FROM_NORMAL_TEXT"
+    },
+    {
+      "name": "tertiary-small-text",
+      "ratio": 3.2977,
+      "result": "EXCLUDED_FROM_NORMAL_TEXT"
+    }
+  ],
+  "css": [
+    {
+      "file": "tokens.css",
+      "result": "PASS"
+    },
+    {
+      "file": "review.css",
+      "result": "PASS"
+    }
+  ],
+  "html": {
+    "parseErrors": 0,
+    "images": 10,
+    "localReferences": 24,
+    "anchorTargets": 8,
+    "externalRuntimeReferences": 0,
+    "scripts": 0,
+    "forms": 0
+  },
+  "assets": {
+    "verified": 3,
+    "fontVersion": "v2.0.5",
+    "localLicenseIncluded": true
+  },
+  "boards": [
+    {
+      "file": "boards/home-desktop.png",
+      "width": 1440,
+      "height": 1020,
+      "sha256": "94c27ea0f244f4e067840d70e33a5d16b929ba7fca557985db201b3780eb332f",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/home-mobile.png",
+      "width": 390,
+      "height": 1100,
+      "sha256": "eecbb775ddfcb5f7d83c81eaccd58ae18a91f6cebb72fe6c3905ebb9e5e4666c",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/discover-desktop.png",
+      "width": 1440,
+      "height": 1020,
+      "sha256": "55bd518312d357b6d2ce0709b23e19d3e2c8d6412da977c0798ef7fcfd63851d",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/discover-mobile.png",
+      "width": 390,
+      "height": 1100,
+      "sha256": "da65a15a91243ccceec730f4604377e7ecdf40f115f99701ed3a2f7738d287db",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/detail-desktop.png",
+      "width": 1440,
+      "height": 1020,
+      "sha256": "55df25cdfbac89fce85383577b07e210d8b993a7b464da11d575adbfcee33071",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/detail-mobile.png",
+      "width": 390,
+      "height": 1100,
+      "sha256": "ad7177d9f859a7c459d77b16f19e71a25231933c00654bd48b966f82b3087f9d",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/studio-desktop.png",
+      "width": 1440,
+      "height": 1020,
+      "sha256": "605fb932e4503b881e335a74450cefa992d6e193f4443ba58e9d19de79f78bda",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/studio-mobile.png",
+      "width": 390,
+      "height": 1100,
+      "sha256": "1180d8124cfbaf537b2aa11d8a63c64733008e24d8dc7eabf19154a23b0f83de",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/webtoon-desktop.png",
+      "width": 1440,
+      "height": 1020,
+      "sha256": "eac8dca4e20c76c8c270841f93f7feaf6f69d2449878ed4a9ce39d00928d93b6",
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "file": "boards/webtoon-mobile.png",
+      "width": 390,
+      "height": 1100,
+      "sha256": "c32fdf118d195e720822ee988886c40646cdc2fc4325db803090ddaa2bbb7d58",
+      "measuredTextFitsCanvas": true
+    }
+  ],
+  "security": {
+    "textFilesScanned": 8,
+    "detectedSecretPatterns": 0
+  },
+  "visualReview": {
+    "method": "Native PNG inspection; not browser screenshots",
+    "boardsInspected": 10,
+    "limits": "Static compositions. Text measurements check canvas bounds, not interactive flow or every overlap."
+  },
+  "notRun": [
+    "localhost or browser acceptance",
+    "live mobile keyboard or responsive behavior",
+    "product build/types/functional tests/coverage",
+    "DB/API/Cloudflare validation"
+  ],
+  "markdownReferences": 22
+}

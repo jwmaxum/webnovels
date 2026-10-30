@@ -1,0 +1,23 @@
+{
+  "fontVersion": "v2.0.5",
+  "assets": [
+    {
+      "file": "SUIT-Variable.woff2",
+      "source": "https://raw.githubusercontent.com/sun-typeface/SUIT/v2.0.5/fonts/variable/woff2/SUIT-Variable.woff2",
+      "bytes": 624536,
+      "sha256": "aa894a204d5a6fbae259dac6868d350cbd373a390caee0313f92946af741df23"
+    },
+    {
+      "file": "SUIT-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/sun-typeface/SUIT/v2.0.5/LICENSE",
+      "bytes": 4380,
+      "sha256": "30d101ee3c35ef629d622d933d261a27b2f60223e0a3b0f36791e569c2b9daa9"
+    },
+    {
+      "file": "joseon-romance.jpg",
+      "source": "Previously user-authorized AI cover for published work 32, copied from local publication assets",
+      "bytes": 188977,
+      "sha256": "b92ca41693562c839ec35688b50b906bd3ff80ffed0104519c6263d80dfbbecf"
+    }
+  ]
+}

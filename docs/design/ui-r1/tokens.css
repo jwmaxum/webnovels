@@ -1,0 +1,56 @@
+/* UI-R1 design review only. Production styles are unchanged. */
+:root {
+  --color-primary-50: #FEEEFA;
+  --color-primary-100: #FDDEF6;
+  --color-primary-200: #FCCEF2;
+  --color-primary-300: #FAAEEA;
+  --color-primary-400: #F88DE2;
+  --color-primary-500: #F55DD6;
+  --color-primary-600: #E356C6;
+  --color-primary-700: #D14FB7;
+  --color-primary-800: #8F357C;
+  --color-primary-900: #4F1D45;
+  --color-secondary-500: #6E52FF;
+
+  --color-neutral-0: #FFFFFF;
+  --color-neutral-50: #F9FAFA;
+  --color-neutral-100: #F5F6F6;
+  --color-neutral-200: #ECEDEE;
+  --color-neutral-300: #E2E5E6;
+  --color-neutral-500: #878F91;
+  --color-neutral-700: #606567;
+  --color-neutral-900: #121212;
+  --color-neutral-1000: #000000;
+
+  --color-success-bg: #E0F7E2;
+  --color-success-fg: #00BF10;
+  --color-warning-bg: #FFEDE7;
+  --color-warning-fg: #FF6734;
+  --color-error-bg: #FFE4E4;
+  --color-error-fg: #E52D2D;
+  --color-info-bg: #E4EDFF;
+  --color-info-fg: #216BFF;
+
+  --bg-base: #F5F6F6;
+  --bg-subtle: #F9FAFA;
+  --bg-elevated: #FFFFFF;
+  --bg-overlay: rgba(0, 0, 0, 0.50);
+  --text-primary: #292B2B;
+  --text-secondary: #606567;
+  --text-tertiary: #878F91;
+  --text-on-primary: #FFFFFF;
+  --text-disabled: #B3BABD;
+  --text-strong: #121212;
+  --border-default: #ECEDEE;
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-strong: #C6CBCD;
+  --border-focus: #6E52FF; /* R1 확정 */
+}
+
+:root {
+  --border-input: var(--color-neutral-500);
+  --text-success: #137B29;
+  --text-warning: #A33A13;
+  --text-error: #B71F1F;
+  --text-info: #174CB8;
+}

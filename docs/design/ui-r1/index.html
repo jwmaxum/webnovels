@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex, nofollow">
+  <title>WebNovels · R1 디자인 확정 시안</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="review.css">
+</head>
+<body>
+  <header class="review-header">
+    <p class="eyebrow">WEBNOVELS / UI-R1 / 2026.10.30</p>
+    <h1>읽기 쉬운 글자, 분명한 행동.</h1>
+    <p class="intro">밝은 바탕 위에 진한 본문과 선명한 버튼을 배치했습니다. 홈부터 발행까지, 같은 기준으로 정리한 화면 시안입니다.</p>
+    <p class="scope">R1 확정 산출물 · 실제 서비스와 연결되지 않은 디자인 보드입니다. 이미지 속 버튼은 저장·발행을 실행하지 않습니다.</p>
+    <nav class="review-nav" aria-label="시안 탐색">
+      <a href="#foundation">색상·서체</a><a href="#home">홈</a><a href="#discover">탐색</a><a href="#detail">작품 상세</a><a href="#studio">소설 작성</a><a href="#webtoon">웹툰 업로드</a><a href="#next">다음 단계</a>
+    </nav>
+  </header>
+  <main>
+    <section id="foundation" class="foundation" aria-labelledby="foundation-title">
+      <div>
+        <p class="eyebrow">01 / 확정 기준</p><h2 id="foundation-title">색은 부드럽게, 글자는 선명하게</h2>
+        <p>UI는 <strong>SUIT Variable</strong>로 통일합니다. 본문 16px, 보조 정보 14px, 제목 600~700 굵기를 기본으로 사용합니다. 소설 본문에는 기존 독자 설정이 우선합니다.</p>
+        <div class="color-list">
+          <span><i class="swatch base"></i>바탕 #F5F6F6</span><span><i class="swatch elevated"></i>콘텐츠 #FFFFFF</span><span><i class="swatch brand"></i>강조 #F55DD6</span><span><i class="swatch action"></i>주요 행동 #8F357C</span>
+        </div>
+        <p class="type-sample"><strong>조선 로맨스 · 10화 완결</strong><br>이야기에 집중할 수 있도록 글자와 여백을 정돈합니다.</p>
+        <div class="actions"><a class="primary" href="#home">주요 화면 보기</a><a class="secondary" href="README.md">확정 명세 보기</a></div>
+      </div>
+      <div class="contrast-panel">
+        <h3>작은 설명도 읽을 수 있게</h3>
+        <table><caption>정적 색상 대비 검증</caption><thead><tr><th scope="col">용도</th><th scope="col">대비</th></tr></thead><tbody>
+          <tr><th scope="row">주요 버튼 흰 글자 / 자주 배경</th><td>7.07:1</td></tr>
+          <tr><th scope="row">보조 설명 / 기본 배경</th><td>5.46:1</td></tr>
+          <tr><th scope="row">밝은 핑크 위 진한 글자</th><td>6.62:1</td></tr>
+        </tbody></table>
+        <p>흐린 회색과 흰 글자·밝은 핑크 조합을 본문이나 주요 행동에 사용하지 않습니다.</p>
+        <p class="status success">저장 완료 · 상태 표현 예시</p>
+        <p class="status info">공개본 수정은 검토 요청으로 구분합니다.</p>
+        <p class="status error">실패한 항목과 재시도 방법을 함께 표시합니다.</p>
+      </div>
+    </section>
+    <section id="home" class="screen-section" aria-labelledby="home-title">
+      <div class="section-heading"><div><p class="eyebrow">02 / 독자 홈</p><h2 id="home-title">작품을 먼저 만나는 홈</h2></div><p>상단 탐색 · 실제 표지 중심 · 차분한 작품 진열</p></div>
+      <div class="boards"><figure><a href="boards/home-desktop.png"><img src="boards/home-desktop.png" width="1440" height="1020" alt="PC 홈 시안. 상단 검색과 탐색, 조선 로맨스 소개, 첫 화 읽기 버튼과 여섯 개의 표지 배치 영역."></a><figcaption>PC 1440px · 이미지를 선택하면 원본 크기로 볼 수 있습니다.</figcaption></figure><figure class="mobile-board"><a href="boards/home-mobile.png"><img src="boards/home-mobile.png" width="390" height="1100" alt="모바일 홈 시안. 작은 표지와 제목, 넓은 첫 화 읽기 버튼, 두 열의 작품 목록과 하단 탐색."></a><figcaption>모바일 390px</figcaption></figure></div>
+    </section>
+    <section id="discover" class="screen-section" aria-labelledby="discover-title">
+      <div class="section-heading"><div><p class="eyebrow">03 / 작품 탐색</p><h2 id="discover-title">웹소설과 웹툰을 같은 구조로</h2></div><p>유형 → 검색 → 장르 → 결과 · 선택된 필터를 명확하게</p></div>
+      <div class="boards"><figure><a href="boards/discover-desktop.png"><img loading="lazy" src="boards/discover-desktop.png" width="1440" height="1020" alt="PC 탐색 시안. 웹소설과 웹툰 전환, 검색 입력, 장르 필터, 정렬과 작품 카드 목록."></a><figcaption>PC 1440px</figcaption></figure><figure class="mobile-board"><a href="boards/discover-mobile.png"><img loading="lazy" src="boards/discover-mobile.png" width="390" height="1100" alt="모바일 탐색 시안. 입력 영역과 필터, 두 열의 작품 목록."></a><figcaption>모바일 390px</figcaption></figure></div>
+    </section>
+    <section id="detail" class="screen-section" aria-labelledby="detail-title">
+      <div class="section-heading"><div><p class="eyebrow">04 / 작품 상세</p><h2 id="detail-title">소개에서 첫 화까지, 자연스럽게</h2></div><p>표지·작가·소개·완결 상태 · 뚜렷한 읽기 버튼 · 단정한 회차 목록</p></div>
+      <div class="boards"><figure><a href="boards/detail-desktop.png"><img loading="lazy" src="boards/detail-desktop.png" width="1440" height="1020" alt="PC 작품 상세 시안. 조선 로맨스 표지와 소개, 무료 완결 표시, 읽기와 관심 등록 버튼, 회차 목록."></a><figcaption>PC 1440px</figcaption></figure><figure class="mobile-board"><a href="boards/detail-mobile.png"><img loading="lazy" src="boards/detail-mobile.png" width="390" height="1100" alt="모바일 작품 상세 시안. 표지와 작품명, 소개, 넓은 읽기 버튼, 회차별 목록."></a><figcaption>모바일 390px</figcaption></figure></div>
+    </section>
+    <section id="studio" class="screen-section" aria-labelledby="studio-title">
+      <div class="section-heading"><div><p class="eyebrow">05 / 작가 · 웹소설</p><h2 id="studio-title">원고가 중심인 작업 공간</h2></div><p>불러오기·저장·미리보기·발행을 일정한 위치에 · 표지 변경은 작품 설정에</p></div>
+      <div class="boards"><figure><a href="boards/studio-desktop.png"><img loading="lazy" src="boards/studio-desktop.png" width="1440" height="1020" alt="PC 작가 화면 시안. 왼쪽 원고 목록, 넓은 편집 영역, 상단 저장 상태와 저장·미리보기·발행 버튼."></a><figcaption>PC 1440px · 상태와 원고 문구는 시안용 예시입니다.</figcaption></figure><figure class="mobile-board"><a href="boards/studio-mobile.png"><img loading="lazy" src="boards/studio-mobile.png" width="390" height="1100" alt="모바일 소설 작성 시안. 원고 불러오기와 썸네일 변경, 제목과 서식 도구, 편집 면, 하단 저장·미리보기·발행."></a><figcaption>모바일 390px</figcaption></figure></div>
+    </section>
+    <section id="webtoon" class="screen-section" aria-labelledby="webtoon-title">
+      <div class="section-heading"><div><p class="eyebrow">06 / 작가 · 웹툰</p><h2 id="webtoon-title">올리는 순서가 보이는 업로드</h2></div><p>번호·파일별 상태·순서 변경 · PC 스크롤 미리보기 · 모바일 핵심 조작 유지</p></div>
+      <div class="boards"><figure><a href="boards/webtoon-desktop.png"><img loading="lazy" src="boards/webtoon-desktop.png" width="1440" height="1020" alt="PC 웹툰 업로드 시안. 이미지 추가 영역, 번호가 붙은 세 개의 파일과 준비 상태, 우측 순차 미리보기."></a><figcaption>PC 1440px · 이미지 영역은 구성 확인용입니다.</figcaption></figure><figure class="mobile-board"><a href="boards/webtoon-mobile.png"><img loading="lazy" src="boards/webtoon-mobile.png" width="390" height="1100" alt="모바일 웹툰 업로드 시안. 이미지 추가 버튼, 순서 번호와 위로·아래로·재시도 표시, 저장과 발행."></a><figcaption>모바일 390px</figcaption></figure></div>
+    </section>
+    <section id="next" class="next-section" aria-labelledby="next-title"><p class="eyebrow">NEXT / UI-R2</p><h2 id="next-title">다음 단계는 공통 컴포넌트 적용입니다.</h2><p>확정 토큰과 SUIT 서체를 서비스에 연결하고 버튼·입력·탭·카드·알림을 정리합니다. 기존 원고·계정·발행 권한은 보존하며, 레이아웃의 실제 적용은 R3부터 화면별로 진행합니다.</p><p>이 시안은 브라우저 캡처가 아닌 정적 디자인 보드입니다. 실제 화면의 줄바꿈·키보드 조작·반응형 동작은 구현 후 별도로 검증합니다.</p></section>
+  </main>
+  <footer>WebNovels UI-R1 · 디자인 기준 확정 · 운영 DB·발행 기능 미연결</footer>
+</body>
+</html>

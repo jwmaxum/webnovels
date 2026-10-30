@@ -1,0 +1,75 @@
+{
+  "renderer": "Sharp + SUIT TTF via Pango; composed design boards, not browser screenshots",
+  "screens": [
+    {
+      "name": "home-desktop",
+      "width": 1440,
+      "height": 1020,
+      "labels": 41,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "home-mobile",
+      "width": 390,
+      "height": 1100,
+      "labels": 27,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "discover-desktop",
+      "width": 1440,
+      "height": 1020,
+      "labels": 38,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "discover-mobile",
+      "width": 390,
+      "height": 1100,
+      "labels": 27,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "detail-desktop",
+      "width": 1440,
+      "height": 1020,
+      "labels": 28,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "detail-mobile",
+      "width": 390,
+      "height": 1100,
+      "labels": 31,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "studio-desktop",
+      "width": 1440,
+      "height": 1020,
+      "labels": 27,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "studio-mobile",
+      "width": 390,
+      "height": 1100,
+      "labels": 22,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "webtoon-desktop",
+      "width": 1440,
+      "height": 1020,
+      "labels": 38,
+      "measuredTextFitsCanvas": true
+    },
+    {
+      "name": "webtoon-mobile",
+      "width": 390,
+      "height": 1100,
+      "labels": 26,
+      "measuredTextFitsCanvas": true
+    }
+  ]
+}
