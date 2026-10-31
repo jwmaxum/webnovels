@@ -54,9 +54,11 @@
   }
   async function episodes(root,workId){
     if(!root||!active())return;
-    root.textContent='회차를 불러오는 중입니다…';
+    const seq=++turn,user=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===user&&!!actor()?.author;
+    root.textContent='회차를 불러오는 중입니다…';root.setAttribute('aria-busy','true');
     try{
       const result=await api('episodes',workId);
+      if(!valid())return;
       const rows=result.episodes||[];
       root.innerHTML='<label>회차 검색 <input id="coEpisodeSearch" class="form-control" type="search"></label>'+
         '<label>상태 <select id="coEpisodeFilter" class="form-control"><option value="all">전체</option>'+
@@ -64,29 +66,37 @@
         '<option value="PENDING">예약</option><option value="FAILED">실패</option></select></label>'+
         '<div id="coEpisodeRows"></div><p id="coEpisodeMessage" role="status"></p>';
       const list=root.querySelector('#coEpisodeRows'),message=root.querySelector('#coEpisodeMessage');
+      text(root,'p','비공개 원고는 자유롭게 수정·저장하고 작가가 직접 발행합니다. 예약 원고 수정은 기존 예약을 취소한 뒤 이어 쓰며, 이미 공개한 내용의 수정·철회는 검토를 요청합니다.');
       const render=()=>{
+        if(!valid())return;
         const q=root.querySelector('#coEpisodeSearch').value.toLowerCase().trim();
         const filter=root.querySelector('#coEpisodeFilter').value;
         list.replaceChildren();
         for(const row of rows.filter(r=>(filter==='all'||(r.schedule_status||r.status)===filter)&&
           (!q||String(r.episode_number).includes(q)||String(r.title).toLowerCase().includes(q)))){
           const item=document.createElement('div');item.className='co-episode';
-          text(item,'span',`${row.episode_number}화 · ${row.title} · ${row.schedule_status||row.status}`);
-          const manage=text(item,'button','수정·예약 관리');
+          const state=row.schedule_status||row.status;
+          text(item,'span',`${row.episode_number}화 · ${row.title} · ${{PUBLISHED:'공개',DRAFT:'비공개',PENDING:'예약',FAILED:'예약 실패',RUNNING:'발행 처리 중',CANCELLED:'예약 취소'}[state]||state}`);
+          const manage=text(item,'button',['PENDING','FAILED','RUNNING'].includes(row.schedule_status)?'예약 원고·시각 관리':row.status==='PUBLISHED'||row.has_head?'공개본 수정 요청':'원고·발행 관리');
           manage.type='button';manage.className='btn btn-outline btn-sm';
-          manage.onclick=()=>window.CreatorPublications.open(workId);
+          manage.onclick=()=>{if(valid())return window.CreatorPublications.open(workId,{focusEpisodeId:String(row.id)});};
           if((row.status==='PUBLISHED'||(row.status==='DRAFT'&&row.has_head))&&!row.schedule_status){
             const withdraw=row.status==='PUBLISHED';
-            const toggle=text(item,'button',withdraw?'공개 철회':'공개 복구');
+            const toggle=text(item,'button',withdraw?'공개 철회 검토 요청':'공개 복구 검토 요청');
             toggle.type='button';toggle.className='btn btn-outline btn-sm';
+            let submitting=false;
             toggle.onclick=async()=>{
+              if(!valid()||submitting)return;
               if(!confirm(withdraw?'회차를 비공개로 전환할까요? 댓글과 공개본 이력은 보존됩니다.':'기존 공개본을 다시 공개할까요?'))return;
+              submitting=true;toggle.disabled=true;
               try{
                 const saved=await api(withdraw?'withdraw':'restore-episode',workId,{episodeId:row.id});
+                if(!valid())return;
                 if(saved.reviewRequired){message.textContent='공개 상태 변경 검토를 요청했습니다. 승인 전까지 기존 공개 상태를 유지합니다.';return;}
                 await window.refreshReaderCatalog?.(true);
                 await episodes(root,workId);
-              }catch(error){message.textContent=reportError(error);}
+              }catch(error){if(valid())message.textContent=reportError(error);}
+              finally{if(valid()){submitting=false;toggle.disabled=false;}}
             };
           }
           list.append(item);
@@ -96,7 +106,8 @@
       root.querySelector('#coEpisodeSearch').oninput=render;
       root.querySelector('#coEpisodeFilter').onchange=render;
       render();
-    }catch(error){root.textContent='회차를 불러오지 못했습니다. '+reportError(error);}
+    }catch(error){if(valid())root.textContent='회차를 불러오지 못했습니다. '+reportError(error);}
+    finally{if(valid())root.setAttribute('aria-busy','false');}
   }
   async function serial(work,root){
     if(!root||!active())return;

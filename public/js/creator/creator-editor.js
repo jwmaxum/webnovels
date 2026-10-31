@@ -17,14 +17,14 @@
     const restricted=!work||work.moderation_state!=='CLEAR'||!!work.trashed_at;
     return Object.freeze({hasDraft:owned,workId:owned?c.workId:null,workTitle:owned?work?.title||'작품 정보 확인 중':'작품을 선택해주세요',
       contentType:owned?work?.content_type:null,readOnly:!owned||c.lifecycle!=='ACTIVE'||restricted,
-      conflict:owned&&!!c.conflict,composing,editingPublished:owned&&!!c.episodeId,lifecycle:owned?c.lifecycle:null,
+      conflict:owned&&!!c.conflict,composing,editingPublished:owned&&(c.hasPublicationHistory===true||!!c.episodeId&&c.hasPublicationHistory!==false),lifecycle:owned?c.lifecycle:null,
       pendingImages:!!window.CreatorWebtoon?.hasPending?.()});
   }
   function updateUi(){
     const state=getUiState();
     if($('studioCurrentWork'))$('studioCurrentWork').textContent=state.workTitle;
     if($('studioWorkKind'))$('studioWorkKind').textContent=state.hasDraft?(state.contentType==='WEBTOON'?'웹툰':'웹소설'):'';
-    if($('studioDraftState'))$('studioDraftState').textContent=!state.hasDraft?'원고 선택 전':state.lifecycle==='PUBLISHED'?'발행한 보관 원고':state.readOnly?'읽기 전용 원고':state.editingPublished?'공개본 수정 원고':'비공개 원고';
+    if($('studioDraftState'))$('studioDraftState').textContent=!state.hasDraft?'원고 선택 전':state.lifecycle==='PUBLISHED'?(state.editingPublished?'발행한 보관 원고':'예약·보관 원고'):state.readOnly?'읽기 전용 원고':state.editingPublished?'공개본 수정 원고':'비공개 원고';
     if($('btnSubmitNewEpisode'))$('btnSubmitNewEpisode').disabled=state.readOnly||state.composing;
     window.CreatorPublications?.refreshAvailability?.();
   }
@@ -165,12 +165,14 @@
     if(remote.revision!==c.revision||remote.lifecycle!=='ACTIVE'||
        ['title','content','authorComment'].some(k=>remote[k]!==c.snapshot[k])||canonical(remote.webtoon||null)!==canonical(c.snapshot.webtoon||null)||canonical(remote.contentDocument||null)!==canonical(c.snapshot.contentDocument||null))
       throw Error('PUBLISH_REVISION_CONFLICT');
+    c.episodeId=remote.episodeId||null;c.hasPublicationHistory=typeof remote.hasPublicationHistory==='boolean'?remote.hasPublicationHistory:null;updateUi();
     return JSON.parse(JSON.stringify({userId:user,workId:c.workId,id:c.id,revision:c.revision,
-      episodeId:remote.episodeId,seq:c.seq,snapshot:c.snapshot}));
+      episodeId:c.episodeId,hasPublicationHistory:c.hasPublicationHistory,seq:c.seq,snapshot:c.snapshot}));
   }
-  async function markPublished(expected){
+  async function markPublished(expected,publication){
     const c=engine.current;
     if(!c||c.id!==expected.id||c.workId!==expected.workId||c.userId!==expected.userId)return;
+    if(publication){c.episodeId=publication.episodeId||c.episodeId;c.hasPublicationHistory=typeof publication.hasPublicationHistory==='boolean'?publication.hasPublicationHistory:publication.status==='PUBLISHED'?true:c.hasPublicationHistory;}
     c.lifecycle='PUBLISHED';stop();form(c.snapshot,true);
     try{if(c.seq!==expected.seq){await DraftStore.backup(c,c.snapshot,'after-publish-edits');if(engine.current===c&&actor()?.userId===c.userId)toast('게시 요청 이후의 수정은 기기 사본으로 보존했습니다. 보관 사본을 새 원고로 복사할 수 있습니다.');}}
     finally{await engine.flush(c);if(engine.current===c&&actor()?.userId===c.userId)status(c);}
@@ -182,6 +184,7 @@
     const remote=(await api('get',{workId:c.workId,id:c.id,userId:c.userId})).draft;
     const unchanged=()=>turn===epoch&&engine.current===c&&actor()?.userId===c.userId&&!composing;
     if(!unchanged())throw Error('PUBLISH_SAVE_REQUIRED');
+    c.episodeId=remote.episodeId||null;c.hasPublicationHistory=typeof remote.hasPublicationHistory==='boolean'?remote.hasPublicationHistory:null;
     if(remote.lifecycle==='PUBLISHED')return markPublished(expected);
     if(!['ACTIVE','TRASHED'].includes(remote.lifecycle))throw Error('PUBLISH_DRAFT_UNAVAILABLE');
     if(remote.lifecycle==='ACTIVE'&&remote.revision!==c.revision){
@@ -266,7 +269,7 @@
   window.CreatorDraftEditor={getUiState,openWork:safe(openWork),enter:safe(enter),save:safe(save),syncServer:safe(save),download,openDiffModal:safe(openDiffModal),beforeAccountChange,onAuthLost,
     editWebtoon:(webtoon,expected)=>{const c=engine.current;if(!active(c)||c.id!==expected.id||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('SESSION_CHANGED');const {contentDocument,...snapshot}=c.snapshot;engine.edit({...snapshot,content:'',webtoon});schedule(c);},
     preparePublication,markPublished,refreshPublicationState,startNext:workId=>openWork(workId,null,{fresh:true}),
-    getFileContext:()=>engine.current?JSON.parse(JSON.stringify({userId:engine.current.userId,workId:engine.current.workId,id:engine.current.id,seq:engine.current.seq,snapshot:engine.current.snapshot,episodeId:engine.current.episodeId||null})):null,
+    getFileContext:()=>engine.current?JSON.parse(JSON.stringify({userId:engine.current.userId,workId:engine.current.workId,id:engine.current.id,seq:engine.current.seq,snapshot:engine.current.snapshot,episodeId:engine.current.episodeId||null,hasPublicationHistory:engine.current.hasPublicationHistory,lifecycle:engine.current.lifecycle})):null,
     replaceFromFile:async(snapshot,expected)=>{
       const c=engine.current;if(composing)throw Error('DRAFT_COMPOSING');if(!c||c.id!==expected.id||c.seq!==expected.seq||c.userId!==expected.userId||c.workId!==expected.workId)throw Error('EDIT_CHANGED_DURING_IMPORT');
       if(c.snapshot.webtoon)throw Error('WEBTOON_IMAGE_EDITOR_REQUIRED');stop();await engine.replace(snapshot,'before-file-import');if(engine.current!==c)throw Error('SESSION_CHANGED');form(c.snapshot);schedule(c);

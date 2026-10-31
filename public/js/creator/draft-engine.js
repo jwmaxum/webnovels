@@ -19,7 +19,8 @@
         let remote=null;
         if(arguments[2]&&!localOnly) remote=(await this.api('get',{workId,id,userId})).draft;
         c={userId,workId,id,branch:this.uuid(),snapshot:snapshot(remote||{}),seq:0,localSeq:-1,serverSeq:remote?0:-1,
-          episodeId:remote?.episodeId||null,revision:remote?.revision||'0',lifecycle:remote?.lifecycle||'ACTIVE',pending:null,conflict:null,error:null};
+          episodeId:remote?.episodeId||null,hasPublicationHistory:typeof remote?.hasPublicationHistory==='boolean'?remote.hasPublicationHistory:null,
+          revision:remote?.revision||'0',lifecycle:remote?.lifecycle||'ACTIVE',pending:null,conflict:null,error:null};
         if(epoch!==this.epoch)return null;
         this.contexts.set(key,c);
       }

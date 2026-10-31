@@ -1,0 +1,139 @@
+{
+  "stage": "UI-R8",
+  "checkedAt": "2026-10-31T03:23:13.659Z",
+  "baseCommit": "7482d84f1b44b3b4a534782860344c43c637fad0",
+  "validation": {
+    "releaseCommandCount": 46,
+    "initialFullBuild": {
+      "exitCode": 1,
+      "reason": "Two stale UI-R5 copy/cache assertions; corrected"
+    },
+    "continuation": {
+      "startedAt": "2026-10-31T03:14:25.952Z",
+      "completedAt": "2026-10-31T03:15:28.947Z",
+      "steps": [
+        {
+          "command": "test:ui-r5",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "test:ui-r6",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "test:ui-r7",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "test:ui-r8",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "build:compile",
+          "exitCode": 0,
+          "error": null
+        }
+      ],
+      "exitCode": 0,
+      "log": "scratch/ui-r8/build-resumed.log"
+    },
+    "types": {
+      "exitCode": 0
+    },
+    "newR8Tests": {
+      "publicationSql": 9,
+      "authorUi": 9,
+      "readerFonts": 12,
+      "schedulerConfiguration": 12,
+      "total": 42
+    },
+    "additionalDeliveryRegression": 1,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED"
+  },
+  "database": {
+    "appliedAt": "2026-10-31T03:10:53.192Z",
+    "migration": "authoring-028",
+    "sourceSnapshotSha256": "f74034961e70e35c4bf4bf779294062fdcf910f19bb19aab5b3fd7c9f7bed308",
+    "migrationSha256": "165cf184124c12e422a149ed2fc797ef4cafcd891e9fe279f62873ef9bae7e6f",
+    "preparedSqlSha256": "334ee3112c59c94ee100e11822ef709d9142b9118ca9d1e2f547c416e4312cd4",
+    "productionApplied": true,
+    "originalRowsPreserved": true,
+    "publicWrappersUnchanged": true,
+    "exactProductionAclGuards": true,
+    "nativeBackupVerified": true,
+    "changedFunctions": [
+      "authoring.draft_json(uuid,bigint)",
+      "authoring.publication_json(uuid)",
+      "authoring.review_original_publications(uuid,text,bigint,uuid,bigint,jsonb,uuid)"
+    ],
+    "flagsChanged": false,
+    "reset": false,
+    "restoredTables": 164,
+    "restoredRows": 330,
+    "localDefaultAclNormalizations": 2,
+    "productionTechnicalClockException": {
+      "table": "authoring.beta_operation_maintenance",
+      "reason": "Existing Cron advances only this technical maintenance timestamp between backup and apply.",
+      "guard": "Capture exact live row hash after all application-table locks; require the same hash after migration in the same transaction.",
+      "allOtherSnapshotRowGuardsExact": true,
+      "localAllSnapshotRowsStillVerified": true
+    },
+    "technicalClockWithinTransactionDriftRejected": true,
+    "hostedRestoreAccepted": false
+  },
+  "productionState": {
+    "checkedAt": "2026-10-31T03:18:52.832Z",
+    "readOnly": true,
+    "migration_applied": true,
+    "original_work_public_completed": true,
+    "original_ten_episodes_public": true,
+    "original_ten_heads_present": true,
+    "acceptance_novel_private": true,
+    "acceptance_novel_not_published": true,
+    "active_queue_empty": true,
+    "private_helpers_denied": true,
+    "browser_rpcs_denied": true
+  },
+  "scheduler": {
+    "checkedAt": "2026-10-31T03:21:30.533Z",
+    "project": "webnovels",
+    "projectRef": "ghwabesnydktumeyejnm",
+    "worker": "webnovels-authoring-scheduler",
+    "applied": true,
+    "publicationEnabled": true,
+    "ready": false,
+    "databaseReady": true,
+    "pendingSchedules": 0,
+    "runningSchedules": 0,
+    "sourceDigest": "6096a7f5c3d0f78241189c9cd672033e68d49a386bffcfcc6452d7602420508a",
+    "sourceBytes": 2990,
+    "changedVariables": [
+      "AUTHOR_PUBLISH_ENABLED"
+    ],
+    "privateWorker": true,
+    "cronPreserved": true,
+    "sourcePreserved": true,
+    "verifiedAt": "2026-10-31T03:21:40.022Z"
+  },
+  "browser": {
+    "privateAuthorLogin": true,
+    "novelCreated": true,
+    "representativeWordHtmlPaste": true,
+    "savedFormattingRestored": true,
+    "automaticReloadRestoreObserved": true,
+    "initialReservationWithoutAdmin": true,
+    "reservationCancelledAndDraftEditable": true,
+    "existingStoryNotEdited": true,
+    "physicalMobile": false,
+    "microsoftWordApplication": false,
+    "realPublicPublish": false,
+    "adminApprovalRoundtrip": false,
+    "postDeployment": "PENDING"
+  },
+  "deployment": "PENDING"
+}

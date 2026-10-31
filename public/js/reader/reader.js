@@ -1366,6 +1366,8 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   const enterReader=()=>{
     if(entered||!valid())return;entered=true;
     switchWebNovelsView('view-reader',null,false);activeWork=null;
+    window.ReaderFonts?.start();
+    document.getElementById('view-reader')?.setAttribute('data-reader-font-state','PENDING');
     if(document.getElementById('readerWorkTitle'))document.getElementById('readerWorkTitle').textContent='작품 정보 확인 중';
     if(document.getElementById('readerEpTitle'))document.getElementById('readerEpTitle').textContent='';
     if(document.getElementById('readerHeading'))document.getElementById('readerHeading').textContent='공개 회차를 불러오는 중입니다.';
@@ -1545,14 +1547,38 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   window.ReaderPreferencesManager?.apply();
   window.scrollTo({top:0,behavior:'instant'});
   heading.focus?.({preventScroll:true});
-  const restored=window.ReaderPosition?.restore(loadedWebtoon?webtoonViewerEl:textBodyEl,savedPosition,versionId);
+  const isWebtoon=work.contentType==='WEBTOON'||loadedPanels.length>0||!!loadedWebtoon?.panels?.length;
+  let fontState=isWebtoon?'NOT_NEEDED':'UNAVAILABLE',movedWhileWaiting=false;
+  if(!isWebtoon&&window.ReaderFonts){
+    const controller=new AbortController(),initialTop=window.scrollY;
+    const fontValid=()=>valid()&&currentActiveView==='view-reader';
+    const moved=()=>{if(window.scrollY!==initialTop){movedWhileWaiting=true;controller.abort();}};
+    const cleanup=()=>{controller.abort();window.removeEventListener('scroll',moved);};
+    // ReaderSession.begin/leave already calls this cleanup, so a late font result
+    // cannot restore an old chapter, account or departed reader screen.
+    window._readerScrollCleanup?.();window._readerScrollCleanup=cleanup;
+    window.addEventListener('scroll',moved,{passive:true});
+    const font=()=>{const pref=window.ReaderPreferencesManager?.pref;
+      const family=pref?.fontFamily==='sans'?'Noto Sans KR':'Noto Serif KR';
+      const size=Number.isFinite(Number(pref?.fontSize))?Number(pref.fontSize):18;
+      return `${size}px "${family}"`;};
+    fontState=await window.ReaderFonts.waitForLayout(textBodyEl,{valid:fontValid,signal:controller.signal,font});
+    window.removeEventListener('scroll',moved);
+    if(window._readerScrollCleanup===cleanup)window._readerScrollCleanup=null;
+    if(!fontValid())return;
+    movedWhileWaiting=movedWhileWaiting||window.scrollY!==initialTop;
+  }
+  if(!valid())return;
+  document.getElementById('view-reader')?.setAttribute('data-reader-font-state',fontState);
+  const restored=movedWhileWaiting?'USER_MOVED':window.ReaderPosition?.restore(isWebtoon?webtoonViewerEl:textBodyEl,savedPosition,versionId);
   const progressStatus=document.getElementById('readerProgressStatus');
   if(progressStatus){
     progressStatus.setAttribute('role','status');progressStatus.setAttribute('aria-live','polite');
-    progressStatus.textContent=restored==='RESTORED'?'저장한 위치에서 이어봅니다.':
+    progressStatus.textContent=restored==='USER_MOVED'?'이동한 읽기 위치를 유지합니다.':restored==='RESTORED'?'저장한 위치에서 이어봅니다.':
       restored==='VERSION_CHANGED'||positionChanged?'공개본이 수정되어 처음부터 표시합니다. 기존 독서 기록은 유지됩니다.':
       restored==='UNAVAILABLE'||positionUnavailable?'저장 위치를 확인하지 못해 처음부터 표시합니다. 위치를 다시 불러오려면 회차를 다시 열어주세요.':
       window.WebNovelsAuth?.getActor()?.reader?'스크롤하면 읽은 위치를 저장합니다.':'독자 로그인 후 읽은 위치를 저장할 수 있습니다.';
+    if(['TIMEOUT','ERROR','UNAVAILABLE','FALLBACK'].includes(fontState))progressStatus.textContent+=' 글꼴 연결을 확인하지 못해 현재 표시 기준으로 읽기를 계속합니다.';
   }
   if(restored==='VERSION_CHANGED'||positionChanged)showToast('공개본이 수정되어 처음부터 표시합니다. 이전 독서 기록은 유지됩니다.');
   else if(restored==='UNAVAILABLE'||positionUnavailable)showToast('저장 위치를 확인하지 못해 처음부터 표시합니다.');
@@ -1565,7 +1591,6 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   window._readerScrollCleanup?.();
   let scrollTimeout = null;
   let lastTop=window.scrollY;
-  const isWebtoon=work.contentType==='WEBTOON'||loadedPanels.length>0;
   const onReaderScroll = () => {
     if(!valid()||currentActiveView!=='view-reader')return;
     if(window.scrollY===lastTop)return;

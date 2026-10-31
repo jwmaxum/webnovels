@@ -87,7 +87,7 @@ test('Word paste and file import notices describe their distinct supported forma
  assert.equal(attr(byId('creatorCoverInput'),'accept'),'image/jpeg,image/png');
  assert.equal(Number(attr(byId('creatorCoverCanvas'),'width'))/Number(attr(byId('creatorCoverCanvas'),'height')),2/3);
  const policy=nodes.find(node=>hasClass(node,'creator-publish-policy')&&inside(node,byId('view-creator')));
- assert.match(text(policy),/새 회차.*작가.*직접/);assert.match(text(policy),/발행된 작품.*수정.*삭제.*관리자 승인/);
+ assert.match(text(policy),/공개 전 원고.*자유롭게 수정.*바로 발행.*예약 발행/);assert.match(text(policy),/이미 공개된 회차.*수정.*삭제.*관리자 승인/);
  for(const id of ['modalCreatorFiles','modalCreatorPublication']){const modal=byId(id);assert.equal(attr(modal,'hidden'),'');assert.equal(attr(modal,'role'),'dialog');assert(byId(attr(modal,'aria-labelledby')));}
 });
 
@@ -116,10 +116,11 @@ test('studio styles and changed role modules have local cache versions in compat
  assert(style);assert.equal(attr(style,'href'),'/css/author-studio.css?v=20261031r5');
  await readFile(new URL('../public'+attr(style,'href').split('?')[0],import.meta.url));
  const scripts=nodes.filter(node=>node.tagName==='script').map(node=>attr(node,'src')).filter(Boolean);
- assert(scripts.includes('/js/core/role-modules.js?v=20261031r7'));
+ assert(scripts.includes('/js/core/role-modules.js?v=20261031r8'));
  const files=[...loader.matchAll(/'([^']+)'/g)].map(match=>match[1]).filter(path=>path.startsWith('/js/creator/'));
  for(const name of ['creator-webtoon','creator-editor','creator-publications','creator-works']){
-  const path='/js/creator/'+name+'.js?v=20261031r5';assert(files.includes(path),name+' needs its new cache version');await readFile(new URL('../public'+path.split('?')[0],import.meta.url));
+  const version=['creator-editor','creator-publications'].includes(name)?'20261031r8':'20261031r5';
+  const path='/js/creator/'+name+'.js?v='+version;assert(files.includes(path),name+' needs its new cache version');await readFile(new URL('../public'+path.split('?')[0],import.meta.url));
  }
  assert(files.findIndex(path=>path.includes('/draft-engine.js'))<files.findIndex(path=>path.includes('/creator-editor.js')));
  assert(files.findIndex(path=>path.includes('/creator-editor.js'))<files.findIndex(path=>path.includes('/creator-publications.js')));

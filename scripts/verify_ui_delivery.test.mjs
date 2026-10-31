@@ -42,6 +42,14 @@ test('origin and asset parsing reject credentials, APIs, private endpoints, trav
  assert.deepEqual(refs.local.map(item=>item.path),['/js/main.js?v=ok']);assert.equal(refs.skipped.length,5);assert(!JSON.stringify(refs).includes('PRIVATE'));
 });
 
+test('disabled stylesheet declarations remain inventoried without being labelled initially blocking',()=>{
+ // Static HTML metadata only. Actual request absence is measured in browser
+ // resource entries, never inferred as a network result by this parser test.
+ const refs=htmlReferences('<link rel="stylesheet" disabled href="https://fonts.googleapis.com/css?family=Noto"><link rel="stylesheet" href="/css/enabled.css"><link rel="stylesheet" disabled="false" href="/css/disabled.css">');
+ assert.deepEqual(refs.external,[{host:'fonts.googleapis.com',role:'stylesheet',blocking:false}]);
+ assert.deepEqual(refs.local.map(item=>({path:item.path,blocking:item.blocking})),[{path:'/css/enabled.css',blocking:true},{path:'/css/disabled.css',blocking:false}]);
+});
+
 test('newline comparison preserves all bytes except CR immediately before LF, including binary font bytes',async()=>{
  assert.deepEqual(normalizeNewlines(Buffer.from([0,255,13,10,13,7])),Buffer.from([0,255,10,13,7]));
  const html='<!doctype html>\n<link rel="stylesheet" href="/css/main.css?v=1"><link rel="preload" as="font" href="/fonts/main.woff2">\n';

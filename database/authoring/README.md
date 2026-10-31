@@ -46,3 +46,8 @@ launch/013 호환 SQL → 실제 authoring 의존성 → 마지막 launch/012 �
 과거 본문 충돌을 보존하고 P0 표식을 위조하지 않는다. `NEW_SERIALS_ENABLED`는 기본 false이고
 hosted·Storage·Images·Cron 인수 전에는 공개를 활성화하지 않는다. `npm run test:stage33`은
 합성 DB/API 검증이고 실제 백업 리허설/운영 적용 기록과 구분한다.
+
+UI-R8: [028_publication_history_contract.sql](028_publication_history_contract.sql)은 검토된 021·022 뒤에 적용하는 함수 수정이다.
+회차별 공개 이력 필드를 기존 비공개 JSON에 추가하고 발행 목록의 변수/별칭 충돌만 수정한다.
+기존 발행 승인·권한·원고·예약·공개본은 보존한다. 과거 마이그레이션을 번호순으로 다시 실행하지 않는다.
+현재 백업·함수 정의·ACL·원본 행을 검증한 적용 및 인수 범위는 [UI-R8 기록](../../docs/launch/ui-r8-author-acceptance-2026-10-31.md)을 따른다.

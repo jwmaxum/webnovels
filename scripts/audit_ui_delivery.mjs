@@ -41,7 +41,7 @@ export function htmlReferences(source,page='/',origin=inventoryOrigin){
   if(node.tagName==='script'&&attr(node,'src')){raw=attr(node,'src');kind='script';blocking=attr(node,'async')===undefined&&attr(node,'defer')===undefined&&attr(node,'type')!=='module';}
   if(node.tagName==='link'){
    const rel=(attr(node,'rel')||'').toLowerCase().split(/\s+/);
-   if(rel.includes('stylesheet')){raw=attr(node,'href');kind='stylesheet';blocking=!attr(node,'media')||attr(node,'media')==='all';}
+   if(rel.includes('stylesheet')){raw=attr(node,'href');kind='stylesheet';blocking=attr(node,'disabled')===undefined&&(!attr(node,'media')||attr(node,'media')==='all');}
    else if(rel.includes('preload')&&['font','script','style'].includes(attr(node,'as'))){raw=attr(node,'href');kind='preload';}
   }
   if(!raw)continue;const item=reference(raw,new URL(page,origin));
