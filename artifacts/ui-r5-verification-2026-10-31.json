@@ -1,0 +1,203 @@
+{
+  "stage": "UI-R5",
+  "date": "2026-10-31",
+  "result": "PASS",
+  "runtime": "v24.19.0",
+  "build": {
+    "command": "npm run build",
+    "startedAt": "2026-10-31T00:12:16.774Z",
+    "completedAt": "2026-10-31T00:40:49.841Z",
+    "exitCode": 0,
+    "error": null,
+    "log": "scratch/ui-r5/build.log"
+  },
+  "release": {
+    "commands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5"
+    ],
+    "count": 43,
+    "result": "PASS"
+  },
+  "newRegressionTests": {
+    "total": 30,
+    "passed": 30,
+    "failed": 0,
+    "works": 8,
+    "editorPublication": 9,
+    "webtoon": 7,
+    "layout": 6
+  },
+  "types": {
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "startedAt": "2026-10-31T00:33:42.282Z",
+    "completedAt": "2026-10-31T00:33:58.095Z",
+    "exitCode": 0,
+    "error": null
+  },
+  "staticChecks": {
+    "syntax": [
+      {
+        "file": "public/js/core/role-modules.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/creator/creator-editor.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/creator/creator-publications.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/creator/creator-webtoon.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/creator/creator-works.js",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r5_editor.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r5_layout.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r5_webtoon.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r5_works.test.mjs",
+        "exitCode": 0
+      }
+    ],
+    "files": [
+      {
+        "file": "public/index.html",
+        "sha256": "be6938c7f6aa9567fdb18518dd4d01f5296a10eaeefd30c383fd9004a6195285"
+      },
+      {
+        "file": "public/css/author-studio.css",
+        "sha256": "e0f26db4e53cc9ad1feef42143e1dcfa4fb693a38c7439e7a58d9d29914bce3f"
+      },
+      {
+        "file": "public/js/core/role-modules.js",
+        "sha256": "584c10692dda1fdd483168e52b623db547dc90c5ffd63a58525cd996cedee3c9"
+      },
+      {
+        "file": "public/js/creator/creator-editor.js",
+        "sha256": "041bfdf460353ca92cf961ca54039c00f05ff5e10c3d5b4f42ec1ca0c313b8bd"
+      },
+      {
+        "file": "public/js/creator/creator-publications.js",
+        "sha256": "8aae24ea95f4aaf176966707c4e4fb55fa64f6ed8fcc9691388a448c6a1b9b89"
+      },
+      {
+        "file": "public/js/creator/creator-webtoon.js",
+        "sha256": "e6fe8c4ddf233c4f3404380ccc969e94c992c82c4cc5768146e1b29a9b880713"
+      },
+      {
+        "file": "public/js/creator/creator-works.js",
+        "sha256": "c73b6ba37ee3dd5cb4b24e9837181863393a7a7557b1cdf53d20728ddd95b343"
+      },
+      {
+        "file": "scripts/verify_ui_r5_editor.test.mjs",
+        "sha256": "17adcb5eb6822e196406a9518a5ed93335f9be437b7fa7884cef34c4c40265c2"
+      },
+      {
+        "file": "scripts/verify_ui_r5_layout.test.mjs",
+        "sha256": "02ed2991b7b58e9da0d83861645b480e3213cd2311c1ec5fd38f3e63c91f9639"
+      },
+      {
+        "file": "scripts/verify_ui_r5_webtoon.test.mjs",
+        "sha256": "504b8a45ea68a4ce5c84c0f060b5e65c0399519a3eb707cc9247b2bdc6f5817a"
+      },
+      {
+        "file": "scripts/verify_ui_r5_works.test.mjs",
+        "sha256": "39929b9ac576e69bf6d26dfbbd20b9e2baea2f3c96eeff8220fa45e86ec4de31"
+      }
+    ],
+    "secretScan": {
+      "files": 11,
+      "matches": 0
+    },
+    "protectedScopesUnchanged": true,
+    "diffCheckExitCode": 0,
+    "envIgnored": true,
+    "userFilePreserved": true,
+    "stylesheet": {
+      "bytes": 13909,
+      "gzipBytes": 2982
+    },
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "result": "PASS"
+  },
+  "securityReview": {
+    "result": "PASS",
+    "scope": "Author UI input rendering, actor/work/draft identity, private upload bytes, resource cleanup and stale async results",
+    "fixed": [
+      "Late preview failure cannot overwrite a newer preview under the same account",
+      "Only focus mode pins the toolbar so the normal header cannot hide it"
+    ],
+    "backendAndDatabaseUnchanged": true,
+    "flagsUnchanged": true
+  },
+  "notRun": [
+    "localhost/browser acceptance (requires explicit user request)",
+    "actual DB mutation/production upload or scheduled publication acceptance",
+    "dedicated lint (not configured)",
+    "coverage threshold (not measured)"
+  ],
+  "userChangesPreserved": [
+    "gemini.md",
+    ".agents/skills/search-first/",
+    ".agents/skills/security-review/",
+    ".agents/skills/verification-loop/"
+  ],
+  "nextStage": "UI-R6: administrator, account, support and policy surfaces"
+}

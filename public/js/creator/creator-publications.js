@@ -6,9 +6,11 @@
   const canPublish=()=>window.WEBNOVELS_CONFIG?.authorPublishEnabled===true&&actor()?.author?.status==='APPROVED'&&actor()?.authorWorkspaceReady!==true;
   const previewNotice='저장본 미리보기는 사용할 수 있습니다. 공개 발행은 서비스 연결 준비 중이며 현재 원고는 비공개로 보존됩니다.';
   function refreshAvailability(){
-    if($('btnOpenPublication'))$('btnOpenPublication').textContent=canPublish()?'미리보기 후 발행':'원고 미리보기';
-    if($('btnSchedulePublication')){$('btnSchedulePublication').disabled=!canPublish();$('btnSchedulePublication').title=canPublish()?'저장한 원고를 확인하고 발행 시각을 선택합니다.':previewNotice;}
-    if($('creatorPublicationNotice'))$('creatorPublicationNotice').textContent=canPublish()?'':previewNotice;
+    const state=window.CreatorDraftEditor?.getUiState?.(),unavailable=!!state&&(!state.hasDraft||state.readOnly||state.conflict||state.composing||state.pendingImages);
+    if($('btnOpenPublication')){$('btnOpenPublication').textContent=canPublish()?(state?.editingPublished?'수정 검토 요청':'지금 발행'):'원고 미리보기';$('btnOpenPublication').disabled=unavailable||busy;}
+    if($('btnStudioPreview'))$('btnStudioPreview').disabled=unavailable||busy;
+    if($('btnSchedulePublication')){$('btnSchedulePublication').disabled=!canPublish()||unavailable||!!state?.editingPublished||busy;$('btnSchedulePublication').title=state?.editingPublished?'공개본 수정은 관리자 승인 후 반영되며 예약 발행하지 않습니다.':canPublish()?'저장한 원고를 확인하고 발행 시각을 선택합니다.':previewNotice;}
+    if($('creatorPublicationNotice'))$('creatorPublicationNotice').textContent=!canPublish()?previewNotice:state?.editingPublished?'공개본 수정은 검토 요청으로 접수되며 승인 전까지 기존 공개본을 유지합니다.':state?.pendingImages?'이미지 처리를 마치거나 대기 파일을 취소한 뒤 미리보기·발행할 수 있습니다.':state?.readOnly?'보관 또는 제한된 원고입니다. 새 원고를 선택하거나 작품 상태를 확인해주세요.':'';
   }
   const pendingKey = (user,id) => 'creator-publication:' + user + ':' + id;
   const errorText = e => ({
@@ -125,11 +127,11 @@
     if(!rows.length)list.textContent='아직 공개하거나 예약한 회차가 없습니다.';
     return rows;
   }
-  async function open(workId,{mode='NOW'}={}) {
+  async function open(workId,{mode='NOW',preview=false}={}) {
     if(busy)throw Error('PUBLICATION_IN_PROGRESS');
     const turn=++epoch,user=actor()?.userId;
     if(!user||actor()?.author?.status!=='APPROVED')throw Error('AUTHOR_REQUIRED');
-    previewOnly=!canPublish();refreshAvailability();
+    previewOnly=preview||!canPublish();refreshAvailability();
     work=null;context=null;lastResult=null;message('작품과 원고를 확인하는 중입니다.');
     $('publicationResult').hidden=true;$('publicationDraftPanel').hidden=true;$('publicationRetryPanel').hidden=true;
     $('publicationControls').hidden=previewOnly;$('publicationListSection').hidden=previewOnly;
@@ -140,7 +142,7 @@
     if(turn!==epoch||actor()?.userId!==user)throw Error('SESSION_CHANGED');
     work={...result.work,userId:user,episodes:result.episodes};
     $('publicationHeading').textContent=work.title+(previewOnly?' · 저장본 미리보기':' · 미리보기·게시');
-    let rows=[],previewMessage=previewNotice;
+    let rows=[],previewMessage=preview?'저장한 원고의 미리보기입니다. 발행하려면 편집 화면에서 지금 발행 또는 예약 발행을 선택해주세요.':previewNotice;
     if(!previewOnly)try{rows=await loadList(turn,user);}catch{
       assertOpen(turn,user);previewOnly=true;
       $('publicationHeading').textContent=work.title+' · 저장본 미리보기';
@@ -240,7 +242,7 @@
       if(publication.status==='PUBLISHED')try { await window.refreshReaderCatalog?.(true); }
         catch { notices.push('독자 목록 갱신에 실패했습니다. 독자 화면을 다시 열어주세요.'); }
       assertOpen(turn,user);message('게시 결과를 확인했습니다.'+(notices.length?' '+notices.join(' '):''));
-    } finally {if(turn===epoch){busy=false;$('publicationCommit').disabled=false;$('publicationRetry').disabled=false;}}
+    } finally {if(turn===epoch){busy=false;$('publicationCommit').disabled=false;$('publicationRetry').disabled=false;refreshAvailability();}}
   }
   function reset(){window.ReaderWebtoon?.destroy($('publicationPreviewBody'));epoch++;work=null;context=null;lastResult=null;busy=false;
     for(const id of ['publicationList','publicationPreviewBody','publicationPreviewComment','publicationSummary','publicationMessage','publicationChecklist','publicationRetrySummary'])$(id)?.replaceChildren();
@@ -249,6 +251,7 @@
   }
   function init(){
     refreshAvailability();
+    if($('btnStudioPreview'))$('btnStudioPreview').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(!c){window.showToast?.('작품을 선택하고 원고를 작성해주세요.');return;}const pending=open(c.workId,{preview:true}),turn=epoch;return pending.catch(e=>{if(turn===epoch&&actor()?.userId===user&&e.message!=='SESSION_CHANGED'){message(errorText(e));window.showToast?.(errorText(e));}});};
     if($('btnSchedulePublication'))$('btnSchedulePublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(!c){window.showToast?.('작품을 선택하고 원고를 작성해주세요.');return;}return open(c.workId,{mode:'SCHEDULED'}).catch(e=>{if(actor()?.userId===user){message(errorText(e));window.showToast?.(errorText(e));}});};
     $('btnOpenPublication').onclick=()=>{const c=window.CreatorDraftEditor.getFileContext(),user=actor()?.userId;if(!c){window.showToast?.('작품을 선택하고 원고를 작성해주세요.');return;}return open(c.workId).catch(e=>{if(actor()?.userId===user&&e.message!=='SESSION_CHANGED'){const text=(e.message==='AUTHOR_PUBLISH_NOT_ACTIVATED'?'최초 발행은 관리자 사전 검수 없이 진행합니다. 현재 공개 서비스 연결이 준비되지 않아 발행할 수 없습니다. 원고 저장은 계속 이용할 수 있습니다.':errorText(e));message(text);window.showToast?.(text);const notice=$('creatorDraftError');if(notice)notice.textContent=text;}});};
     $('publicationDesktop').onclick=()=>$('publicationPreview').classList.remove('is-mobile');

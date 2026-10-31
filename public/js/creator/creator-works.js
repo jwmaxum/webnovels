@@ -29,11 +29,18 @@
       : `<div class="cw-cover cw-default-cover" role="img" aria-label="${e(work.title)} 기본 표지">${e(work.title)}</div>`;
   }
   function status(work) { return work.trashed_at?'휴지통':work.visibility==='PUBLIC'?'공개':'비공개 / 초안'; }
+  const reviewed = work => work.hasPublicationHistory===true || work.visibility==='PUBLIC';
+  function workMeta(work) {
+    const count=work.episode_count,episodes=count!==null&&count!==undefined&&count!==''&&Number.isSafeInteger(Number(count))&&Number(count)>=0?`등록 회차 ${Number(count)}개`:'등록 회차 확인 필요';
+    return `${work.content_type==='WEBTOON'?'웹툰':'웹소설'} · ${status(work)} · ${{ONGOING:'연재 중',HIATUS:'휴재',COMPLETED:'완결'}[work.serial_state]||'연재 상태 확인 필요'} · ${episodes}`;
+  }
   function card(work) {
-    return `<article class="cw-card">${cover(work)}<div><h4>${e(work.title)}</h4>
-      <p>${work.content_type==='WEBTOON'?'웹툰':'웹소설'} · ${status(work)} · ${{ONGOING:'연재 중',HIATUS:'휴재',COMPLETED:'완결'}[work.serial_state]||'확인 필요'} · ${e(work.episode_count)}화</p>
+    const disabled=!!work.trashed_at||work.moderation_state!=='CLEAR';
+    return `<article class="cw-card studio-work-card">${cover(work)}<div class="studio-work-heading"><h4>${e(work.title)}</h4>
+      <p>${e(workMeta(work))}</p>
       ${work.moderation_state==='RESTRICTED'?'<p class="cw-notice">운영 제한</p>':''}
-      <button type="button" class="btn btn-outline" data-work-id="${e(work.id)}">작품 관리</button></div></article>`;
+      <div class="studio-work-actions"><button type="button" class="btn btn-primary" data-write-work-id="${e(work.id)}" ${disabled?'disabled':''}>원고 작성</button>
+      <button type="button" class="btn btn-outline" data-work-id="${e(work.id)}">작품 설정</button></div></div></article>`;
   }
   function listHTML() {
     return `<div class="cw-toolbar"><label>목록 <select id="cwFilter" class="form-control">
@@ -42,17 +49,19 @@
       <div id="cwList">${rows.length?rows.map(card).join(''):`<p role="status">${filter==='trash'?'휴지통이 비어 있습니다.':filter==='all'?'아직 등록한 작품이 없습니다. 제목만으로 첫 작품을 시작해보세요.':'이 조건에 맞는 작품이 없습니다.'}</p>${filter==='all'?'<button type="button" class="btn btn-primary" id="cwFirst">첫 작품 등록하기</button>':''}`}</div>
       ${cursor?'<button type="button" class="btn btn-outline" id="cwMore">더 불러오기</button>':''}<p id="cwMessage" role="status"></p>`;
   }
-  function bindList() {
+  function bindList(seq=epoch,user=actor()?.userId) {
     root().querySelector('#cwFilter').onchange=event=>{filter=event.target.value;loadList();};
     root().querySelector('#cwCreate').onclick=()=>navigate('/creator/works/new');
     const first=root().querySelector('#cwFirst');if(first)first.onclick=()=>navigate('/creator/works/new');
-    root().querySelectorAll('[data-work-id]').forEach(button=>button.onclick=()=>navigate('/creator/works/'+button.dataset.workId));
+    root().querySelectorAll('[data-work-id]').forEach(button=>button.onclick=()=>{if(validRequest(seq,user))navigate('/creator/works/'+button.dataset.workId+'/settings');});
+    root().querySelectorAll('[data-write-work-id]').forEach(button=>button.onclick=()=>{if(!button.disabled&&validRequest(seq,user))return window.CreatorDraftEditor.openWork(button.dataset.writeWorkId);});
     const more=root().querySelector('#cwMore');if(more)more.onclick=()=>loadList(true);
   }
   async function loadList(append=false) {
     window.CreatorDistribution?.reset();
     const seq=++epoch,user=actor()?.userId;current=null;
     if(!root())return;
+    root().setAttribute?.('aria-busy','true');
     const countLabel=document.getElementById('creatorWorksCount');if(countLabel&&!append)countLabel.textContent='불러오는 중';
     if(!append){rows=[];cursor=null;root().innerHTML='<p role="status">내 작품을 불러오는 중입니다…</p>';}
     else {const button=root().querySelector('#cwMore');if(button)button.disabled=true;}
@@ -60,7 +69,7 @@
       const result=await api('?filter='+filter+'&after='+(append?cursor:'0'));
       if(!validRequest(seq,user))return;
       rows=append?[...rows,...result.works]:result.works;cursor=result.nextCursor;
-      root().innerHTML=listHTML();bindList();
+      root().innerHTML=listHTML();bindList(seq,user);
       const count=document.getElementById('creatorWorksCount');if(count)count.textContent=`불러온 작품: ${rows.length}개${cursor?' 이상':''}`;
     }catch(error){
       if(!validRequest(seq,user))return;
@@ -68,7 +77,7 @@
       if(!append)root().innerHTML=`<p role="alert">${e(message(error))}</p><button type="button" class="btn btn-outline" id="cwRetry">다시 불러오기</button>`;
       else {document.getElementById('cwMessage').textContent=message(error);root().querySelector('#cwMore').disabled=false;}
       const retry=root().querySelector('#cwRetry');if(retry)retry.onclick=()=>loadList();
-    }
+    }finally{if(validRequest(seq,user))root()?.setAttribute?.('aria-busy','false');}
   }
   function pending() { try{return JSON.parse(sessionStorage.getItem(pendingKey())||'null');}catch{return null;} }
   function createForm() {
@@ -108,7 +117,8 @@
   function detailHTML(work,episodes,tab,distributionEnabled=false) {
     const disabled=work.trashed_at||work.moderation_state!=='CLEAR';
     const workspace=actor()?.authorWorkspaceReady===true;
-    const nav=[['episodes','회차·원고'],['settings','작품 설정'],...(!workspace?[['reactions','독자 반응']]:[])].map(([v,t])=>`<button type="button" class="btn ${v===tab?'btn-primary':'btn-outline'}" data-detail-tab="${v}">${t}</button>`).join('');
+    const review=reviewed(work);
+    const secondary=[['episodes','회차·예약 목록'],...(!workspace?[['reactions','독자 반응']]:[])].map(([v,t])=>`<button type="button" class="btn btn-outline" data-detail-tab="${v}" ${v===tab?'aria-current="page"':''}>${t}</button>`).join('');
     let body;
     if(tab==='settings')body=`<form id="cwSettings"><fieldset ${disabled?'disabled':''}>
       <label for="cwEditTitle">작품명</label><input id="cwEditTitle" class="form-control" name="title" required maxlength="200" value="${e(work.title)}">
@@ -120,21 +130,23 @@
       <label for="cwRating">이용등급</label><select id="cwRating" class="form-control" name="rating">${options([['ALL','전체 이용가'],['AGE_15','15세 이상'],['AGE_19','19세 이상']],work.rating_confirmed?work.rating:'',!work.rating_confirmed)}</select>
       <label for="cwAI">AI 사용 표기</label><select id="cwAI" class="form-control" name="ai_usage_type">${options([['NONE','사용 안 함'],['ASSISTED','보조 사용'],['GENERATED','AI 생성 포함']],work.ai_confirmed?work.ai_usage_type:'',!work.ai_confirmed)}</select>
       ${window.CreatorOperations?.active()?'':`<label for="cwSerial">연재 상태 (공개 여부와 별개)</label><select id="cwSerial" class="form-control" name="serial_state">${options([['ONGOING','연재 중'],['HIATUS','휴재'],['COMPLETED','완결']],work.serial_state)}</select>`}
-      <p>${!workspace&&window.WEBNOVELS_CONFIG?.authorFilesEnabled===true?'표지는 파일 관리에서 올릴 수 있습니다.':'표지 업로드는 준비 중입니다.'} 표지가 없으면 제목으로 기본 표지를 표시합니다.</p>
-      <button type="submit" class="btn btn-primary">설정 저장</button></fieldset></form>
+      <p>${window.WEBNOVELS_CONFIG?.authorFilesEnabled===true?'위의 썸네일 변경에서 표지를 올릴 수 있습니다.':'표지 업로드는 준비 중입니다.'} 표지가 없으면 제목으로 기본 표지를 표시합니다.${review?' 공개된 표지의 변경은 관리자 검토 후 반영됩니다.':''}</p>
+      <button type="submit" class="btn btn-primary">${review?'수정 검토 요청':'설정 저장'}</button></fieldset></form>
       ${distributionEnabled?'<div id="cwDistributionPanel"></div>':''}
       ${window.CreatorOperations?.active()?'<div id="cwSerialOperations"></div>':''}
-      ${work.visibility==='PUBLIC'&&!disabled?'<button type="button" class="btn btn-outline" id="cwPrivate">비공개로 전환</button>':''}
-      <p>설정 저장은 공개 여부를 바꾸지 않습니다. 저장된 초안은 원고 작성·복구에서 확인할 수 있습니다.</p>`;
+      ${work.visibility==='PUBLIC'&&!disabled?'<button type="button" class="btn btn-outline" id="cwPrivate">공개 중단 검토 요청</button>':''}
+      <p>${review?'작품 정보 수정은 검토 승인 후 공개본에 반영됩니다. 비공개 원고는 계속 작성할 수 있습니다.':'설정 저장은 공개 여부를 바꾸지 않습니다. 저장된 초안은 원고 작성·불러오기에서 확인할 수 있습니다.'}</p>`;
     else if(tab==='reactions')body=window.CreatorOperations?.active()?'<div id="cwReactions"></div>':'<p>댓글·독자 반응 관리 기능은 준비 중입니다.</p>';
-    else body=`<h4>회차 ${episodes.length}개</h4>${window.CreatorOperations?.active()?'<div id="cwEpisodeOperations"></div>':episodes.length?`<ol class="cw-episodes">${episodes.map(ep=>`<li>${e(ep.episode_number)}화 · ${e(ep.title)} <span>${e(ep.status)}</span>${ep.scheduled_at?' · 예약 '+e(ep.scheduled_at):''}</li>`).join('')}</ol>`:'<p>아직 작성한 회차가 없습니다.</p>'}<button type="button" id="cwDrafts" class="btn btn-primary">원고 작성·복구</button>`;
-    return `<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><header class="cw-card">${cover(work)}<div><h3>${e(work.title)}</h3><p>${status(work)}</p>
+    else body=`<h4>회차·예약 목록 · ${episodes.length}개</h4>${window.CreatorOperations?.active()?'<div id="cwEpisodeOperations"></div>':episodes.length?`<ol class="cw-episodes">${episodes.map(ep=>`<li>${e(ep.episode_number)}화 · ${e(ep.title)} <span>${e({DRAFT:'비공개',PUBLISHED:'공개',SCHEDULED:'예약'}[ep.status]||ep.status)}</span>${ep.scheduled_at?' · 예약 '+e(ep.scheduled_at):''}</li>`).join('')}</ol>`:'<p>아직 작성한 회차가 없습니다. 원고 작성에서 글을 쓰거나 저장한 원고를 불러올 수 있습니다.</p>'}`;
+    return `<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><header class="cw-card studio-work-summary">${cover(work)}<div class="studio-work-heading"><h3>${e(work.title)}</h3><p>${e(workMeta(work))}</p>
       ${work.moderation_state==='RESTRICTED'?`<p role="alert">운영 제한: ${e(work.moderation_reason)}</p>`:''}
-      <p>최초 공개 전 확인: ${work.publication_missing?.length?e(work.publication_missing.join(', ')):'기본 정보 입력 완료 (게시 검증은 별도)'}</p></div></header>
-      <section aria-label="첫 연재 준비"><h4>첫 연재 준비</h4>${window.CreatorReadiness?.render(window.CreatorReadiness.workItems(work),true)||''}</section>
-      <nav class="cw-toolbar" aria-label="작품 관리">${nav}<button type="button" class="btn btn-outline" id="cwCover">썸네일 변경</button>${workspace?'':'<button type="button" class="btn btn-outline" id="cwFiles">원고 가져오기</button><button type="button" class="btn btn-outline" id="cwPublications">발행·예약 관리</button>'}</nav>${body}<p id="cwMessage" role="status"></p>
+      <p>${review?'신규 회차는 작가가 발행합니다. 공개본의 수정·삭제는 검토 승인 후 반영됩니다.':'최초 공개 전 확인: '+(work.publication_missing?.length?e(work.publication_missing.join(', ')):'기본 정보 입력 완료 (게시 검증은 별도)')}</p></div></header>
+      <nav class="studio-work-actions" aria-label="작품 관리"><button type="button" id="cwDrafts" class="btn btn-primary" ${disabled?'disabled':''}>원고 작성</button><button type="button" class="btn btn-outline" data-detail-tab="settings" ${tab==='settings'?'aria-current="page"':''}>작품 설정</button><button type="button" class="btn btn-outline" id="cwCover" ${disabled?'disabled':''}>썸네일 변경</button></nav>
+      <details class="studio-work-more"><summary>회차·예약 및 추가 관리</summary><div class="cw-toolbar">${secondary}${workspace?'':'<button type="button" class="btn btn-outline" id="cwFiles">원고 가져오기</button><button type="button" class="btn btn-outline" id="cwPublications">발행·예약 관리</button>'}</div></details>
+      <details class="studio-work-checklist"><summary>발행 준비 확인</summary><section aria-label="첫 연재 준비"><h4>첫 연재 준비</h4>${window.CreatorReadiness?.render(window.CreatorReadiness.workItems(work),true)||''}</section></details>
+      ${body}<p id="cwMessage" role="status"></p>
       <details class="cw-danger"><summary>삭제·비공개 관리</summary><p>발행 이력이 있는 작품의 변경은 관리자 승인 후 반영됩니다. 회차·원고·파일은 보존되며, 복구 시 예약은 자동 재개되지 않습니다.</p>
-      <button type="button" class="btn btn-outline" id="cwTrash">${work.trashed_at?'비공개로 복구':'휴지통으로 이동'}</button></details>
+      <button type="button" class="btn btn-outline" id="cwTrash">${work.trashed_at?(review?'복구 검토 요청':'비공개로 복구'):(review?'삭제 검토 요청':'휴지통으로 이동')}</button></details>
       <button type="button" class="btn btn-ghost" id="cwReload">최신 내용 불러오기 (입력 초기화)</button>`;
   }
   async function loadDetail(id,tab='episodes') {
@@ -142,6 +154,7 @@
     if(!/^\d+$/.test(id))return loadList();
     const seq=++epoch,user=actor()?.userId;current=null;
     root().innerHTML='<p role="status">작품을 불러오는 중입니다…</p>';
+    root().setAttribute?.('aria-busy','true');
     try {
       const result=await api('/'+id);if(!validRequest(seq,user))return;
       current=result.work;root().innerHTML=detailHTML(current,result.episodes,tab,result.distributionEnabled===true);
@@ -152,16 +165,17 @@
         for(const change of result.changeRequests){const row=document.createElement('p');row.textContent=(names[change.kind]||'변경')+' · '+({APPROVE:'승인·반영 완료',REJECT:'반려'}[change.decision]||'검토 대기')+(change.reason?' · '+change.reason:'');section.append(row);}root().append(section);
       }
       if(tab==='settings'&&result.distributionEnabled===true)window.CreatorDistribution?.mount(root().querySelector('#cwDistributionPanel'),current);
-      const drafts=root().querySelector('#cwDrafts');if(drafts)drafts.onclick=()=>window.CreatorDraftEditor.openWork(id);
+      const drafts=root().querySelector('#cwDrafts');if(drafts)drafts.onclick=()=>{if(!drafts.disabled&&validRequest(seq,user))return window.CreatorDraftEditor.openWork(id);};
       if(current.content_type==='WEBTOON'&&window.WEBNOVELS_CONFIG?.webtoonServiceEnabled!==true){
         const note=document.createElement('p');note.className='cw-help';
         note.textContent='웹툰 작품이 등록되었습니다. 지금은 작품 정보와 비공개 글 원고를 준비할 수 있습니다. 이미지 업로드·발행은 서비스 준비 완료 후 사용할 수 있습니다.';
         root().append(note);
       }
-      const files=root().querySelector('#cwFiles');if(files)files.onclick=()=>window.CreatorFiles.open(id);
-      const coverButton=root().querySelector('#cwCover');if(coverButton)coverButton.onclick=()=>window.CreatorFiles.open(id,{section:'cover'});
-      const publications=root().querySelector('#cwPublications');if(publications)publications.onclick=()=>window.CreatorPublications.open(id);
+      const files=root().querySelector('#cwFiles');if(files)files.onclick=()=>{if(validRequest(seq,user))return window.CreatorFiles.open(id);};
+      const coverButton=root().querySelector('#cwCover');if(coverButton)coverButton.onclick=()=>{if(!coverButton.disabled&&validRequest(seq,user))return window.CreatorFiles.open(id,{section:'cover'});};
+      const publications=root().querySelector('#cwPublications');if(publications)publications.onclick=()=>{if(validRequest(seq,user))return window.CreatorPublications.open(id);};
       root().querySelectorAll('[data-ready-action]').forEach(button=>button.onclick=()=>{
+        if(!validRequest(seq,user))return;
         const action=button.dataset.readyAction;
         if(action==='settings'){if(tab==='settings')root().querySelector('#cwDescription')?.focus();else navigate('/creator/works/'+id+'/settings');}
         if(action==='draft')window.CreatorDraftEditor.openWork(id);
@@ -170,12 +184,12 @@
       });
       if(tab==='settings')window.CreatorReadiness?.bindChoices(root());
       root().querySelector('#cwBack').onclick=()=>navigate('/creator/works');
-      root().querySelectorAll('[data-detail-tab]').forEach(button=>button.onclick=()=>navigate('/creator/works/'+id+'/'+button.dataset.detailTab));
-      root().querySelector('#cwReload').onclick=()=>loadDetail(id,tab);
-      root().querySelector('#cwTrash').onclick=()=>mutate(current.trashed_at?'restore':'trash',{},tab);
-      const hide=root().querySelector('#cwPrivate');if(hide)hide.onclick=()=>mutate('update',{visibility:'PRIVATE'},tab);
+      root().querySelectorAll('[data-detail-tab]').forEach(button=>button.onclick=()=>{if(validRequest(seq,user))navigate('/creator/works/'+id+'/'+button.dataset.detailTab);});
+      root().querySelector('#cwReload').onclick=()=>{if(validRequest(seq,user))return loadDetail(id,tab);};
+      root().querySelector('#cwTrash').onclick=()=>{if(validRequest(seq,user))return mutate(current.trashed_at?'restore':'trash',{},tab);};
+      const hide=root().querySelector('#cwPrivate');if(hide)hide.onclick=()=>{if(validRequest(seq,user))return mutate('update',{visibility:'PRIVATE'},tab);};
       const form=root().querySelector('#cwSettings');if(form)form.onsubmit=event=>{
-        event.preventDefault();const data=Object.fromEntries(new FormData(form));
+        event.preventDefault();if(!validRequest(seq,user))return;const data=Object.fromEntries(new FormData(form));
         try{for(const key of ['genre','tags'])data[key]=window.CreatorReadiness?window.CreatorReadiness.values(key,data[key],current[key]||[]):[...new Set(data[key].split(',').map(v=>v.trim()).filter(Boolean))];}
         catch(error){document.getElementById('cwMessage').textContent=message(error);return;}
         for(const key of ['rating','ai_usage_type'])if(!data[key])delete data[key];
@@ -185,13 +199,14 @@
       if(tab==='reactions')window.CreatorOperations?.reactions(root().querySelector('#cwReactions'),id);
       if(tab==='settings')window.CreatorOperations?.serial(current,root().querySelector('#cwSerialOperations'));
     }catch(error){if(validRequest(seq,user))root().innerHTML=`<p role="alert">${e(message(error))}</p><button type="button" class="btn btn-outline" onclick="CreatorWorks.loadFromRoute()">다시 불러오기</button>`;}
+    finally{if(validRequest(seq,user))root()?.setAttribute?.('aria-busy','false');}
   }
   async function mutate(action,data,tab) {
     if(busy||!current)return;
     if(window.CreatorDistribution?.hasUnsavedChanges?.()){
       document.getElementById('cwMessage').textContent='연재 방식에 저장하지 않은 변경이 있습니다. 연재 방식을 저장하거나 최신 설정을 불러온 뒤 작품 정보·상태를 변경해주세요.';return;
     }
-    if(action==='trash'&&!window.confirm('공개가 중단되고 대기 예약이 취소됩니다. 원고는 보존됩니다. 휴지통으로 옮길까요?'))return;
+    if(action==='trash'&&!window.confirm(reviewed(current)?'삭제 검토를 요청할까요? 승인 전까지 기존 공개본은 유지되며 회차·원고·파일은 보존됩니다.':'공개가 중단되고 대기 예약이 취소됩니다. 원고는 보존됩니다. 휴지통으로 옮길까요?'))return;
     if(data.visibility==='PRIVATE'&&!window.confirm('공개 중단을 요청할까요? 발행 이력이 있는 작품은 관리자 승인 후 반영됩니다.'))return;
     busy=true;const id=current.id,version=current.version,seq=epoch,user=actor()?.userId;
     root().querySelectorAll('button[type="submit"],#cwTrash,#cwPrivate').forEach(b=>b.disabled=true);
@@ -210,6 +225,6 @@
     if(parts[1]==='works'&&/^\d+$/.test(parts[2]||''))return loadDetail(parts[2],['settings','reactions'].includes(parts[3])?parts[3]:'episodes');
     return loadList();
   }
-  function reset(){window.CreatorDistribution?.reset();++epoch;current=null;rows=[];cursor=null;if(root())root().innerHTML='<p>작가 로그인이 필요합니다.</p>';}
+  function reset(){window.CreatorDistribution?.reset();++epoch;current=null;rows=[];cursor=null;if(root()){root().innerHTML='<p>작가 로그인이 필요합니다.</p>';root().setAttribute?.('aria-busy','false');}}
   window.CreatorWorks={loadFromRoute,create,reset,navigate,renderCard:card,renderDetail:detailHTML};
 })();

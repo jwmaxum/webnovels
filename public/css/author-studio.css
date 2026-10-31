@@ -1,0 +1,136 @@
+/* UI-R5: author workspace only. Reader content, permission gates and source documents keep their contracts. */
+#view-creator > .container { max-width: 1232px; padding-block: 28px 64px; }
+#view-creator :is(.card, .glass-panel) { background: var(--bg-elevated); box-shadow: none; border-color: var(--border-default); }
+#view-creator #creatorAuthorBar { border: 1px solid var(--border-default); border-radius: 16px; }
+#creatorAuthorAvatar { width: 48px; height: 48px; flex-shrink: 0; display: grid; place-items: center; border-radius: 12px; background: var(--selected-bg); color: var(--selected-fg); font-size: 24px; }
+#view-creator #creatorAuthorPenName { color: var(--text-strong); font-weight: 750; }
+#view-creator #creatorAuthorDetails { line-height: 1.6; }
+#view-creator :is(.btn, summary) { min-height: 44px; }
+#view-creator :is(.btn, summary, h3, h4, p) { overflow-wrap: anywhere; }
+#view-creator :is(input, select, textarea) { font-size: 16px; }
+#view-creator :is(button, summary, input, select, textarea, [contenteditable="true"]):focus-visible,
+:is(#modalCreatorFiles, #modalCreatorPublication) :is(button, input, select, textarea):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+#view-creator #creatorTabsBar { gap: 8px; border-bottom: 1px solid var(--border-default); padding-bottom: 16px; }
+#view-creator #creatorTabsBar > button { border-radius: 8px; }
+#view-creator #creatorTabsBar > button.active { background: var(--selected-bg); color: var(--selected-fg); border-color: var(--selected-fg); }
+#view-creator .studio-more-nav { margin-left: auto; }
+#view-creator .studio-more-nav > summary { padding: 10px 8px; }
+#view-creator .studio-more-nav[open] > div { background: var(--bg-elevated); }
+#view-creator #authorWorkspaceNotice { background: var(--bg-subtle); color: var(--text-secondary); border-left: 3px solid var(--border-strong); }
+
+/* Works are separate from the manuscript. Original cover ratios remain 2:3. */
+#view-creator #cwList { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+#view-creator :is(.studio-work-card, .studio-work-summary) { padding: 20px; border: 1px solid var(--border-default); border-radius: 12px; gap: 20px; background: var(--bg-elevated); }
+#view-creator .cw-cover { width: 96px; height: 144px; border-radius: 8px; }
+#view-creator .cw-default-cover { background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-default); font-size: 14px; font-weight: 600; }
+#view-creator .studio-work-heading { min-width: 0; }
+#view-creator .studio-work-heading :is(h3, h4) { color: var(--text-strong); line-height: 1.45; margin-bottom: 8px; font-weight: 750; }
+#view-creator .studio-work-heading p { margin: 0 0 12px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+#view-creator .studio-work-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+#view-creator .studio-work-card .studio-work-actions { margin-bottom: 0; }
+#view-creator :is(.studio-work-more, .studio-work-checklist, .cw-danger) { margin: 16px 0; padding: 12px 16px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-subtle); }
+#view-creator :is(.studio-work-more, .studio-work-checklist, .cw-danger) > summary { cursor: pointer; align-content: center; font-weight: 650; color: var(--text-primary); }
+#view-creator :is(#cwSettings, #cwCreateForm) { max-width: 760px; margin-block: 24px; }
+#view-creator :is(#cwSettings, #cwCreateForm) .form-control { width: 100%; min-height: 46px; background: var(--bg-elevated); }
+#view-creator :is(#cwSettings, #cwCreateForm) p { color: var(--text-secondary); line-height: 1.7; }
+
+/* Selected work, editing actions and save state stay visible before secondary tools. */
+#creatorTab-new-ep .studio-editor-card { padding: 28px; }
+#creatorTab-new-ep .studio-editor-heading { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+#creatorTab-new-ep .studio-editor-heading > div { min-width: 0; flex: 1 1 220px; }
+#creatorTab-new-ep .studio-eyebrow { margin: 0 0 8px; color: var(--text-secondary); font-size: 13px; font-weight: 650; }
+#creatorTab-new-ep #studioCurrentWork { margin: 0 0 12px; color: var(--text-strong); font-size: clamp(21px, 2.4vw, 28px); line-height: 1.4; }
+#creatorTab-new-ep .studio-draft-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+#creatorTab-new-ep .studio-draft-meta > span:not(:empty) { padding: 4px 8px; border-radius: 6px; background: var(--bg-subtle); }
+#creatorTab-new-ep .studio-work-picker { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+#creatorTab-new-ep .studio-work-picker > .form-group { flex: 1 1 280px; min-width: 0; margin: 0; }
+#creatorTab-new-ep label { display: block; font-size: 14px; font-weight: 650; margin-bottom: 8px; color: var(--text-primary); }
+#creatorTab-new-ep :is(.studio-work-tools, .studio-action-bar) { display: flex; flex-wrap: wrap; gap: 8px; }
+#creatorTab-new-ep :is(#newEpWorkSelect, #newEpTitle, #newEpAuthorComment) { width: 100%; min-height: 46px; padding: 11px 12px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--bg-elevated); color: var(--text-primary); }
+#creatorTab-new-ep .studio-action-bar { position: relative; z-index: 5; align-items: start; margin: 20px 0 12px; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 10px; }
+#creatorTab-new-ep .studio-publish-menu { margin-left: auto; min-width: 140px; }
+#creatorTab-new-ep .studio-publish-menu > summary { cursor: pointer; min-height: 44px; padding: 10px 14px; border: 1px solid var(--control-border); border-radius: 8px; color: var(--text-primary); font-weight: 650; }
+#creatorTab-new-ep .studio-publish-menu > div { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }
+#creatorTab-new-ep .studio-save-state { align-items: start; gap: 8px 24px; line-height: 1.6; }
+#creatorTab-new-ep :is(.creator-draft-status, .creator-word-count, .creator-word-goal, .creator-editor-help) { font-size: 13px; line-height: 1.7; color: var(--text-secondary); }
+#creatorTab-new-ep #creatorDraftStatus { font-weight: 650; color: var(--text-primary); }
+#creatorTab-new-ep :is(#creatorPublicationNotice, #creatorDraftError):empty { display: none; }
+#creatorTab-new-ep #creatorPublicationNotice { margin-block: 12px; line-height: 1.7; color: var(--text-secondary); }
+#creatorTab-new-ep .studio-editor-layout { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 20px; margin-top: 20px; }
+#creatorTab-new-ep .studio-editor-layout:has(> .studio-draft-library[open]) { grid-template-columns: minmax(200px, 260px) minmax(0, 1fr); }
+#creatorTab-new-ep .studio-manuscript { min-width: 0; }
+#creatorTab-new-ep .studio-fold { margin: 0 0 20px; border-color: var(--border-default); background: var(--bg-subtle); }
+#creatorTab-new-ep .studio-draft-library { grid-column: 1; margin: 0; }
+#creatorTab-new-ep .studio-fold > summary { padding-block: 10px; }
+#creatorTab-new-ep .draft-copy-list section { background: var(--bg-elevated); min-width: 0; }
+#creatorTab-new-ep .draft-copy-list button { max-width: 100%; white-space: normal; text-align: left; }
+#creatorTab-new-ep .creator-editor-toolbar { padding: 12px; align-items: center; gap: 8px 16px; border-color: var(--border-default); background: var(--bg-subtle); }
+#creatorTab-new-ep .studio-format-more { width: 100%; }
+#creatorTab-new-ep .studio-format-more > summary { padding-block: 10px; }
+#creatorTab-new-ep .creator-word-progress > span { background: var(--action-primary); transition: none; }
+#creatorTab-new-ep :is(.creator-editor-textarea, .creator-rich-body) { min-height: 480px; width: 100%; padding: 28px; background: var(--bg-elevated); color: var(--text-primary); border-color: var(--control-border); line-height: 1.95; font-size: 18px; }
+#creatorTab-new-ep .creator-editor-textarea { font-family: var(--font-ui); }
+#creatorTab-new-ep .rich-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding-block: 12px; }
+#creatorTab-new-ep .creator-editor-actions { flex-wrap: wrap; gap: 8px; }
+#creatorTab-new-ep .creator-publish-policy { padding-block: 12px; line-height: 1.7; color: var(--text-secondary); font-size: 14px; }
+#creatorTab-new-ep #draftIdentity { overflow-wrap: anywhere; }
+#creatorTab-new-ep.draft-focus { padding: max(16px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: var(--bg-base); height: var(--draft-viewport, 100dvh); }
+#creatorTab-new-ep.draft-focus .studio-editor-card { max-width: 1200px; margin-inline: auto; }
+#creatorTab-new-ep.draft-focus .studio-action-bar { position: sticky; top: 0; }
+
+/* Ordered uploads show actual local thumbnails, state text and keyboard actions. */
+#creatorWebtoon { padding: 20px; margin-bottom: 24px; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-subtle); }
+#creatorWebtoon > h3 { margin-bottom: 12px; font-size: 20px; color: var(--text-strong); }
+#creatorWebtoon > p { font-size: 14px; line-height: 1.7; color: var(--text-secondary); }
+#creatorWebtoon input[type="file"] { width: 100%; padding: 20px 12px; background: var(--bg-elevated); border: 2px dashed var(--control-border); }
+#creatorWebtoon > label { margin: 12px 12px 12px 0; }
+#creatorWebtoon .studio-webtoon-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-block: 12px; padding: 16px; border-color: var(--border-default); border-radius: 10px; background: var(--bg-elevated); }
+#creatorWebtoon .studio-webtoon-number { order: 0; flex: 0 0 28px; font-weight: 750; text-align: center; color: var(--text-strong); }
+#creatorWebtoon .studio-webtoon-thumb { order: 1; display: flex; align-items: center; justify-content: center; width: 56px; height: 76px; flex: 0 0 56px; object-fit: contain; border-radius: 4px; background: var(--bg-subtle); font-size: 11px; color: var(--text-secondary); text-align: center; }
+#creatorWebtoon .studio-webtoon-row > strong { order: 2; flex: 1 1 160px; min-width: 0; font-size: 15px; color: var(--text-strong); }
+#creatorWebtoon .studio-webtoon-state { order: 3; flex-basis: 100%; color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+#creatorWebtoon .studio-webtoon-controls { order: 4; min-height: 44px; white-space: normal; }
+#creatorWebtoon .webtoon-preview { max-width: 420px; width: 100%; background: var(--bg-elevated); }
+#creatorWebtoon .webtoon-panel { border-radius: 0; }
+#creatorWebtoon .webtoon-panel img { object-fit: contain; }
+
+/* Existing guarded file/publication dialogs share the studio's spacing and contrast. */
+:is(#modalCreatorFiles, #modalCreatorPublication) .modal-dialog { padding: 0; border: 1px solid var(--border-default); background: var(--bg-elevated); }
+:is(#modalCreatorFiles, #modalCreatorPublication) :is(.modal-header, .modal-body) { padding: 24px; }
+:is(#modalCreatorFiles, #modalCreatorPublication) .modal-header { border-bottom: 1px solid var(--border-default); }
+:is(#modalCreatorFiles, #modalCreatorPublication) .modal-body { color: var(--text-primary); line-height: 1.7; }
+:is(#modalCreatorFiles, #modalCreatorPublication) .btn { min-height: 44px; white-space: normal; }
+#modalCreatorFiles .creator-file-drop { background: var(--bg-subtle); border-color: var(--control-border); }
+#modalCreatorFiles .creator-file-row { border-color: var(--border-default); }
+#modalCreatorFiles #creatorCoverCanvas { border: 1px solid var(--border-strong); }
+#modalCreatorPublication .publication-preview { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--border-default); }
+#modalCreatorPublication #publicationSummary { padding: 12px; background: var(--bg-subtle); border-radius: 8px; overflow-wrap: anywhere; }
+#modalCreatorPublication #publicationControls fieldset { padding: 16px; margin-block: 20px; border: 1px solid var(--border-strong); border-radius: 8px; }
+#modalCreatorPublication #publicationControls label { display: block; margin-block: 12px; }
+
+@media (max-width: 1023px) {
+  #view-creator #cwList { grid-template-columns: minmax(0, 1fr); }
+  #creatorTab-new-ep .studio-editor-layout:has(> .studio-draft-library[open]) { grid-template-columns: minmax(0, 1fr); }
+  #creatorTab-new-ep .draft-copy-list { max-height: 360px; overflow-y: auto; }
+}
+@media (max-width: 600px) {
+  #view-creator > .container { padding-inline: 12px; padding-block: 16px 32px; }
+  #view-creator #creatorAuthorBar { padding: 16px; }
+  #view-creator .studio-more-nav { margin-left: 0; }
+  #view-creator :is(.studio-work-card, .studio-work-summary) { padding: 12px; gap: 12px; }
+  #view-creator .cw-cover { width: 64px; height: 96px; }
+  #view-creator .studio-work-actions .btn { padding-inline: 12px; }
+  #creatorTab-new-ep .studio-editor-card { padding: 16px; }
+  #creatorTab-new-ep .studio-work-tools { width: 100%; }
+  #creatorTab-new-ep .studio-work-tools .btn { flex: 1 1 auto; padding-inline: 10px; }
+  #creatorTab-new-ep .studio-action-bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 8px; }
+  #creatorTab-new-ep .studio-action-bar > .btn { padding: 10px 8px; white-space: normal; }
+  #creatorTab-new-ep .studio-publish-menu { grid-column: 1 / -1; width: 100%; margin: 0; }
+  #creatorTab-new-ep .studio-publish-menu > div > .btn { flex: 1 1 100px; }
+  #creatorTab-new-ep .studio-save-state { display: grid; }
+  #creatorTab-new-ep :is(.creator-editor-textarea, .creator-rich-body) { min-height: 360px; padding: 16px; font-size: 16px; }
+  #creatorWebtoon { padding: 12px; }
+  #creatorWebtoon .studio-webtoon-row { padding: 12px; }
+  #creatorWebtoon .studio-webtoon-row > strong { flex-basis: 100px; }
+  :is(#modalCreatorFiles, #modalCreatorPublication) :is(.modal-header, .modal-body) { padding: 16px; }
+}
