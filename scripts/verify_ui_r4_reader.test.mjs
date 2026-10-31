@@ -65,7 +65,7 @@ test('reading layout uses document scroll, keeps manuscript properties and reser
   assert.match(css,/\.webtoon-panel:has\(button:not\(\[hidden\]\)\) \.webtoon-panel-status[^}]*clip-path: inset\(50%\)/,'error text must not overlap the retry control');
   assert.match(css,/\n\.webtoon-panel-status \{ position: absolute/,'shared author preview status must not alter reserved panel geometry');
   assert.match(css,/\.webtoon-panel:has\(button:not\(\[hidden\]\)\) \{ overflow: visible/,'short failed cuts must not clip the retry target');
-  assert(html.includes('/css/reader-experience.css?v=20261031r4'));
+  assert(html.includes('/css/reader-experience.css?v=20261031r7'));
 });
 
 test('chapter loading errors provide a guarded retry and actual gap neighbours stay authoritative',async()=>{

@@ -1,0 +1,219 @@
+{
+  "stage": "UI-R7",
+  "date": "2026-10-31",
+  "result": "LOCAL_PASS_DEPLOYMENT_ACCEPTANCE_PENDING",
+  "runtime": "v24.19.0",
+  "build": {
+    "command": "npm run build",
+    "startedAt": "2026-10-31T01:41:42.806Z",
+    "completedAt": "2026-10-31T01:59:03.890Z",
+    "exitCode": 0,
+    "error": null,
+    "log": "scratch/ui-r7/build.log"
+  },
+  "release": {
+    "commands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5",
+      "test:ui-r6",
+      "test:ui-r7"
+    ],
+    "count": 45,
+    "result": "PASS"
+  },
+  "newRegressionTests": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "accessibility": 8,
+    "crossModuleRegression": 6,
+    "deliveryAudit": 11
+  },
+  "supplementary": {
+    "reason": "Read-only workflow entry and shared asset version changed after their early release phases ran",
+    "command": "node --test scripts/verify_stage17_ui.test.mjs scripts/verify_ui_r7_regression.test.mjs scripts/verify_ui_r7_accessibility.test.mjs scripts/verify_ui_r5_layout.test.mjs scripts/verify_ui_r6_layout.test.mjs",
+    "exitCode": 0,
+    "passed": 34
+  },
+  "types": {
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "startedAt": "2026-10-31T01:52:42.877Z",
+    "completedAt": "2026-10-31T01:52:51.434Z",
+    "exitCode": 0,
+    "error": null
+  },
+  "staticChecks": {
+    "syntax": [
+      {
+        "file": "public/js/reader/reader.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/admin/admin-workflow.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/core/role-modules.js",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r4_reader.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r5_layout.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r6_layout.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/audit_ui_delivery.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_delivery.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r7_accessibility.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r7_regression.test.mjs",
+        "exitCode": 0
+      }
+    ],
+    "files": [
+      {
+        "file": "public/index.html",
+        "sha256": "9895c9b6cfbe9d7184762de491f6590653d4f79da5e6f93737170bcf2f13b24b"
+      },
+      {
+        "file": "public/css/reader-experience.css",
+        "sha256": "7fc68d9e27186a276fe7225b8ce2750aa541a71576e007e24bd153330e1af869"
+      },
+      {
+        "file": "public/js/reader/reader.js",
+        "sha256": "490249ce1e35d5a936a2b35f565e9670158e465793d9e4116b864c00a9e4dceb"
+      },
+      {
+        "file": "public/js/admin/admin-workflow.js",
+        "sha256": "e07be5ba35899fad13c8ee706f9eddd3c3005305a48f0ae94ce5d5cb26960277"
+      },
+      {
+        "file": "public/js/core/role-modules.js",
+        "sha256": "71817e3c1ca754d7ea75de18872dd5e8fbbf9109298775754584aec3b2b8e9a8"
+      },
+      {
+        "file": "scripts/verify_ui_r4_reader.test.mjs",
+        "sha256": "230d8614eb21b60a98f4176d7cf62af7d7145eec97875945845e0c11b5866dbd"
+      },
+      {
+        "file": "scripts/verify_ui_r5_layout.test.mjs",
+        "sha256": "4fba52b6b4ad5c074284b0d97f79125516b7eecb286cbfbe49718cce046b4734"
+      },
+      {
+        "file": "scripts/verify_ui_r6_layout.test.mjs",
+        "sha256": "0a2e453460553747d9f3a5904967eef62e10a6aef5da46a07c4a790b54bf177d"
+      },
+      {
+        "file": "scripts/audit_ui_delivery.mjs",
+        "sha256": "18a7702c13487d6a955e1c378bcb6fed81aa3d2e230eb204655fc839f99dec07"
+      },
+      {
+        "file": "scripts/verify_ui_delivery.test.mjs",
+        "sha256": "aeff787bc59e5625553e3ed2d0d944310187173b91837aa61cce455f4032ecee"
+      },
+      {
+        "file": "scripts/verify_ui_r7_accessibility.test.mjs",
+        "sha256": "7fbffba304d212a328891c3c4e39917cc1eadb1bda69a157bc66fd2a6303e384"
+      },
+      {
+        "file": "scripts/verify_ui_r7_regression.test.mjs",
+        "sha256": "a68a464ba5f7c338ceccf1136427f56b8a8cb56d76aedebb59c27d9b3da228b4"
+      }
+    ],
+    "secretScan": {
+      "files": 12,
+      "matches": 0
+    },
+    "protectedScopesUnchanged": true,
+    "diffCheckExitCode": 0,
+    "envIgnored": true,
+    "userFilePreserved": true,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "result": "PASS"
+  },
+  "securityReview": {
+    "result": "PASS",
+    "scope": "Single safe comment composer, actual preference state, authorized review navigation, frozen API/session contracts and bounded unauthenticated trusted-origin delivery audit",
+    "auditIndependentReview": true,
+    "auditCspWideningFalsePositiveFixed": true,
+    "flagsUnchanged": true,
+    "legalTextUnchanged": true,
+    "backendAndDatabaseSchemaUnchanged": true
+  },
+  "browser": {
+    "baseline": "artifacts/ui-r7-browser-2026-10-31.json",
+    "adminReadOnlyExplicitlyApproved": true,
+    "deploymentAcceptance": "PENDING",
+    "businessDataMutations": false,
+    "normalAuthSessionEffectsAllowed": true
+  },
+  "notRun": [
+    "actual 200% browser zoom",
+    "spoken screen-reader acceptance",
+    "physical mobile keyboard",
+    "actual author Word/file/webtoon/publish/schedule/review writes",
+    "production support create/reply/reopen writes",
+    "public webtoon viewer (no public webtoon data)",
+    "PostgreSQL two independent connections, SMTP/PASS/Toss acceptance",
+    "dedicated lint (not configured)",
+    "coverage threshold (not measured)"
+  ],
+  "nextStage": "UI-R8: actual author/device acceptance and measured performance improvements"
+}

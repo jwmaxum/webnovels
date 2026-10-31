@@ -167,6 +167,11 @@
         }
       }else if(page==='works'){
         status(root,'작품·회차 본문 편집은 작가 스튜디오에서 진행합니다. 노출 제한과 편집 추천은 별도 운영 업무입니다.');
+        if(can('CONTENT_REVIEW')){
+          const review=el(root,'section',null,'co-panel workflow-card');el(review,'h4','공개본 변경 요청');
+          status(review,'이미 공개된 작품·회차의 수정·삭제 요청은 변경 검토함에서 확인합니다. 신규 회차의 최초 발행은 작가가 직접 진행합니다.');
+          button(review,'공개본 변경 검토 열기',()=>{if(current(c)&&can('CONTENT_REVIEW'))return window.AdminOperations?.navigate('cases');});
+        }
         for(const item of result.works){const card=el(root,'article',null,'co-panel workflow-card');el(card,'h4',`${item.title} · ${item.id}`);el(card,'p',`${item.status} · ${item.moderation}`);auditLink(card,'WORK:'+item.id,c);
           if(can('CONTENT_MODERATE'))form(card,item.moderation==='RESTRICTED'?'작품 제한 해제':'작품 노출 제한','moderate',()=>()=>({workId:item.id,version:item.version,decision:item.moderation==='RESTRICTED'?'UNRESTRICT':'RESTRICT'}),c);
         }

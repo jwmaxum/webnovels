@@ -1794,26 +1794,36 @@ class ReaderPreferencesStore {
 
   updateControlsUI() {
     document.querySelectorAll('.theme-selector-grid .theme-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.theme === this.pref.theme || btn.classList.contains(this.pref.theme));
+      const selected = btn.dataset.theme === this.pref.theme || btn.classList.contains(this.pref.theme);
+      btn.classList.toggle('active', selected);
+      btn.setAttribute('aria-pressed', String(selected));
     });
 
     document.querySelectorAll('.pref-btn[data-font]').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.font === this.pref.fontFamily);
+      const selected = btn.dataset.font === this.pref.fontFamily;
+      btn.classList.toggle('active', selected);
+      btn.setAttribute('aria-pressed', String(selected));
     });
 
     const disp = document.getElementById('fontSizeDisplay');
     if (disp) disp.textContent = `${this.pref.fontSize}px`;
 
     document.querySelectorAll('.pref-btn[data-line-height]').forEach(btn => {
-      btn.classList.toggle('active', Number(btn.dataset.lineHeight) === Number(this.pref.lineHeight));
+      const selected = Number(btn.dataset.lineHeight) === Number(this.pref.lineHeight);
+      btn.classList.toggle('active', selected);
+      btn.setAttribute('aria-pressed', String(selected));
     });
 
     document.querySelectorAll('.pref-btn[data-padding]').forEach(btn => {
-      btn.classList.toggle('active', Number(btn.dataset.padding) === Number(this.pref.paddingX));
+      const selected = Number(btn.dataset.padding) === Number(this.pref.paddingX);
+      btn.classList.toggle('active', selected);
+      btn.setAttribute('aria-pressed', String(selected));
     });
 
     document.querySelectorAll('.pref-btn[data-gap]').forEach(btn => {
-      btn.classList.toggle('active', Number(btn.dataset.gap) === Number(this.pref.paragraphGap));
+      const selected = Number(btn.dataset.gap) === Number(this.pref.paragraphGap);
+      btn.classList.toggle('active', selected);
+      btn.setAttribute('aria-pressed', String(selected));
     });
   }
 
@@ -2387,12 +2397,12 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     let html = `
       <!-- 댓글 입력창 -->
       <div class="comment-input-box card glass-panel p-3 mb-4" style="border: 1px solid var(--border-color); border-radius: 8px;">
-        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">💬 독자 한줄 감상평 남기기</div>
+        <label for="readerCommentInput" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">💬 독자 한줄 감상평 남기기</label>
         ${paragraphContext}
         <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
         <div class="flex-between mt-2" style="display:flex; justify-content:space-between; align-items:center;">
           <label class="text-muted" style="font-size:.78rem; cursor:pointer;"><input id="readerCommentSpoiler" type="checkbox"> ⚠️ 스포일러 포함</label>
-          <button class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit('${workId}', '${episodeId}')">
+          <button type="button" id="btnSubmitComment" class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit('${workId}', '${episodeId}')">
             댓글 등록
           </button>
         </div>
@@ -2440,6 +2450,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
 
             <!-- 대댓글 입력창 -->
             <div class="reply-input-wrapper" id="replyInput-${c.id}">
+              <label for="replyText-${c.id}" class="sr-only">답글 내용</label>
               <textarea id="replyText-${c.id}" class="form-control" rows="2" placeholder="답글을 입력하세요..." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:6px; border:1px solid var(--border-color); font-size:0.85rem;"></textarea>
               <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
                 <button class="btn btn-ghost btn-sm" onclick="toggleReplyInput('${c.id}')">취소</button>

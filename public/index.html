@@ -48,7 +48,7 @@
 <link rel="stylesheet" href="/css/growth.css?v=20261031">
 <link rel="stylesheet" href="/css/policies.css?v=20261031r6">
   <link rel="stylesheet" href="/css/reader-shell.css?v=20261031r3">
-  <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r4">
+  <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r7">
   <link rel="stylesheet" href="/css/author-studio.css?v=20261031r5">
   <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
 </head>
@@ -610,14 +610,7 @@
                 </h2>
               </div>
 
-              <!-- Comment Input Form -->
-              <div class="comment-input-form mb-4" style="display:flex; gap:8px;">
-                <label class="sr-only" for="readerCommentInput">회차 댓글</label>
-                <input type="text" id="readerCommentInput" class="form-input" style="flex:1; background:var(--bg-subtle); border:1px solid var(--control-border); border-radius:8px; padding:10px 14px; color:var(--text-primary);" placeholder="작품과 작가를 응원하는 댓글을 남겨보세요.">
-                <button class="btn btn-primary" id="btnSubmitComment" onclick="submitReaderComment()">등록</button>
-              </div>
-
-              <!-- Comments Dynamic List -->
+              <!-- The dynamic list owns the single labelled comment composer. -->
               <div class="comments-list" id="readerCommentsList" style="display:flex; flex-direction:column; gap:12px;">
                 <!-- Dynamic Comment Cards -->
               </div>
@@ -1640,19 +1633,19 @@
 
     <!-- Modal: Reader Settings Bottom Sheet Drawer (design.md Section 29 & improve3.md) -->
     <div class="modal-backdrop modal-bottom-sheet-backdrop" id="modalReaderSettings">
-      <div class="modal-dialog modal-bottom-sheet glass-panel dialog-bottom">
+      <div class="modal-dialog modal-bottom-sheet glass-panel dialog-bottom" role="dialog" aria-modal="true" aria-labelledby="readerSettingsHeading">
         <div class="sheet-handle-bar">
           <div class="sheet-handle"></div>
         </div>
         <div class="modal-header" style="margin-bottom:12px;">
-          <h3><i data-lucide="sliders"></i> 뷰어 읽기 환경 설정</h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+          <h3 id="readerSettingsHeading"><i data-lucide="sliders" aria-hidden="true"></i> 뷰어 읽기 환경 설정</h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="읽기 환경 설정 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body" style="gap:16px;">
           <!-- 1. 독서 배경 테마 (4종) -->
           <div class="form-group">
-            <label class="small text-muted mb-2 block font-bold">독서 배경 테마</label>
-            <div class="theme-selector-grid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
+            <label id="readerThemeLabel" class="small text-muted mb-2 block font-bold">독서 배경 테마</label>
+            <div class="theme-selector-grid" role="group" aria-labelledby="readerThemeLabel" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
               <button type="button" class="theme-btn theme-dark" data-theme="theme-dark" onclick="window.ReaderPreferencesManager?.setTheme('theme-dark')">다크</button>
               <button type="button" class="theme-btn theme-oled" data-theme="theme-oled" onclick="window.ReaderPreferencesManager?.setTheme('theme-oled')">OLED 블랙</button>
               <button type="button" class="theme-btn theme-sepia" data-theme="theme-sepia" onclick="window.ReaderPreferencesManager?.setTheme('theme-sepia')">세피아</button>
@@ -1662,8 +1655,8 @@
 
           <!-- 2. 본문 글꼴 계열 (명조 / 고딕) -->
           <div class="form-group">
-            <label class="small text-muted mb-2 block font-bold">본문 서체 (글꼴)</label>
-            <div class="pref-btn-group" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <label id="readerFontLabel" class="small text-muted mb-2 block font-bold">본문 서체 (글꼴)</label>
+            <div class="pref-btn-group" role="group" aria-labelledby="readerFontLabel" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
               <button type="button" class="btn btn-outline pref-btn active" data-font="serif" onclick="window.ReaderPreferencesManager?.setFontFamily('serif')">
                 <i data-lucide="book-open" style="width:14px;height:14px;"></i> 가독 명조 (Serif)
               </button>
@@ -1675,18 +1668,18 @@
 
           <!-- 3. 본문 글자 크기 (14px ~ 26px) -->
           <div class="form-group">
-            <label class="small text-muted mb-2 block font-bold">본문 글자 크기</label>
-            <div class="font-size-control" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-subtle); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);">
-              <button type="button" class="btn btn-outline btn-sm" onclick="window.ReaderPreferencesManager?.changeFontSize(-2)" style="width:44px; height:36px; font-weight:800;">A-</button>
-              <span id="fontSizeDisplay" style="font-weight:800; font-size:1.1rem; color:var(--cdg-pink);">18px</span>
-              <button type="button" class="btn btn-outline btn-sm" onclick="window.ReaderPreferencesManager?.changeFontSize(2)" style="width:44px; height:36px; font-weight:800;">A+</button>
+            <label id="readerSizeLabel" class="small text-muted mb-2 block font-bold">본문 글자 크기</label>
+            <div class="font-size-control" role="group" aria-labelledby="readerSizeLabel" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-subtle); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);">
+              <button type="button" class="btn btn-outline btn-sm" aria-label="글자 크기 줄이기" onclick="window.ReaderPreferencesManager?.changeFontSize(-2)" style="width:44px; height:44px; font-weight:800;">A-</button>
+              <span id="fontSizeDisplay" role="status" aria-live="polite" style="font-weight:800; font-size:1.1rem; color:var(--cdg-pink);">18px</span>
+              <button type="button" class="btn btn-outline btn-sm" aria-label="글자 크기 늘리기" onclick="window.ReaderPreferencesManager?.changeFontSize(2)" style="width:44px; height:44px; font-weight:800;">A+</button>
             </div>
           </div>
 
           <!-- 4. 줄간격 (Line Height: 1.5, 1.8, 2.2) -->
           <div class="form-group">
-            <label class="small text-muted mb-2 block font-bold">본문 줄간격</label>
-            <div class="pref-btn-group" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+            <label id="readerLineLabel" class="small text-muted mb-2 block font-bold">본문 줄간격</label>
+            <div class="pref-btn-group" role="group" aria-labelledby="readerLineLabel" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
               <button type="button" class="btn btn-outline pref-btn" data-line-height="1.5" onclick="window.ReaderPreferencesManager?.setLineHeight(1.5)">좁게 (1.5)</button>
               <button type="button" class="btn btn-outline pref-btn active" data-line-height="1.8" onclick="window.ReaderPreferencesManager?.setLineHeight(1.8)">보통 (1.8)</button>
               <button type="button" class="btn btn-outline pref-btn" data-line-height="2.2" onclick="window.ReaderPreferencesManager?.setLineHeight(2.2)">넓게 (2.2)</button>
@@ -1695,8 +1688,8 @@
 
           <!-- 5. 좌우 여백 (Horizontal Padding: 12px, 20px, 36px) -->
           <div class="form-group">
-            <label class="small text-muted mb-2 block font-bold">본문 좌우 여백</label>
-            <div class="pref-btn-group" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+            <label id="readerPaddingLabel" class="small text-muted mb-2 block font-bold">본문 좌우 여백</label>
+            <div class="pref-btn-group" role="group" aria-labelledby="readerPaddingLabel" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
               <button type="button" class="btn btn-outline pref-btn" data-padding="12" onclick="window.ReaderPreferencesManager?.setPaddingX(12)">화면 가득</button>
               <button type="button" class="btn btn-outline pref-btn active" data-padding="20" onclick="window.ReaderPreferencesManager?.setPaddingX(20)">기본 여백</button>
               <button type="button" class="btn btn-outline pref-btn" data-padding="36" onclick="window.ReaderPreferencesManager?.setPaddingX(36)">여유 있게</button>
@@ -1705,8 +1698,8 @@
 
           <!-- 6. 문단 간격 (Paragraph Gap: 0.8em, 1.2em, 1.6em) -->
           <div class="form-group">
-            <label class="small text-muted mb-2 block font-bold">문단 사이 간격</label>
-            <div class="pref-btn-group" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+            <label id="readerGapLabel" class="small text-muted mb-2 block font-bold">문단 사이 간격</label>
+            <div class="pref-btn-group" role="group" aria-labelledby="readerGapLabel" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
               <button type="button" class="btn btn-outline pref-btn" data-gap="0.8" onclick="window.ReaderPreferencesManager?.setParagraphGap(0.8)">밀착</button>
               <button type="button" class="btn btn-outline pref-btn active" data-gap="1.2" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.2)">표준</button>
               <button type="button" class="btn btn-outline pref-btn" data-gap="1.6" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.6)">여유</button>
@@ -1718,15 +1711,15 @@
 
     <!-- Modal: Search -->
     <div class="modal-backdrop" id="modalSearch">
-      <div class="modal-dialog glass-panel dialog-search">
+      <div class="modal-dialog glass-panel dialog-search" role="dialog" aria-modal="true" aria-labelledby="readerSearchHeading">
         <div class="modal-header">
-          <h3><i data-lucide="search"></i> 작품/작가 검색</h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+          <h3 id="readerSearchHeading"><i data-lucide="search" aria-hidden="true"></i> 작품·작가 검색</h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="작품·작가 검색 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <div class="search-control">
             <i data-lucide="search"></i>
-            <input type="search" id="globalSearchInput" placeholder="제목, 작가, 장르를 입력하세요" autocomplete="off">
+            <label class="sr-only" for="globalSearchInput">작품·작가 검색</label><input type="search" id="globalSearchInput" placeholder="제목, 작가, 장르를 입력하세요" autocomplete="off">
           </div>
           <div class="search-suggest-row" id="searchQuickTags">
             <button data-search-term="판타지">판타지</button>
@@ -2316,11 +2309,12 @@
 
     <!-- Mobile More Menu Bottom Sheet Modal (UI_mobile.md) -->
     <div class="modal-backdrop modal-bottom-sheet-backdrop" id="modalMobileMore">
-      <div class="modal-dialog modal-bottom-sheet glass-panel mobile-more-sheet">
+      <div class="modal-dialog modal-bottom-sheet glass-panel mobile-more-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileMoreHeading">
         <div class="sheet-handle-bar">
           <div class="sheet-handle"></div>
         </div>
         <div class="mobile-more-content">
+          <h3 id="mobileMoreHeading">더 보기</h3>
           <!-- User Profile Summary Card -->
           <div class="mobile-more-user-box glass-panel p-4 mb-3">
             <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -2485,7 +2479,7 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261031r6"></script>
+  <script src="/js/core/role-modules.js?v=20261031r7"></script>
   <script src="/js/core/router.js?v=20261031r4"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
@@ -2494,7 +2488,7 @@
   <script src="/js/reader/reader-discovery.js?v=20261031r4"></script>
   <script src="/js/reader/reader-webtoon.js?v=20261031r4"></script>
   <script src="/js/reader/reader-position.js?v=20261031r4"></script>
-  <script src="/js/reader/reader.js?v=20261031r4"></script>
+  <script src="/js/reader/reader.js?v=20261031r7"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>

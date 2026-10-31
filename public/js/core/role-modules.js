@@ -15,7 +15,7 @@
     ],
     admin: [
       '/js/admin/admin.js?v=20261012', '/js/admin/admin-provider-settings.js?v=135', '/js/admin/admin-console.js?v=20261031r6',
-      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=20261031r6', '/js/admin/admin-workflow.js?v=20261031r6', '/js/admin/admin-beta-operations.js?v=20261031r6', '/js/admin/admin-operations.js?v=20261031r6',
+      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=20261031r6', '/js/admin/admin-workflow.js?v=20261031r7', '/js/admin/admin-beta-operations.js?v=20261031r6', '/js/admin/admin-operations.js?v=20261031r6',
       '/js/admin/virtual-accounts.js?v=111'
     ]
   };

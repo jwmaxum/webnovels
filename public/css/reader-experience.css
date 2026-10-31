@@ -92,7 +92,8 @@ body[data-active-view="view-reader"] :is(.legal-footer, #freeBetaNotice, #servic
 .webtoon-panel button { top: min(50%, 240px); z-index: 1; }
 #view-reader .webtoon-panel button { min-height: 44px; max-width: calc(100% - 32px); background: var(--control-bg); color: var(--control-fg); border: 1px solid var(--control-border); border-radius: 8px; font: 14px/1.5 var(--font-ui); }
 #modalReaderSettings .modal-header h3 { font-size: 20px; font-weight: 700; }
-#modalReaderSettings .modal-body { max-height: 70dvh; overflow-y: auto; }
+#modalReaderSettings .modal-dialog { max-height: calc(100dvh - 16px); min-height: 0; overflow-y: auto; }
+#modalReaderSettings .modal-body { max-height: none; overflow-y: visible; }
 #modalReaderSettings .pref-btn, #modalReaderSettings .theme-btn { min-height: 44px !important; font-size: 14px !important; }
 @media (max-width: 800px) {
   #view-mypage .library-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
