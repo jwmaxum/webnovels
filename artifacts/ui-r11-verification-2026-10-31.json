@@ -1,0 +1,76 @@
+{
+  "stage": "UI-R11",
+  "checkedAt": "2026-10-31T07:30:55.331Z",
+  "productCommit": "e194da7ac3e3bc7b0b99dc55da076b8fa955a5cc",
+  "scope": "User requested phone confirmation record and build only; detailed acceptance stopped",
+  "userReport": {
+    "phoneOverallNormal": true,
+    "statement": "휴대폰 잘 작동합니다. 그냥 빌드하세요",
+    "priorDeviceContext": "Galaxy S26 Chrome",
+    "osVersion": null,
+    "browserVersion": null,
+    "itemizedEvidence": false
+  },
+  "build": {
+    "startedAt": "2026-10-31T07:29:17.787Z",
+    "completedAt": "2026-10-31T07:29:47.411Z",
+    "steps": [
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "exitCode": 0,
+    "log": "scratch/ui-r11/build.log"
+  },
+  "previousFullRelease": {
+    "commit": "e194da7ac3e3bc7b0b99dc55da076b8fa955a5cc",
+    "checks": [
+      {
+        "name": "Cloudflare Pages",
+        "conclusion": "success"
+      },
+      {
+        "name": "build-and-test",
+        "conclusion": "success"
+      }
+    ],
+    "runUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41179805737"
+  },
+  "verification": {
+    "localFullReleaseRepeated": false,
+    "reason": "No product code changes; compiler build and types requested; prior product commit CI passed",
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "newTests": "NOT_APPLICABLE_DOCUMENTATION_ONLY",
+    "security": {
+      "secretScanFiles": 3,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "userChangesPreserved": true
+    }
+  },
+  "acceptance": {
+    "browserInitialization": "TIMED_OUT_BEFORE_UI_ACTION",
+    "newWorkOrDraftCreated": false,
+    "wordSaveRestore": "NOT_VERIFIED",
+    "zoom200": "NOT_VERIFIED",
+    "keyboard": "NOT_VERIFIED_THIS_STAGE",
+    "spokenScreenReader": "NOT_VERIFIED",
+    "lcpCls": "NOT_COLLECTED",
+    "additionalAcceptanceStoppedAtUserRequest": true
+  },
+  "production": {
+    "codeChanges": false,
+    "databaseChanges": false,
+    "accountChanges": false,
+    "featureFlagChanges": false
+  },
+  "nextServiceStage": "SMTP-backed signup/recovery mail reception and independent hosted restore when configured; detailed acceptance remains open"
+}
