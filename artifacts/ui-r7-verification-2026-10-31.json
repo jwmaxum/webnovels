@@ -1,7 +1,7 @@
 {
   "stage": "UI-R7",
   "date": "2026-10-31",
-  "result": "LOCAL_PASS_DEPLOYMENT_ACCEPTANCE_PENDING",
+  "result": "PASS_WITH_REMAINING_MANUAL_ACCEPTANCE",
   "runtime": "v24.19.0",
   "build": {
     "command": "npm run build",
@@ -195,14 +195,17 @@
     "auditCspWideningFalsePositiveFixed": true,
     "flagsUnchanged": true,
     "legalTextUnchanged": true,
-    "backendAndDatabaseSchemaUnchanged": true
+    "backendAndDatabaseSchemaUnchanged": true,
+    "independentProductionDiffReview": "PASS"
   },
   "browser": {
     "baseline": "artifacts/ui-r7-browser-2026-10-31.json",
     "adminReadOnlyExplicitlyApproved": true,
-    "deploymentAcceptance": "PENDING",
+    "deploymentAcceptance": "PASS",
     "businessDataMutations": false,
-    "normalAuthSessionEffectsAllowed": true
+    "normalAuthSessionEffectsAllowed": true,
+    "postDeployment": "artifacts/ui-r7-browser-2026-10-31.json",
+    "screenshot": "artifacts/ui-r7-reader-settings-375x300.jpg"
   },
   "notRun": [
     "actual 200% browser zoom",
@@ -215,5 +218,29 @@
     "dedicated lint (not configured)",
     "coverage threshold (not measured)"
   ],
-  "nextStage": "UI-R8: actual author/device acceptance and measured performance improvements"
+  "nextStage": "UI-R8: actual author/device acceptance and measured performance improvements",
+  "deployment": {
+    "codeCommit": "749b4e1f52b0bdef79fbc713df85577e2f5f5f01",
+    "checkedAt": "2026-10-31T02:08:38.435Z",
+    "checks": [
+      {
+        "name": "Cloudflare Pages",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/runs/124410851315"
+      },
+      {
+        "name": "build-and-test",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41157983269/job/124408925431"
+      }
+    ],
+    "changedAssets": {
+      "requested": 5,
+      "matched": 5,
+      "findings": 0,
+      "artifact": "artifacts/ui-r7-delivery-2026-10-31.json"
+    }
+  }
 }

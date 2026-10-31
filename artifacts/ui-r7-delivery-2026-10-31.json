@@ -1,0 +1,522 @@
+{
+  "checkedAt": "2026-10-31T02:08:51.416Z",
+  "codeCommit": "749b4e1f52b0bdef79fbc713df85577e2f5f5f01",
+  "origin": "https://webnovels-db4.pages.dev",
+  "scope": "selected-resources",
+  "measurement": "Decoded resource parity and HTTP metadata only; no browser paint, Core Web Vitals or throughput benchmark.",
+  "coverage": "Four public documents, linked scripts/styles/font preloads, CSS font URLs and literal role-loader modules; APIs, configuration, external hosts, work images and unreferenced files excluded.",
+  "summary": {
+    "resources": 71,
+    "localBytes": 2752982,
+    "requested": 5,
+    "liveChecked": 5,
+    "unavailable": 0,
+    "matched": 5,
+    "findings": 0,
+    "compressedLengthReported": 0
+  },
+  "findings": [],
+  "assets": [
+    {
+      "path": "/",
+      "kind": "html",
+      "sources": [
+        "document"
+      ],
+      "integrities": [],
+      "local": {
+        "bytes": 185714,
+        "sha256": "9895c9b6cfbe9d7184762de491f6590653d4f79da5e6f93737170bcf2f13b24b",
+        "normalization": "CRLF_TO_LF"
+      },
+      "remote": {
+        "status": 200,
+        "attempts": 1,
+        "headers": {
+          "cache": {
+            "revalidates": true,
+            "immutable": false,
+            "maxAge": null
+          },
+          "nosniff": true,
+          "frameDenied": true,
+          "referrerPolicy": true,
+          "csp": {
+            "baseRestricted": true,
+            "objectNone": true,
+            "frameAncestorsNone": true,
+            "scriptControlEnforced": false,
+            "scriptControlReportOnly": true
+          }
+        },
+        "decodedBytes": 185714,
+        "sha256": "9895c9b6cfbe9d7184762de491f6590653d4f79da5e6f93737170bcf2f13b24b",
+        "mime": "text/html",
+        "mimeMatches": true,
+        "encoding": "br",
+        "encodedBytesFromContentLength": null,
+        "contentLength": null,
+        "integrityMatches": true,
+        "references": {
+          "local": [
+            {
+              "path": "/vendor/lucide/lucide-1.52.0.min.js",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": "sha384-SSRIJfpvnhji4rCcULgpNXRJjQ9P/odU9OaWxSumsZiokvJ7zAu4PGQVWyWxTG3u"
+            },
+            {
+              "path": "/vendor/supabase/supabase-2.112.3.js",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": "sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"
+            },
+            {
+              "path": "/fonts/suit-v2.0.5/SUIT-Variable.woff2",
+              "kind": "woff2",
+              "role": "preload",
+              "blocking": false,
+              "integrity": null
+            },
+            {
+              "path": "/css/design-tokens.css?v=20261031",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/styles.css?v=20261031",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/free-beta.css?v=20261031",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/beta-operations.css?v=20261031",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/webtoon.css?v=20261031",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/growth.css?v=20261031",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/policies.css?v=20261031r6",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/reader-shell.css?v=20261031r3",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/reader-experience.css?v=20261031r7",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/author-studio.css?v=20261031r5",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/css/operations-account.css?v=20261031r6",
+              "kind": "css",
+              "role": "stylesheet",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/state.js?v=20261012",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/ui-utils.js?v=126",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/role-modules.js?v=20261031r7",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/router.js?v=20261031r4",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/shared/manuscript-document.js?v=124",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/reader-content.js?v=124",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/reader-catalog.js?v=117",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/reader-discovery.js?v=20261031r4",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/reader-webtoon.js?v=20261031r4",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/reader-position.js?v=20261031r4",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/reader.js?v=20261031r7",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/reader-hub.js?v=116",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/growth-studio.js?v=122",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/reader/continue-reading.js?v=116",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/supabase-admin.js?v=116",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/auth-session.js?v=136",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/author-enrollment.js?v=135",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/account-access.js?v=20261031r6",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/appeals.js?v=117",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/beta-support.js?v=20261031r6",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/auth-ui.js?v=20261031r6",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/service-status.js?v=114",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/js/core/free-beta-ui.js?v=135",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            },
+            {
+              "path": "/app.js?v=20261031r6",
+              "kind": "js",
+              "role": "script",
+              "blocking": true,
+              "integrity": null
+            }
+          ],
+          "external": [
+            {
+              "host": "fonts.googleapis.com",
+              "role": "stylesheet",
+              "blocking": true
+            }
+          ],
+          "skipped": [
+            "CONFIG_OR_API_EXCLUDED",
+            "CONFIG_OR_API_EXCLUDED"
+          ]
+        }
+      },
+      "matchesLocal": true,
+      "referenceDifferences": {
+        "localOnly": [],
+        "deployedOnly": [],
+        "orderMatches": true
+      }
+    },
+    {
+      "path": "/css/reader-experience.css?v=20261031r7",
+      "kind": "css",
+      "sources": [
+        "/"
+      ],
+      "integrities": [],
+      "local": {
+        "bytes": 13121,
+        "sha256": "7fc68d9e27186a276fe7225b8ce2750aa541a71576e007e24bd153330e1af869",
+        "normalization": "CRLF_TO_LF"
+      },
+      "remote": {
+        "status": 200,
+        "attempts": 1,
+        "headers": {
+          "cache": {
+            "revalidates": true,
+            "immutable": false,
+            "maxAge": null
+          },
+          "nosniff": true,
+          "frameDenied": true,
+          "referrerPolicy": true,
+          "csp": {
+            "baseRestricted": true,
+            "objectNone": true,
+            "frameAncestorsNone": true,
+            "scriptControlEnforced": false,
+            "scriptControlReportOnly": true
+          }
+        },
+        "decodedBytes": 13121,
+        "sha256": "7fc68d9e27186a276fe7225b8ce2750aa541a71576e007e24bd153330e1af869",
+        "mime": "text/css",
+        "mimeMatches": true,
+        "encoding": "br",
+        "encodedBytesFromContentLength": null,
+        "contentLength": null,
+        "integrityMatches": true
+      },
+      "matchesLocal": true
+    },
+    {
+      "path": "/js/core/role-modules.js?v=20261031r7",
+      "kind": "js",
+      "sources": [
+        "/"
+      ],
+      "integrities": [],
+      "local": {
+        "bytes": 4376,
+        "sha256": "71817e3c1ca754d7ea75de18872dd5e8fbbf9109298775754584aec3b2b8e9a8",
+        "normalization": "CRLF_TO_LF"
+      },
+      "remote": {
+        "status": 200,
+        "attempts": 1,
+        "headers": {
+          "cache": {
+            "revalidates": true,
+            "immutable": false,
+            "maxAge": null
+          },
+          "nosniff": true,
+          "frameDenied": true,
+          "referrerPolicy": true,
+          "csp": {
+            "baseRestricted": true,
+            "objectNone": true,
+            "frameAncestorsNone": true,
+            "scriptControlEnforced": false,
+            "scriptControlReportOnly": true
+          }
+        },
+        "decodedBytes": 4376,
+        "sha256": "71817e3c1ca754d7ea75de18872dd5e8fbbf9109298775754584aec3b2b8e9a8",
+        "mime": "application/javascript",
+        "mimeMatches": true,
+        "encoding": "br",
+        "encodedBytesFromContentLength": null,
+        "contentLength": null,
+        "integrityMatches": true
+      },
+      "matchesLocal": true
+    },
+    {
+      "path": "/js/reader/reader.js?v=20261031r7",
+      "kind": "js",
+      "sources": [
+        "/"
+      ],
+      "integrities": [],
+      "local": {
+        "bytes": 136847,
+        "sha256": "490249ce1e35d5a936a2b35f565e9670158e465793d9e4116b864c00a9e4dceb",
+        "normalization": "CRLF_TO_LF"
+      },
+      "remote": {
+        "status": 200,
+        "attempts": 1,
+        "headers": {
+          "cache": {
+            "revalidates": true,
+            "immutable": false,
+            "maxAge": null
+          },
+          "nosniff": true,
+          "frameDenied": true,
+          "referrerPolicy": true,
+          "csp": {
+            "baseRestricted": true,
+            "objectNone": true,
+            "frameAncestorsNone": true,
+            "scriptControlEnforced": false,
+            "scriptControlReportOnly": true
+          }
+        },
+        "decodedBytes": 136847,
+        "sha256": "490249ce1e35d5a936a2b35f565e9670158e465793d9e4116b864c00a9e4dceb",
+        "mime": "application/javascript",
+        "mimeMatches": true,
+        "encoding": "br",
+        "encodedBytesFromContentLength": null,
+        "contentLength": null,
+        "integrityMatches": true
+      },
+      "matchesLocal": true
+    },
+    {
+      "path": "/js/admin/admin-workflow.js?v=20261031r7",
+      "kind": "js",
+      "sources": [
+        "lazy-role"
+      ],
+      "integrities": [],
+      "local": {
+        "bytes": 19977,
+        "sha256": "e07be5ba35899fad13c8ee706f9eddd3c3005305a48f0ae94ce5d5cb26960277",
+        "normalization": "CRLF_TO_LF"
+      },
+      "remote": {
+        "status": 200,
+        "attempts": 1,
+        "headers": {
+          "cache": {
+            "revalidates": true,
+            "immutable": false,
+            "maxAge": null
+          },
+          "nosniff": true,
+          "frameDenied": true,
+          "referrerPolicy": true,
+          "csp": {
+            "baseRestricted": true,
+            "objectNone": true,
+            "frameAncestorsNone": true,
+            "scriptControlEnforced": false,
+            "scriptControlReportOnly": true
+          }
+        },
+        "decodedBytes": 19977,
+        "sha256": "e07be5ba35899fad13c8ee706f9eddd3c3005305a48f0ae94ce5d5cb26960277",
+        "mime": "application/javascript",
+        "mimeMatches": true,
+        "encoding": "br",
+        "encodedBytesFromContentLength": null,
+        "contentLength": null,
+        "integrityMatches": true
+      },
+      "matchesLocal": true
+    }
+  ]
+}

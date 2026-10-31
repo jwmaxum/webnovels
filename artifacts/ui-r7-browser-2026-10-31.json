@@ -1,356 +1,495 @@
 {
-  "checkedAt": "2026-10-31T01:51:58.587Z",
+  "stage": "UI-R7",
   "origin": "https://webnovels-db4.pages.dev",
-  "basisCommit": "92ab3901ff805ca307be212316a6507709931fc2",
-  "mode": "Baseline live browser observation before R7 deployment",
-  "adminUse": "Explicit user approval; read-only; no account/work/support mutations",
-  "records": [
-    {
-      "page": "home",
-      "requestedWidth": 320,
-      "mainWidth": 305,
-      "overflow": [
-        {
-          "className": "",
-          "id": "",
-          "tag": "A"
+  "baseline": {
+    "checkedAt": "2026-10-31T01:51:58.587Z",
+    "origin": "https://webnovels-db4.pages.dev",
+    "basisCommit": "92ab3901ff805ca307be212316a6507709931fc2",
+    "mode": "Baseline live browser observation before R7 deployment",
+    "adminUse": "Explicit user approval; read-only; no account/work/support mutations",
+    "records": [
+      {
+        "page": "home",
+        "requestedWidth": 320,
+        "mainWidth": 305,
+        "overflow": [
+          {
+            "className": "",
+            "id": "",
+            "tag": "A"
+          }
+        ],
+        "scrollWidth": 305,
+        "viewport": 305
+      },
+      {
+        "page": "home",
+        "requestedWidth": 375,
+        "mainWidth": 360,
+        "overflow": [],
+        "scrollWidth": 360,
+        "viewport": 360
+      },
+      {
+        "page": "home",
+        "requestedWidth": 390,
+        "mainWidth": 375,
+        "overflow": [],
+        "scrollWidth": 375,
+        "viewport": 375
+      },
+      {
+        "page": "home",
+        "requestedWidth": 768,
+        "mainWidth": 753,
+        "overflow": [],
+        "scrollWidth": 753,
+        "viewport": 753
+      },
+      {
+        "page": "home",
+        "requestedWidth": 1024,
+        "mainWidth": 1009,
+        "overflow": [],
+        "scrollWidth": 1009,
+        "viewport": 1009
+      },
+      {
+        "page": "home",
+        "requestedWidth": 1440,
+        "mainWidth": 1425,
+        "overflow": [],
+        "scrollWidth": 1425,
+        "viewport": 1425
+      },
+      {
+        "page": "/company/",
+        "requestedWidth": 320,
+        "missingAnchors": [],
+        "scrollWidth": 305,
+        "title": "회사정보",
+        "viewport": 305
+      },
+      {
+        "page": "/company/",
+        "requestedWidth": 375,
+        "missingAnchors": [],
+        "scrollWidth": 360,
+        "title": "회사정보",
+        "viewport": 360
+      },
+      {
+        "page": "/company/",
+        "requestedWidth": 390,
+        "missingAnchors": [],
+        "scrollWidth": 375,
+        "title": "회사정보",
+        "viewport": 375
+      },
+      {
+        "page": "/company/",
+        "requestedWidth": 768,
+        "missingAnchors": [],
+        "scrollWidth": 753,
+        "title": "회사정보",
+        "viewport": 753
+      },
+      {
+        "page": "/company/",
+        "requestedWidth": 1024,
+        "missingAnchors": [],
+        "scrollWidth": 1009,
+        "title": "회사정보",
+        "viewport": 1009
+      },
+      {
+        "page": "/company/",
+        "requestedWidth": 1440,
+        "missingAnchors": [],
+        "scrollWidth": 1425,
+        "title": "회사정보",
+        "viewport": 1425
+      },
+      {
+        "page": "/policies/terms/",
+        "requestedWidth": 320,
+        "missingAnchors": [],
+        "scrollWidth": 305,
+        "title": "이용약관",
+        "viewport": 305
+      },
+      {
+        "page": "/policies/terms/",
+        "requestedWidth": 375,
+        "missingAnchors": [],
+        "scrollWidth": 360,
+        "title": "이용약관",
+        "viewport": 360
+      },
+      {
+        "page": "/policies/terms/",
+        "requestedWidth": 390,
+        "missingAnchors": [],
+        "scrollWidth": 375,
+        "title": "이용약관",
+        "viewport": 375
+      },
+      {
+        "page": "/policies/terms/",
+        "requestedWidth": 768,
+        "missingAnchors": [],
+        "scrollWidth": 753,
+        "title": "이용약관",
+        "viewport": 753
+      },
+      {
+        "page": "/policies/terms/",
+        "requestedWidth": 1024,
+        "missingAnchors": [],
+        "scrollWidth": 1009,
+        "title": "이용약관",
+        "viewport": 1009
+      },
+      {
+        "page": "/policies/terms/",
+        "requestedWidth": 1440,
+        "missingAnchors": [],
+        "scrollWidth": 1425,
+        "title": "이용약관",
+        "viewport": 1425
+      },
+      {
+        "page": "/policies/refund/",
+        "requestedWidth": 320,
+        "missingAnchors": [],
+        "scrollWidth": 305,
+        "title": "환불정책",
+        "viewport": 305
+      },
+      {
+        "page": "/policies/refund/",
+        "requestedWidth": 375,
+        "missingAnchors": [],
+        "scrollWidth": 360,
+        "title": "환불정책",
+        "viewport": 360
+      },
+      {
+        "page": "/policies/refund/",
+        "requestedWidth": 390,
+        "missingAnchors": [],
+        "scrollWidth": 375,
+        "title": "환불정책",
+        "viewport": 375
+      },
+      {
+        "page": "/policies/refund/",
+        "requestedWidth": 768,
+        "missingAnchors": [],
+        "scrollWidth": 753,
+        "title": "환불정책",
+        "viewport": 753
+      },
+      {
+        "page": "/policies/refund/",
+        "requestedWidth": 1024,
+        "missingAnchors": [],
+        "scrollWidth": 1009,
+        "title": "환불정책",
+        "viewport": 1009
+      },
+      {
+        "page": "/policies/refund/",
+        "requestedWidth": 1440,
+        "missingAnchors": [],
+        "scrollWidth": 1425,
+        "title": "환불정책",
+        "viewport": 1425
+      },
+      {
+        "page": "admin-dashboard",
+        "requestedWidth": 320,
+        "contentRegion": "관리자 작업 영역",
+        "menuButtons": 13,
+        "scrollWidth": 305,
+        "viewport": 305
+      },
+      {
+        "page": "admin-dashboard",
+        "requestedWidth": 375,
+        "contentRegion": "관리자 작업 영역",
+        "menuButtons": 13,
+        "scrollWidth": 360,
+        "viewport": 360
+      },
+      {
+        "page": "admin-dashboard",
+        "requestedWidth": 390,
+        "contentRegion": "관리자 작업 영역",
+        "menuButtons": 13,
+        "scrollWidth": 375,
+        "viewport": 375
+      },
+      {
+        "page": "admin-dashboard",
+        "requestedWidth": 768,
+        "contentRegion": "관리자 작업 영역",
+        "menuButtons": 13,
+        "scrollWidth": 753,
+        "viewport": 753
+      },
+      {
+        "page": "admin-dashboard",
+        "requestedWidth": 1024,
+        "contentRegion": "관리자 작업 영역",
+        "menuButtons": 13,
+        "scrollWidth": 1009,
+        "viewport": 1009
+      },
+      {
+        "page": "admin-dashboard",
+        "requestedWidth": 1440,
+        "contentRegion": "관리자 작업 영역",
+        "menuButtons": 13,
+        "scrollWidth": 1425,
+        "viewport": 1425
+      },
+      {
+        "page": "admin-readonly",
+        "dashboard": "PASS",
+        "workMetadata": "PASS",
+        "supportQueue": "PASS-empty",
+        "providerStates": "UNCONFIGURED",
+        "writesPerformed": false,
+        "loggedOut": true
+      },
+      {
+        "page": "discover-webtoon",
+        "requestedWidth": 320,
+        "heading": "웹툰 작품 탐색",
+        "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
+        "scrollWidth": 305,
+        "viewport": 305
+      },
+      {
+        "page": "discover-webtoon",
+        "requestedWidth": 375,
+        "heading": "웹툰 작품 탐색",
+        "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
+        "scrollWidth": 360,
+        "viewport": 360
+      },
+      {
+        "page": "discover-webtoon",
+        "requestedWidth": 390,
+        "heading": "웹툰 작품 탐색",
+        "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
+        "scrollWidth": 375,
+        "viewport": 375
+      },
+      {
+        "page": "discover-webtoon",
+        "requestedWidth": 768,
+        "heading": "웹툰 작품 탐색",
+        "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
+        "scrollWidth": 753,
+        "viewport": 753
+      },
+      {
+        "page": "discover-webtoon",
+        "requestedWidth": 1024,
+        "heading": "웹툰 작품 탐색",
+        "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
+        "scrollWidth": 1009,
+        "viewport": 1009
+      },
+      {
+        "page": "discover-webtoon",
+        "requestedWidth": 1440,
+        "heading": "웹툰 작품 탐색",
+        "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
+        "scrollWidth": 1425,
+        "viewport": 1425
+      },
+      {
+        "page": "acceptance-limits",
+        "actualBrowserZoom200": "NOT_VERIFIED-native shortcut did not change CSS viewport",
+        "physicalMobileKeyboard": "NOT_TESTED",
+        "spokenScreenReader": "NOT_TESTED",
+        "publicWebtoonViewer": "NO_PUBLIC_WEBTOON_DATA"
+      },
+      {
+        "page": "admin-cases",
+        "publicationReview": "PASS-empty",
+        "writesPerformed": false
+      },
+      {
+        "page": "auth-keyboard",
+        "arrowSelection": "PASS",
+        "shortDialog375x300": {
+          "top": 12,
+          "height": 276,
+          "bottom": 288
         }
-      ],
-      "scrollWidth": 305,
-      "viewport": 305
-    },
-    {
-      "page": "home",
-      "requestedWidth": 375,
-      "mainWidth": 360,
-      "overflow": [],
-      "scrollWidth": 360,
-      "viewport": 360
-    },
-    {
-      "page": "home",
-      "requestedWidth": 390,
-      "mainWidth": 375,
-      "overflow": [],
-      "scrollWidth": 375,
-      "viewport": 375
-    },
-    {
-      "page": "home",
-      "requestedWidth": 768,
-      "mainWidth": 753,
-      "overflow": [],
-      "scrollWidth": 753,
-      "viewport": 753
-    },
-    {
-      "page": "home",
-      "requestedWidth": 1024,
-      "mainWidth": 1009,
-      "overflow": [],
-      "scrollWidth": 1009,
-      "viewport": 1009
-    },
-    {
-      "page": "home",
-      "requestedWidth": 1440,
-      "mainWidth": 1425,
-      "overflow": [],
-      "scrollWidth": 1425,
-      "viewport": 1425
-    },
-    {
-      "page": "/company/",
-      "requestedWidth": 320,
-      "missingAnchors": [],
-      "scrollWidth": 305,
-      "title": "회사정보",
-      "viewport": 305
-    },
-    {
-      "page": "/company/",
-      "requestedWidth": 375,
-      "missingAnchors": [],
-      "scrollWidth": 360,
-      "title": "회사정보",
-      "viewport": 360
-    },
-    {
-      "page": "/company/",
-      "requestedWidth": 390,
-      "missingAnchors": [],
-      "scrollWidth": 375,
-      "title": "회사정보",
-      "viewport": 375
-    },
-    {
-      "page": "/company/",
-      "requestedWidth": 768,
-      "missingAnchors": [],
-      "scrollWidth": 753,
-      "title": "회사정보",
-      "viewport": 753
-    },
-    {
-      "page": "/company/",
-      "requestedWidth": 1024,
-      "missingAnchors": [],
-      "scrollWidth": 1009,
-      "title": "회사정보",
-      "viewport": 1009
-    },
-    {
-      "page": "/company/",
-      "requestedWidth": 1440,
-      "missingAnchors": [],
-      "scrollWidth": 1425,
-      "title": "회사정보",
-      "viewport": 1425
-    },
-    {
-      "page": "/policies/terms/",
-      "requestedWidth": 320,
-      "missingAnchors": [],
-      "scrollWidth": 305,
-      "title": "이용약관",
-      "viewport": 305
-    },
-    {
-      "page": "/policies/terms/",
-      "requestedWidth": 375,
-      "missingAnchors": [],
-      "scrollWidth": 360,
-      "title": "이용약관",
-      "viewport": 360
-    },
-    {
-      "page": "/policies/terms/",
-      "requestedWidth": 390,
-      "missingAnchors": [],
-      "scrollWidth": 375,
-      "title": "이용약관",
-      "viewport": 375
-    },
-    {
-      "page": "/policies/terms/",
-      "requestedWidth": 768,
-      "missingAnchors": [],
-      "scrollWidth": 753,
-      "title": "이용약관",
-      "viewport": 753
-    },
-    {
-      "page": "/policies/terms/",
-      "requestedWidth": 1024,
-      "missingAnchors": [],
-      "scrollWidth": 1009,
-      "title": "이용약관",
-      "viewport": 1009
-    },
-    {
-      "page": "/policies/terms/",
-      "requestedWidth": 1440,
-      "missingAnchors": [],
-      "scrollWidth": 1425,
-      "title": "이용약관",
-      "viewport": 1425
-    },
-    {
-      "page": "/policies/refund/",
-      "requestedWidth": 320,
-      "missingAnchors": [],
-      "scrollWidth": 305,
-      "title": "환불정책",
-      "viewport": 305
-    },
-    {
-      "page": "/policies/refund/",
-      "requestedWidth": 375,
-      "missingAnchors": [],
-      "scrollWidth": 360,
-      "title": "환불정책",
-      "viewport": 360
-    },
-    {
-      "page": "/policies/refund/",
-      "requestedWidth": 390,
-      "missingAnchors": [],
-      "scrollWidth": 375,
-      "title": "환불정책",
-      "viewport": 375
-    },
-    {
-      "page": "/policies/refund/",
-      "requestedWidth": 768,
-      "missingAnchors": [],
-      "scrollWidth": 753,
-      "title": "환불정책",
-      "viewport": 753
-    },
-    {
-      "page": "/policies/refund/",
-      "requestedWidth": 1024,
-      "missingAnchors": [],
-      "scrollWidth": 1009,
-      "title": "환불정책",
-      "viewport": 1009
-    },
-    {
-      "page": "/policies/refund/",
-      "requestedWidth": 1440,
-      "missingAnchors": [],
-      "scrollWidth": 1425,
-      "title": "환불정책",
-      "viewport": 1425
-    },
-    {
-      "page": "admin-dashboard",
-      "requestedWidth": 320,
-      "contentRegion": "관리자 작업 영역",
-      "menuButtons": 13,
-      "scrollWidth": 305,
-      "viewport": 305
-    },
-    {
-      "page": "admin-dashboard",
-      "requestedWidth": 375,
-      "contentRegion": "관리자 작업 영역",
-      "menuButtons": 13,
-      "scrollWidth": 360,
-      "viewport": 360
-    },
-    {
-      "page": "admin-dashboard",
-      "requestedWidth": 390,
-      "contentRegion": "관리자 작업 영역",
-      "menuButtons": 13,
-      "scrollWidth": 375,
-      "viewport": 375
-    },
-    {
-      "page": "admin-dashboard",
-      "requestedWidth": 768,
-      "contentRegion": "관리자 작업 영역",
-      "menuButtons": 13,
-      "scrollWidth": 753,
-      "viewport": 753
-    },
-    {
-      "page": "admin-dashboard",
-      "requestedWidth": 1024,
-      "contentRegion": "관리자 작업 영역",
-      "menuButtons": 13,
-      "scrollWidth": 1009,
-      "viewport": 1009
-    },
-    {
-      "page": "admin-dashboard",
-      "requestedWidth": 1440,
-      "contentRegion": "관리자 작업 영역",
-      "menuButtons": 13,
-      "scrollWidth": 1425,
-      "viewport": 1425
-    },
-    {
-      "page": "admin-readonly",
-      "dashboard": "PASS",
-      "workMetadata": "PASS",
-      "supportQueue": "PASS-empty",
-      "providerStates": "UNCONFIGURED",
-      "writesPerformed": false,
-      "loggedOut": true
-    },
-    {
-      "page": "discover-webtoon",
-      "requestedWidth": 320,
-      "heading": "웹툰 작품 탐색",
-      "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
-      "scrollWidth": 305,
-      "viewport": 305
-    },
-    {
-      "page": "discover-webtoon",
-      "requestedWidth": 375,
-      "heading": "웹툰 작품 탐색",
-      "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
-      "scrollWidth": 360,
-      "viewport": 360
-    },
-    {
-      "page": "discover-webtoon",
-      "requestedWidth": 390,
-      "heading": "웹툰 작품 탐색",
-      "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
-      "scrollWidth": 375,
-      "viewport": 375
-    },
-    {
-      "page": "discover-webtoon",
-      "requestedWidth": 768,
-      "heading": "웹툰 작품 탐색",
-      "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
-      "scrollWidth": 753,
-      "viewport": 753
-    },
-    {
-      "page": "discover-webtoon",
-      "requestedWidth": 1024,
-      "heading": "웹툰 작품 탐색",
-      "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
-      "scrollWidth": 1009,
-      "viewport": 1009
-    },
-    {
-      "page": "discover-webtoon",
-      "requestedWidth": 1440,
-      "heading": "웹툰 작품 탐색",
-      "results": "조건에 맞는 공개 작품이 없습니다.검색 조건 초기화",
-      "scrollWidth": 1425,
-      "viewport": 1425
-    },
-    {
-      "page": "acceptance-limits",
-      "actualBrowserZoom200": "NOT_VERIFIED-native shortcut did not change CSS viewport",
-      "physicalMobileKeyboard": "NOT_TESTED",
-      "spokenScreenReader": "NOT_TESTED",
-      "publicWebtoonViewer": "NO_PUBLIC_WEBTOON_DATA"
-    },
-    {
-      "page": "admin-cases",
-      "publicationReview": "PASS-empty",
-      "writesPerformed": false
-    },
-    {
-      "page": "auth-keyboard",
-      "arrowSelection": "PASS",
-      "shortDialog375x300": {
-        "top": 12,
-        "height": 276,
-        "bottom": 288
+      },
+      {
+        "page": "baseline-reader-defects",
+        "duplicateCommentIds": 2,
+        "selectedAriaPressed": "MISSING",
+        "settingsDialog375x300": {
+          "top": -26,
+          "height": 326,
+          "bottom": 300
+        }
       }
-    },
-    {
-      "page": "baseline-reader-defects",
-      "duplicateCommentIds": 2,
-      "selectedAriaPressed": "MISSING",
-      "settingsDialog375x300": {
-        "top": -26,
-        "height": 326,
-        "bottom": 300
+    ],
+    "initialTimingSample": {
+      "scope": "initial public navigation before R6 reload; single uncontrolled sample, no improvement claim",
+      "ttfbMs": 382.9,
+      "domContentLoadedMs": 1484.8,
+      "loadMs": 1538,
+      "documentEncodedBytes": 37136,
+      "documentDecodedBytes": 183669,
+      "googleFontsCss": {
+        "encodedBytes": 162387,
+        "decodedBytes": 662314,
+        "durationMs": 328.2
       }
     }
-  ],
-  "initialTimingSample": {
-    "scope": "initial public navigation before R6 reload; single uncontrolled sample, no improvement claim",
-    "ttfbMs": 382.9,
-    "domContentLoadedMs": 1484.8,
-    "loadMs": 1538,
-    "documentEncodedBytes": 37136,
-    "documentDecodedBytes": 183669,
-    "googleFontsCss": {
-      "encodedBytes": 162387,
-      "decodedBytes": 662314,
-      "durationMs": 328.2
-    }
+  },
+  "postDeployment": {
+    "checkedAt": "2026-10-31T02:10:46.961Z",
+    "origin": "https://webnovels-db4.pages.dev",
+    "codeCommit": "749b4e1f52b0bdef79fbc713df85577e2f5f5f01",
+    "result": "PASS_WITH_LIMITS",
+    "records": [
+      {
+        "page": "admin-review-navigation",
+        "path": "https://webnovels-db4.pages.dev/admin/cases",
+        "result": "PASS",
+        "businessMutations": false
+      },
+      {
+        "page": "work-detail",
+        "requestedWidth": 320,
+        "scrollWidth": 305,
+        "title": "조선 로맨스",
+        "width": 305
+      },
+      {
+        "page": "work-detail",
+        "requestedWidth": 375,
+        "scrollWidth": 360,
+        "title": "조선 로맨스",
+        "width": 360
+      },
+      {
+        "page": "work-detail",
+        "requestedWidth": 390,
+        "scrollWidth": 375,
+        "title": "조선 로맨스",
+        "width": 375
+      },
+      {
+        "page": "work-detail",
+        "requestedWidth": 768,
+        "scrollWidth": 753,
+        "title": "조선 로맨스",
+        "width": 753
+      },
+      {
+        "page": "work-detail",
+        "requestedWidth": 1024,
+        "scrollWidth": 1009,
+        "title": "조선 로맨스",
+        "width": 1009
+      },
+      {
+        "page": "work-detail",
+        "requestedWidth": 1440,
+        "scrollWidth": 1425,
+        "title": "조선 로맨스",
+        "width": 1425
+      },
+      {
+        "page": "novel-reader",
+        "requestedWidth": 320,
+        "commentInputs": 1,
+        "scrollWidth": 305,
+        "submitButtons": 1,
+        "width": 305
+      },
+      {
+        "page": "novel-reader",
+        "requestedWidth": 375,
+        "commentInputs": 1,
+        "scrollWidth": 360,
+        "submitButtons": 1,
+        "width": 360
+      },
+      {
+        "page": "novel-reader",
+        "requestedWidth": 390,
+        "commentInputs": 1,
+        "scrollWidth": 375,
+        "submitButtons": 1,
+        "width": 375
+      },
+      {
+        "page": "novel-reader",
+        "requestedWidth": 768,
+        "commentInputs": 1,
+        "scrollWidth": 753,
+        "submitButtons": 1,
+        "width": 753
+      },
+      {
+        "page": "novel-reader",
+        "requestedWidth": 1024,
+        "commentInputs": 1,
+        "scrollWidth": 1009,
+        "submitButtons": 1,
+        "width": 1009
+      },
+      {
+        "page": "novel-reader",
+        "requestedWidth": 1440,
+        "commentInputs": 1,
+        "scrollWidth": 1425,
+        "submitButtons": 1,
+        "width": 1425
+      },
+      {
+        "page": "reader-settings-375x300",
+        "dialog": {
+          "bottom": 300,
+          "height": 284,
+          "left": 0,
+          "right": 360,
+          "top": 16,
+          "width": 360,
+          "x": 0,
+          "y": 16
+        },
+        "height": 300,
+        "labelledBy": "readerSettingsHeading",
+        "scrollOwner": "auto",
+        "selected": [
+          "화이트",
+          "가독 명조 (Serif)",
+          "보통 (1.8)",
+          "기본 여백",
+          "표준"
+        ]
+      },
+      {
+        "page": "reader-settings-escape",
+        "focused": "btnReaderSettings",
+        "settingsHidden": true
+      }
+    ],
+    "screenshot": "artifacts/ui-r7-reader-settings-375x300.jpg",
+    "businessDataMutations": false,
+    "administratorLoggedOut": true
   }
 }
