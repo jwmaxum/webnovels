@@ -1,0 +1,94 @@
+{
+  "stage": "UI-R9",
+  "checkedAt": "2026-10-31T06:26:30.395Z",
+  "origin": "https://webnovels-db4.pages.dev",
+  "liveUiBase": "a33585471569afd3947b596746d83ccb028829da",
+  "authorAndAdminDistinct": true,
+  "immediateAuthorPublication": {
+    "novel": true,
+    "webtoon": true,
+    "priorAdminReview": false
+  },
+  "scheduledPublication": {
+    "manualSchedulerCall": false,
+    "novel": {
+      "requestedKST": "2026-10-31T14:38:00+09:00",
+      "publishedKST": "2026-10-31T14:38:52+09:00"
+    },
+    "webtoon": {
+      "requestedKST": "2026-10-31T14:44:00+09:00",
+      "publishedKST": "2026-10-31T14:44:52+09:00"
+    }
+  },
+  "publicEditReview": {
+    "novelOldReaderBeforeApproval": true,
+    "novelChangedReaderAfterApproval": true,
+    "webtoonOldTitleBeforeApproval": true,
+    "webtoonAdminApproval": true,
+    "webtoonReaderAfterApproval": "NOT_VERIFIED_BROWSER_INTERRUPTED",
+    "bothApprovedStoredFirstVersions": true
+  },
+  "webtoonUpload": {
+    "panels": 2,
+    "sequentialProcessing": true,
+    "moveUpAndRestore": true,
+    "savedAndPublished": true,
+    "readerImagesDecoded": true,
+    "observedCssWidth": 1265,
+    "observedScrollWidth": 1265
+  },
+  "representativeHtml": {
+    "serverSaved": true,
+    "publishedReaderMarksAndAlignment": true,
+    "actualNativeWordClipboard": "AUTOMATION_BRIDGE_UNAVAILABLE"
+  },
+  "userReports": {
+    "phone": {
+      "device": "Galaxy S26",
+      "browser": "Chrome",
+      "overallNormal": true,
+      "osVersion": null,
+      "browserVersion": null,
+      "itemizedEvidence": false
+    },
+    "pcPaste": {
+      "success": true,
+      "statement": "PC에서 붙여넣기는 잘 되네요. My bad",
+      "individualFormattingAndReload": "NOT_ITEMIZED"
+    }
+  },
+  "cleanup": {
+    "workIds": [
+      "36",
+      "37"
+    ],
+    "private": true,
+    "unauthenticatedWorkApiNotFound": true,
+    "activeSchedules": 0,
+    "headsAndHistoryRetained": true,
+    "finalMethod": "ordinary author PATCH and separate admin decision API after browser interruption",
+    "sameTitleWorkaroundBefore029": true,
+    "apiSessionsLocallySignedOut": true,
+    "userBrowserSessionsGloballyRevoked": false
+  },
+  "existingWorkPreserved": {
+    "id": "32",
+    "completed": true,
+    "publicEpisodes": 10,
+    "publicHeads": 10
+  },
+  "existingPrivateWorksUnchanged": true,
+  "accessibility": {
+    "ariaAndSelectionRegression": true,
+    "desktop200Percent": "NOT_VERIFIED",
+    "spokenScreenReader": "NOT_VERIFIED"
+  },
+  "performance": {
+    "collection": "UNAVAILABLE",
+    "reason": "Raw CDP PerformanceTimeline.enable unsupported by this browser tool",
+    "actualLcpCandidate": null,
+    "actualCls": null,
+    "repeatedSamples": 0,
+    "fieldCwvClaim": false
+  }
+}

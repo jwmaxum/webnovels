@@ -29,7 +29,7 @@
     PUBLISH_SAVE_REQUIRED:'서버 저장이 확인되지 않았습니다. 원고 상태를 확인하고 다시 시도하세요.',
     PUBLISH_REVISION_CONFLICT:'미리보기와 서버 원고가 달라졌습니다. 다시 확인하세요.',
     RIGHTS_CONFIRMATION_REQUIRED:'게시 권리와 작품 정보를 확인해주세요.',
-    INVALID_SCHEDULE:'예약 시각과 시간대를 확인해주세요.',
+    INVALID_SCHEDULE:'예약 시각은 현재보다 2분 넘게 뒤로, 1년 이내로 지정해주세요. 선택한 표시 시간대도 확인해주세요.',
     DRAFT_COMPOSING:'한글 입력을 마친 뒤 미리보기를 다시 열어주세요.',
     PUBLICATION_IN_PROGRESS:'게시 결과를 확인하는 중입니다. 결과 확인 후 다른 작품을 열어주세요.'
   }[e?.code || e?.message] || '게시 상태를 확인하지 못했습니다. 같은 요청으로 다시 확인하세요.');
@@ -41,6 +41,22 @@
     ...(key ? {headers:{'Idempotency-Key':key}} : {}),body:JSON.stringify(data)});
   function assertOpen(turn,user) {
     if (turn !== epoch || actor()?.userId !== user || work?.userId !== user) throw Error('SESSION_CHANGED');
+  }
+  function showReview(result,turn,user) {
+    const workId=String(work.id),path='/creator/works/'+encodeURIComponent(workId)+'/settings';
+    const receipt=typeof result.changeId==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(result.changeId)?result.changeId:null;
+    $('publicationDraftPanel').hidden=true;$('publicationRetryPanel').hidden=true;
+    message('수정 검토 요청이 접수되었습니다. 승인 전까지 기존 공개본이 유지됩니다.'+(receipt?' 요청 번호: '+receipt:''));
+    const status=$('publicationMessage');if(!status)return;
+    const space=document.createElement('span');space.textContent=' ';
+    const link=document.createElement('a');link.href=path;link.textContent='검토 현황 확인';
+    const visit=event=>{
+      if(turn!==epoch||actor()?.userId!==user||actor()?.author?.status!=='APPROVED'||work?.userId!==user||String(work?.id)!==workId){event?.preventDefault();return false;}
+      if(event?.button>0||event?.ctrlKey||event?.metaKey||event?.shiftKey||event?.altKey||typeof window.navigateTo!=='function')return;
+      event?.preventDefault();window.closeModal('modalCreatorPublication');window.navigateTo(path);return false;
+    };
+    link.onclick=visit;link.onauxclick=visit;
+    status.append(space,link);
   }
   function checklist(){
     if(!context||!work)return [];
@@ -263,7 +279,7 @@
       const result=await post('/publish/'+context.id,pending.data,pending.key);
       assertOpen(turn,user);
       sessionStorage.removeItem(storage);
-      if(result.reviewRequired){$('publicationDraftPanel').hidden=true;$('publicationRetryPanel').hidden=true;message('수정 검토 요청이 접수되었습니다. 승인 전까지 기존 공개본이 유지됩니다.');return;}
+      if(result.reviewRequired){showReview(result,turn,user);return;}
       const publication=result.publication,notices=[];
       try { await reconcileDraft(publication,context); }
       catch { notices.push('기기 상태 저장에 실패했습니다. 기기 원고를 다운로드해 보관해주세요.'); }

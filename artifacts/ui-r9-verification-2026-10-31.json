@@ -1,0 +1,112 @@
+{
+  "stage": "UI-R9",
+  "checkedAt": "2026-10-31T06:26:58.698Z",
+  "baseCommit": "a33585471569afd3947b596746d83ccb028829da",
+  "validation": {
+    "releaseCommandCount": 47,
+    "fullBuild": {
+      "command": "npm run build",
+      "startedAt": "2026-10-31T05:19:46.924Z",
+      "completedAt": "2026-10-31T06:03:07.240Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "scratch/ui-r9/build.log"
+    },
+    "lateSqlCorrection": "Full release passed before 029; final scoped regressions and compile passed after 029, remote CI covers final tree",
+    "finalScoped": {
+      "startedAt": "2026-10-31T06:17:33.014Z",
+      "completedAt": "2026-10-31T06:18:42.522Z",
+      "steps": [
+        {
+          "command": "test:ui-r9",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "test:author-publishing",
+          "exitCode": 0,
+          "error": null
+        },
+        {
+          "command": "build:compile",
+          "exitCode": 0,
+          "error": null
+        }
+      ],
+      "exitCode": 0,
+      "log": "scratch/ui-r9/final-validation.log"
+    },
+    "types": {
+      "exitCode": 0
+    },
+    "newTests": {
+      "wordPaste": 11,
+      "richEditor": 11,
+      "publicationReceipt": 9,
+      "performance": 17,
+      "reviewWorkScope": 8,
+      "total": 56
+    },
+    "coverage": {
+      "scope": "src/manuscript-paste.mjs only",
+      "lines": 100,
+      "branches": 93.02,
+      "functions": 100,
+      "global": "NOT_MEASURED"
+    },
+    "lint": "NOT_CONFIGURED",
+    "independentReview": "NO_BLOCKING_FINDINGS",
+    "security": {
+      "checkedAt": "2026-10-31T06:28:23.233Z",
+      "syntaxFiles": 13,
+      "syntaxPassed": true,
+      "secretScanTextFiles": 20,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "independentReview": "NO_BLOCKING_FINDINGS",
+      "userFilePreserved": true,
+      "rawBackupsExcluded": true
+    }
+  },
+  "database": {
+    "migration": "authoring-029",
+    "appliedAt": "2026-10-31T06:25:53.292Z",
+    "productionApplied": true,
+    "migrationSha256": "f3a5f1f785ac48db7e26c75724b2a53cd005bcfbcafcc4311be610764b337bac",
+    "currentLogicalBackupVerified": true,
+    "nativeArchiveShaVerified": true,
+    "actualBackupLocalRestore": true,
+    "hostedRestoreAccepted": false,
+    "originalRowsPreserved": true,
+    "allApplicationConstraintsVerified": true,
+    "localNotNullCatalogNormalization": true,
+    "onlyExpectedFunctionChanged": true,
+    "changedFunction": "authoring.review_change(text,uuid,bigint,jsonb,boolean)",
+    "publicWrappersUnchanged": true,
+    "functionAclsUnchanged": true,
+    "productionAclGuardsExact": true,
+    "repeatable": true,
+    "postApply": {
+      "applied": true,
+      "work_scoped_unique": true,
+      "private_helper_denied": true,
+      "browser_rpc_denied": true
+    },
+    "flagsChanged": false,
+    "reset": false,
+    "backupContentCommitted": false
+  },
+  "operationalChecks": {
+    "originalCompletedWorkPreserved": true,
+    "testWorksPrivate": true,
+    "testActiveSchedules": 0,
+    "distinctAuthorAdminForAllFourDecisions": true,
+    "headsAndImmutableReviewsPreserved": true
+  },
+  "limits": [
+    "Live browser publication roundtrip ran on R8 deployment; final R9 assets are separately checked after push.",
+    "PC paste and Galaxy S26 Chrome operation are user reports, not itemized instrumented evidence.",
+    "200% zoom, spoken screen reader, repeated LCP/CLS and independent hosted recovery remain open."
+  ],
+  "gitAndDelivery": "Commit, push and CI/delivery outcome are reported after publication; no credentials or raw backup files are included."
+}

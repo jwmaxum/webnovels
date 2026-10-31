@@ -782,7 +782,7 @@
                       <button type="button" class="btn btn-outline btn-sm" data-rich-command="justifyRight">오른쪽</button>
                     </div>
                     <p id="creatorRichNotice" class="text-muted small" role="status">Word에서 복사한 문단·줄바꿈·강조·정렬을 붙여넣을 수 있습니다. 표·그림·쪽 배치는 지원하지 않습니다.</p>
-                    <div id="creatorRichBody" class="creator-rich-body" contenteditable="false" role="textbox" aria-multiline="true" aria-label="서식 원고 본문"></div>
+                    <div id="creatorRichBody" class="creator-rich-body" contenteditable="false" role="textbox" aria-multiline="true" aria-label="서식 원고 본문" aria-describedby="creatorRichNotice"></div>
                   </section>
                   <textarea id="newEpContent" rows="16" class="form-input creator-editor-textarea" placeholder="원고를 입력해주세요." maxlength="200000"></textarea>
                   <p class="creator-editor-help">자동 저장 상태를 위에서 확인하세요. Ctrl/Cmd+S로 바로 저장할 수 있습니다.</p>
@@ -2477,7 +2477,7 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261031r8a"></script>
+  <script src="/js/core/role-modules.js?v=20261031r9"></script>
   <script src="/js/core/router.js?v=20261031r4"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
@@ -2583,7 +2583,8 @@
             <label><input type="radio" name="publicationMode" value="SCHEDULED"> <span id="publicationScheduledLabel">예약 무료 게시</span></label>
           </fieldset>
           <div id="publicationScheduleFields" hidden>
-            <label>예약 시각 <input id="publicationDueAt" type="datetime-local"></label>
+            <label>예약 시각 <input id="publicationDueAt" type="datetime-local" aria-describedby="publicationScheduleHelp"></label>
+            <p id="publicationScheduleHelp" class="text-muted small">현재보다 2분 넘게 뒤부터 1년 이내로 예약할 수 있습니다. 입력 시간을 고려해 5분 이상 여유를 두고, 선택한 표시 시간대 기준으로 입력하세요.</p>
             <label>표시 시간대 <select id="publicationTimezone"><option value="Asia/Seoul">한국 시간 (UTC+9)</option><option value="UTC">UTC</option></select></label>
           </div>
           <label class="publication-rights"><input type="checkbox" id="publicationRights"> 이 원고의 게시 권리가 있으며 작품 정보·등급·AI 표기를 확인했습니다.</label>

@@ -110,7 +110,7 @@ test('R6 changed assets have explicit local cache versions and preserve compatib
  const sources=doc.nodes.filter(node=>node.tagName==='script').map(node=>attr(node,'src')).filter(Boolean),styles=doc.nodes.filter(node=>node.tagName==='link').map(node=>attr(node,'href')).filter(Boolean);
  assert(styles.includes('/css/operations-account.css?v=20261031r6'));
  for(const path of ['/app.js','/js/core/auth-ui.js','/js/core/account-access.js','/js/core/beta-support.js']){assert(sources.includes(path+'?v=20261031r6'),path+' cache');await read('public'+path);}
- assert(sources.includes('/js/core/role-modules.js?v=20261031r8a'));
+ assert(sources.includes('/js/core/role-modules.js?v=20261031r9'));
  for(const name of ['admin-console','admin-publication-changes','admin-workflow','admin-beta-operations','admin-operations']){const path='/js/admin/'+name+'.js?v='+(name==='admin-workflow'?'20261031r7':'20261031r6');assert(loader.includes(path),name+' cache');await read('public'+path.split('?')[0]);}
  assert(sources.indexOf('/js/core/auth-session.js?v=136')<sources.indexOf('/js/core/beta-support.js?v=20261031r6'));assert(sources.indexOf('/js/core/beta-support.js?v=20261031r6')<sources.indexOf('/app.js?v=20261031r6'));
  assert(loader.indexOf('/js/admin/admin-beta-operations.js')<loader.indexOf('/js/admin/admin-operations.js'));assert(loader.includes('/js/creator/creator-webtoon.js?v=20261031r8a'));assert(loader.includes('/js/creator/creator-editor.js?v=20261031r8'));
