@@ -5,7 +5,7 @@
   const statuses = { OPEN: '접수', IN_REVIEW: '검토 중', WAITING_USER: '추가 답변 요청', RESOLVED: '답변 완료', CLOSED: '종결', CANCELLED: '취소' };
   const terminal = new Set(['RESOLVED', 'CLOSED', 'CANCELLED']);
   const roots = new Map();
-  let returnFocus = null;
+  let returnFocus = null, fieldSequence = 0;
   const actor = () => window.WebNovelsAuth?.getActor();
   const permitted = permission => actor()?.admin?.is_active === true && (actor()?.admin?.role === 'SUPER_ADMIN' || actor()?.admin?.permissions?.includes(permission));
   const canRead = admin => !!actor()?.userId && (!admin || permitted('CASE_READ'));
@@ -36,6 +36,15 @@
     input.value = Object.keys(choices)[0]; return input;
   }
   function date(value) { const time = new Date(value); return Number.isNaN(time.getTime()) ? '' : time.toLocaleString('ko-KR'); }
+  const statusName = (status, admin) => status === 'WAITING_USER' ? (admin ? '회원 답변 대기' : '내 답변 필요') : statuses[status] || '상태 확인 필요';
+  function statusBadge(parent, status, admin) {
+    const badge = el(parent, 'span', statusName(status, admin), 'beta-support-badge beta-support-status');
+    badge.setAttribute('data-support-status', statuses[status] ? status : 'UNKNOWN'); return badge;
+  }
+  function nextStep(status, admin) {
+    return (admin ? { OPEN: '새 문의입니다. 내용을 확인하고 검토 시작 또는 답변을 선택하세요.', IN_REVIEW: '검토 중인 문의입니다. 답변하거나 추가 자료가 필요하면 회원 답변 대기로 변경하세요.', WAITING_USER: '회원의 추가 답변을 기다리고 있습니다.', RESOLVED: '답변이 완료되었습니다. 필요한 경우 사유를 남기고 종결할 수 있습니다.', CLOSED: '종결된 문의입니다. 이력만 확인할 수 있습니다.', CANCELLED: '회원이 취소한 문의입니다. 이력만 확인할 수 있습니다.' } :
+      { OPEN: '문의가 접수되었습니다. 추가 설명이 있으면 답변을 남겨 주세요.', IN_REVIEW: '관리자가 확인하고 있습니다. 처리 내용은 아래 이력에서 확인할 수 있습니다.', WAITING_USER: '관리자가 추가 답변을 요청했습니다. 아래 요청 내용을 확인하고 답변해 주세요.', RESOLVED: '관리자 답변을 확인해 주세요. 필요한 경우 처리 결과의 재검토를 요청할 수 있습니다.', CLOSED: '처리가 종결되었습니다. 필요한 경우 처리 결과의 재검토를 요청할 수 있습니다.', CANCELLED: '취소한 문의입니다. 기록은 보존되며 다시 열 수 없습니다.' })[status] || '현재 처리 상태를 확인해 주세요.';
+  }
   function dispose(state) {
     state.alive = false; state.seq++; state.retry = null;
     if (roots.get(state.root) === state) {
@@ -50,7 +59,7 @@
   }
   function start(state) {
     if (!current(state)) return null;
-    state.seq++; state.retry = null; state.conflict = false; state.root.replaceChildren();
+    state.seq++; state.retry = null; state.conflict = false; state.busy = false; state.root.replaceChildren();
     return state.seq;
   }
   function heading(state, title, back = false) {
@@ -81,6 +90,8 @@
   async function get(state, action, params) { return window.WebNovelsAuth.api(endpoint(state, action, params)); }
   function formMessage(form) {
     const input = field(form, '내용 (3~4,000자)', 'message', 'textarea'); input.rows = 7; input.required = true; input.minLength = 3; input.maxLength = 4000;
+    const counter = el(form, 'p', '0 / 4,000자 · 최소 3자', 'beta-support-counter'); counter.id = 'betaSupportCounter' + (++fieldSequence);
+    input.setAttribute('aria-describedby', counter.id); input.oninput = () => { counter.textContent = input.value.length.toLocaleString('ko-KR') + ' / 4,000자 · 최소 3자'; };
     return input;
   }
   async function save(state, seq, form, status, action, payload, done) {
@@ -88,7 +99,7 @@
     const key = JSON.stringify({ action, ...payload });
     if (!state.retry || state.retry.key !== key) state.retry = { key, requestId: window.crypto.randomUUID() };
     state.busy = true; const controls = [...form.querySelectorAll('input,textarea,select,button')];
-    controls.forEach(control => { control.disabled = true; }); status.textContent = '저장하고 있습니다…';
+    controls.forEach(control => { control.disabled = true; }); form.setAttribute('aria-busy', 'true'); status.setAttribute('role', 'status'); status.textContent = '저장하고 있습니다… 요청 번호 ' + state.retry.requestId;
     let conflict = false;
     try {
       const result = await window.WebNovelsAuth.api(endpoint(state, action), {
@@ -104,10 +115,12 @@
         state.retry = null;
         // Keep the author's unsent message; replace only the displayed conversation on explicit reload.
         button(status, '최신 내용 불러오기', () => showDetail(state, payload.id, null, form.querySelector('textarea')?.value || ''));
+      } else if (!error?.code || !messages[error.code]) {
+        el(status, 'span', ' 같은 내용을 다시 보내면 중복 접수를 방지합니다. 요청 번호 ' + state.retry.requestId, 'beta-support-request-id');
+        button(status, '같은 요청 다시 보내기', () => form.onsubmit({ preventDefault() {} }));
       }
     } finally {
-      state.busy = false;
-      if (current(state, seq)) controls.forEach(control => { control.disabled = conflict && control.tagName === 'BUTTON'; });
+      if (current(state, seq)) { state.busy = false; form.setAttribute('aria-busy', 'false'); controls.forEach(control => { control.disabled = conflict && control.tagName === 'BUTTON'; }); }
     }
   }
   async function showList(state, offset = 0) {
@@ -121,23 +134,36 @@
     if (state.admin) {
       const category = select(filters, '문의 유형', 'category', { '': '전체 유형', ...categories }); category.value = state.category;
       category.onchange = () => { state.category = category.value; showList(state); };
+      const queue = el(state.root, 'nav', null, 'beta-support-queue-tabs'); queue.setAttribute('aria-label', '문의 처리 단계');
+      for (const [value, label] of [['', '전체'], ['OPEN', '새 문의'], ['IN_REVIEW', '검토 중'], ['WAITING_USER', '회원 답변 대기'], ['RESOLVED', '답변 완료']]) {
+        const tab = button(queue, label, () => { if (!current(state, seq)) return; state.status = value; return showList(state); });
+        tab.setAttribute('aria-pressed', String(state.status === value));
+      }
     }
     notice(state.root, '문의에는 비밀번호·인증번호·주민등록번호·API 키를 입력하지 마세요. 원고나 기기 정보는 자동 첨부하지 않습니다.');
-    const list = el(state.root, 'div', null, 'beta-support-list'); notice(list, '문의 내역을 불러오는 중입니다…');
+    const summary = el(state.root, 'p', '목록을 확인하고 있습니다.', 'beta-support-list-summary'); summary.setAttribute('role', 'status');
+    const list = el(state.root, 'div', null, 'beta-support-list'); list.setAttribute('aria-busy', 'true'); notice(list, '문의 내역을 불러오는 중입니다…');
     try {
       const result = await get(state, 'list', { offset: String(offset), ...(state.status ? { status: state.status } : {}), ...(state.admin && state.category ? { category: state.category } : {}) });
-      if (!current(state, seq)) return; list.replaceChildren();
-      if (!result.items?.length) notice(list, '등록된 문의가 없습니다.');
+      if (!current(state, seq)) return; if (!Array.isArray(result.items)) throw Error('INVALID_SUPPORT_RESPONSE'); list.replaceChildren();
+      const selected = [state.status && statusName(state.status, state.admin), state.category && categories[state.category]].filter(Boolean);
+      summary.textContent = `현재 목록 ${result.items?.length || 0}건${selected.length ? ' · ' + selected.join(' · ') : ''} · 최근 변경 순`;
+      if (!result.items?.length) {
+        notice(list, state.status || state.category ? '선택한 조건에 맞는 문의가 없습니다.' : '등록된 문의가 없습니다.');
+        if (state.status || state.category) button(list, '전체 문의 보기', () => { if (!current(state, seq)) return; state.status = ''; state.category = ''; return showList(state); });
+      }
       for (const item of result.items || []) {
         const card = el(list, 'article', null, 'beta-support-card');
-        el(card, 'span', `${categories[item.category] || '문의'} · ${statuses[item.status] || '상태 확인 필요'}`, 'beta-support-badge');
+        el(card, 'span', categories[item.category] || '문의', 'beta-support-badge'); statusBadge(card, item.status, state.admin);
         button(card, item.title, () => showDetail(state, item.id));
         el(card, 'p', `최근 변경 ${date(item.updatedAt)} · 답변 ${item.replyCount || 0}개`, 'beta-support-meta');
+        el(card, 'p', '문의 번호 ' + item.id, 'beta-support-meta beta-support-request-id');
       }
       const nav = el(list, 'div', null, 'beta-support-toolbar');
       if (offset) button(nav, '처음 목록', () => showList(state));
       if (Number.isInteger(result.nextOffset) && result.nextOffset > offset) button(nav, '다음 목록', () => showList(state, result.nextOffset));
-    } catch (error) { if (current(state, seq)) { list.replaceChildren(); notice(list, errorText(error), true); } }
+    } catch (error) { if (current(state, seq)) { summary.textContent = '목록 조회 실패'; list.replaceChildren(); notice(list, errorText(error), true); button(list, '목록 다시 불러오기', () => { if (current(state, seq)) return showList(state, offset); }); } }
+    finally { if (current(state, seq)) list.setAttribute('aria-busy', 'false'); }
   }
   function showCreate(state) {
     const seq = start(state); if (seq == null) return;
@@ -145,6 +171,7 @@
     notice(state.root, '발생한 상황과 원하는 도움을 적어 주세요. 문의 접수는 작품 공개 승인이나 PASS 본인확인을 대신하지 않습니다.');
     const form = el(state.root, 'form', null, 'beta-support-form');
     const category = select(form, '문의 유형', 'category', categories);
+    const categoryHint = el(form, 'p', '이용 중 궁금한 점과 필요한 도움을 적어 주세요.', 'beta-support-action-hint');
     const title = field(form, '제목 (3~120자)', 'title'); title.required = true; title.minLength = 3; title.maxLength = 120;
     const message = formMessage(form);
     const workId = field(form, '관련 작품 번호 (선택)', 'workId'); workId.inputMode = 'numeric'; workId.pattern = '[1-9][0-9]{0,17}'; workId.maxLength = 18;
@@ -153,36 +180,41 @@
     const confirm = el(label, 'input'); confirm.type = 'checkbox'; confirm.name = 'withdrawalConfirmed';
     el(label, 'span', '탈퇴 검토를 요청합니다. 이 접수만으로 계정이나 원고가 삭제되지 않으며, 보존 범위와 처리 결과를 관리자 답변으로 확인하겠습니다.');
     label.hidden = true;
-    category.onchange = () => { label.hidden = category.value !== 'WITHDRAWAL'; confirm.required = !label.hidden; confirm.checked = false; help.hidden = category.value === 'WITHDRAWAL'; };
+    category.onchange = () => { label.hidden = category.value !== 'WITHDRAWAL'; confirm.required = !label.hidden; confirm.checked = false; help.hidden = category.value === 'WITHDRAWAL'; categoryHint.textContent = ({ QUESTION: '이용 중 궁금한 점과 필요한 도움을 적어 주세요.', BUG: '어느 화면에서 무엇을 했을 때 문제가 발생했는지 적어 주세요. 표시된 오류 확인 번호가 있으면 함께 알려 주세요.', IDEA: '이용한 화면과 개선하고 싶은 점을 적어 주세요.', COPYRIGHT: '대상 작품 번호와 본인이 가진 권리, 확인이 필요한 내용을 적어 주세요. 이 접수만으로 콘텐츠를 제한하지 않습니다.', WITHDRAWAL: '탈퇴 검토 요청을 접수합니다. 계정·작품의 자동 삭제가 아니며 관리자의 처리 범위 안내를 먼저 확인합니다.' })[category.value] || '문의 유형을 선택해 주세요.'; };
     const status = notice(form, '답변은 내 문의 목록에서 확인할 수 있습니다. 이 화면을 닫으면 보내지 않은 내용은 지워집니다.');
     const submit = button(form, '문의 접수', null, true); submit.type = 'submit';
     form.onsubmit = event => {
       event.preventDefault(); if (!current(state, seq) || state.busy) return;
       const data = { category: category.value, title: title.value.trim(), message: message.value.trim() };
+      for (const [input, invalid] of [[category, !categories[data.category]], [title, data.title.length < 3 || data.title.length > 120], [message, data.message.length < 3 || data.message.length > 4000], [workId, !!workId.value.trim() && !/^[1-9]\d{0,17}$/.test(workId.value.trim())], [confirm, data.category === 'WITHDRAWAL' && !confirm.checked]]) input.setAttribute('aria-invalid', String(invalid));
       if (!categories[data.category] || data.title.length < 3 || data.title.length > 120 || data.message.length < 3 || data.message.length > 4000 ||
           (workId.value.trim() && !/^[1-9]\d{0,17}$/.test(workId.value.trim())) || (data.category === 'WITHDRAWAL' && !confirm.checked)) {
         status.textContent = '제목·내용의 글자 수, 작품 번호 및 필요한 동의를 확인해 주세요.'; status.setAttribute('role', 'alert'); return;
       }
       if (workId.value.trim()) data.workId = workId.value.trim();
       if (data.category === 'WITHDRAWAL') data.withdrawalConfirmed = true;
-      return save(state, seq, form, status, 'create', data, result => showDetail(state, result.case.id, result, '', '문의가 접수되었습니다.'));
+      return save(state, seq, form, status, 'create', data, result => showDetail(state, result.case.id, result, '', result.replayed ? '이미 접수된 문의를 확인했습니다.' : '문의가 접수되었습니다.'));
     };
     title.focus();
   }
   async function showDetail(state, id, supplied = null, draft = '', saved = '') {
     const seq = start(state); if (seq == null) return;
     heading(state, state.admin ? '문의 검토' : '문의 내역', true);
-    const body = el(state.root, 'section', null, 'beta-support-detail'); notice(body, '문의 내용을 불러오는 중입니다…');
+    const body = el(state.root, 'section', null, 'beta-support-detail'); body.setAttribute('aria-busy', 'true'); notice(body, '문의 내용을 불러오는 중입니다…');
     try {
       const result = supplied || await get(state, 'detail', { id });
       if (!current(state, seq)) return; body.replaceChildren();
-      const item = result.case; if (!item) throw Error('INVALID_SUPPORT_RESPONSE');
-      el(body, 'h4', item.title); el(body, 'p', `${categories[item.category] || '문의'} · ${statuses[item.status] || '상태 확인 필요'}`, 'beta-support-badge');
-      el(body, 'p', `문의 번호 ${item.id} · 접수 ${date(item.createdAt)}`, 'beta-support-meta');
+      const item = result.case; if (!item || !Array.isArray(result.messages)) throw Error('INVALID_SUPPORT_RESPONSE');
+      el(body, 'h4', item.title); el(body, 'span', categories[item.category] || '문의', 'beta-support-badge'); statusBadge(body, item.status, state.admin);
+      el(body, 'p', `문의 번호 ${item.id}`, 'beta-support-meta beta-support-request-id');
+      el(body, 'p', `접수 ${date(item.createdAt)} · 최근 변경 ${date(item.updatedAt)}`, 'beta-support-meta');
+      notice(body, nextStep(item.status, state.admin)).className += ' beta-support-next-step';
       if (item.workId) el(body, 'p', '관련 작품 번호: ' + item.workId, 'beta-support-meta');
       if (saved) notice(body, saved);
       if (item.category === 'WITHDRAWAL') notice(body, '탈퇴 검토 요청입니다. 답변 완료·종결 상태도 실제 계정 삭제 완료를 뜻하지 않습니다. 처리 범위와 보존 안내는 관리자 답변을 확인해 주세요.');
+      el(body, 'h4', '대화·처리 이력');
       const history = el(body, 'ol', null, 'beta-support-history');
+      if (!result.messages.length) notice(body, '등록된 대화 기록이 없습니다.');
       for (const entry of result.messages || []) {
         const card = el(history, 'li', null, 'beta-support-message');
         el(card, 'p', `${entry.authorKind === 'ADMIN' ? '관리자' : '문의자'} · ${date(entry.createdAt)}`, 'beta-support-meta');
@@ -202,17 +234,26 @@
         nextStatus = select(form, '변경할 상태 (상태 변경을 선택한 경우)', 'nextStatus', transitions);
       }
       const message = formMessage(form); message.value = draft;
+      message.oninput();
+      const hint = el(form, 'p', '', 'beta-support-action-hint');
+      const actionHint = () => {
+        if (nextStatus) nextStatus.closest('label').hidden = action.value !== 'transition';
+        hint.textContent = ({ reply: state.admin ? '작성한 답변만 전달합니다. 현재 처리 상태는 유지됩니다.' : '추가 설명을 전달합니다. 내 답변 필요 상태라면 접수 상태로 돌아갑니다.', cancel: '문의 접수를 취소합니다. 기록은 보존되며 이 문의는 다시 열 수 없습니다.', reopen: `처리 결과의 재검토를 요청합니다. 남은 요청 횟수는 ${Math.max(0, 2 - Number(item.reopenCount || 0))}회입니다.`, transition: '선택한 상태로 변경하고 사유를 문의자에게 함께 표시합니다.' })[action.value] || '처리 방법을 선택해 주세요.';
+      };
+      action.onchange = actionHint; actionHint();
       const status = notice(form, state.admin ? '답변과 처리 사유는 문의자에게 표시됩니다.' : '답변 또는 재검토·취소 사유를 적어 주세요.');
       const submit = button(form, '선택한 내용 보내기', null, true); submit.type = 'submit';
       form.onsubmit = event => {
         event.preventDefault(); if (!current(state, seq) || state.busy) return;
         const content = message.value.trim();
+        message.setAttribute('aria-invalid', String(content.length < 3 || content.length > 4000));
         if (!actions[action.value] || content.length < 3 || content.length > 4000) { status.textContent = '내용을 3~4,000자로 입력해 주세요.'; status.setAttribute('role', 'alert'); return; }
         return save(state, seq, form, status, action.value, { id: item.id, revision: String(item.revision), message: content,
           ...(action.value === 'transition' ? { status: nextStatus.value } : {}) },
-        result => showDetail(state, result.case.id, result, '', '저장했습니다. 아래 처리 상태와 이력을 확인해 주세요.'));
+        result => showDetail(state, result.case.id, result, '', result.replayed ? '이미 저장된 처리 결과를 확인했습니다.' : '저장했습니다. 아래 처리 상태와 이력을 확인해 주세요.'));
       };
     } catch (error) { if (current(state, seq)) { body.replaceChildren(); notice(body, errorText(error), true); button(body, '다시 불러오기', () => showDetail(state, id, null, draft)); } }
+    finally { if (current(state, seq)) body.setAttribute('aria-busy', 'false'); }
   }
   async function render(root, options = {}) {
     if (roots.has(root)) dispose(roots.get(root));

@@ -142,7 +142,7 @@ test('account-only admin sees CMS, settlement and role menus, old deep links wor
  context.window=context;vm.createContext(context);vm.runInContext(read('public/js/admin/admin-console.js'),context);vm.runInContext(read('public/js/admin/admin-operations.js'),context);
  await context.AdminOperations.navigate('dashboard',false);
  const labels=nodes.adminOperationsNav.querySelectorAll('button').map(n=>n.textContent);
- for(const label of ['운영 대시보드','작품 CMS','회차 CMS','작가 정산','서브관리자·권한','가상 계정 시험 도구'])assert.ok(labels.includes(label),label);
+ for(const label of ['운영 대시보드','작품·변경 검토','회차 조회','작가 정산','서브관리자·권한','가상 계정 시험 도구'])assert.ok(labels.includes(label),label);
  assert.match(calls[0],/console\?action=dashboard/);
  for(const [path,action] of [['subadmins','roles'],['settlements','settlements'],['episodes','episodes'],['authors','accounts']]){
    await context.AdminOperations.navigate(path,false);assert.match(calls.at(-1),new RegExp('action='+action));
@@ -150,7 +150,7 @@ test('account-only admin sees CMS, settlement and role menus, old deep links wor
  assert.ok(!calls.some(x=>x.includes('/operations')));
  who={userId:sub,admin:{role:'SUB_ADMIN',permissions:['CONTENT_METADATA_READ']},accountServiceReady:true};
  await context.AdminOperations.navigate('dashboard',false);
- assert.deepEqual(nodes.adminOperationsNav.querySelectorAll('button').map(n=>n.textContent),['작품 CMS','회차 CMS']);
+ assert.deepEqual(nodes.adminOperationsNav.querySelectorAll('button').map(n=>n.textContent),['작품·변경 검토','회차 조회']);
  context.AdminOperations.reset();assert.equal(nodes.adminOperationsNav.children.length,0);assert.equal(nodes.adminOperationsContent.children.length,0);
 });
 test('CMS treats database content as text and discards a response after navigation',async()=>{

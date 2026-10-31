@@ -64,10 +64,10 @@
       '정산 지급: 거래 원장 대조, 지급 정책, 중복 지급 방지 및 송금 결과 확인'])el(list,'li',item);
   }
   async function render(root,page,{accountKind,isCurrent=()=>true}={}){
-    const seq=++turn,owner=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===owner&&isCurrent();
+    const seq=++turn,owner=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===owner&&!!actor()?.admin&&actor().admin.is_active!==false&&isCurrent();
     if(current!==page){current=page;offset=0;query='';}
     if(accountKind&&kind!==accountKind){kind=accountKind;offset=0;query='';}
-    root.replaceChildren();el(root,'h2',titles[page]||'운영 관리');
+    root.replaceChildren();el(root,'h2',titles[page]||'운영 관리');root.setAttribute?.('aria-busy','false');
     if(!actor()?.admin){notice(root,'관리자 로그인이 필요합니다.');return;}
     const refresh=()=>render(root,page,{isCurrent});
     if(page==='settings'){settings(root);const providers=el(root,'section');await window.AdminProviderSettings?.render(providers,{isCurrent:valid});return;}
@@ -95,6 +95,7 @@
     }
     button(toolbar,'새로고침',refresh);
     const loading=notice(root,'운영 정보를 불러오는 중입니다…');loading.setAttribute('role','status');
+    root.setAttribute?.('aria-busy','true');
     const params=new URLSearchParams({action:page,offset:String(offset)});
     if(['works','episodes','accounts'].includes(page))params.set('q',query);
     if(page==='accounts')params.set('kind',kind);
@@ -103,12 +104,17 @@
       const result=await window.WebNovelsAuth.api('/api/v2/admin/console?'+params);if(!valid())return;
       loading.textContent='';
       if(page==='dashboard'){
+        const queue=el(root,'section',null,'cms-task-queue');el(queue,'h3','먼저 확인할 운영 업무');
+        notice(queue,`기존 검수 대기 ${result.pendingReviews??'확인 필요'}건 · 신고 대기 ${result.pendingReports??'확인 필요'}건. 공개 후 변경 요청 수는 해당 검토 목록에서 별도로 확인합니다.`);
+        if(can('CASE_READ')||can('CONTENT_REVIEW')||can('COMMENT_REPORT'))button(queue,'콘텐츠 검토·공개 후 변경 요청',()=>{if(valid())window.AdminOperations?.navigate('cases');});
+        if(can('OPERATIONS_READ')||can('CASE_READ'))button(queue,'베타 운영 · 오류 및 문의 지원함',()=>{if(valid())window.AdminOperations?.navigate('beta-operations');});
+        notice(queue,'새 회차의 최초 발행은 작가가 진행합니다. 공개본의 수정·삭제 요청과 신고·문의는 해당 처리함에서 확인하세요.');
+        el(root,'h3','등록 자료 현황');
         const cards=el(root,'div',null,'cms-metrics');
         for(const [key,label] of [['works','작품'],['episodes','회차'],['authors','작가'],['readers','독자'],['pendingReviews','대기 검수'],['pendingReports','대기 신고']]){
           const card=el(cards,'article',null,'cms-metric');el(card,'span',label);el(card,'strong',result[key]??'확인 필요');
         }
         notice(root,`원본 본문 확인이 필요한 회차: ${result.emptyOriginals??'확인 필요'}개. 등록 건수는 공개 가능 건수와 다릅니다.`);
-        if(can('OPERATIONS_READ')||can('CASE_READ'))button(root,'베타 운영 · 오류 및 문의 지원함',()=>window.AdminOperations?.navigate('beta-operations'));
         el(root,'h3','서비스 준비 상태');settings(root);window.GrowthStudio?.admin(root);return;
       }
       const items=result.items||[];
@@ -155,6 +161,7 @@
       const prev=button(pager,'이전',()=>{offset=Math.max(0,offset-100);refresh();});prev.disabled=offset===0;
       const next=button(pager,'다음',()=>{offset+=100;refresh();});next.disabled=offset+items.length>=result.total;
     }catch(e){if(valid()){loading.textContent=errorText(e);button(root,'다시 시도',refresh);}}
+    finally{if(valid())root.setAttribute?.('aria-busy','false');}
   }
   function errorText(e){return ({ADMIN_REAUTH_FAILED:'관리자 비밀번호를 확인해주세요.',ADMIN_REAUTH_REQUIRED:'현재 관리자 비밀번호를 입력해주세요.',
     CONFLICT:'다른 변경이 먼저 저장되었습니다. 새로고침 후 다시 확인해주세요.',ADMIN_FORBIDDEN:'이 정보를 조회하거나 변경할 권한이 없습니다.',

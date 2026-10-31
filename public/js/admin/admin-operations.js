@@ -9,10 +9,12 @@
     works:'works',cms:'works',episodes:'episodes',actionqueue:'cases',review:'cases',comments:'cases',
     subadmins:'roles',security:'audit',analytics:'dashboard',revenue:'settlements',system:'settings'};
   const retired=new Set(['admgmt','fanmeeting','goods','events']);
-  const menu=[['dashboard','운영 대시보드','서비스 운영'],['beta-operations','베타 운영','서비스 운영'],['works','작품 CMS','콘텐츠'],['episodes','회차 CMS','콘텐츠'],
-    ['curation','기간별 편집 추천','콘텐츠'],['cases','신고·콘텐츠 검수','사건 처리'],['recovery','원고 복구 검토','사건 처리'],['appeals','이의제기','사건 처리'],['accounts','작가·독자 지원','회원·수익'],
-    ['virtual-accounts','가상 계정 시험 도구','회원·수익'],['settlements','작가 정산','회원·수익'],
-    ['roles','서브관리자·권한','시스템'],['audit','감사·처리 기록','시스템'],['settings','서비스 운영 설정','시스템']];
+  const menu=[['dashboard','운영 대시보드','운영 현황·문의'],['beta-operations','문의·베타 운영','운영 현황·문의'],
+    ['works','작품·변경 검토','작품·발행 관리'],['episodes','회차 조회','작품·발행 관리'],['curation','홈 편집 추천','작품·발행 관리'],
+    ['cases','신고·콘텐츠 검수','신고·복구'],['recovery','원고 복구 검토','신고·복구'],['appeals','이의제기','신고·복구'],
+    ['accounts','작가·독자 관리','회원·작가'],['virtual-accounts','가상 계정 시험 도구','회원·작가'],
+    ['settlements','작가 정산','서비스 설정·기록'],['roles','서브관리자·권한','서비스 설정·기록'],
+    ['audit','감사·처리 기록','서비스 설정·기록'],['settings','서비스 운영 설정','서비스 설정·기록']];
   const sources=[['CONTENT_REVIEW','콘텐츠 검수','CONTENT_REVIEW'],
     ['COMMENT_REPORT','작품 댓글 신고','COMMENT_REPORT'],['REPORT','기존 신고','COMMENT_REPORT']];
   const rolePermissions=[['OPERATIONS_READ','운영 현황'],['ACCOUNTS_READ','계정 조회'],

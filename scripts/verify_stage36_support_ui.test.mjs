@@ -189,6 +189,6 @@ test('HTML and lazy loader wire support to reader, author and administrator with
   assert.match(html, /aria-modal="true" aria-labelledby="betaSupportTitle"/);
   assert.ok(html.indexOf('auth-session.js') < html.indexOf('beta-support.js'));
   assert.ok(loader.indexOf('admin-beta-operations.js') < loader.indexOf('admin-operations.js'));
-  assert.match(admin, /\['beta-operations','베타 운영'/); assert.match(admin, /AdminBetaOperations\?\.reset/);
+  assert.match(admin, /\['beta-operations','문의·베타 운영'/); assert.match(admin, /AdminBetaOperations\?\.reset/);
   assert.doesNotMatch(source, /localStorage|innerHTML|\/api\/v2\/author\//);
 });

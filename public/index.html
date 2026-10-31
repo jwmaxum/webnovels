@@ -46,10 +46,11 @@
   <link rel="stylesheet" href="/css/beta-operations.css?v=20261031">
 <link rel="stylesheet" href="/css/webtoon.css?v=20261031">
 <link rel="stylesheet" href="/css/growth.css?v=20261031">
-<link rel="stylesheet" href="/css/policies.css?v=20261031">
+<link rel="stylesheet" href="/css/policies.css?v=20261031r6">
   <link rel="stylesheet" href="/css/reader-shell.css?v=20261031r3">
   <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r4">
   <link rel="stylesheet" href="/css/author-studio.css?v=20261031r5">
+  <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
 </head>
 <body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
   <a class="reader-skip-link" href="#readerMain">본문으로 이동</a>
@@ -1097,12 +1098,12 @@
       <section id="view-admin-cms" class="main-view">
         <div id="adminOperationsShell" class="container section-padding" hidden>
           <header class="cms-header">
-            <div><p class="cms-eyebrow">WEBNOVELS ADMIN</p><h1>서비스 운영 CMS</h1><p id="adminConsoleIdentity"></p></div>
+            <div><p class="cms-eyebrow">관리자 센터</p><h1>서비스 운영</h1><p class="cms-intro">처리할 요청을 확인하고, 권한에 맞는 업무를 선택하세요.</p><p id="adminConsoleIdentity" role="status"></p></div>
             <div class="cms-toolbar"><a class="btn btn-outline btn-sm" href="/home">사이트 보기</a><button type="button" class="btn btn-outline btn-sm" onclick="handleAdminLogoutProcess()">로그아웃</button></div>
           </header>
           <div class="cms-layout">
             <aside class="cms-sidebar glass-panel"><nav id="adminOperationsNav" aria-label="관리자 운영 메뉴"></nav></aside>
-            <div id="adminOperationsContent" class="card glass-panel p-4" aria-label="관리자 작업 영역"></div>
+            <div id="adminOperationsContent" class="card glass-panel p-4" role="region" aria-label="관리자 작업 영역" tabindex="-1"></div>
           </div>
         </div>
         <div class="container section-padding">
@@ -1748,70 +1749,71 @@
 
     <!-- Modal: Member Login / Signup -->
     <div class="modal-backdrop" id="modalAuth">
-      <div class="modal-dialog glass-panel">
+      <div class="modal-dialog glass-panel" role="dialog" aria-modal="true" aria-labelledby="authModalHeading">
         <div class="modal-header">
-          <h3><i data-lucide="user-circle"></i> 로그인 / 회원가입</h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+          <h3 id="authModalHeading"><i data-lucide="user-circle" aria-hidden="true"></i> 로그인·회원가입</h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="로그인·회원가입 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <div class="auth-tabs" role="tablist" aria-label="인증 탭">
-            <button class="active" data-auth-tab="login">로그인</button>
-            <button data-auth-tab="signup">독자가입</button>
-            <button data-auth-tab="signup-author">작가가입</button>
+            <button type="button" class="active" id="authTab-login" role="tab" aria-controls="authForm-login" aria-selected="true" data-auth-tab="login">로그인</button>
+            <button type="button" id="authTab-signup" role="tab" aria-controls="authForm-signup" aria-selected="false" tabindex="-1" data-auth-tab="signup">독자 가입</button>
+            <button type="button" id="authTab-signup-author" role="tab" aria-controls="authForm-signup-author" aria-selected="false" tabindex="-1" data-auth-tab="signup-author">작가 가입</button>
           </div>
-          <form class="auth-form active" id="authForm-login">
-            <label>이메일</label>
+          <form class="auth-form active" id="authForm-login" role="tabpanel" aria-labelledby="authTab-login">
+            <label for="loginEmail">이메일</label>
             <input type="email" id="loginEmail" class="form-control"  autocomplete="username" required>
-            <label>비밀번호</label>
+            <label for="loginPassword">비밀번호</label>
             <input type="password" id="loginPassword" class="form-control"  autocomplete="current-password" required>
-            <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="log-in"></i> 로그인하고 내 서재로</button>
+            <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="log-in"></i> 로그인</button>
           <button type="button" class="btn btn-ghost" onclick="requestAuthReset()">비밀번호 재설정 메일 보내기</button>
             <button type="button" class="btn btn-ghost" onclick="showAuthOnboarding()">이메일 확인 후 가입 마무리</button>
           </form>
 
-          <form class="auth-form" id="authForm-signup" style="max-height: 440px; overflow-y: auto; padding-right: 5px;">
-            <label>Nickname(별명)</label>
+          <form class="auth-form" id="authForm-signup" role="tabpanel" aria-labelledby="authTab-signup">
+            <label for="signupNickname">별명</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-              <input type="text" id="signupNickname" class="form-control" style="margin-bottom: 0;" placeholder="예: 새벽독자" required>
+              <input type="text" id="signupNickname" class="form-control" style="margin-bottom: 0;" autocomplete="nickname" placeholder="예: 새벽독자" required>
 
             </div>
             <div id="nicknameCheckMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
-            <label>email ID :</label>
-            <input type="email" id="signupEmail" class="form-control" placeholder="reader@webnovels.com" required>
+            <label for="signupEmail">이메일</label>
+            <input type="email" id="signupEmail" class="form-control" autocomplete="email" placeholder="reader@webnovels.com" required>
 
-            <label>Password (비밀번호) :</label>
-            <input type="password" id="signupPassword" class="form-control" placeholder="8자 이상" required>
+            <label for="signupPassword">비밀번호</label>
+            <input type="password" id="signupPassword" class="form-control" autocomplete="new-password" placeholder="8자 이상" required>
 
-            <label>Password 확인 :</label>
-            <input type="password" id="signupPasswordConfirm" class="form-control" placeholder="비밀번호 재입력" required>
+            <label for="signupPasswordConfirm">비밀번호 확인</label>
+            <input type="password" id="signupPasswordConfirm" class="form-control" autocomplete="new-password" placeholder="비밀번호 재입력" required>
             <div id="pwMatchMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
 
             <button type="submit" class="btn btn-primary btn-lg w-full mt-3"><i data-lucide="user-plus"></i> 일반 독자 회원가입</button>
           </form>
 
-          <form class="auth-form" id="authForm-signup-author" style="max-height: 440px; overflow-y: auto; padding-right: 5px;">
+          <form class="auth-form" id="authForm-signup-author" role="tabpanel" aria-labelledby="authTab-signup-author">
             <p class="text-muted small">이메일 확인 후 저작권 확약과 PASS 실명 본인확인을 거쳐 가입합니다. 같은 본인도 별도 이메일 ID·필명으로 가입할 수 있으며, 각 계정의 작품 권한은 분리됩니다.</p>
-            <label>Nickname / 필명 (별명)</label>
+            <label for="authorPenName">필명</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-              <input type="text" id="authorPenName" class="form-control" style="margin-bottom: 0;" placeholder="예: 판타지마스터" required>
+              <input type="text" id="authorPenName" class="form-control" style="margin-bottom: 0;" autocomplete="nickname" placeholder="예: 판타지마스터" required>
 
             </div>
             <div id="authorPenNameCheckMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
-            <label>email ID :</label>
-            <input type="email" id="authorEmail" class="form-control" placeholder="author@webnovels.com" required>
+            <label for="authorEmail">이메일</label>
+            <input type="email" id="authorEmail" class="form-control" autocomplete="email" placeholder="author@webnovels.com" required>
 
-            <label>Password (비밀번호) :</label>
-            <input type="password" id="authorPassword" class="form-control" placeholder="8자 이상" required>
+            <label for="authorPassword">비밀번호</label>
+            <input type="password" id="authorPassword" class="form-control" autocomplete="new-password" placeholder="8자 이상" required>
 
-            <label>Password 확인 :</label>
-            <input type="password" id="authorPasswordConfirm" class="form-control" placeholder="비밀번호 재입력" required>
+            <label for="authorPasswordConfirm">비밀번호 확인</label>
+            <input type="password" id="authorPasswordConfirm" class="form-control" autocomplete="new-password" placeholder="비밀번호 재입력" required>
             <div id="authorPwMatchMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
             <button type="submit" class="btn btn-secondary btn-lg w-full mt-3"><i data-lucide="feather"></i> 작가 회원가입</button>
           </form>
+          <nav class="auth-policy-links" aria-label="회사·이용 정책"><a href="/company/">회사정보</a><a href="/policies/terms/">이용약관</a><a href="/policies/refund/">환불정책</a></nav>
         </div>
       </div>
     </div>
@@ -1857,20 +1859,20 @@
 
     <!-- Modal: Super Admin Login Modal -->
     <div class="modal-backdrop" id="modalAdminLogin">
-      <div class="modal-dialog glass-panel">
+      <div class="modal-dialog glass-panel" role="dialog" aria-modal="true" aria-labelledby="adminLoginHeading">
         <div class="modal-header">
-          <h3><i data-lucide="shield-check" class="icon-indigo"></i> 웹노블즈(WebNovels) 관리자 보안 로그인</h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+          <h3 id="adminLoginHeading"><i data-lucide="shield-check" aria-hidden="true"></i> 관리자 로그인</h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="관리자 로그인 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <p class="text-muted small mb-4">관리자 CMS에 접근하려면 최고 관리자(Super Admin) 또는 서브 관리자 계정으로 로그인해야 합니다.</p>
           <form id="formAdminLoginSubmit" onsubmit="event.preventDefault(); handleAdminLoginProcess();">
             <div class="form-group mb-3">
-              <label>관리자 ID / 이메일</label>
+              <label for="adminLoginId">관리자 이메일</label>
               <input type="text" id="adminLoginId" class="form-control" placeholder="관리자 아이디 (이메일)" autocomplete="username" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
             </div>
             <div class="form-group mb-4">
-              <label>비밀번호</label>
+              <label for="adminLoginPw">비밀번호</label>
               <input type="password" id="adminLoginPw" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-full">
@@ -1878,7 +1880,7 @@
             </button>
           </form>
           <div class="mt-4 p-3 glass-panel text-center small text-muted">
-            💡 <strong>힌트</strong>: <code>.env.local</code>에 설정된 최고 관리자 계정 정보로 접속하실 수 있습니다.
+            관리자 권한이 확인된 계정으로 로그인해주세요. 비밀번호 재설정은 일반 로그인 화면에서 진행할 수 있습니다.
           </div>
         </div>
       </div>
@@ -2142,16 +2144,16 @@
 
     <!-- Modal: Edit User Profile (독자 내 정보 수정) -->
     <div class="modal-backdrop" id="modalEditProfile">
-      <div class="modal-dialog glass-panel" style="max-width: 480px;">
+      <div class="modal-dialog glass-panel" role="dialog" aria-modal="true" aria-labelledby="editProfileHeading" style="max-width: 480px;">
         <div class="modal-header">
-          <h3><i data-lucide="user-cog" class="icon-indigo"></i> 나의 정보 수정</h3>
-          <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
+          <h3 id="editProfileHeading"><i data-lucide="user-cog" aria-hidden="true"></i> 내 정보 수정</h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="내 정보 수정 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <form id="formEditProfile" onsubmit="handleSaveProfile(event)">
             <div class="form-group mb-4">
-              <label>닉네임</label>
-              <input type="text" id="editProfileNickname" class="form-control" placeholder="변경할 닉네임 입력" minlength="2" maxlength="40" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--control-border);">
+              <label for="editProfileNickname">별명</label>
+              <input type="text" id="editProfileNickname" class="form-control" autocomplete="nickname" placeholder="변경할 별명 입력" minlength="2" maxlength="40" required>
             </div>
 
             <p class="text-muted small mb-4">비밀번호는 로그인 화면의 재설정 메일로 변경할 수 있습니다.</p>
@@ -2483,7 +2485,7 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261031r5"></script>
+  <script src="/js/core/role-modules.js?v=20261031r6"></script>
   <script src="/js/core/router.js?v=20261031r4"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
@@ -2623,12 +2625,12 @@
   <script src="/supabase-admin.js?v=116"></script>
   <script src="/js/core/auth-session.js?v=136"></script>
   <script src="/js/core/author-enrollment.js?v=135"></script>
-  <script src="/js/core/account-access.js?v=114"></script>
+  <script src="/js/core/account-access.js?v=20261031r6"></script>
   <script src="/js/core/appeals.js?v=117"></script>
-  <script src="/js/core/beta-support.js?v=136"></script>
-  <script src="/js/core/auth-ui.js?v=134"></script>
+  <script src="/js/core/beta-support.js?v=20261031r6"></script>
+  <script src="/js/core/auth-ui.js?v=20261031r6"></script>
   <script src="/js/core/service-status.js?v=114"></script>
   <script src="/js/core/free-beta-ui.js?v=135"></script>
-  <script src="/app.js?v=20261031r4"></script>
+  <script src="/app.js?v=20261031r6"></script>
 </body>
 </html>

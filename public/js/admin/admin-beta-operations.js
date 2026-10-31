@@ -10,19 +10,20 @@
   const duration = value => value == null ? '관측 없음' : count(value) + 'ms';
   function current(state, seq) {
     if (roots.get(state.root) !== state || !state.isCurrent() || seq !== state.seq) return false;
-    if (actor()?.userId !== state.user || !actor()?.admin) { reset(state.root); return false; }
+    if (actor()?.userId !== state.user || !actor()?.admin || (!can('OPERATIONS_READ') && !can('CASE_READ'))) { reset(state.root); return false; }
     return true;
   }
   async function observations(state) {
     if (!current(state, state.seq)) return;
-    const seq = ++state.seq, root = state.observations; root.replaceChildren();
-    if (!can('OPERATIONS_READ')) { el(root, 'p', '운영 현황 조회 권한이 필요합니다.', 'beta-support-note'); return; }
+    const seq = ++state.seq, root = state.observations; root.replaceChildren(); root.setAttribute('aria-busy', 'true');
+    if (!can('OPERATIONS_READ')) { root.setAttribute('aria-busy', 'false'); el(root, 'p', '운영 현황 조회 권한이 필요합니다.', 'beta-support-note'); return; }
     const heading = el(root, 'div', null, 'beta-support-toolbar'); el(heading, 'h3', '최근 24시간 운영 관측');
     const refresh = el(heading, 'button', '새로고침', 'btn btn-outline btn-sm'); refresh.type = 'button'; refresh.disabled = true; refresh.onclick = () => observations(state);
     const body = el(root, 'div'); const status = el(body, 'p', '운영 기록을 불러오는 중입니다…', 'beta-support-note'); status.setAttribute('role', 'status');
     try {
       const result = await window.WebNovelsAuth.api('/api/v2/admin/beta-operations');
-      if (!current(state, seq) || !can('OPERATIONS_READ')) return; body.replaceChildren();
+      if (!current(state, seq)) return; body.replaceChildren();
+      if (!can('OPERATIONS_READ')) { el(body, 'p', '운영 현황 조회 권한이 필요합니다.', 'beta-support-note'); return; }
       if (!result.enabled) { el(body, 'p', '운영 관측이 아직 활성화되지 않았습니다. 문의 지원함은 별도로 이용할 수 있습니다.', 'beta-support-note'); return; }
       el(body, 'p', '수집된 대상 요청만 표시합니다. 전체 방문·가입 수 또는 사이트 전체 실패율을 뜻하지 않습니다. 문의 본문·원고·사용자 ID·IP·토큰은 이 관측 기록에 수집하지 않습니다.', 'beta-support-note');
       const cards = el(body, 'div', null, 'beta-operations-metrics');
@@ -32,7 +33,10 @@
       const areas = el(body, 'ul', null, 'beta-operations-areas');
       for (const item of result.areas || []) el(areas, 'li', `${areaNames[item.area] || '기타'}: 요청 ${count(item.requests)} · 실패 ${count(item.failures)} · 충돌 ${count(item.conflicts)} · 평균 ${duration(item.averageDurationMs)}`);
       const queue = result.queue || {};
-      el(body, 'p', `예약 대기 ${count(queue.pendingSchedules)} · 예약 실패 ${count(queue.failedSchedules)} · 이미지 처리 실패 ${count(queue.failedWebtoonAssets)}`, 'beta-support-note');
+      el(body, 'h4', '확인이 필요한 처리 대기열');
+      const queueCards = el(body, 'div', null, 'beta-operations-queue');
+      for (const [label, value] of [['예약 대기', queue.pendingSchedules], ['예약 실패', queue.failedSchedules], ['이미지 처리 실패', queue.failedWebtoonAssets]]) el(queueCards, 'p', label + ' ' + count(value), 'beta-support-card');
+      el(body, 'p', '대기열은 조회 시점의 실제 상태입니다. 이 화면에서 자동 재처리하지 않으며 작가의 최신 원고·예약 상태를 먼저 확인하세요.', 'beta-support-note');
       el(body, 'p', '최근 운영 점검 신호: ' + (result.lastSchedulerHeartbeat ? new Date(result.lastSchedulerHeartbeat).toLocaleString('ko-KR') : '수신 기록 없음') + '. 점검 신호는 예약 발행 성공을 뜻하지 않습니다.', 'beta-support-meta');
       el(body, 'h4', '최근 오류 확인 번호');
       if (!result.recentErrors?.length) el(body, 'p', '수집된 오류가 없습니다.', 'beta-support-note');
@@ -46,7 +50,8 @@
       if (!current(state, seq)) return; body.replaceChildren();
       const message = error?.code === 'BETA_OPERATIONS_NOT_READY' ? '운영 관측이 준비 중입니다. 문의 지원함은 계속 이용할 수 있습니다.' : '운영 기록을 불러오지 못했습니다. 권한과 연결 상태를 확인한 뒤 다시 시도해 주세요.';
       const node = el(body, 'p', message, 'beta-support-note'); node.setAttribute('role', 'status');
-    } finally { if (current(state, seq)) refresh.disabled = false; }
+      const retry = el(body, 'button', '운영 기록 다시 불러오기', 'btn btn-outline btn-sm'); retry.type = 'button'; retry.onclick = () => { if (current(state, seq) && can('OPERATIONS_READ')) return observations(state); };
+    } finally { if (current(state, seq)) { root.setAttribute('aria-busy', 'false'); refresh.disabled = false; } }
   }
   async function render(root, options = {}) {
     reset(root); root.replaceChildren();

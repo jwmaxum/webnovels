@@ -114,13 +114,28 @@ function bindWebNovelsEvents() {
   });
 
   // Auth tabs
+  const authTabs = () => [...document.querySelectorAll('[data-auth-tab]')].filter(tab => !tab.hidden && !tab.disabled);
+  function selectAuthTab(tab, focus = false) {
+    const panel = document.getElementById(`authForm-${tab.dataset.authTab}`);
+    if (!panel || !authTabs().includes(tab)) return;
+    document.querySelectorAll('[data-auth-tab]').forEach(item => {
+      const selected = item === tab;
+      item.classList.toggle('active', selected);
+      item.setAttribute('aria-selected', String(selected));
+      item.tabIndex = selected ? 0 : -1;
+    });
+    document.querySelectorAll('.auth-form').forEach(form => form.classList.toggle('active', form === panel));
+    if (focus) tab.focus();
+  }
   document.querySelectorAll('[data-auth-tab]').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const tabName = tab.dataset.authTab;
-      document.querySelectorAll('[data-auth-tab]').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(`authForm-${tabName}`)?.classList.add('active');
+    tab.addEventListener('click', () => selectAuthTab(tab));
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      const tabs = authTabs(), index = tabs.indexOf(tab);
+      if (index < 0) return;
+      event.preventDefault();
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      selectAuthTab(tabs[next], true);
     });
   });
 

@@ -22,7 +22,7 @@
     const wrap=el(parent,'label',null,'workflow-field');el(wrap,'span',label);const n=el(wrap,'select',null,'form-control');n.setAttribute('aria-label',label);
     for(const [id,text] of choices){const option=el(n,'option',text);option.value=id;}n.value=value;return n;
   }
-  const current=c=>context===c&&turn===c.turn&&actor()?.userId===c.user&&c.isCurrent();
+  const current=c=>context===c&&turn===c.turn&&actor()?.userId===c.user&&!!actor()?.admin&&actor().admin.is_active!==false&&c.isCurrent();
   function status(parent,text){const n=el(parent,'p',text);n.setAttribute('role','status');return n;}
   async function api(action,data={},write=false){
     const user=actor()?.userId;if(!user||!actor()?.admin)throw Error('ADMIN_REQUIRED');
@@ -131,7 +131,7 @@
   }
   async function render(root,page,options={}){
     if(!active())return;window.AdminPublicationChanges?.reset();host=root;const c={turn:++turn,user:actor()?.userId,page,options,isCurrent:options.isCurrent||(()=>true)};context=c;
-    root.replaceChildren();status(root,'운영 정보를 불러오는 중입니다…');
+    root.replaceChildren();root.setAttribute?.('aria-busy','true');status(root,'운영 정보를 불러오는 중입니다…');
     const source=options.source||'CONTENT_REVIEW',kind=options.accountKind||'reader',offset=options.offset||0;
     try{
       let result,assignees=[],works=[];
@@ -190,6 +190,7 @@
       }
       pager(result,c);
     }catch(error){if(current(c)){root.replaceChildren();status(root,'조회 실패: '+(error.code||error.message||'요청 실패'));button(root,'다시 불러오기',()=>render(root,page,options));}}
+    finally{if(current(c))root.setAttribute?.('aria-busy','false');}
   }
   function reset(){window.AdminPublicationChanges?.reset();window.AdminRecovery?.reset();turn++;context=null;if(host)host.replaceChildren();host=null;}
   window.AdminWorkflow=Object.freeze({active,api,render,reset});

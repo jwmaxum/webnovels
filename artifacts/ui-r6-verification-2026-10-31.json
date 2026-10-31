@@ -1,0 +1,301 @@
+{
+  "stage": "UI-R6",
+  "date": "2026-10-31",
+  "result": "PASS",
+  "runtime": "v24.19.0",
+  "build": {
+    "command": "npm run build",
+    "startedAt": "2026-10-31T01:01:43.550Z",
+    "completedAt": "2026-10-31T01:19:56.660Z",
+    "exitCode": 0,
+    "error": null,
+    "log": "scratch/ui-r6/build.log"
+  },
+  "release": {
+    "commands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5",
+      "test:ui-r6"
+    ],
+    "count": 44,
+    "result": "PASS"
+  },
+  "newRegressionTests": {
+    "total": 35,
+    "passed": 35,
+    "failed": 0,
+    "admin": 8,
+    "support": 8,
+    "accountPolicy": 12,
+    "layoutNavigation": 7
+  },
+  "types": {
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "startedAt": "2026-10-31T01:06:41.469Z",
+    "completedAt": "2026-10-31T01:06:50.358Z",
+    "exitCode": 0,
+    "error": null
+  },
+  "staticChecks": {
+    "syntax": [
+      {
+        "file": "public/app.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/core/account-access.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/core/auth-ui.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/core/beta-support.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/core/role-modules.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/admin/admin-console.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/admin/admin-workflow.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/admin/admin-publication-changes.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/admin/admin-beta-operations.js",
+        "exitCode": 0
+      },
+      {
+        "file": "public/js/admin/admin-operations.js",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_admin_console.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_stage17_ui.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_stage36_support_ui.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r5_layout.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r6_admin.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r6_support.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r6_account_policy.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "file": "scripts/verify_ui_r6_layout.test.mjs",
+        "exitCode": 0
+      }
+    ],
+    "files": [
+      {
+        "file": "public/app.js",
+        "sha256": "4b271fe61db41a855c882f65a0446126b3bfb41078094bc73bd0221aae716902"
+      },
+      {
+        "file": "public/index.html",
+        "sha256": "bb9892c8a12a56c7fff899f0d25c64b8d9a43c17677ea8befa6a4879dd9ea3bd"
+      },
+      {
+        "file": "public/css/operations-account.css",
+        "sha256": "2ec9580a526777c0bf9edbb3b205c0aa400bdfdc60dd8106d886bcc6d09ab408"
+      },
+      {
+        "file": "public/css/policies.css",
+        "sha256": "99c742c74db883d4fc2253fe2a689608a1d7afc92373b6806f498bfb1bcc2069"
+      },
+      {
+        "file": "public/company/index.html",
+        "sha256": "0a4005ac46093d0edf517b55ca69694e4ed25579f6b094c7db798d46bb8b3c3c"
+      },
+      {
+        "file": "public/policies/refund/index.html",
+        "sha256": "fcdf02a964970479f82118acdc243d1945e753fa6eb46a6b31ae8e58e083ad32"
+      },
+      {
+        "file": "public/policies/terms/index.html",
+        "sha256": "ee21cca0c03bef2bca44a8b7e6afe295f9607da0f4d0543bdf540f870276b144"
+      },
+      {
+        "file": "public/js/core/account-access.js",
+        "sha256": "0bfafc7f93f20de417fe94fbe907a9fda38e948c3070cc5fbc6cbf34c6d755dc"
+      },
+      {
+        "file": "public/js/core/auth-ui.js",
+        "sha256": "d3cabd08bae684b2b473ab3a95c2120723554965b434631456c859f740959d32"
+      },
+      {
+        "file": "public/js/core/beta-support.js",
+        "sha256": "28ba4d326e7f5c0821fd815323e980859adbcad5cd82eed87329265343bdf098"
+      },
+      {
+        "file": "public/js/core/role-modules.js",
+        "sha256": "3f8dac2b699bba707e6f092076bf28edfb2b7ca9a8346ffaf6ffeca8adab4050"
+      },
+      {
+        "file": "public/js/admin/admin-console.js",
+        "sha256": "e287b2602f8de37ee87fa446ad3d021823a1d904806c20486603e0f5399360df"
+      },
+      {
+        "file": "public/js/admin/admin-workflow.js",
+        "sha256": "cb47115fade750bdc94ef0650a7aed9a03092165aeda15955ecfd63745615832"
+      },
+      {
+        "file": "public/js/admin/admin-publication-changes.js",
+        "sha256": "8beaddf307ffe0cad67931599af3c8ea15493b7c37933a8627cf9d6512b9bce9"
+      },
+      {
+        "file": "public/js/admin/admin-beta-operations.js",
+        "sha256": "f51dcfefa499d8db5f4949afbebdb369451f1661836554f770cc786b7b83cc87"
+      },
+      {
+        "file": "public/js/admin/admin-operations.js",
+        "sha256": "745ac4898d80991cf1c67a3e8b524a70adf240de474a47c994c8c4319850aa8e"
+      },
+      {
+        "file": "scripts/verify_admin_console.test.mjs",
+        "sha256": "680714ab4836213675c093950b4a65fa2a3e09d8f8f16a1f6907b69fc5e125ae"
+      },
+      {
+        "file": "scripts/verify_stage17_ui.test.mjs",
+        "sha256": "feba3d1e6a4ae66798e030371cb0aeee703747d867d94415bb58b6e5f9b461fc"
+      },
+      {
+        "file": "scripts/verify_stage36_support_ui.test.mjs",
+        "sha256": "9dd2c0d65fb50e7d44a2cdeddeea766749e7770409c0940a9bafbbb9bf8f9b92"
+      },
+      {
+        "file": "scripts/verify_ui_r5_layout.test.mjs",
+        "sha256": "c9a92587a774681f0c254068890e6bae375be3e5dc2d58b606aa16e18162a1a5"
+      },
+      {
+        "file": "scripts/verify_ui_r6_admin.test.mjs",
+        "sha256": "859e1beeb291e79acf8f342595c1385ab039def44d73b6018c709c7029332905"
+      },
+      {
+        "file": "scripts/verify_ui_r6_support.test.mjs",
+        "sha256": "e4232f9a819d3c874f18138e588e4244b9b3de02e5c5463c8a999fa2a3254235"
+      },
+      {
+        "file": "scripts/verify_ui_r6_account_policy.test.mjs",
+        "sha256": "a86ebf427a064844d6d7fd4184cbc4c53e77a93e7b1fbef3c5ca2fbcac6c39b0"
+      },
+      {
+        "file": "scripts/verify_ui_r6_layout.test.mjs",
+        "sha256": "2a754d038ce934872829891c7ab65a4fbe4789922ebf7d3591d1a4cf6b1b2405"
+      }
+    ],
+    "secretScan": {
+      "files": 24,
+      "matches": 0
+    },
+    "protectedScopesUnchanged": true,
+    "diffCheckExitCode": 0,
+    "envIgnored": true,
+    "userFilePreserved": true,
+    "styles": [
+      {
+        "file": "public/css/operations-account.css",
+        "bytes": 14263,
+        "gzipBytes": 2768
+      },
+      {
+        "file": "public/css/policies.css",
+        "bytes": 7456,
+        "gzipBytes": 1671
+      }
+    ],
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "result": "PASS"
+  },
+  "securityReview": {
+    "result": "PASS",
+    "scope": "Verified actor and workflow permissions, safe baseline/candidate projection, support request identity and retries, stale async UI responses, legal content preservation",
+    "independentSourceReviews": 2,
+    "productionModalCloseVerified": true,
+    "baselineProjectionCheckedAgainstServerAndSQL": true,
+    "backendAndDatabaseUnchanged": true,
+    "flagsUnchanged": true,
+    "legalTextAndExistingLinksPreserved": true,
+    "legacyTestChanges": "Exact menu wording and shared loader version expectations updated; permission, route, payload and data preservation assertions retained"
+  },
+  "notRun": [
+    "localhost/browser acceptance (requires explicit user request)",
+    "actual production DB support/review writes or external PASS/payment/SMTP acceptance",
+    "dedicated lint (not configured)",
+    "coverage threshold (not measured)"
+  ],
+  "userChangesPreserved": [
+    "gemini.md",
+    ".agents/skills/search-first/",
+    ".agents/skills/security-review/",
+    ".agents/skills/verification-loop/"
+  ],
+  "nextStage": "UI-R7: regression, accessibility, performance and deployment acceptance"
+}

@@ -1,0 +1,122 @@
+/* UI-R6: operational work surfaces and account/support dialogs. R2 role tokens supply contrast. */
+#view-admin-cms #adminOperationsShell { max-width: 1440px; padding-block: 28px 64px; }
+#view-admin-cms .cms-header { align-items: start; gap: 24px; margin-bottom: 28px; }
+#view-admin-cms .cms-eyebrow { margin-bottom: 8px; color: var(--text-secondary); font-size: 13px; letter-spacing: 0; }
+#view-admin-cms .cms-header h1 { color: var(--text-strong); font-size: clamp(24px, 3vw, 30px); line-height: 1.4; font-weight: 750; }
+#view-admin-cms :is(.cms-intro, #adminConsoleIdentity) { color: var(--text-secondary); line-height: 1.7; font-size: 14px; margin-block: 8px; }
+#view-admin-cms .cms-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 24px; }
+#view-admin-cms .cms-sidebar { position: static; padding: 12px; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-elevated); box-shadow: none; }
+#view-admin-cms #adminOperationsNav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+#view-admin-cms .cms-nav-group { padding: 20px 12px 8px; color: var(--text-secondary); font-size: 13px; line-height: 1.5; font-weight: 650; }
+#view-admin-cms .cms-nav-group:first-child { padding-top: 8px; }
+#view-admin-cms .cms-nav-link { min-height: 44px; width: 100%; padding: 12px; line-height: 1.5; text-align: left; color: var(--text-primary); overflow-wrap: anywhere; }
+#view-admin-cms .cms-nav-link.active { background: var(--selected-bg); border-color: var(--selected-fg); color: var(--selected-fg); text-decoration: none; font-weight: 750; }
+#view-admin-cms #adminOperationsContent { min-width: 0; padding: 28px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: 12px; box-shadow: none; }
+#view-admin-cms #adminOperationsContent :is(h2, h3, h4) { color: var(--text-strong); line-height: 1.5; overflow-wrap: anywhere; }
+#view-admin-cms #adminOperationsContent > h2 { margin-bottom: 20px; font-size: 24px; font-weight: 750; }
+#view-admin-cms #adminOperationsContent h3 { font-size: 20px; }
+#view-admin-cms #adminOperationsContent h4 { font-size: 17px; }
+#view-admin-cms #adminOperationsContent :is(p, label, li, dd) { line-height: 1.7; overflow-wrap: anywhere; }
+#view-admin-cms :is(.cms-toolbar, .cms-search) { gap: 8px; }
+#view-admin-cms .cms-search { flex: 1 1 260px; min-width: 0; }
+#view-admin-cms .cms-search input { flex: 1; min-width: 0; }
+#view-admin-cms :is(.btn, .cms-nav-link) { min-height: 44px; white-space: normal; }
+#view-admin-cms #adminOperationsContent :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) { min-height: 44px; max-width: 100%; padding: 10px 12px; font: inherit; font-size: 16px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--bg-elevated); color: var(--text-primary); }
+#view-admin-cms #adminOperationsContent textarea { width: 100%; resize: vertical; }
+#view-admin-cms #adminOperationsContent :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--action-primary); }
+#view-admin-cms .cms-table-wrap { width: 100%; max-width: 100%; margin-block: 20px; overflow-x: auto; border: 1px solid var(--border-default); border-radius: 8px; }
+#view-admin-cms .cms-table { margin: 0; width: 100%; border-collapse: collapse; color: var(--text-primary); font-size: 14px; }
+#view-admin-cms .cms-table :is(th, td) { padding: 14px 16px; border-bottom: 1px solid var(--border-default); line-height: 1.65; vertical-align: top; }
+#view-admin-cms .cms-table th { background: var(--bg-subtle); color: var(--text-secondary); font-weight: 650; }
+#view-admin-cms .cms-table td > small { white-space: normal; color: var(--text-secondary); }
+#view-admin-cms .cms-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-block: 24px; }
+#view-admin-cms .cms-metric { padding: 16px; border-color: var(--border-default); background: var(--bg-subtle); box-shadow: none; }
+#view-admin-cms .cms-metric strong { font-size: 24px; color: var(--text-strong); }
+#view-admin-cms .cms-metric span { color: var(--text-secondary); font-size: 14px; }
+#view-admin-cms :is(.co-panel, .cms-role) { padding: 20px; margin-block: 20px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-elevated); }
+#view-admin-cms :is(.cms-notice, .cms-empty-state) { color: var(--text-info); background: var(--color-info-bg); border-color: var(--text-info); line-height: 1.7; }
+#view-admin-cms .cms-error-state { padding: 16px; color: var(--text-error); background: var(--color-error-bg); border-radius: 8px; }
+#view-admin-cms .admin-change-comparison { display: block; margin-block: 20px; padding: 16px; border: 1px solid var(--border-default); border-radius: 10px; }
+#view-admin-cms .admin-change-comparison .cms-table { min-width: 560px; }
+#view-admin-cms .admin-change-values { padding: 12px; background: var(--bg-subtle); overflow-wrap: anywhere; }
+#view-admin-cms .admin-change-modified td { background: var(--selected-bg); }
+#view-admin-cms .admin-change-comparison td { white-space: pre-wrap; }
+#view-admin-cms .cms-curation { min-width: 240px; }
+#view-admin-cms .cms-permissions label { line-height: 1.6; }
+#view-admin-cms .beta-operations-panel { margin-block: 20px; padding: 20px; box-shadow: none; }
+#view-admin-cms .beta-operations-metrics strong { color: var(--text-strong); }
+#view-admin-cms .beta-operations-queue { min-width: 0; }
+
+/* A single scrolling dialog keeps signup and recovery fields in the same flow. */
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) .modal-dialog { width: min(560px, 100%); max-height: calc(100dvh - 48px); overflow-y: auto; padding: 0; border: 1px solid var(--border-default); border-radius: 16px; background: var(--bg-elevated); box-shadow: none; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) :is(.modal-header, .modal-body) { padding: 24px; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) .modal-header { border-bottom: 1px solid var(--border-default); align-items: start; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) .modal-header h3 { margin: 0; line-height: 1.5; color: var(--text-strong); font-size: 22px; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) :is(.btn, input, select) { min-height: 44px; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) .btn { white-space: normal; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) label { display: block; margin-block: 16px 8px; color: var(--text-primary); font-size: 14px; font-weight: 650; line-height: 1.6; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) :is(.form-control, .form-input) { width: 100%; padding: 11px 12px; font-size: 16px; color: var(--text-primary); border-color: var(--control-border); background: var(--bg-elevated); }
+#modalAuth .auth-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: var(--bg-subtle); border-radius: 10px; margin-bottom: 20px; }
+#modalAuth .auth-tabs button { min-width: 0; padding: 10px 4px; border: 1px solid transparent; border-radius: 8px; color: var(--text-secondary); font-weight: 650; font-size: 14px; background: transparent; }
+#modalAuth .auth-tabs button[aria-selected="true"] { color: var(--selected-fg); background: var(--bg-elevated); border-color: var(--selected-fg); }
+#modalAuth .auth-form > button[type="submit"] { margin-top: 20px; }
+#modalAuth :is(.auth-form, .free-beta-email-help) { line-height: 1.7; }
+#modalAuth .auth-policy-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-default); }
+#modalAuth .auth-policy-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--link-color); font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) :is(p, .text-muted) { color: var(--text-secondary); line-height: 1.7; }
+:is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) [role="alert"] { color: var(--text-error); }
+#modalAuthCompletion .auth-form-status:not(:empty) { padding: 12px; border-radius: 8px; background: var(--bg-subtle); line-height: 1.7; }
+#modalAuthCompletion .auth-form-status.auth-form-error { color: var(--text-error); background: var(--color-error-bg); }
+#modalEditProfile .modal-dialog { padding: 0; max-height: calc(100dvh - 32px); overflow-y: auto; border: 1px solid var(--border-default); background: var(--bg-elevated); border-radius: 12px; box-shadow: none; }
+#modalEditProfile :is(.modal-header, .modal-body) { padding: 24px; }
+#modalEditProfile .modal-header h3 { color: var(--text-strong); font-size: 22px; line-height: 1.5; }
+#modalEditProfile :is(input, button) { min-height: 44px; }
+#modalEditProfile input { width: 100%; padding: 11px 12px; font-size: 16px; background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--control-border); border-radius: 8px; }
+#modalEditProfile :is(input, button):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+:is(#view-creator, #view-mypage) .account-access-summary { width: calc(100% - 32px); max-width: 760px; margin: 32px auto; padding: 32px; border: 1px solid var(--border-default); border-radius: 16px; background: var(--bg-elevated); color: var(--text-primary); }
+:is(#view-creator, #view-mypage) .account-access-summary > h2 { font-size: 26px; color: var(--text-strong); line-height: 1.5; }
+:is(#view-creator, #view-mypage) .account-access-status { padding: 12px; background: var(--bg-subtle); color: var(--text-secondary); border-radius: 8px; line-height: 1.7; }
+:is(#view-creator, #view-mypage) .account-access-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+:is(#view-creator, #view-mypage) .account-access-actions :is(a, button) { min-height: 44px; }
+:is(#view-creator, #view-mypage) .account-access-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-default); }
+:is(#view-creator, #view-mypage) .account-access-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--link-color); text-decoration: underline; text-underline-offset: 4px; }
+
+/* Existing support state and request receipts remain readable without relying on color. */
+#betaSupportModal { padding: 24px; }
+#betaSupportModal .beta-support-dialog { padding: 28px; border: 1px solid var(--border-default); box-shadow: none; border-radius: 16px; }
+#betaSupportModal .beta-support-dialog-header h2 { font-size: 24px; color: var(--text-strong); line-height: 1.5; }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-status { display: inline-block; padding: 4px 8px; background: var(--bg-subtle); color: var(--text-secondary); border-radius: 6px; font-size: 13px; font-weight: 650; line-height: 1.6; }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-status[data-support-status="WAITING_USER"] { background: var(--color-warning-bg); color: var(--text-warning); }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-status[data-support-status="IN_REVIEW"] { background: var(--color-info-bg); color: var(--text-info); }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-status[data-support-status="RESOLVED"] { background: var(--color-success-bg); color: var(--text-success); }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-request-id { font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; line-height: 1.7; }
+:is(#betaSupportModal, #view-admin-cms) :is(.beta-support-next-step, .beta-support-action-hint) { padding: 12px; border-left: 3px solid var(--text-info); color: var(--text-info); background: var(--color-info-bg); line-height: 1.7; }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-list-summary { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-counter { text-align: right; color: var(--text-secondary); font-size: 13px; font-weight: 400; }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-queue-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-message { border-color: var(--border-strong); }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-message-body { color: var(--text-primary); line-height: 1.8; }
+:is(#betaSupportModal, #view-admin-cms) :is(.beta-support-card, .beta-support-message) { box-shadow: none; }
+:is(#betaSupportModal, #view-admin-cms) .beta-support-dialog button { min-height: 44px; }
+:is(#view-admin-cms, #modalAuth, #modalAdminLogin, #modalAuthCompletion, #betaSupportModal) :is(button, a, input, select, textarea, [tabindex="0"]):focus-visible,
+:is(#view-creator, #view-mypage) .account-access-summary :is(button, a):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+
+@media (max-width: 1000px) {
+  #view-admin-cms .cms-layout { grid-template-columns: minmax(0, 1fr); }
+  #view-admin-cms #adminOperationsNav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #view-admin-cms .cms-nav-group { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  #view-admin-cms #adminOperationsShell { padding: 16px 12px 32px; }
+  #view-admin-cms #adminOperationsContent { padding: 16px; }
+  #view-admin-cms .cms-header { flex-direction: column; gap: 12px; }
+  #view-admin-cms :is(.cms-metrics, .beta-operations-metrics) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #view-admin-cms .cms-permissions { grid-template-columns: minmax(0, 1fr); }
+  #view-admin-cms :is(.co-panel, .cms-role, .beta-operations-panel, .admin-change-comparison) { padding: 12px; }
+  #view-admin-cms .cms-table :is(th, td) { padding: 12px; }
+  :is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) .modal-dialog { max-height: calc(100dvh - 24px); border-radius: 12px; }
+  :is(#modalAuth, #modalAdminLogin, #modalAuthCompletion) :is(.modal-header, .modal-body) { padding: 20px 16px; }
+  :is(#view-creator, #view-mypage) .account-access-summary { margin-block: 20px; padding: 20px; }
+  #betaSupportModal { padding: 8px; }
+  #betaSupportModal .beta-support-dialog { padding: 20px 16px; max-height: calc(100dvh - 16px); border-radius: 12px; }
+}
