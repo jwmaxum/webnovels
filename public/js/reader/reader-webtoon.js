@@ -3,6 +3,13 @@
  'use strict';
  const instances=new Map();
  const element=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+ function formatCredits(credits){
+  if(!credits||typeof credits!=='object'||Array.isArray(credits))return '';
+  return [['writer','글 작가'],['artist','그림 작가'],['original','원작 작가']].flatMap(([key,label])=>{
+   const value=Object.hasOwn(credits,key)&&typeof credits[key]==='string'?credits[key].trim():'';
+   return value?[label+': '+value]:[];
+  }).join(' · ');
+ }
  function destroy(root){instances.get(root)?.();instances.delete(root);}
  function reset(){for(const dispose of instances.values())dispose();instances.clear();}
  function render(root,panels,{load,valid=()=>true}={}){
@@ -62,5 +69,5 @@
   if(typeof path!=='string'||!/^\/api\/v2\/webtoon\/images\//.test(path)||path.includes('..'))throw Error('INVALID_IMAGE_URL');
   const response=await fetch(path,{credentials:'omit',cache:'no-store',signal});if(!response.ok)throw Object.assign(Error('IMAGE_UNAVAILABLE'),{status:response.status});return response.blob();
  }
- window.ReaderWebtoon=Object.freeze({render,destroy,reset,publicLoad});
+ window.ReaderWebtoon=Object.freeze({render,destroy,reset,publicLoad,formatCredits});
 })();

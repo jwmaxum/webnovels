@@ -102,7 +102,7 @@ test('shipped form submits private save and publication button opens the real gu
   await s.get('btnOpenPublication').emit('click');
   assert.equal(s.get('modalCreatorPublication').hidden,false);assert.equal(s.get('modalCreatorPublication').classList.contains('active'),true);
   assert.equal(s.get('publicationPreviewBody').textContent,'본문\n\n다음 문단');
-  assert.match(s.get('publicationSummary').textContent,/서버 원고 버전 1/);
+  assert.match(s.get('publicationSummary').textContent,/전체 이용가.*무료 발행/);
   assert.equal(s.get('publicationControls').hidden,false);
   s.get('publicationRights').checked=true;await s.get('publicationCommit').emit('click');
   assert.equal(s.calls.filter(c=>c.path.includes('/publish/')).length,1);assert.match(s.get('publicationResultText').textContent,/공개됐습니다/);

@@ -78,6 +78,20 @@
 #creatorTab-new-ep.draft-focus .studio-editor-card { max-width: 1200px; margin-inline: auto; }
 #creatorTab-new-ep.draft-focus .studio-action-bar { position: sticky; top: 0; }
 
+/* Registration emphasizes required metadata before optional serial settings. */
+#creatorWorksContainer .studio-registration-steps { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 0; margin: 20px 0; list-style: decimal inside; color: var(--text-secondary); }
+#creatorWorksContainer .studio-registration-steps > li { flex: 1 1 140px; min-width: 0; padding: 12px; border-bottom: 2px solid var(--border-default); overflow-wrap: anywhere; }
+#creatorWorksContainer .studio-registration-steps [aria-current="step"] { color: var(--text-strong); border-color: var(--action-primary); font-weight: 700; }
+#creatorWorksContainer .studio-field-help { font-size: 13px; line-height: 1.7; color: var(--text-secondary); margin-block: 8px 16px; }
+#creatorWorksContainer .studio-settings-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+#creatorWorksContainer .studio-settings-actions .btn { min-height: 44px; white-space: normal; }
+#creatorWorksContainer .studio-optional, #creatorWebtoon .studio-webtoon-participants { min-width: 0; padding: 12px; margin-block: 16px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--bg-subtle); }
+#creatorWorksContainer .studio-optional > summary, #creatorWebtoon .studio-webtoon-participants > summary { min-height: 44px; padding-block: 10px; cursor: pointer; font-weight: 650; color: var(--text-primary); }
+#creatorWebtoon .studio-webtoon-participants p { font-size: 13px; line-height: 1.7; color: var(--text-secondary); }
+#creatorWebtoon .studio-webtoon-participants label { display: block; margin-top: 16px; }
+#creatorWebtoon .studio-webtoon-participants input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--control-border); border-radius: 8px; color: var(--text-primary); background: var(--bg-elevated); }
+#modalCreatorPublication #publicationWorkSettings { max-width: 100%; margin-block: 8px 16px; }
+
 /* Ordered uploads show actual local thumbnails, state text and keyboard actions. */
 #creatorWebtoon { padding: 20px; margin-bottom: 24px; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-subtle); }
 #creatorWebtoon > h3 { margin-bottom: 12px; font-size: 20px; color: var(--text-strong); }
@@ -114,6 +128,7 @@
   #creatorTab-new-ep .draft-copy-list { max-height: 360px; overflow-y: auto; }
 }
 @media (max-width: 600px) {
+  #creatorWorksContainer .studio-settings-actions > .btn { flex: 1 1 100%; }
   #view-creator > .container { padding-inline: 12px; padding-block: 16px 32px; }
   #view-creator #creatorAuthorBar { padding: 16px; }
   #view-creator .studio-more-nav { margin-left: 0; }

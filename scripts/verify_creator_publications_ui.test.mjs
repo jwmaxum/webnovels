@@ -33,7 +33,7 @@ test('preview confirms a saved owner revision; lost publish response retries exa
     {window,document,sessionStorage,crypto,Date,location:{origin:'https://app.test'},navigator:{}});
   await window.CreatorPublications.open('10');
   assert.equal(get('publicationPreviewBody').textContent,ctx.snapshot.content);
-  assert.match(get('publicationSummary').textContent,/서버 원고 버전 2/);
+  assert.match(get('publicationSummary').textContent,/전체 이용가.*AI 사용 안 함.*무료 발행/);
   get('publicationRights').checked=true;
   await Promise.all([get('publicationCommit').onclick(),get('publicationCommit').onclick()]);
   assert.equal(saved.size,1);

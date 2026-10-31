@@ -1485,7 +1485,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   if(loadedWebtoon?.panels?.length){
     textBodyEl.style.display='none';webtoonViewerEl.style.display='block';
     window.ReaderWebtoon.render(webtoonViewerEl,loadedWebtoon.panels,{load:window.ReaderWebtoon.publicLoad,valid});
-    if(authorCommentEl)authorCommentEl.textContent=(Object.entries(loadedWebtoon.credits||{}).map(([k,v])=>({writer:'글',artist:'그림',original:'원작'}[k])+': '+v).join(' · '))+'\n'+(ep.authorComment||'');
+    if(authorCommentEl)authorCommentEl.textContent=[window.ReaderWebtoon?.formatCredits?.(loadedWebtoon.credits)||'',ep.authorComment||''].filter(Boolean).join('\n');
   } else if (work.contentType === 'WEBTOON' || (loadedPanels && loadedPanels.length > 0)) {
     if (textBodyEl) textBodyEl.style.display = 'none';
     if (webtoonViewerEl) {

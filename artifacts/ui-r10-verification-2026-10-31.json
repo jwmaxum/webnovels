@@ -1,0 +1,141 @@
+{
+  "stage": "UI-R10",
+  "checkedAt": "2026-10-31T07:13:16.707Z",
+  "baseCommit": "7e0cb34f1cb834321672975e96ab3bad71f49ac5",
+  "changes": [
+    "Guided registration, required metadata and save-and-write",
+    "Unsaved metadata guards and native fieldset locks",
+    "Saved draft checkpoint before metadata correction",
+    "Localized publication summary",
+    "Optional participating author roles and safe shared display",
+    "Mixed upload batch outcome summary"
+  ],
+  "validation": {
+    "startedAt": "2026-10-31T07:05:48.312Z",
+    "completedAt": "2026-10-31T07:10:13.721Z",
+    "steps": [
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r10",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:creator-works",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:drafts",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:publication",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:auth",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:naming",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage15",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r4",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r5",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r6",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r7",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r8",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r9",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "expectedCommands": 15,
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "log": "scratch/ui-r10/verification.log",
+    "supplement": {
+      "startedAt": "2026-10-31T07:11:24.073Z",
+      "completedAt": "2026-10-31T07:11:33.243Z",
+      "exitCode": 0,
+      "tests": 52,
+      "error": null
+    },
+    "newTests": {
+      "works": 14,
+      "webtoon": 9,
+      "publication": 12,
+      "total": 35
+    },
+    "fullRelease": "Final commit CI runs all 48 commands; local checks cover affected scope",
+    "independentReview": "NO_BLOCKING_FINDINGS",
+    "security": {
+      "checkedAt": "2026-10-31T07:13:40.094Z",
+      "syntaxFiles": 13,
+      "syntaxPassed": true,
+      "secretScanTextFiles": 19,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "userFilePreserved": true,
+      "rawBackupsExcluded": true
+    }
+  },
+  "runtime": {
+    "browser": "NOT_RUN_PROJECT_RESTRICTION",
+    "localhost": "NOT_RUN",
+    "physicalDevice": "NOT_RUN",
+    "wordFormattingRoundtrip": "NOT_VERIFIED",
+    "zoom200": "NOT_VERIFIED",
+    "spokenScreenReader": "NOT_VERIFIED",
+    "lcpCls": "NOT_MEASURED"
+  },
+  "production": {
+    "databaseMutations": false,
+    "schemaChanges": false,
+    "featureFlagsChanged": false,
+    "accountOrWorkChanges": false
+  },
+  "nextStage": "UI-R11: permitted device and accessibility acceptance, detailed Word restore, measured performance; SMTP/external beta when configured",
+  "gitAndDelivery": "Final commit, push, CI and Cloudflare asset parity reported after push; credentials and backups excluded"
+}
