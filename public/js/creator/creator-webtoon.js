@@ -14,7 +14,7 @@
  const api=(c,action,id,options)=>{if(!same(c))throw Error('SESSION_CHANGED');return window.WebNovelsAuth.api(url(c,action,id),options);};
  const manifest=()=>editor()?.getFileContext()?.snapshot.webtoon||empty();
  const message=text=>{if($('creatorWebtoonMessage'))$('creatorWebtoonMessage').textContent=text;};
- const error=e=>({IMAGE_ORIENTATION_REQUIRED:'회전 정보를 적용한 JPEG/PNG로 다시 내보내주세요.',STATIC_IMAGE_REQUIRED:'움직이지 않는 PNG/JPEG를 선택해주세요.',IMAGE_PIXEL_LIMIT:'원본은 변당 12,000px, 1,200만 화소 이하로 나눠주세요.',FILE_TOO_LARGE:'파일 하나는 8 MiB 이하여야 합니다.',PROCESSING_BUSY:'이 파일을 처리 중입니다. 잠시 후 이어서 처리해주세요.',ASSET_CANCELLED:'업로드가 취소되었습니다. 원본 기록은 보존됩니다.',WEBTOON_NOT_ACTIVATED:'웹툰 제작 기능이 아직 활성화되지 않았습니다.',PROCESSING_LIMIT:'처리 실패가 누적되었습니다. 원본을 보관하고 운영자에게 문의해주세요.'}[e.code||e.message]||'완료된 이미지는 보존했습니다. 연결 상태를 확인하고 파일별로 재시도해주세요.');
+ const error=e=>({IMAGE_TYPE_MISMATCH:'파일 확장자와 실제 이미지 형식이 다릅니다. JPEG는 .jpg/.jpeg, PNG는 .png로 다시 저장한 후 파일을 다시 선택해주세요.',IMAGE_INVALID:'이미지 파일을 읽을 수 없습니다. 원본을 JPEG/PNG로 다시 저장한 후 파일을 다시 선택해주세요.',INVALID_FILENAME:'파일 이름은 경로 문자 없이 200자 이내로 변경한 후 파일을 다시 선택해주세요.',IMAGE_ORIENTATION_REQUIRED:'회전 정보를 적용한 JPEG/PNG로 다시 내보내주세요.',STATIC_IMAGE_REQUIRED:'움직이지 않는 PNG/JPEG를 선택해주세요.',IMAGE_PIXEL_LIMIT:'원본은 변당 12,000px, 1,200만 화소 이하로 나눠주세요.',FILE_TOO_LARGE:'파일 하나는 8 MiB 이하여야 합니다.',PROCESSING_BUSY:'이 파일을 처리 중입니다. 잠시 후 이어서 처리해주세요.',ASSET_CANCELLED:'업로드가 취소되었습니다. 원본 기록은 보존됩니다.',WEBTOON_NOT_ACTIVATED:'웹툰 제작 기능이 아직 활성화되지 않았습니다.',PROCESSING_LIMIT:'처리 실패가 누적되었습니다. 원본을 보관하고 운영자에게 문의해주세요.'}[e.code||e.message]||'완료된 이미지는 보존했습니다. 연결 상태를 확인하고 파일별로 재시도해주세요.');
  function invalidatePreviews(){for(const record of [...previews.values()])record.stop();previewDispose=null;}
  function revokeThumbnail(id){const value=thumbnails.get(id);if(value)URL.revokeObjectURL(value);thumbnails.delete(id);thumbnailRequests.delete(id);}
  function cacheThumbnail(id,blob){if(thumbnails.has(id))return;thumbnails.set(id,URL.createObjectURL(blob));}
@@ -43,7 +43,7 @@
   for(const [position,asset] of ordered.entries()){
    const row=node('div'),index=m.assetIds.indexOf(asset.id),number=node('span',String(position+1));row.className='webtoon-asset studio-webtoon-row';number.className='studio-webtoon-number';number.setAttribute('aria-label',(position+1)+'번째 이미지');row.append(node('strong',asset.name),number);
    const thumb=thumbnails.has(asset.id)?node('img'):node('span','미리보기 없음');thumb.className='studio-webtoon-thumb';if(thumbnails.has(asset.id)){thumb.loading='lazy';thumb.decoding='async';thumb.src=thumbnails.get(asset.id);thumb.alt='';thumb.title=asset.name;thumb.onerror=()=>{if(!same(c)||thumbnails.get(asset.id)!==thumb.src)return;revokeThumbnail(asset.id);message('이미지를 표시하지 못했습니다. 이미지 확인 또는 세로 미리보기로 다시 확인해주세요.');draw();};}row.append(thumb);
-   const state=node('span',`${asset.uiFailed&&['LOCAL','PREPARED'].includes(asset.state)?'업로드 실패 · 재시도 가능':{LOCAL:'업로드 대기',PREPARED:'원본 저장 대기',UPLOADED:'이미지 처리 대기',PROCESSING:'이미지 처리 중',FAILED:'처리 실패 · 재시도 가능',READY:'완료',UNKNOWN:'정보 확인 중'}[asset.state]||'상태 확인'} · 분할 ${asset.cursor||0}/${asset.partCount||'?'}${m.thumbnailAssetId===asset.id?' · 대표 이미지':''}`);state.className='studio-webtoon-state';row.append(state);
+   const state=node('span',`${asset.uiFailed&&asset.uiErrorMessage?asset.uiErrorMessage:asset.uiFailed&&['LOCAL','PREPARED'].includes(asset.state)?'업로드 실패 · 재시도 가능':{LOCAL:'업로드 대기',PREPARED:'원본 저장 대기',UPLOADED:'이미지 처리 대기',PROCESSING:'이미지 처리 중',FAILED:'처리 실패 · 재시도 가능',READY:'완료',UNKNOWN:'정보 확인 중'}[asset.state]||'상태 확인'} · 분할 ${asset.cursor||0}/${asset.partCount||'?'}${m.thumbnailAssetId===asset.id?' · 대표 이미지':''}`);state.className='studio-webtoon-state';row.append(state);
    const locked=c.readOnly||busy(c);
    if(index>=0){
     row.draggable=!locked;row.ondragstart=e=>e.dataTransfer.setData('text/plain',asset.id);row.ondragover=e=>e.preventDefault();row.ondrop=e=>{e.preventDefault();if(!locked){const from=manifest().assetIds.indexOf(e.dataTransfer.getData('text/plain'));if(from>=0)move(from,index);}};
@@ -65,7 +65,7 @@
  }
  async function process(c,id,batch=false){
   if(!same(c)||c.readOnly||running.size>0||c.batch&&!batch)return;let asset=assets.find(a=>a.id===id);if(!asset||asset.state==='CANCELLED')return;
-  const token=Symbol('upload');running.set(id,token);asset.uiFailed=false;draw();
+  const token=Symbol('upload');running.set(id,token);asset.uiFailed=false;asset.uiErrorMessage='';draw();
   try{
    if(['LOCAL','PREPARED'].includes(asset.state)){
     const file=files.get(id);if(!file)throw Error('FILE_REQUIRED');
@@ -79,7 +79,7 @@
     if(asset.state==='FAILED'||!['READY','CANCELLED'].includes(asset.state)&&asset.state===before.state&&asset.cursor===before.cursor){message('이미지 처리가 완료되지 않았습니다. 잠시 후 이어서 처리를 눌러주세요.');break;}
    }
    if(same(c)&&!asset.cancelRequested&&asset.state==='READY'){files.delete(id);attach(id);message('이미지 처리가 완료되었습니다. 순서를 확인하고 원고를 저장하세요.');}
-  }catch(e){if(same(c)&&!asset.cancelRequested&&asset.state!=='CANCELLED')asset.uiFailed=true;throw e;}
+  }catch(e){if(same(c)&&!asset.cancelRequested&&asset.state!=='CANCELLED'){asset.uiFailed=true;asset.uiErrorMessage=asset.name+' · '+error(e);}throw e;}
   finally{if(same(c)&&running.get(id)===token){running.delete(id);draw();}}
  }
  async function select(selected){
@@ -99,7 +99,7 @@
   for(const id of queued){
    if(!same(c))return;
    const asset=assets.find(a=>a.id===id);if(asset?.state==='CANCELLED')continue;
-   try{await process(c,id,true);}catch(e){if(same(c))message(error(e));}
+   try{await process(c,id,true);}catch(e){if(same(c))message(asset?.uiErrorMessage||error(e));}
   }
   }finally{c.batch=false;if(same(c))draw();}
  }

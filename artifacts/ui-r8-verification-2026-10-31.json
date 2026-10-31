@@ -1,6 +1,6 @@
 {
   "stage": "UI-R8",
-  "checkedAt": "2026-10-31T03:23:13.659Z",
+  "checkedAt": "2026-10-31T04:36:01.262Z",
   "baseCommit": "7482d84f1b44b3b4a534782860344c43c637fad0",
   "validation": {
     "releaseCommandCount": 46,
@@ -9,8 +9,8 @@
       "reason": "Two stale UI-R5 copy/cache assertions; corrected"
     },
     "continuation": {
-      "startedAt": "2026-10-31T03:14:25.952Z",
-      "completedAt": "2026-10-31T03:15:28.947Z",
+      "startedAt": "2026-10-31T04:30:06.486Z",
+      "completedAt": "2026-10-31T04:31:03.402Z",
       "steps": [
         {
           "command": "test:ui-r5",
@@ -49,11 +49,51 @@
       "authorUi": 9,
       "readerFonts": 12,
       "schedulerConfiguration": 12,
-      "total": 42
+      "total": 46,
+      "webtoonInputErrors": 4
     },
     "additionalDeliveryRegression": 1,
     "lint": "NOT_CONFIGURED",
-    "coverage": "NOT_MEASURED"
+    "coverage": "NOT_MEASURED",
+    "fullCi": {
+      "commit": "7b8cc173fbff9de0283da8f1c454548e76b3e5d3",
+      "checks": [
+        {
+          "name": "Cloudflare Pages",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/jwmaxum/webnovels/runs/124430125056",
+          "detailsUrl": "https://dash.cloudflare.com/?to=/7c88b2d2b3fe9baf32dc744ac0a631b3/pages/view/webnovels/572bff60-7477-439e-9375-d224c8d68dc2"
+        },
+        {
+          "name": "build-and-test",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/jwmaxum/webnovels/actions/runs/41164357760/job/124428585337",
+          "detailsUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41164357760/job/124428585337"
+        }
+      ],
+      "runs": [
+        {
+          "name": "WebNovels CI / Build & Test Workflow",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/jwmaxum/webnovels/actions/runs/41164357760"
+        }
+      ]
+    },
+    "supplementalSecurity": {
+      "checkedAt": "2026-10-31T04:37:20.748Z",
+      "syntaxFiles": 5,
+      "syntaxPassed": true,
+      "secretScanTextFiles": 11,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "userFilePreserved": true,
+      "rawBackupsExcluded": true,
+      "lint": "NOT_CONFIGURED",
+      "coverage": "NOT_MEASURED"
+    }
   },
   "database": {
     "appliedAt": "2026-10-31T03:10:53.192Z",
@@ -87,7 +127,7 @@
     "hostedRestoreAccepted": false
   },
   "productionState": {
-    "checkedAt": "2026-10-31T03:18:52.832Z",
+    "checkedAt": "2026-10-31T04:32:35.319Z",
     "readOnly": true,
     "migration_applied": true,
     "original_work_public_completed": true,
@@ -95,6 +135,8 @@
     "original_ten_heads_present": true,
     "acceptance_novel_private": true,
     "acceptance_novel_not_published": true,
+    "acceptance_webtoon_private": true,
+    "acceptance_webtoon_not_published": true,
     "active_queue_empty": true,
     "private_helpers_denied": true,
     "browser_rpcs_denied": true
@@ -133,7 +175,15 @@
     "microsoftWordApplication": false,
     "realPublicPublish": false,
     "adminApprovalRoundtrip": false,
-    "postDeployment": "PENDING"
+    "postDeployment": "PC PRIVATE AUTHOR ACCEPTANCE PASSED",
+    "details": "artifacts/ui-r8-browser-2026-10-31.json"
   },
-  "deployment": "PENDING"
+  "deployment": {
+    "sourceCommit": "7b8cc173fbff9de0283da8f1c454548e76b3e5d3",
+    "coreCi": "SUCCESS",
+    "cloudflare": "SUCCESS",
+    "changedAssetsMatched": 8,
+    "checkedAt": "2026-10-31T04:20:25.150Z",
+    "followup": "Per-file upload advice/cache update validated locally; subsequent commit checked separately"
+  }
 }

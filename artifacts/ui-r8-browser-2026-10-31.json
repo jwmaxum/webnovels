@@ -1,0 +1,120 @@
+{
+  "stage": "UI-R8",
+  "checkedAt": "2026-10-31T04:36:01.254Z",
+  "origin": "https://webnovels-db4.pages.dev",
+  "desktopBrowser": true,
+  "scope": "User-authorized separate private acceptance works; existing published story untouched",
+  "novel": {
+    "separatePrivateWork": true,
+    "representativeWordHtmlPaste": true,
+    "paragraphsLineBreaksBoldItalicUnderlineAlignmentPreserved": true,
+    "serverSaveAndReloadRestored": true,
+    "initialReservationWithoutAdmin": true,
+    "reservationCancelled": true,
+    "afterCancellationEditable": true,
+    "afterCancellationNowAndScheduleEnabled": true
+  },
+  "webtoon": {
+    "sameAuthorNewTypeAllowed": true,
+    "separatePrivateWork": true,
+    "jpegImagesUploaded": 2,
+    "processedImages": 2,
+    "orderChangedAndReloadRestored": true,
+    "reservationWithoutAdmin": true,
+    "editReservationConfirmedAndCancelled": true,
+    "sameEpisodeNumberRetained": 1,
+    "directEditSavedRevision": 6,
+    "nowAndScheduleRemainAvailable": true,
+    "imagesLoaded": 2,
+    "imageCssWidth": 385,
+    "parentCssWidth": 385
+  },
+  "uploadValidation": {
+    "initialHttpStatus": 400,
+    "fixtureExtensionDidNotMatchJpegBytes": true,
+    "errorReproducedInLocalProductionRoute": "IMAGE_TYPE_MISMATCH",
+    "actualResponseBodyAvailable": false,
+    "correctJpegFilesSucceeded": true,
+    "serverMimeValidationPreserved": true,
+    "actionablePerFileErrorAdded": true
+  },
+  "performance": {
+    "before": {
+      "checkedAt": "2026-10-31T02:42:40.063Z",
+      "kind": "uncontrolled-single-navigation",
+      "navigation": [
+        {
+          "ttfbMs": 216,
+          "domContentLoadedMs": 1278.9000000059605,
+          "loadMs": 1323.7000000029802
+        }
+      ],
+      "google": [
+        {
+          "host": "fonts.googleapis.com",
+          "type": "link",
+          "durationMs": 176.09999999403954,
+          "encodedBytes": 162387,
+          "decodedBytes": 662314
+        }
+      ]
+    },
+    "after": {
+      "checkedAt": "2026-10-31T04:22:05.532Z",
+      "kind": "uncontrolled-single-navigation",
+      "navigation": [
+        {
+          "ttfbMs": 75,
+          "domContentLoadedMs": 717.5,
+          "loadMs": 765.2000000029802
+        }
+      ],
+      "google": []
+    },
+    "readerFontState": "READY",
+    "readerGoogleCssRequested": true,
+    "uncontrolledSamples": true,
+    "lcpMeasured": false,
+    "clsMeasured": false,
+    "improvementPercentClaimed": false
+  },
+  "viewport": {
+    "requestedWidths": [
+      375,
+      1440
+    ],
+    "observedCssWidths": [
+      961,
+      961
+    ],
+    "responsiveMobileAcceptance": false,
+    "temporaryOverrideReset": true,
+    "horizontalOverflowObserved": false
+  },
+  "productionState": {
+    "checkedAt": "2026-10-31T04:32:35.319Z",
+    "readOnly": true,
+    "migration_applied": true,
+    "original_work_public_completed": true,
+    "original_ten_episodes_public": true,
+    "original_ten_heads_present": true,
+    "acceptance_novel_private": true,
+    "acceptance_novel_not_published": true,
+    "acceptance_webtoon_private": true,
+    "acceptance_webtoon_not_published": true,
+    "active_queue_empty": true,
+    "private_helpers_denied": true,
+    "browser_rpcs_denied": true
+  },
+  "loggedOut": true,
+  "notExecuted": [
+    "physical phone and mobile keyboard",
+    "actual Microsoft Word application clipboard",
+    "200 percent desktop zoom",
+    "spoken screen reader",
+    "real public NOW publication",
+    "due-time public scheduler execution",
+    "administrator approval write roundtrip"
+  ],
+  "screenshot": "artifacts/ui-r8-webtoon-publication-desktop.jpg"
+}

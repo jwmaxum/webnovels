@@ -91,7 +91,7 @@
     "test:ui-r5": "node --test scripts/verify_ui_r5_works.test.mjs scripts/verify_ui_r5_editor.test.mjs scripts/verify_ui_r5_webtoon.test.mjs scripts/verify_ui_r5_layout.test.mjs",
     "test:ui-r6": "node --test scripts/verify_ui_r6_admin.test.mjs scripts/verify_ui_r6_support.test.mjs scripts/verify_ui_r6_account_policy.test.mjs scripts/verify_ui_r6_layout.test.mjs",
     "test:ui-r7": "node --test scripts/verify_ui_r7_accessibility.test.mjs scripts/verify_ui_r7_regression.test.mjs scripts/verify_ui_delivery.test.mjs",
-    "test:ui-r8": "node --test --test-concurrency=1 scripts/verify_ui_r8_publication_contract.test.mjs scripts/verify_ui_r8_author_ui.test.mjs scripts/verify_ui_r8_fonts.test.mjs scripts/verify_ui_r8_scheduler_config.test.mjs",
+    "test:ui-r8": "node --test --test-concurrency=1 scripts/verify_ui_r8_publication_contract.test.mjs scripts/verify_ui_r8_author_ui.test.mjs scripts/verify_ui_r8_fonts.test.mjs scripts/verify_ui_r8_scheduler_config.test.mjs scripts/verify_ui_r8_webtoon_errors.test.mjs",
     "audit:ui-delivery": "node scripts/audit_ui_delivery.mjs"
   },
   "keywords": [],
