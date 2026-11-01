@@ -151,13 +151,17 @@
       if(page==='virtual-accounts'){await window.VirtualAccounts.render(root());return;}
       if(page==='recovery'){await window.AdminRecovery.render(root(),{offset,isCurrent});return;}
       if(page==='accounts'&&window.AdminMembers){
+        const legacy=async unavailable=>{
+          if(!isCurrent())return;window.AdminMembers.leave();
+          if(window.AdminWorkflow?.active())await window.AdminWorkflow.render(root(),'accounts',{accountKind:kind,offset,isCurrent,onNavigate:workflowNavigate,externalAccountTabs:true});
+          else await window.AdminConsole.render(root(),'accounts',{accountKind:kind,isCurrent,onNavigate:workflowNavigate,externalAccountTabs:true});
+          if(isCurrent()){
+            if(unavailable)message('확장 회원 관리는 연결 준비 중입니다. 기존 회원 조회를 표시합니다.');
+            link(root(),'회원 검색으로 돌아가기',navigation.path({group:'members',tab:kind}),'btn btn-outline');
+          }
+        };
         await window.AdminMembers.render(root(),{kind,accountId:route.params.accountId,isCurrent,
-          onNavigate:options=>{if(isCurrent())return memberNavigate(options);},onUnavailable:async()=>{
-            if(!isCurrent())return;window.AdminMembers.leave();
-            if(window.AdminWorkflow?.active())await window.AdminWorkflow.render(root(),'accounts',{accountKind:kind,offset,isCurrent,onNavigate:workflowNavigate,externalAccountTabs:true});
-            else await window.AdminConsole.render(root(),'accounts',{accountKind:kind,isCurrent,onNavigate:workflowNavigate,externalAccountTabs:true});
-            if(isCurrent())message('확장 회원 관리는 연결 준비 중입니다. 기존 회원 조회를 표시합니다.');
-          }});return;
+          onNavigate:options=>{if(isCurrent())return memberNavigate(options);},onUnavailable:()=>legacy(true),onLegacyManage:()=>legacy(false)});return;
       }
       if(window.AdminWorkflow?.active()&&['cases','appeals','accounts','works','curation','audit'].includes(page)){
         await window.AdminWorkflow.render(root(),page,{...(page==='cases'?{source}:{}),...(page==='accounts'?{accountKind:kind}:{}),

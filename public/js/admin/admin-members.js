@@ -45,7 +45,7 @@
     const head=el(el(table,'thead'),'tr');for(const name of columns)el(head,'th',name).scope='col';
     const body=el(table,'tbody');for(const item of items){const row=el(body,'tr');renderCell(row,item);}return table;
   }
-  async function render(root,{kind='reader',accountId,isCurrent=()=>true,onNavigate,onUnavailable,focusList=false}={}){
+  async function render(root,{kind='reader',accountId,isCurrent=()=>true,onNavigate,onUnavailable,onLegacyManage,focusList=false}={}){
     if(typeof accountId==='string'&&uuid.test(accountId))accountId=accountId.toLowerCase();
     if(owner!==actor()?.userId){reset();owner=actor()?.userId||null;}else leave();
     const turn=generation,user=actor()?.userId,current=()=>turn===generation&&actor()?.userId===user&&readable(kind)&&isCurrent()&&root.isConnected!==false;
@@ -61,9 +61,9 @@
     const selectMember=id=>{
       if(!current())return;
       if(onNavigate)return onNavigate({kind,...(id?{accountId:id}:{})});
-      return render(root,{kind,accountId:id,isCurrent,onNavigate,onUnavailable,focusList:!id});
+      return render(root,{kind,accountId:id,isCurrent,onNavigate,onUnavailable,onLegacyManage,focusList:!id});
     };
-    const reload=()=>{if(current())return render(root,{kind,accountId,isCurrent,onNavigate,onUnavailable,focusList:true});};
+    const reload=()=>{if(current())return render(root,{kind,accountId,isCurrent,onNavigate,onUnavailable,onLegacyManage,focusList:true});};
     let loadingList=true;
     try{
       const result=await api('list',{kind,...filters});if(!current())return;
@@ -87,13 +87,13 @@
         el(search,'p','유료 독자·순결제액·유상/보너스 잔액·주문번호 검색은 금융 원장 연결 후 제공합니다. 현재는 미집계이며 0원으로 판정하지 않습니다.','members-hint');
       }
       const actions=el(search,'div',null,'members-actions'),submit=button(actions,'조건 적용',null,true);submit.type='submit';
-      button(actions,'조건 초기화',()=>{if(!current())return;state.filters=initial();return render(root,{kind,isCurrent,onNavigate,onUnavailable,focusList:true});});
+      button(actions,'조건 초기화',()=>{if(!current())return;state.filters=initial();return render(root,{kind,isCurrent,onNavigate,onUnavailable,onLegacyManage,focusList:true});});
       button(actions,'새로고침',reload);
       search.onsubmit=event=>{
         event.preventDefault();if(!current())return;
         const next={...initial()};for(const [key,node]of Object.entries(controls))if(!node.disabled)next[key]=node.value.trim();
         if(next.q.length>100||next.createdFrom&&next.createdTo&&next.createdFrom>next.createdTo){feedback.textContent='검색어 길이와 가입일 범위를 확인해주세요.';return;}
-        state.filters=next;return render(root,{kind,isCurrent,onNavigate,onUnavailable,focusList:true});
+        state.filters=next;return render(root,{kind,isCurrent,onNavigate,onUnavailable,onLegacyManage,focusList:true});
       };
       inputs.push(...Object.values(controls));
       feedback.textContent=`${title} ${number(result.total)}명 · ${Math.floor(filters.offset/50)+1}페이지`;
@@ -105,9 +105,9 @@
         el(row,'td',number(member.pendingRequests));if(kind==='author')el(row,'td',capabilities.canReadSettlement===true?settlementText(member.settlementState):'조회 권한 없음');
       });
       const pager=el(section,'nav',null,'members-actions');pager.setAttribute('aria-label',title+' 목록 페이지');
-      if(filters.offset>0)button(pager,'이전 페이지',()=>{if(!current())return;state.filters.offset=Math.max(0,filters.offset-50);return render(root,{kind,isCurrent,onNavigate,onUnavailable,focusList:true});});
-      if(result.hasMore===true&&Number.isSafeInteger(result.nextOffset)&&result.nextOffset>filters.offset)button(pager,'다음 페이지',()=>{if(!current())return;state.filters.offset=result.nextOffset;return render(root,{kind,isCurrent,onNavigate,onUnavailable,focusList:true});});
-      if(accountId)await detail(section,String(accountId),kind,{current,state,inputs,isCurrent,onNavigate,selectMember});
+      if(filters.offset>0)button(pager,'이전 페이지',()=>{if(!current())return;state.filters.offset=Math.max(0,filters.offset-50);return render(root,{kind,isCurrent,onNavigate,onUnavailable,onLegacyManage,focusList:true});});
+      if(result.hasMore===true&&Number.isSafeInteger(result.nextOffset)&&result.nextOffset>filters.offset)button(pager,'다음 페이지',()=>{if(!current())return;state.filters.offset=result.nextOffset;return render(root,{kind,isCurrent,onNavigate,onUnavailable,onLegacyManage,focusList:true});});
+      if(accountId)await detail(section,String(accountId),kind,{current,state,inputs,isCurrent,onNavigate,onLegacyManage,selectMember});
     }catch(error){if(current()){
       if(loadingList&&typeof onUnavailable==='function'&&(error?.status===503||error?.status==null)&&
         ['ACCOUNT_SERVICE_NOT_ACTIVATED','MEMBERS_NOT_READY','MEMBER_SERVICE_UNAVAILABLE'].includes(error?.code))return onUnavailable();
@@ -115,7 +115,7 @@
     }}
     finally{if(current())section.setAttribute('aria-busy','false');}
   }
-  async function detail(parent,id,kind,{current,state,inputs,isCurrent,onNavigate,selectMember}){
+  async function detail(parent,id,kind,{current,state,inputs,isCurrent,onNavigate,onLegacyManage,selectMember}){
     const section=el(parent,'section',null,'members-detail');section.setAttribute('tabindex','-1');section.setAttribute('aria-label',(kind==='author'?'작가':'독자')+' 상세');
     const feedback=status(section,'회원 상세를 불러오는 중입니다…');section.setAttribute('aria-busy','true');
     try{
@@ -128,6 +128,10 @@
         ['계정 연결',member.authLinked?'연결됨':'미연결'],['이메일 인증',member.emailConfirmed?'확인':'미확인'],['가입일',date(member.createdAt)],['최근 활동',date(member.lastActivityAt)]]);
       if(author)el(account,'p',member.bio||'등록된 소개가 없습니다.');
       el(account,'p','비밀번호·이메일·실명·계좌·계정 연결은 이 화면에서 변경하지 않습니다. 본인은 로그인 화면의 비밀번호 재설정을 이용할 수 있습니다.','members-hint');
+      if(typeof onLegacyManage==='function'){
+        el(account,'p','기존 회원 목록에서 연결·복구 상태와 권한별 계정 조치를 확인합니다.','members-hint');
+        const tools=el(account,'div',null,'members-actions');button(tools,'계정 지원 도구',()=>{if(current())return onLegacyManage();});
+      }
       if(capabilities.canEditPublic===true&&actor()?.admin?.role==='SUPER_ADMIN')edit(account,member,kind,{current,state,inputs,selectMember});
       if(author){
         const works=el(section,'section');el(works,'h4','작품');

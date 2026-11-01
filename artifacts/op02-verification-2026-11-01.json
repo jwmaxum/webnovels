@@ -8,7 +8,8 @@
     "Highest-admin public name/bio revision, reason, audit and exact idempotent retry",
     "Per-source support/publication/settlement/audit permission boundaries",
     "Safe existing inventory fallback when new directory is unavailable",
-    "Lossless bigint sequence metadata in logical backup JSON"
+    "Lossless bigint sequence metadata in logical backup JSON",
+    "Explicit same-kind entry to original account-support and moderation inventory without new status writes"
   ],
   "validation": {
     "stage": "OP-02",
@@ -121,7 +122,7 @@
       ],
       "exitCode": 0
     },
-    "newTests": 59,
+    "newTests": 62,
     "op01RegressionTests": 35,
     "backupRegression": {
       "command": "node --test scripts/verify_stage23_backup.test.mjs scripts/verify_op02_backup_precision.test.mjs",
@@ -135,6 +136,46 @@
       "secretMatches": 0,
       "diffCheck": "PASS",
       "userChangesPreserved": true
+    },
+    "compatibility": {
+      "checkedAt": "2026-11-01T07:44:53.979Z",
+      "steps": [
+        {
+          "command": "build:compile",
+          "exitCode": 0
+        },
+        {
+          "command": "test:op02",
+          "exitCode": 0
+        },
+        {
+          "command": "test:op01",
+          "exitCode": 0
+        },
+        {
+          "command": "test:auth",
+          "exitCode": 0
+        },
+        {
+          "command": "test:launch",
+          "exitCode": 0
+        },
+        {
+          "command": "test:ui-r5",
+          "exitCode": 0
+        },
+        {
+          "command": "test:ui-r6",
+          "exitCode": 0
+        },
+        {
+          "command": "test:ui-r7",
+          "exitCode": 0
+        }
+      ],
+      "exitCode": 0,
+      "purpose": "Retain original same-kind account support, recovery and configured moderation tools with search return",
+      "newStatusMutationApi": false
     }
   },
   "production": {

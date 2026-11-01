@@ -47,10 +47,10 @@ test('OP-02 assets retain compatibility ordering and native separate member dest
   const attr=(node,key)=>node.attrs?.find(item=>item.name===key)?.value;
   const styles=all.filter(node=>node.tagName==='link').map(node=>attr(node,'href'));
   assert(styles.indexOf('/css/admin-members.css?v=20261101op02')>styles.indexOf('/css/admin-shell.css?v=20261101op01'));
-  for(const name of ['admin-navigation','admin-members','admin-operations'])assert(loader.includes('/js/admin/'+name+'.js?v=20261101op02'));
+  for(const name of ['admin-navigation','admin-members','admin-operations'])assert(loader.includes('/js/admin/'+name+'.js?v='+(name==='admin-navigation'?'20261101op02':'20261101op02b')));
   assert(loader.indexOf('/admin-navigation.js?')<loader.indexOf('/admin-members.js?'));
   assert(loader.indexOf('/admin-members.js?')<loader.indexOf('/admin-operations.js?'));
-  for(const name of ['role-modules','router'])assert(html.includes('/js/core/'+name+'.js?v=20261101op02'));
+  for(const name of ['role-modules','router'])assert(html.includes('/js/core/'+name+'.js?v='+(name==='role-modules'?'20261101op02b':'20261101op02')));
   const navigation={window:{location:{origin:'https://webnovels.uk'}},URL,URLSearchParams};vm.runInNewContext(sources['admin-navigation'],navigation);
   const memberGroup=navigation.window.AdminNavigation.groups(()=>true).find(group=>group.key==='members');
   assert.deepEqual(Array.from(memberGroup.tabs,item=>[item.kind,item.href]),[['reader','/admin/members?kind=reader'],['author','/admin/members?kind=author']]);
@@ -134,4 +134,14 @@ test('directory readiness fallback preserves same-kind existing inventory and ne
   const count=app.otherCalls.length;await author.options.onUnavailable();assert.equal(app.otherCalls.length,count);
   app.context.AdminWorkflow.active=()=>false;await last(app).options.onUnavailable();assert.equal(app.otherCalls.length,count+1);
   assert.equal(last(app).options.kind,'reader');assert.equal(app.location.search,'?kind=reader');
+});
+
+test('member detail retains access to existing support tools with a return to independent search state',async()=>{
+  const app=setup();await app.api.openRoute('/admin/members?kind=author&accountId=17',false);
+  const author=last(app);author.filters.q='kept-filter';await author.options.onLegacyManage();
+  assert.deepEqual(app.otherCalls,['accounts']);assert.equal(app.resets,0);assert.doesNotMatch(app.nodes.adminOperationsContent.textContent,/연결 준비/);
+  const back=app.nodes.adminOperationsContent.querySelectorAll('a').find(node=>node.textContent.trim()==='회원 검색으로 돌아가기');assert(back);
+  await back.onclick({preventDefault(){}});assert.equal(last(app).options.kind,'author');assert.equal(last(app).options.accountId,undefined);assert.equal(last(app).filters.q,'kept-filter');
+  await app.api.openRoute('/admin/members?kind=reader',false);const count=app.otherCalls.length;
+  await author.options.onLegacyManage();assert.equal(app.otherCalls.length,count,'old controls cannot open a different kind workspace');
 });

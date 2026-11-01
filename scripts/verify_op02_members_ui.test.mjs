@@ -96,6 +96,32 @@ test('member row and close actions navigate with kind and profile ID only',async
   await app.render('reader',readerId,{onNavigate:route=>routes.push(route)});await button(app.root,'상세 닫기').onclick();assert.equal(routes.at(-1).kind,'reader');assert.equal(routes.at(-1).accountId,undefined);
 });
 
+test('same-kind detail retains existing account support entry without introducing status mutations',async()=>{
+  for(const kind of ['author','reader']){
+    const app=setup(),invoked=[];await app.render(kind,kind==='author'?authorId:readerId,{onLegacyManage:()=>invoked.push(kind)});
+    const support=button(app.root,'계정 지원 도구');assert(support);assert.match(app.root.textContent,/기존 회원 목록에서 연결·복구 상태와 권한별 계정 조치를 확인합니다/);
+    await support.onclick();assert.deepEqual(invoked,[kind]);assert.equal(app.calls.filter(call=>!['list','detail'].includes(call.action)).length,0);
+    app.c.AdminMembers.reset();await support.onclick();assert.deepEqual(invoked,[kind]);assert.equal(app.root.children.length,0);
+  }
+  const app=setup();await app.render('reader',readerId);assert.equal(button(app.root,'계정 지원 도구'),undefined);
+});
+
+test('account support callback persists through search, paging, reset and detail refetch',async()=>{
+  for(const action of ['reload','search','reset','next','previous','close']){
+    const app=setup(),original=app.c.WebNovelsAuth.api;let support=0;
+    app.c.WebNovelsAuth.api=async(url,options)=>{const result=await original(url,options);if(url.includes('action=list')){const data=JSON.parse(options.body);result.total=100;result.hasMore=data.offset===0;result.nextOffset=data.offset===0?50:null;}return result;};
+    await app.render('reader',readerId,{onLegacyManage:()=>support++});
+    if(action==='reload')await button(app.root,'새로고침').onclick();
+    if(action==='search')await submit(form(app.root,'독자 검색 조건'));
+    if(action==='reset')await button(app.root,'조건 초기화').onclick();
+    if(action==='next')await button(app.root,'다음 페이지').onclick();
+    if(action==='previous'){await button(app.root,'다음 페이지').onclick();await button(app.root,'이전 페이지').onclick();}
+    if(action==='close')await button(app.root,'상세 닫기').onclick();
+    if(!button(app.root,'계정 지원 도구'))await button(app.root,'독자 하나').onclick();
+    await button(app.root,'계정 지원 도구').onclick();assert.equal(support,1,action);
+  }
+});
+
 test('kind mismatch, invalid IDs and malformed revision responses fail without mixed records',async()=>{
   const app=setup({handler:(_action,data)=>({kind:'author',items:[member('author')],capabilities:capabilities()})});await app.render('reader');assert.match(app.root.textContent,/결과를 확인하지/);assert.doesNotMatch(app.root.textContent,/작가 하나/);
   const invalid=setup();await invalid.render('reader','invalid-reader-id');assert.equal(invalid.calls.length,0);assert.match(invalid.root.textContent,/회원 ID 형식/);
