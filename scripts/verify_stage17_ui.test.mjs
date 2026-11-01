@@ -22,7 +22,7 @@ const read=(action)=>({cases:{cases:[caseItem]},assignees:{assignees:[]},appeals
  curation:{placements:[]},preview:{placements:[]},audit:{events:[],missingSources:[]}})[action]||{};
 function setup({permission,handler,enabled=true}={}){
  const root=new Node('div'),calls=[];let who={userId:id,admin:{role:permission?'SUB_ADMIN':'SUPER_ADMIN',is_active:true,permissions:permission||[]}};
- const context={URLSearchParams,Date,crypto:webcrypto,document:{createElement:t=>new Node(t)},WEBNOVELS_CONFIG:{adminWorkflowEnabled:enabled,adminOperationsEnabled:true},
+ const context={URL,URLSearchParams,Date,crypto:webcrypto,document:{createElement:t=>new Node(t)},WEBNOVELS_CONFIG:{adminWorkflowEnabled:enabled,adminOperationsEnabled:true},
   WebNovelsAuth:{getActor:()=>who,api:async(url,options)=>{const action=new URL(url,'https://example.test').searchParams.get('action');const call={action,options,url};calls.push(call);return handler?handler(call):read(action);}}};
  context.window=context;vm.createContext(context);vm.runInContext(source,context,{filename:fileURLToPath(file)});
  return {root,calls,context,api:context.AdminWorkflow,setActor:value=>{who=value;}};
@@ -73,17 +73,38 @@ test('curation preview uses server projection and its save carries UTC interval,
  const form=t.root.querySelectorAll('form')[0];reason(form);await submit(form);const data=JSON.parse(t.calls.find(x=>x.options).options.body);
  assert.equal(data.revision,'0');assert.equal(data.slot,'HOME_RECOMMENDED');assert.match(data.startsAt,/Z$/);assert.ok(Date.parse(data.endsAt)>Date.parse(data.startsAt));assert.equal(data.workId,'10');
 });
-test('existing admin URLs route to workflow and keep settlement/role console; menus distinguish cases and test tools',async()=>{
+test('workflow source, paging and audit links delegate navigation while detached controls stay inactive',async()=>{
+ const t=setup({permission:['CASE_READ','AUDIT_READ'],handler:call=>call.action==='cases'?{cases:[caseItem],nextOffset:100}:read(call.action)}),routes=[];
+ await t.api.render(t.root,'cases',{offset:50,onNavigate:(page,options)=>routes.push({page,source:options.source,offset:options.offset,target:options.target})});
+ const controls=['작품 댓글 신고','다음 페이지','관련 감사 기록'].map(label=>t.root.querySelectorAll('button').find(node=>node.textContent===label));
+ assert.ok(controls.every(Boolean));const reads=t.calls.length;
+ for(const control of controls)await control.onclick();
+ assert.deepEqual(routes,[{page:'cases',source:'COMMENT_REPORT',offset:0,target:undefined},{page:'cases',source:undefined,offset:100,target:undefined},{page:'audit',source:undefined,offset:0,target:'CONTENT_REVIEW:'+id}]);
+ assert.equal(t.calls.length,reads,'outer navigation owns the next load');
+ t.api.reset();for(const control of controls)await control.onclick();assert.equal(routes.length,3,'reset invalidates old navigation controls');
+ const account=setup({permission:['ACCOUNTS_READ']});await account.api.render(account.root,'accounts',{externalAccountTabs:true});
+ assert.ok(!account.root.querySelectorAll('button').some(node=>['독자','작가'].includes(node.textContent)),'the outer member tabs replace duplicate inner tabs');
+});
+test('six primary admin menus preserve legacy workflow links, canonical filters and settlement/role console',async()=>{
  const t=setup();const nodes=Object.fromEntries(['adminOperationsContent','adminOperationsShell','adminOperationsNav','view-admin-cms','adminConsoleIdentity'].map(id=>[id,new Node('div')]));
- t.context.document.getElementById=id=>nodes[id];t.context.location={pathname:'/admin'};t.context.history={pushState(){}};
+ t.context.document.getElementById=id=>nodes[id];t.context.location=new URL('https://example.test/admin');
+ t.context.history={pushState(_state,_title,path){t.context.location=new URL(path,t.context.location);},replaceState(_state,_title,path){t.context.location=new URL(path,t.context.location);}};
  const consoleCalls=[];t.context.AdminConsole={reset(){},render:async(root,page)=>consoleCalls.push(page)};t.context.VirtualAccounts={reset(){},render(){}};
+ vm.runInContext(readFileSync(new URL('../public/js/admin/admin-navigation.js',import.meta.url),'utf8'),t.context);
  vm.runInContext(readFileSync(new URL('../public/js/admin/admin-operations.js',import.meta.url),'utf8'),t.context);
  for(const tab of ['review','comments','authors','works','curation','audit'])await t.context.AdminOperations.navigate(tab,false);
  assert.ok(t.calls.some(c=>c.url.includes('action=cases&source=COMMENT_REPORT')));assert.ok(t.calls.some(c=>c.url.includes('action=accounts&kind=author')));
  for(const tab of ['subadmins','settlements','episodes'])await t.context.AdminOperations.navigate(tab,false);
- assert.deepEqual(consoleCalls,['roles','settlements','episodes']);assert.match(text(nodes.adminOperationsNav),/신고·복구/);assert.match(text(nodes.adminOperationsNav),/가상 계정 시험 도구/);
+ assert.deepEqual(consoleCalls,['roles','settlements','episodes']);
+ assert.deepEqual(nodes.adminOperationsNav.querySelectorAll('a').map(node=>node.textContent),['운영 홈','콘텐츠·전시','회원 관리','결제·정산','통합처리함','설정']);
+ await t.context.AdminOperations.navigate('/admin/inbox?tab=cases&source=REPORT&offset=50',false);
+ assert.ok(t.calls.some(call=>{const url=new URL(call.url,t.context.location);return url.searchParams.get('action')==='cases'&&url.searchParams.get('source')==='REPORT'&&url.searchParams.get('offset')==='50';}));
+ await t.context.AdminOperations.navigate('/admin/settings?tab=audit&target=WORK%3A10&offset=50');
+ assert.equal(t.context.location.pathname,'/admin/settings');assert.equal(t.context.location.searchParams.get('target'),'WORK:10');
+ const audit=new URL(t.calls.at(-1).url,t.context.location);assert.equal(audit.searchParams.get('action'),'audit');assert.equal(audit.searchParams.get('target'),'WORK:10');assert.equal(audit.searchParams.get('offset'),'50');
  t.context.AdminOperations.reset();assert.equal(nodes.adminOperationsContent.children.length,0);
  const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
  const loader=readFileSync(new URL('../public/js/core/role-modules.js',import.meta.url),'utf8');
  const workflow=loader.indexOf('/js/admin/admin-workflow.js');assert.ok(workflow>=0 && workflow<loader.indexOf('/js/admin/admin-operations.js'));
+ const navigation=loader.indexOf('/js/admin/admin-navigation.js');assert.ok(navigation>=0 && navigation<loader.indexOf('/js/admin/admin-operations.js'));
 });

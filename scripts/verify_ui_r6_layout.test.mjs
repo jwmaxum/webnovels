@@ -6,7 +6,7 @@ import {parse} from 'parse5';
 import {transform} from 'esbuild';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
-const [html,app,adminSource,css,loader,authUi]=await Promise.all(['public/index.html','public/app.js','public/js/admin/admin-operations.js','public/css/operations-account.css','public/js/core/role-modules.js','public/js/core/auth-ui.js'].map(read));
+const [html,app,adminSource,css,loader,authUi,navigationSource]=await Promise.all(['public/index.html','public/app.js','public/js/admin/admin-operations.js','public/css/operations-account.css','public/js/core/role-modules.js','public/js/core/auth-ui.js','public/js/admin/admin-navigation.js'].map(read));
 const attr=(node,key)=>node?.attrs?.find(item=>item.name===key)?.value;
 const text=node=>(node?.childNodes||[]).map(child=>child.value||text(child)).join('');
 const hasClass=(node,name)=>(attr(node,'class')||'').split(/\s+/).includes(name);
@@ -56,29 +56,31 @@ class MenuNode {
  querySelectorAll(tag){return this.children.flatMap(child=>[...(child.tag===tag?[child]:[]),...child.querySelectorAll(tag)]);}
 }
 function adminFixture(who={userId:'admin-a',accountServiceReady:true,admin:{role:'SUPER_ADMIN',nickname:'운영자'}}){
- const nodes=Object.fromEntries(['adminOperationsContent','adminOperationsShell','adminOperationsNav','view-admin-cms','adminConsoleIdentity'].map(id=>[id,new MenuNode()])),dispatches=[],paths=[];let actor=who;
+ const nodes=Object.fromEntries(['adminOperationsContent','adminOperationsShell','adminOperationsNav','view-admin-cms','adminConsoleIdentity','adminSectionTabs','adminBreadcrumbs','adminWorkspaceHeading','adminWorkspaceDescription'].map(id=>[id,new MenuNode()])),dispatches=[],paths=[];let actor=who;
  const render=(module,root,page,options)=>{dispatches.push({module,page,options});root.replaceChildren();};
- const context={URLSearchParams,document:{getElementById:id=>nodes[id],createElement:tag=>new MenuNode(tag)},WEBNOVELS_CONFIG:{adminOperationsEnabled:false},WebNovelsAuth:{getActor:()=>actor,api:()=>assert.fail('layout navigation must not write or make API requests')},location:{pathname:'/admin'},history:{pushState:(_state,_title,path)=>paths.push(path)},
+ const context={URL,URLSearchParams,document:{getElementById:id=>nodes[id],createElement:tag=>new MenuNode(tag)},WEBNOVELS_CONFIG:{adminOperationsEnabled:false},WebNovelsAuth:{getActor:()=>actor,api:()=>assert.fail('layout navigation must not write or make API requests')},location:new URL('https://example.test/admin'),
   AdminConsole:{reset(){},render:(root,page,options)=>render('console',root,page,options)},AdminWorkflow:{active:()=>true,reset(){},render:(root,page,options)=>render('workflow',root,page,options)},AdminRecovery:{active:()=>true,reset(){},render:(root,options)=>render('recovery',root,'recovery',options)},AdminBetaOperations:{reset(){},render:(root,options)=>render('support',root,'beta-operations',options)},VirtualAccounts:{reset(){},render:root=>render('virtual',root,'virtual-accounts')}};
- context.window=context;vm.createContext(context);vm.runInContext(adminSource,context,{filename:'admin-operations.js'});
- return {context,nodes,dispatches,paths,setActor:value=>actor=value,buttons:()=>nodes.adminOperationsNav.querySelectorAll('button'),groups:()=>nodes.adminOperationsNav.children.filter(node=>node.className==='cms-nav-group').map(node=>node.textContent)};
+ context.history={pushState(_state,_title,path){paths.push(path);context.location=new URL(path,context.location);},replaceState(_state,_title,path){context.location=new URL(path,context.location);}};
+ context.window=context;vm.createContext(context);vm.runInContext(navigationSource,context,{filename:'admin-navigation.js'});vm.runInContext(adminSource,context,{filename:'admin-operations.js'});
+ return {context,nodes,dispatches,paths,setActor:value=>actor=value,links:()=>nodes.adminOperationsNav.querySelectorAll('a'),tabs:()=>nodes.adminSectionTabs.querySelectorAll('a'),groups:()=>nodes.adminOperationsNav.querySelectorAll('a').map(node=>node.textContent)};
 }
 
 test('admin navigation groups actual allowed duties and preserves legacy routes and current-page state',async()=>{
  const f=adminFixture();await f.context.AdminOperations.navigate('dashboard',false);
- assert.deepEqual(f.groups(),['운영 현황·문의','작품·발행 관리','신고·복구','회원·작가','서비스 설정·기록']);assert.equal(f.buttons().length,14);assert.equal(f.buttons().filter(button=>button.attributes['aria-current']==='page').length,1);
- await f.buttons().find(button=>button.textContent==='문의·베타 운영').onclick();assert.equal(f.paths.at(-1),'/admin/beta-operations');assert.equal(f.dispatches.at(-1).module,'support');
+ assert.deepEqual(f.groups(),['운영 홈','콘텐츠·전시','회원 관리','결제·정산','통합처리함','설정']);assert.equal(f.links().length,6);assert.equal(f.links().filter(link=>link.attributes['aria-current']==='page').length,1);
+ await f.links().find(link=>link.textContent==='통합처리함').onclick();await f.tabs().find(link=>link.textContent==='문의·운영 현황').onclick();assert.equal(f.paths.at(-1),'/admin/inbox?tab=support');assert.equal(f.dispatches.at(-1).module,'support');
  for(const [route,module,page,kind,source] of [['subadmins','console','roles'],['security','workflow','audit'],['episodes','console','episodes'],['authors','workflow','accounts','author'],['creators','workflow','accounts','author'],['users','workflow','accounts','reader'],['review','workflow','cases',undefined,'CONTENT_REVIEW'],['comments','workflow','cases',undefined,'COMMENT_REPORT']]){
   await f.context.AdminOperations.navigate(route,false);const last=f.dispatches.at(-1);assert.equal(last.module,module,route);assert.equal(last.page,page,route);if(kind)assert.equal(last.options.accountKind,kind);if(source)assert.equal(last.options.source,source);
  }
- f.context.AdminOperations.reset();assert.equal(f.nodes.adminOperationsNav.children.length,0);assert.equal(f.nodes.adminConsoleIdentity.textContent,'');assert.equal(f.nodes.adminOperationsShell.hidden,true);
+ await f.context.AdminOperations.navigate('/admin/settings?tab=audit&target=WORK%3A10&offset=50',false);const audit=f.dispatches.at(-1);assert.equal(audit.page,'audit');assert.equal(audit.options.target,'WORK:10');assert.equal(audit.options.offset,50);assert.equal(f.context.location.searchParams.get('target'),'WORK:10');
+ f.context.AdminOperations.reset();assert.equal(f.nodes.adminOperationsNav.children.length,0);assert.equal(f.nodes.adminSectionTabs.children.length,0);assert.equal(f.nodes.adminBreadcrumbs.children.length,0);assert.equal(f.nodes.adminConsoleIdentity.textContent,'');assert.equal(f.nodes.adminOperationsShell.hidden,true);
 });
 
 test('sub-admin navigation emits only groups and controls permitted by the current actor',async()=>{
  const f=adminFixture({userId:'staff-a',accountServiceReady:true,admin:{role:'SUB_ADMIN',permissions:['CONTENT_METADATA_READ']}});await f.context.AdminOperations.navigate('dashboard',false);
- assert.deepEqual(f.groups(),['작품·발행 관리']);assert.deepEqual(f.buttons().map(button=>button.textContent),['작품·변경 검토','회차 조회']);
+ assert.deepEqual(f.groups(),['콘텐츠·전시']);assert.deepEqual(f.tabs().map(link=>link.textContent),['작품·회차','회차 조회','공지·정책']);
  const before=f.dispatches.length;await f.context.AdminOperations.navigate('roles',false);assert.equal(f.dispatches.length,before);assert.match(f.nodes.adminOperationsContent.children.map(node=>node.textContent).join(''),/권한이 없습니다/);
- f.setActor({userId:'staff-a',accountServiceReady:true,admin:{role:'SUB_ADMIN',permissions:['CASE_READ']}});await f.context.AdminOperations.navigate('dashboard',false);assert.deepEqual(f.groups(),['운영 현황·문의','신고·복구']);assert.equal(f.buttons().some(button=>button.textContent==='서브관리자·권한'),false);
+ f.setActor({userId:'staff-a',accountServiceReady:true,admin:{role:'SUB_ADMIN',permissions:['CASE_READ']}});await f.context.AdminOperations.navigate('dashboard',false);assert.deepEqual(f.groups(),['통합처리함','설정']);assert.equal(f.tabs().some(link=>link.textContent==='운영자·권한'),false);
 });
 
 test('account/support dialogs retain labelled roles, native form boundaries, field labels and policy destinations',async()=>{
@@ -109,9 +111,10 @@ test('operations/account CSS parses and scopes responsive hit targets, overflow 
 test('R6 changed assets have explicit local cache versions and preserve compatibility script ordering',async()=>{
  const sources=doc.nodes.filter(node=>node.tagName==='script').map(node=>attr(node,'src')).filter(Boolean),styles=doc.nodes.filter(node=>node.tagName==='link').map(node=>attr(node,'href')).filter(Boolean);
  assert(styles.includes('/css/operations-account.css?v=20261031r6'));
+ assert(styles.includes('/css/admin-shell.css?v=20261101op01'));
  for(const path of ['/app.js','/js/core/auth-ui.js','/js/core/account-access.js','/js/core/beta-support.js']){assert(sources.includes(path+'?v=20261031r6'),path+' cache');await read('public'+path);}
- assert(sources.includes('/js/core/role-modules.js?v=20261101r13'));
- for(const name of ['admin-console','admin-publication-changes','admin-workflow','admin-beta-operations','admin-operations']){const path='/js/admin/'+name+'.js?v='+(name==='admin-console'?'20261101r13':name==='admin-workflow'?'20261031r7':'20261031r6');assert(loader.includes(path),name+' cache');await read('public'+path.split('?')[0]);}
+ assert(sources.includes('/js/core/role-modules.js?v=20261101op01'));
+ for(const name of ['admin-console','admin-publication-changes','admin-workflow','admin-beta-operations','admin-navigation','admin-operations']){const path='/js/admin/'+name+'.js?v='+(['admin-console','admin-workflow','admin-navigation','admin-operations'].includes(name)?'20261101op01':'20261031r6');assert(loader.includes(path),name+' cache');await read('public'+path.split('?')[0]);}
  assert(sources.indexOf('/js/core/auth-session.js?v=136')<sources.indexOf('/js/core/beta-support.js?v=20261031r6'));assert(sources.indexOf('/js/core/beta-support.js?v=20261031r6')<sources.indexOf('/app.js?v=20261031r6'));
- assert(loader.indexOf('/js/admin/admin-beta-operations.js')<loader.indexOf('/js/admin/admin-operations.js'));assert(loader.includes('/js/creator/creator-webtoon.js?v=20261031r10'));assert(loader.includes('/js/creator/creator-editor.js?v=20261101r12'));
+ assert(loader.indexOf('/js/admin/admin-beta-operations.js')<loader.indexOf('/js/admin/admin-operations.js'));assert(loader.indexOf('/js/admin/admin-navigation.js')<loader.indexOf('/js/admin/admin-operations.js'));assert(loader.includes('/js/creator/creator-webtoon.js?v=20261031r10'));assert(loader.includes('/js/creator/creator-editor.js?v=20261101r12'));
 });

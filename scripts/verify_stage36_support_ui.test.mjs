@@ -184,11 +184,13 @@ test('HTML and lazy loader wire support to reader, author and administrator with
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   const loader = await readFile(new URL('../public/js/core/role-modules.js', import.meta.url), 'utf8');
   const admin = await readFile(new URL('../public/js/admin/admin-operations.js', import.meta.url), 'utf8');
+  const navigation = await readFile(new URL('../public/js/admin/admin-navigation.js', import.meta.url), 'utf8');
   assert.equal((html.match(/data-beta-support-open/g) || []).length, 4);
   assert.match(html, /auth-session\.js\?v=136/);
   assert.match(html, /aria-modal="true" aria-labelledby="betaSupportTitle"/);
   assert.ok(html.indexOf('auth-session.js') < html.indexOf('beta-support.js'));
   assert.ok(loader.indexOf('admin-beta-operations.js') < loader.indexOf('admin-operations.js'));
-  assert.match(admin, /\['beta-operations','문의·베타 운영'/); assert.match(admin, /AdminBetaOperations\?\.reset/);
+  assert.match(navigation, /key:'support',label:'문의·운영 현황',page:'beta-operations'/);
+  assert.match(admin, /AdminBetaOperations\.render/); assert.match(admin, /AdminBetaOperations\?\.reset/);
   assert.doesNotMatch(source, /localStorage|innerHTML|\/api\/v2\/author\//);
 });

@@ -74,7 +74,7 @@ window.submitReaderSearch = submitReaderSearch;
 /**
  * 1. SPA 메인 뷰 전환기 (switchWebNovelsView)
  */
-function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
+function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options = {}) {
   routeRevision++;
   window.WebNovelsModules?.cancel();
   window.CreatorDraftEditor?.checkpoint();
@@ -106,7 +106,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
 
   const moduleGroup = viewId === 'view-creator' ? 'creator' : viewId === 'view-admin-cms' ? 'admin' : null;
   if (moduleGroup && window.WebNovelsModules && !window.WebNovelsModules.ready(moduleGroup))
-    return window.WebNovelsModules.enter(moduleGroup, () => switchWebNovelsView(viewId, activeLink, shouldPushState));
+    return window.WebNovelsModules.enter(moduleGroup, () => switchWebNovelsView(viewId, activeLink, shouldPushState, options));
 
   // 이전 메인 뷰 기억 (상세 화면이나 뷰어에서 뒤로가기용)
   if (currentActiveView !== 'view-work-detail' && currentActiveView !== 'view-reader') {
@@ -146,7 +146,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true) {
   }
 
   // 관리자 CMS 진입 시 대시보드 로드
-  if (viewId === 'view-admin-cms' && adminLoggedIn && typeof loadAdminDashboard === 'function') {
+  if (viewId === 'view-admin-cms' && !options.deferAdminLoad && adminLoggedIn && typeof loadAdminDashboard === 'function') {
     loadAdminDashboard();
   }
 
@@ -295,9 +295,11 @@ function resolveRoute(pathname, isInitial = false) {
   if (parts[0] === 'admin' || hash === '#admin') {
     let subTab = parts[1] || 'dashboard';
     if (subTab === 'creators') subTab = 'authors';
-    switchWebNovelsView('view-admin-cms', null, false);
+    switchWebNovelsView('view-admin-cms', null, false, {deferAdminLoad: true});
     if (currentActiveView !== 'view-admin-cms') return;
-    if (typeof switchAdminSubTab === 'function') {
+    if (window.AdminOperations?.active()) {
+      window.AdminOperations.openRoute((hash === '#admin' ? '/admin' : route.pathname) + route.search, false);
+    } else if (typeof switchAdminSubTab === 'function') {
       switchAdminSubTab(subTab, false);
     }
     return;

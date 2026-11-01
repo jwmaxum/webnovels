@@ -1,0 +1,55 @@
+/* OP-01: six primary destinations over the existing, permission-checked work surfaces. */
+#view-admin-cms #adminOperationsShell [hidden] { display: none !important; }
+#view-admin-cms #adminOperationsShell .cms-layout { grid-template-columns: 208px minmax(0, 1fr); align-items: start; gap: 20px; }
+#view-admin-cms #adminOperationsShell .cms-sidebar { position: static; padding: 8px; }
+#view-admin-cms .admin-workspace { min-width: 0; max-width: 100%; }
+#view-admin-cms #adminOperationsNav.admin-primary-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+#view-admin-cms #adminOperationsNav.admin-primary-nav :is(a, button) { display: flex; align-items: center; min-width: 0; min-height: 48px; width: 100%; padding: 12px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--text-primary); font: inherit; font-size: 15px; font-weight: 650; line-height: 1.5; text-align: left; text-decoration: none; overflow-wrap: anywhere; }
+#view-admin-cms #adminOperationsNav.admin-primary-nav :is(a, button):hover { background: var(--bg-subtle); }
+#view-admin-cms #adminOperationsNav.admin-primary-nav :is([aria-current="page"], .active) { background: var(--selected-bg); border-color: var(--selected-fg); color: var(--selected-fg); font-weight: 750; }
+#view-admin-cms .admin-breadcrumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 8px; color: var(--text-secondary); font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+#view-admin-cms .admin-breadcrumbs a { display: inline-flex; align-items: center; min-height: 44px; color: var(--link-color); text-decoration: underline; text-underline-offset: 3px; }
+#view-admin-cms .admin-workspace-header { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 16px; }
+#view-admin-cms .admin-workspace-header :is(h2, h3) { margin: 0; color: var(--text-strong); font-size: clamp(22px, 2.4vw, 26px); line-height: 1.5; font-weight: 750; overflow-wrap: anywhere; }
+#view-admin-cms .admin-workspace-header p { margin: 6px 0 0; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+#view-admin-cms .admin-section-tabs { display: flex; align-items: stretch; flex-wrap: wrap; gap: 6px; min-width: 0; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-default); }
+#view-admin-cms .admin-section-tabs :is(a, button) { display: inline-flex; align-items: center; justify-content: center; width: auto; max-width: 100%; min-width: 0; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-elevated); color: var(--text-secondary); font: inherit; font-size: 14px; font-weight: 650; line-height: 1.5; text-decoration: none; white-space: normal; overflow-wrap: anywhere; }
+#view-admin-cms .admin-section-tabs :is([aria-current="page"], [aria-selected="true"], .active) { border-color: var(--selected-fg); background: var(--selected-bg); color: var(--selected-fg); }
+#view-admin-cms .admin-section-tabs :is([disabled], [aria-disabled="true"]) { color: var(--text-secondary); background: var(--bg-subtle); }
+#view-admin-cms .admin-global-search { display: grid; grid-template-columns: minmax(160px, 200px) minmax(0, 1fr) auto; align-items: end; gap: 10px; margin-block: 20px 24px; padding: 16px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-elevated); }
+#view-admin-cms .admin-global-search label { display: grid; gap: 6px; min-width: 0; margin: 0; color: var(--text-primary); font-size: 14px; font-weight: 650; line-height: 1.6; }
+#view-admin-cms .admin-global-search :is(input, select) { min-width: 0; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--bg-elevated); color: var(--text-primary); font: inherit; font-size: 16px; }
+#view-admin-cms .admin-global-search button { min-height: 44px; }
+#view-admin-cms .admin-global-search :is(p, [role="status"]) { grid-column: 1 / -1; margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+#view-admin-cms .admin-overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-block: 20px; }
+#view-admin-cms .admin-overview-card { display: flex; align-items: start; flex-direction: column; gap: 8px; min-width: 0; padding: 18px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-elevated); color: var(--text-primary); text-align: left; text-decoration: none; overflow-wrap: anywhere; }
+#view-admin-cms .admin-overview-card :is(h3, strong) { margin: 0; color: var(--text-strong); font-size: 17px; line-height: 1.6; }
+#view-admin-cms .admin-overview-card :is(p, small) { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+#view-admin-cms .admin-overview-card :is(a, button) { margin-top: auto; min-height: 44px; }
+#view-admin-cms .admin-preparation-state { margin-block: 16px; padding: 16px; border-left: 3px solid var(--text-info); border-radius: 6px; background: var(--bg-subtle); color: var(--text-primary); line-height: 1.8; overflow-wrap: anywhere; }
+#view-admin-cms .admin-preparation-state h3 { margin: 0 0 8px; color: var(--text-strong); }
+#view-admin-cms .admin-preparation-state p { margin-block: 8px; }
+#view-admin-cms .admin-tool-links { margin-block: 20px; padding: 16px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-subtle); }
+#view-admin-cms .admin-tool-links summary { display: list-item; min-height: 44px; padding-block: 10px; color: var(--text-primary); font-weight: 650; cursor: pointer; }
+#view-admin-cms .admin-tool-links[open] summary { margin-bottom: 12px; }
+#view-admin-cms .admin-tool-links :is(a, button) { min-height: 44px; }
+#view-admin-cms .admin-search-results { margin-block: 16px; padding: 16px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-elevated); color: var(--text-primary); overflow-wrap: anywhere; }
+#view-admin-cms .admin-search-results > :is(a, button) { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; min-height: 44px; max-width: 100%; margin-block: 8px; white-space: normal; }
+#view-admin-cms :is(.admin-primary-nav, .admin-section-tabs, .admin-breadcrumbs, .admin-global-search, .admin-overview-card, .admin-tool-links, .admin-search-results) :is(a, button, input, select, summary):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+#view-admin-cms .admin-overview-card:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+
+@media (max-width: 1000px) {
+  #view-admin-cms #adminOperationsShell .cms-layout { grid-template-columns: minmax(0, 1fr); }
+  #view-admin-cms #adminOperationsNav.admin-primary-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #view-admin-cms #adminOperationsNav.admin-primary-nav :is(a, button) { justify-content: center; text-align: center; }
+  #view-admin-cms .admin-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  #view-admin-cms #adminOperationsNav.admin-primary-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #view-admin-cms #adminOperationsNav.admin-primary-nav :is(a, button) { padding: 10px 8px; font-size: 14px; }
+  #view-admin-cms .admin-global-search { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  #view-admin-cms .admin-global-search button { width: 100%; }
+  #view-admin-cms .admin-section-tabs :is(a, button) { flex: 1 1 120px; padding-inline: 10px; }
+  #view-admin-cms .admin-overview-grid { grid-template-columns: minmax(0, 1fr); }
+  #view-admin-cms :is(.admin-overview-card, .admin-search-results, .admin-preparation-state, .admin-tool-links) { padding: 14px; }
+}

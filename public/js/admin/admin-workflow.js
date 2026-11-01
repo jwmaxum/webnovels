@@ -30,7 +30,8 @@
     const result=await window.WebNovelsAuth.api('/api/v2/admin/workflow?'+query,write?{method:'POST',body:JSON.stringify(data)}:undefined);
     if(actor()?.userId!==user)throw Error('SESSION_CHANGED');return result;
   }
-  function auditLink(parent,target,c){if(can('AUDIT_READ')||can('SECURITY_MGMT'))button(parent,'관련 감사 기록',()=>render(host,'audit',{...c.options,target}));}
+  function navigate(page,options,c){if(!current(c))return;return options.onNavigate?options.onNavigate(page,options):render(host,page,options);}
+  function auditLink(parent,target,c){if(can('AUDIT_READ')||can('SECURITY_MGMT'))button(parent,'관련 감사 기록',()=>navigate('audit',{...c.options,target,offset:0},c));}
   function form(parent,title,action,makeFields,c,success){
     const f=el(parent,'form',null,'workflow-form');el(f,'h4',title);const values=makeFields(f);
     const reason=field(f,'조치 사유 (3~500자)','','textarea');reason.required=true;reason.minLength=3;reason.maxLength=500;
@@ -60,8 +61,8 @@
     return f;
   }
   function pager(result,c){
-    if(c.options.offset)button(host,'처음 페이지',()=>render(host,c.page,{...c.options,offset:0}));
-    if(result.nextOffset!=null)button(host,'다음 페이지',()=>render(host,c.page,{...c.options,offset:result.nextOffset}));
+    if(c.options.offset)button(host,'처음 페이지',()=>navigate(c.page,{...c.options,offset:0},c));
+    if(result.nextOffset!=null)button(host,'다음 페이지',()=>navigate(c.page,{...c.options,offset:result.nextOffset},c));
   }
   function caseCard(item,assignees,c){
     const card=el(host,'article',null,'co-panel workflow-card'),m=item.workflow;
@@ -144,13 +145,13 @@
       if(page==='cases'){
         if(can('CONTENT_REVIEW'))await window.AdminPublicationChanges?.render(root,()=>current(c));
         if(!current(c))return;
-        for(const [key,name] of Object.entries(sourceNames))if(can('CASE_READ')||can(key==='CONTENT_REVIEW'?'CONTENT_REVIEW':'COMMENT_REPORT'))button(root,name,()=>render(root,page,{...options,source:key,offset:0}));
+        for(const [key,name] of Object.entries(sourceNames))if(can('CASE_READ')||can(key==='CONTENT_REVIEW'?'CONTENT_REVIEW':'COMMENT_REPORT'))button(root,name,()=>navigate(page,{...options,source:key,offset:0},c));
         if(!result.cases.length)status(root,'사건이 없습니다.');result.cases.forEach(item=>caseCard(item,assignees,c));
       }else if(page==='appeals'){
         status(root,'이의 인정 후에도 별도 후속 조치가 완료될 때까지 기존 제한은 유지됩니다.');
         if(!result.appeals.length)status(root,'이의제기 내역이 없습니다.');result.appeals.forEach(item=>appealCard(item,c));
       }else if(page==='accounts'){
-        for(const [key,name,permission] of [['reader','독자','USER_MGMT'],['author','작가','CREATOR_MGMT']])if(can('ACCOUNTS_READ')||can(permission))button(root,name,()=>render(root,page,{...options,accountKind:key,offset:0}));
+        if(!options.externalAccountTabs)for(const [key,name,permission] of [['reader','독자','USER_MGMT'],['author','작가','CREATOR_MGMT']])if(can('ACCOUNTS_READ')||can(permission))button(root,name,()=>navigate(page,{...options,accountKind:key,offset:0},c));
         status(root,'본인 이메일로 로그인 화면의 비밀번호 재설정을 이용합니다. 링크 수신 → 새 비밀번호 설정 → 다시 로그인 → 작품/계정 확인 순서입니다. 이메일 접근 또는 연결 문제는 본인 확인 후 별도 계정 연결 절차로 처리합니다.');
         status(root,'권한·정지 상태는 매 요청마다 서버에서 확인합니다. 다른 기기의 기존 세션도 다음 요청에서 재검사됩니다.');
         if(!result.accounts.length)status(root,'계정이 없습니다.');
@@ -188,7 +189,7 @@
         for(const item of result.placements){const card=el(root,'article',null,'co-panel workflow-card');el(card,'h4',item.title+' · '+item.slot+' · '+item.position);el(card,'p',`${date(item.starts_at)} ~ ${date(item.ends_at)} · ${item.enabled?'예약 활성':'비활성'} · ${item.eligible?'공개 가능':'현재 공개 불가'}`);auditLink(card,'WORK:'+item.workId,c);
           const details=el(card,'details');el(details,'summary','예약 수정');placementForm(details,item,works,c);}
       }else if(page==='audit'){
-        const target=field(root,'대상 필터 (예: WORK:10 / APPEAL:UUID)',options.target||'');button(root,'필터 적용',()=>render(root,page,{...options,target:target.value.trim(),offset:0}));
+        const target=field(root,'대상 필터 (예: WORK:10 / APPEAL:UUID)',options.target||'');button(root,'필터 적용',()=>navigate(page,{...options,target:target.value.trim(),offset:0},c));
         if(result.missingSources?.length)status(root,'이 환경에서 미설치된 감사 원천: '+result.missingSources.join(', '));
         if(!result.events.length)status(root,'감사 기록이 없습니다.');
         for(const item of result.events){const card=el(root,'article',null,'co-panel workflow-card');el(card,'h4',`${item.action} · ${item.target}`);el(card,'p',`${date(item.created_at)} · ${item.origin} · 처리자 ${item.actor}`);el(card,'p',item.reason);if(item.detail&&Object.keys(item.detail).length)el(card,'pre',JSON.stringify(item.detail,null,2));}

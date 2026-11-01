@@ -1,0 +1,135 @@
+{
+  "stage": "OP-01",
+  "checkedAt": "2026-11-01T04:50:22.747Z",
+  "baseCommit": "8ec5a85d48bb1da80ff89cda6dff79a2f16a4b05",
+  "scope": [
+    "Six permission-filtered admin primary destinations over existing workflows",
+    "Context tabs, breadcrumbs, local menu finder and keyboard focus",
+    "Canonical URLs and legacy compatibility with per-kind/source access",
+    "Existing workflow and Console fallback context preserved",
+    "Preparation states without financial or content mutations"
+  ],
+  "validation": {
+    "stage": "OP-01",
+    "startedAt": "2026-11-01T04:34:41.655Z",
+    "completedAt": "2026-11-01T04:48:45.686Z",
+    "steps": [
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op01",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:auth",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:naming",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:admin-operations",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage17",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:launch",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r5",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r6",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r7",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r13",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage36",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "expectedCommands": 14,
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "browser": "NOT_RUN",
+    "database": "LOCAL_SYNTHETIC_ONLY",
+    "resolvedFailures": [
+      {
+        "command": "test:stage36",
+        "initialExitCode": 1,
+        "reason": "Legacy static menu assertion updated to the navigation model; existing support render/reset contract retained"
+      }
+    ],
+    "supplement": {
+      "checkedAt": "2026-11-01T04:49:44.492Z",
+      "steps": [
+        {
+          "command": "OP01-final",
+          "exitCode": 0
+        },
+        {
+          "command": "existing-admin-final",
+          "exitCode": 0
+        }
+      ],
+      "exitCode": 0
+    },
+    "independentReview": "Per-leaf permissions, same-origin parsing, text-only rendering and stale/reset review; entry-route, focus and Console fallback issues fixed and covered",
+    "security": {
+      "syntaxFiles": 16,
+      "syntaxPassed": true,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "userFilePreserved": true
+    }
+  },
+  "production": {
+    "databaseChanged": false,
+    "schemaChanged": false,
+    "featureFlagsChanged": false,
+    "paymentActivated": false,
+    "adRewardActivated": false,
+    "identityOrPrivacyCollectionActivated": false,
+    "existingRecordsPreserved": true
+  },
+  "delivery": "Normal main push; CI and Cloudflare status verified separately after push",
+  "nextStage": "OP-02: server-backed author/reader search, filters, pagination and unified detail with audited updates; OP-03: admin-selected recommendation and display CMS"
+}

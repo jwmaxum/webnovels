@@ -136,21 +136,24 @@ class Node{
 test('account-only admin sees CMS, settlement and role menus, old deep links work, and session changes clear the console',async()=>{
  const nodes=Object.fromEntries(['adminOperationsContent','adminOperationsShell','adminOperationsNav','view-admin-cms','adminConsoleIdentity'].map(id=>[id,new Node('div')]));
  let who={userId:admin,admin:{role:'SUPER_ADMIN',nickname:'Owner'},accountServiceReady:true},calls=[];
- const context={URLSearchParams,document:{getElementById:id=>nodes[id],createElement:t=>new Node(t)},WEBNOVELS_CONFIG:{adminOperationsEnabled:false},
+ const context={URL,URLSearchParams,document:{getElementById:id=>nodes[id],createElement:t=>new Node(t)},WEBNOVELS_CONFIG:{adminOperationsEnabled:false},
    WebNovelsAuth:{getActor:()=>who,api:async url=>{calls.push(url);return url.includes('dashboard')?{works:30,episodes:180}: {items:[],total:0};}},
-   location:{pathname:'/admin/'},history:{pushState(){}},VirtualAccounts:{reset(){},render(){assert.fail('must not replace the dashboard');}}};
- context.window=context;vm.createContext(context);vm.runInContext(read('public/js/admin/admin-console.js'),context);vm.runInContext(read('public/js/admin/admin-operations.js'),context);
+   location:new URL('https://example.test/admin/'),VirtualAccounts:{reset(){},render(){assert.fail('must not replace the dashboard');}}};
+ context.history={pushState(_state,_title,path){context.location=new URL(path,context.location);},replaceState(_state,_title,path){context.location=new URL(path,context.location);}};
+ context.window=context;vm.createContext(context);vm.runInContext(read('public/js/admin/admin-console.js'),context);vm.runInContext(read('public/js/admin/admin-navigation.js'),context);vm.runInContext(read('public/js/admin/admin-operations.js'),context);
  await context.AdminOperations.navigate('dashboard',false);
- const labels=nodes.adminOperationsNav.querySelectorAll('button').map(n=>n.textContent);
- for(const label of ['운영 대시보드','작품·변경 검토','회차 조회','작가 정산','서브관리자·권한','가상 계정 시험 도구'])assert.ok(labels.includes(label),label);
+ const labels=nodes.adminOperationsNav.querySelectorAll('a').map(n=>n.textContent);
+ assert.deepEqual(labels,['운영 홈','콘텐츠·전시','회원 관리','결제·정산','통합처리함','설정']);
  assert.match(calls[0],/console\?action=dashboard/);
  for(const [path,action] of [['subadmins','roles'],['settlements','settlements'],['episodes','episodes'],['authors','accounts']]){
    await context.AdminOperations.navigate(path,false);assert.match(calls.at(-1),new RegExp('action='+action));
  }
  assert.ok(!calls.some(x=>x.includes('/operations')));
+ await context.AdminOperations.navigate('settlements');assert.equal(context.location.pathname,'/admin/finance');assert.equal(context.location.searchParams.get('tab'),'payouts');
  who={userId:sub,admin:{role:'SUB_ADMIN',permissions:['CONTENT_METADATA_READ']},accountServiceReady:true};
  await context.AdminOperations.navigate('dashboard',false);
- assert.deepEqual(nodes.adminOperationsNav.querySelectorAll('button').map(n=>n.textContent),['작품·변경 검토','회차 조회']);
+ assert.deepEqual(nodes.adminOperationsNav.querySelectorAll('a').map(n=>n.textContent),['콘텐츠·전시']);
+ const beforeDenied=calls.length;await context.AdminOperations.navigate('/admin/finance?tab=payouts',false);assert.equal(calls.length,beforeDenied,'an explicit forbidden leaf must not fetch settlement data');
  context.AdminOperations.reset();assert.equal(nodes.adminOperationsNav.children.length,0);assert.equal(nodes.adminOperationsContent.children.length,0);
 });
 test('CMS treats database content as text and discards a response after navigation',async()=>{
@@ -163,6 +166,24 @@ test('CMS treats database content as text and discards a response after navigati
  context.WebNovelsAuth.api=async()=>({items:[{id:'1',title:'<img onerror=evil()>'}],total:1});
  await context.AdminConsole.render(root,'works');assert.ok(root.querySelectorAll('td').some(n=>n.textContent.includes('<img onerror=evil()>')));assert.equal(root.querySelectorAll('img').length,0);
 });
+test('console aligns outer member tabs and case sources while preserving standalone controls and rejecting stale callbacks',async()=>{
+ const root=new Node('div'),calls=[],routes=[],who={userId:admin,admin:{role:'SUB_ADMIN',is_active:true,permissions:['ACCOUNTS_READ','CASE_READ']}};
+ const context={URLSearchParams,document:{createElement:t=>new Node(t)},WebNovelsAuth:{getActor:()=>who,api:async(url,options)=>{calls.push({url,options});return {items:[],total:0};}}};
+ context.window=context;vm.createContext(context);vm.runInContext(read('public/js/admin/admin-console.js'),context);
+ const find=label=>root.querySelectorAll('button').find(node=>node.textContent===label),query=()=>new URL(calls.at(-1).url,'https://example.test').searchParams;
+ const onNavigate=(page,options)=>routes.push({page,source:options.source,accountKind:options.accountKind});
+ await context.AdminConsole.render(root,'accounts',{accountKind:'reader',externalAccountTabs:true,onNavigate});
+ assert.equal(query().get('kind'),'reader');assert.ok(!root.querySelectorAll('button').some(node=>['독자','작가'].includes(node.textContent)));
+ await find('새로고침').onclick();assert.equal(query().get('kind'),'reader');assert.ok(!root.querySelectorAll('button').some(node=>['독자','작가'].includes(node.textContent)),'refresh preserves outer-owned account tabs');
+ await context.AdminConsole.render(root,'cases',{caseSource:'REPORT',onNavigate});assert.equal(query().get('source'),'REPORT');
+ const review=find('콘텐츠 검수'),reads=calls.length;await review.onclick();assert.deepEqual(routes,[{page:'cases',source:'CONTENT_REVIEW',accountKind:undefined}]);assert.equal(calls.length,reads,'outer navigation owns the next source load');
+ context.AdminConsole.reset();await review.onclick();assert.equal(routes.length,1,'reset invalidates detached source callbacks');
+ await context.AdminConsole.render(root,'cases',{caseSource:'REPORT'});await find('콘텐츠 검수').onclick();assert.equal(query().get('source'),'CONTENT_REVIEW');
+ await find('신고').onclick();assert.equal(query().get('source'),'REPORT');
+ await context.AdminConsole.render(root,'accounts',{accountKind:'reader'});await find('작가').onclick();assert.equal(query().get('kind'),'author');
+ assert.ok(calls.every(call=>!call.options),'navigation tests only perform inventory reads');
+});
+
 test('role form posts the selected target and revision, clears password input and refreshes after saving',async()=>{
  const root=new Node('div'),calls=[];
  const context={URLSearchParams,document:{createElement:t=>new Node(t)},WebNovelsAuth:{getActor:()=>({userId:admin,admin:{role:'SUPER_ADMIN'}}),

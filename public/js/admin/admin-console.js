@@ -63,11 +63,12 @@
       '운영 준비: 문의 연락처, 신고 처리 기준, 백업 복원과 장애 알림',
       '정산 지급: 거래 원장 대조, 지급 정책, 중복 지급 방지 및 송금 결과 확인'])el(list,'li',item);
   }
-  async function render(root,page,{accountKind,isCurrent=()=>true}={}){
+  async function render(root,page,{accountKind,caseSource,onNavigate,externalAccountTabs=false,isCurrent=()=>true}={}){
     window.AdminSettlementReview?.reset();
     const seq=++turn,owner=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===owner&&!!actor()?.admin&&actor().admin.is_active!==false&&isCurrent();
     if(current!==page){current=page;offset=0;query='';}
     if(accountKind&&kind!==accountKind){kind=accountKind;offset=0;query='';}
+    if(caseSource&&source!==caseSource){source=caseSource;offset=0;}
     root.replaceChildren();el(root,'h2',titles[page]||'운영 관리');root.setAttribute?.('aria-busy','false');
     if(!actor()?.admin){notice(root,'관리자 로그인이 필요합니다.');return;}
     if(page==='settlements'&&actor()?.admin?.role==='SUPER_ADMIN'){
@@ -75,7 +76,7 @@
       await window.AdminSettlementReview?.render(review,{isCurrent:valid});
       if(!valid())return;
     }
-    const refresh=()=>render(root,page,{isCurrent});
+    const refresh=()=>render(root,page,{accountKind:page==='accounts'?kind:accountKind,caseSource:page==='cases'?source:caseSource,onNavigate,externalAccountTabs,isCurrent});
     if(page==='settings'){settings(root);const providers=el(root,'section');await window.AdminProviderSettings?.render(providers,{isCurrent:valid});return;}
     if(page==='appeals'){
       notice(root,'이의제기 처리 기능을 준비하고 있습니다. 신고·제재 처리 기능의 운영 연결 후 접수·심사를 사용할 수 있습니다.');
@@ -85,13 +86,13 @@
     if(page==='accounts'){
       const choices=[['author','작가','CREATOR_MGMT'],['reader','독자','USER_MGMT']].filter(x=>can('ACCOUNTS_READ')||can(x[2]));
       if(!choices.some(x=>x[0]===kind))kind=choices[0]?.[0];
-      for(const [value,label] of choices)button(toolbar,label,()=>{kind=value;offset=0;query='';refresh();},kind===value?'btn btn-primary btn-sm':'btn btn-outline btn-sm');
+      if(!externalAccountTabs)for(const [value,label] of choices)button(toolbar,label,()=>{if(!valid())return;if(onNavigate)return onNavigate(page,{accountKind:value});kind=value;offset=0;query='';refresh();},kind===value?'btn btn-primary btn-sm':'btn btn-outline btn-sm');
       if(can('SUPER_ADMIN')||actor()?.admin?.role==='SUPER_ADMIN')button(toolbar,'가상 계정 수정·정지·삭제',()=>window.AdminOperations.navigate('virtual-accounts'));
     }
     if(page==='cases'){
       const choices=[['CONTENT_REVIEW','콘텐츠 검수','CONTENT_REVIEW'],['REPORT','신고','COMMENT_REPORT']].filter(x=>can('CASE_READ')||can(x[2]));
       if(!choices.some(x=>x[0]===source))source=choices[0]?.[0];
-      for(const [value,label] of choices)button(toolbar,label,()=>{source=value;offset=0;refresh();},value===source?'btn btn-primary btn-sm':'btn btn-outline btn-sm');
+      for(const [value,label] of choices)button(toolbar,label,()=>{if(!valid())return;if(onNavigate)return onNavigate(page,{source:value});source=value;offset=0;refresh();},value===source?'btn btn-primary btn-sm':'btn btn-outline btn-sm');
       notice(root,'기존 접수 기록을 조회합니다. 조치·반려는 콘텐츠 운영 연결과 검증 후 사용할 수 있습니다.');
     }
     if(['works','episodes','accounts'].includes(page)){

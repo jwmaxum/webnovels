@@ -49,6 +49,7 @@
   <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r7">
   <link rel="stylesheet" href="/css/author-studio.css?v=20261101r12">
   <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
+  <link rel="stylesheet" href="/css/admin-shell.css?v=20261101op01">
   <link rel="stylesheet" href="/css/settlement.css?v=20261101r13">
 </head>
 <body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
@@ -1094,8 +1095,21 @@
             <div class="cms-toolbar"><a class="btn btn-outline btn-sm" href="/home">사이트 보기</a><button type="button" class="btn btn-outline btn-sm" onclick="handleAdminLogoutProcess()">로그아웃</button></div>
           </header>
           <div class="cms-layout">
-            <aside class="cms-sidebar glass-panel"><nav id="adminOperationsNav" aria-label="관리자 운영 메뉴"></nav></aside>
-            <div id="adminOperationsContent" class="card glass-panel p-4" role="region" aria-label="관리자 작업 영역" tabindex="-1"></div>
+            <aside class="cms-sidebar glass-panel"><nav id="adminOperationsNav" class="admin-primary-nav" aria-label="관리자 운영 메뉴"></nav></aside>
+            <div class="admin-workspace">
+              <form id="adminGlobalSearch" class="admin-global-search" role="search" aria-label="관리자 메뉴·업무 찾기">
+                <label for="adminGlobalSearchInput">메뉴·업무 찾기</label>
+                <input id="adminGlobalSearchInput" type="search" class="form-control" placeholder="추천, 작가, 정산 등 업무명" maxlength="80" autocomplete="off" aria-controls="adminGlobalSearchResults">
+                <button type="submit" class="btn btn-outline">찾기</button>
+              </form>
+              <div id="adminGlobalSearchResults" class="admin-search-results" aria-live="polite" hidden></div>
+              <nav id="adminBreadcrumbs" class="admin-breadcrumbs" aria-label="현재 관리자 위치"></nav>
+              <header class="admin-workspace-header">
+                <div><h2 id="adminWorkspaceHeading">운영 현황</h2><p id="adminWorkspaceDescription"></p></div>
+              </header>
+              <nav id="adminSectionTabs" class="admin-section-tabs" aria-label="현재 업무의 하위 메뉴"></nav>
+              <div id="adminOperationsContent" class="card glass-panel p-4" role="region" aria-labelledby="adminWorkspaceHeading" tabindex="-1"></div>
+            </div>
           </div>
         </div>
         <div class="container section-padding">
@@ -2478,8 +2492,8 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261101r13"></script>
-  <script src="/js/core/router.js?v=20261031r4"></script>
+  <script src="/js/core/role-modules.js?v=20261101op01"></script>
+  <script src="/js/core/router.js?v=20261101op01"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
   <script src="/js/reader/reader-content.js?v=124"></script>

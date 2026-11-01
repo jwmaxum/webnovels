@@ -11,6 +11,18 @@ const author = () => ({userId:'author-auth-uuid', author:{id:12, status:'APPROVE
 const subscriber = () => ({userId:'reader-auth-uuid', author:null, reader:{id:31, status:'ACTIVE', nickname:'Reader'}, admin:null});
 const ticks = async () => { for (let i=0; i<100; i++) await Promise.resolve(); };
 
+test('admin route forwards the complete query once and keeps back navigation context',async()=>{
+  const app=fixture({who:{userId:'admin-auth-uuid',admin:{role:'SUPER_ADMIN'},author:null,reader:null},url:'/admin'});
+  const opened=[];app.c.AdminOperations={active:()=>true,reset(){},openRoute:(path,push)=>opened.push([path,push])};
+  await app.c.WebNovelsAuth.init();
+  await app.c.resolveRoute('/admin/inbox?tab=cases&source=REPORT&offset=25');await app.drain();
+  assert.deepEqual(opened,[['/admin/inbox?tab=cases&source=REPORT&offset=25',false]]);
+  assert.equal(app.visits.filter(value=>value==='admin').length,0,'route entry must not load a second dashboard');
+  app.c.resolveRoute('/admin/members?kind=author');
+  app.c.resolveRoute('/admin/inbox?tab=cases&source=REPORT&offset=25');
+  assert.deepEqual(opened.slice(-2),[['/admin/members?kind=author',false],['/admin/inbox?tab=cases&source=REPORT&offset=25',false]]);
+});
+
 // Execute the production Auth, router, lazy loader and reader entry functions together.
 // SDK responses, DOM elements and script network completion are local substitutes.
 function fixture({who=author(), url='/', holdScripts=false, signedIn=true}={}) {
