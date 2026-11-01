@@ -1,6 +1,6 @@
 {
   "stage": "OP-03",
-  "checkedAt": "2026-11-01T10:02:20.829Z",
+  "checkedAt": "2026-11-01T10:16:27.214Z",
   "baseCommit": "2fbc63cc022688d55fcdeb9dba610e0d7e07fda0",
   "scope": [
     "Administrator-only explicit NOVEL/WEBTOON selection, sequence and publication windows",
@@ -341,7 +341,41 @@
     "hostedFullRestore": "NOT_ACCEPTED",
     "actualProductionServiceRead": "PASS_SERVICE_RPC_AND_API_BRIDGE",
     "gitAndDelivery": "Normal main push. CI and Cloudflare delivery verified separately after the follow-up commit; build executes no production migrations",
-    "editorialState": "Default empty draft only; administrator selection, saved preview and explicit publication required"
+    "editorialState": "Default empty draft only; administrator selection, saved preview and explicit publication required",
+    "hostedDelivery": {
+      "checkedAt": "2026-11-01T10:08:20.694Z",
+      "productCommit": "b7587f78825d0af39f96476ce14ab73835086c54",
+      "ci": "SUCCESS",
+      "ciUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41295320117",
+      "cloudflare": "SUCCESS",
+      "cloudflareDeployment": "cd3cecff-42ca-437a-8b0f-e72b6a4ce866",
+      "origins": [
+        {
+          "origin": "https://webnovels-db4.pages.dev",
+          "directRecommendationRoutePassed": true,
+          "anonymousPublicApiPassed": true,
+          "scriptAndStylesMatched": 10,
+          "htmlExactMatch": true
+        },
+        {
+          "origin": "https://webnovels.uk",
+          "directRecommendationRoutePassed": true,
+          "anonymousPublicApiPassed": true,
+          "scriptAndStylesMatched": 10,
+          "htmlExactMatch": false
+        }
+      ],
+      "htmlDifferenceReview": {
+        "origin": "https://webnovels.uk",
+        "rawDocumentMismatchRetained": true,
+        "diffHunks": 2,
+        "onlyDifferences": "Public footer email obfuscation and Cloudflare email-decode.min.js injection; product scripts/styles and internal references unchanged",
+        "review": "EXPECTED_CLOUDFLARE_EMAIL_PROTECTION",
+        "source": "https://developers.cloudflare.com/waf/tools/scrape-shield/email-address-obfuscation/"
+      },
+      "browser": "NOT_RUN",
+      "editorialWrites": false
+    }
   },
   "nextStage": "OP-04: membership first two episodes free, default 100-point pricing and per-episode entitlements; TEST validation before payment contracts and LIVE activation"
 }
