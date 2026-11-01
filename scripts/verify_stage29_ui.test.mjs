@@ -69,6 +69,9 @@ test('source failed retry is exact and account-scoped storage does not expose ot
 });
 test('loader, menu, auth reset and router leave hooks preserve the existing administrator route and script order',()=>{
  const role=readFileSync('public/js/core/role-modules.js','utf8');assert.ok(role.indexOf('admin-recovery.js')<role.indexOf('admin-operations.js'));
- const ops=readFileSync('public/js/admin/admin-operations.js','utf8');assert.match(ops,/\['recovery','원고 복구 검토'/);assert.match(ops,/AdminRecovery\.render/);assert.equal((ops.match(/AdminRecovery\?\.reset\(\)/g)||[]).length,2);
+ const navigation=readFileSync('public/js/admin/admin-navigation.js','utf8');assert.match(navigation,/key:'recovery',label:'원고 복구',page:'recovery'/);
+ const ops=readFileSync('public/js/admin/admin-operations.js','utf8');assert.match(ops,/AdminRecovery\.render/);
+ assert.equal((ops.match(/AdminRecovery\?\.reset\(\)/g)||[]).length,1,'shared cleanup retains the recovery reset');
+ assert.equal((ops.match(/clearModules\(\);/g)||[]).length,2,'navigation and session reset both run shared cleanup');
  assert.match(readFileSync('public/js/core/router.js','utf8'),/AdminRecovery\?\.leave\(viewId\)/);assert.match(readFileSync('public/js/core/auth-session.js','utf8'),/AdminOperations\?\.reset\(\)/);
 });

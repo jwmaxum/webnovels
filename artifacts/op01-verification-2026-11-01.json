@@ -119,6 +119,14 @@
       "secretMatches": 0,
       "diffCheck": "PASS",
       "userFilePreserved": true
+    },
+    "compatibilityFollowup": {
+      "checkedAt": "2026-11-01T04:56:00.238Z",
+      "test": "scripts/verify_stage29_ui.test.mjs",
+      "exitCode": 0,
+      "tests": 9,
+      "reason": "Recovery UI static checks follow the navigation model and shared reset implementation; behavior tests retained",
+      "scope": "Tests and documentation only; product source unchanged"
     }
   },
   "production": {
