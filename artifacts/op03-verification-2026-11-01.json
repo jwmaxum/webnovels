@@ -1,6 +1,6 @@
 {
   "stage": "OP-03",
-  "checkedAt": "2026-11-01T09:17:19.515Z",
+  "checkedAt": "2026-11-01T10:02:20.829Z",
   "baseCommit": "2fbc63cc022688d55fcdeb9dba610e0d7e07fda0",
   "scope": [
     "Administrator-only explicit NOVEL/WEBTOON selection, sequence and publication windows",
@@ -148,13 +148,44 @@
       "secretMatches": 0,
       "diffCheck": "PASS",
       "userChangesPreserved": true
+    },
+    "ciCacheCorrection": {
+      "file": "scripts/verify_ui_r2.test.mjs",
+      "reason": "Old reader asset cache expectation updated to exact OP-03 version; product code unchanged",
+      "commands": [
+        {
+          "command": "test:ui-r2",
+          "exitCode": 0,
+          "testCount": 5
+        },
+        {
+          "command": "test:ui-r8",
+          "exitCode": 0,
+          "testCount": 46
+        },
+        {
+          "command": "test:ui-r9",
+          "exitCode": 0,
+          "testCount": 56
+        },
+        {
+          "command": "test:ui-r10",
+          "exitCode": 0,
+          "testCount": 35
+        },
+        {
+          "command": "test:ui-r12",
+          "exitCode": 0,
+          "testCount": 48
+        }
+      ],
+      "tests": 190,
+      "gitCommit": "b7587f78825d0af39f96476ce14ab73835086c54"
     }
   },
   "production": {
-    "schemaApplied": false,
-    "status": "PENDING_EXPLICIT_DB_APPROVAL",
-    "automaticApprovalRejected": true,
-    "rejectionReason": "Explicit production schema change approval required for new tables, routines, triggers and legacy-write consolidation",
+    "schemaApplied": true,
+    "status": "APPLIED_SERVICE_RPC_VERIFIED",
     "migrations": [
       {
         "file": "database/launch/018_site_display.sql",
@@ -164,7 +195,7 @@
     "rehearsal": {
       "engine": "PGlite current backup rows and exact application routines",
       "sourceTablesVerified": 170,
-      "sourceRowsVerified": 2445,
+      "sourceRowsVerified": 2498,
       "originalRowsPreserved": true,
       "routineOwnersPreserved": true,
       "triggerModesPreserved": true,
@@ -230,15 +261,87 @@
     "productionDataEdited": false,
     "productionRecommendationsPublished": false,
     "featureFlagsChanged": false,
-    "paymentPassPrivacyCollectionUnchanged": true
+    "paymentPassPrivacyCollectionUnchanged": true,
+    "explicitUserProductionApproval": true,
+    "approvalScope": "018 only: five private CMS tables, nine routines, six triggers; preserve existing works/accounts, no automatic editorial selections",
+    "appliedAt": "2026-11-01T09:58:28.242Z",
+    "priorAutomaticApprovalRejectionResolved": true,
+    "sourceSnapshotSha256": "54b4083b965f770af715c58db49a147ff8454c3d58c55eeb9281ff9149aef269",
+    "preparedSqlSha256": "75abc7968942bba9b14b3a9d532466a45b69aa332c2225c13bdef516febadc83",
+    "exactProductionSourceGuards": true,
+    "existingCatalogsAndAclsPreserved": true,
+    "actualServiceRead": {
+      "checkedAt": "2026-11-01T09:59:09.258Z",
+      "actualServiceRestReady": true,
+      "actualServiceApiBridgeValid": true,
+      "activeAdminMappingVerified": true,
+      "checks": [
+        {
+          "type": "ALL",
+          "publicProjectionPassed": true,
+          "manualItems": 0
+        },
+        {
+          "type": "NOVEL",
+          "publicProjectionPassed": true,
+          "manualItems": 0
+        },
+        {
+          "type": "WEBTOON",
+          "publicProjectionPassed": true,
+          "manualItems": 0
+        },
+        {
+          "type": "ALL",
+          "adminSearchPassed": true,
+          "total": 8
+        },
+        {
+          "type": "NOVEL",
+          "adminSearchPassed": true,
+          "total": 4
+        },
+        {
+          "type": "WEBTOON",
+          "adminSearchPassed": true,
+          "total": 4
+        }
+      ],
+      "adminGetPassed": true,
+      "legacyReadPassed": true,
+      "privatePreviewPassed": true,
+      "privileges": {
+        "anon_admin_denied": true,
+        "authenticated_admin_denied": true,
+        "service_admin_allowed": true,
+        "anon_public_rpc_denied": true,
+        "authenticated_public_rpc_denied": true,
+        "service_public_allowed": true,
+        "private_helper_denied": true,
+        "private_tables_denied": true,
+        "new_triggers_active": true,
+        "migration_recorded": true,
+        "default_draft_unchanged": true,
+        "no_editorial_writes": true
+      },
+      "anonRestDenied": true,
+      "productionEditorialWrites": false,
+      "productionProfilesEdited": false,
+      "financialDataChanged": false,
+      "browser": "NOT_RUN"
+    },
+    "defaultEmptyDraftCreated": true,
+    "legacySelectionsCopied": false,
+    "productionProfilesEdited": false,
+    "financialDataChanged": false
   },
   "readiness": {
     "browser": "NOT_RUN",
     "physicalDevice": "NOT_RUN",
     "hostedFullRestore": "NOT_ACCEPTED",
-    "actualProductionServiceRead": "NOT_RUN_SCHEMA_PENDING",
-    "codeWithoutMigration": "New CMS reports connection not ready; no client-side auto-selection or fabricated publication",
-    "gitAndDelivery": "Normal main commit/push and CI/Cloudflare status checked separately; build runs no production migrations"
+    "actualProductionServiceRead": "PASS_SERVICE_RPC_AND_API_BRIDGE",
+    "gitAndDelivery": "Normal main push. CI and Cloudflare delivery verified separately after the follow-up commit; build executes no production migrations",
+    "editorialState": "Default empty draft only; administrator selection, saved preview and explicit publication required"
   },
   "nextStage": "OP-04: membership first two episodes free, default 100-point pricing and per-episode entitlements; TEST validation before payment contracts and LIVE activation"
 }
