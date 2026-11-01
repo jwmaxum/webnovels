@@ -6,6 +6,10 @@
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const text=(parent,tag,value)=>{const el=document.createElement(tag);el.textContent=value;parent.append(el);return el;};
   let turn=0;
+  let publishedPreviewDispose=null;
+  function clearPublishedPreview(){publishedPreviewDispose?.();publishedPreviewDispose=null;}
+  const readCount=value=>typeof value==='string'&&/^(0|[1-9]\d{0,18})$/.test(value)?BigInt(value).toLocaleString('ko-KR'):'확인 필요';
+  const publicationDate=value=>value&&Number.isFinite(Date.parse(value))?new Date(value).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'발행 기록 없음';
   async function api(action,workId,data){
     const user=actor()?.userId;
     if(!user||!actor()?.author)throw Error('AUTHOR_REQUIRED');
@@ -54,35 +58,90 @@
   }
   async function episodes(root,workId){
     if(!root||!active())return;
-    const seq=++turn,user=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===user&&!!actor()?.author;
+    clearPublishedPreview();
+    const seq=++turn,user=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===user&&actor()?.author?.status==='APPROVED'&&root.isConnected!==false;
     root.textContent='회차를 불러오는 중입니다…';root.setAttribute('aria-busy','true');
     try{
-      const result=await api('episodes',workId);
+      const result=await window.WebNovelsAuth.api('/api/v2/creator/works/'+encodeURIComponent(workId)+'/episodes');
       if(!valid())return;
       const rows=result.episodes||[];
       root.innerHTML='<label>회차 검색 <input id="coEpisodeSearch" class="form-control" type="search"></label>'+
         '<label>상태 <select id="coEpisodeFilter" class="form-control"><option value="all">전체</option>'+
         '<option value="PUBLISHED">공개</option><option value="DRAFT">비공개</option>'+
         '<option value="PENDING">예약</option><option value="FAILED">실패</option></select></label>'+
-        '<div id="coEpisodeRows"></div><p id="coEpisodeMessage" role="status"></p>';
+        '<p id="coEpisodeMetricHelp">회원 열람수는 로그인한 독자의 시간당 중복을 제외한 열람 횟수입니다. 비회원 열람은 포함하지 않습니다. 최종 발행일은 현재 발행본의 반영 시각(한국 시간)입니다.</p>'+
+        '<div class="studio-episode-table-wrap"><table class="studio-episode-table" aria-describedby="coEpisodeMetricHelp"><caption>회차별 발행 현황과 독자 열람</caption><thead><tr><th scope="col">회차·제목</th><th scope="col">최종 발행일</th><th scope="col">회원 열람수</th><th scope="col">상태</th><th scope="col">관리</th></tr></thead><tbody id="coEpisodeRows"></tbody></table></div>'+
+        '<nav class="studio-work-actions" aria-label="회차 목록 페이지"><button type="button" class="btn btn-outline" id="coEpisodePrevious">이전 50회차</button><span id="coEpisodePage" role="status"></span><button type="button" class="btn btn-outline" id="coEpisodeNext">다음 50회차</button></nav><p id="coEpisodeMessage" role="status"></p>'+
+        '<section id="coPublishedPreview" class="studio-published-preview" aria-labelledby="coPublishedTitle" tabindex="-1" hidden><button type="button" class="btn btn-outline" id="coPublishedClose">발행본 닫기</button><h4 id="coPublishedTitle"></h4><p id="coPublishedMeta"></p><div id="coPublishedBody" class="reader-content"></div><div id="coPublishedComment"></div></section>';
       const list=root.querySelector('#coEpisodeRows'),message=root.querySelector('#coEpisodeMessage');
       text(root,'p','비공개 원고는 자유롭게 수정·저장하고 작가가 직접 발행합니다. 예약 원고 수정은 기존 예약을 취소한 뒤 이어 쓰며, 이미 공개한 내용의 수정·철회는 검토를 요청합니다.');
+      const preview=root.querySelector('#coPublishedPreview'),previewBody=root.querySelector('#coPublishedBody');
+      let previewTurn=0,previewOpener=null;
+      const closePreview=()=>{previewTurn++;clearPublishedPreview();preview.hidden=true;previewBody.replaceChildren();root.querySelector('#coPublishedComment').replaceChildren();};
+      root.querySelector('#coPublishedClose').onclick=()=>{closePreview();if(valid())previewOpener?.focus();};
+      const showPublished=async(row,opener)=>{
+        if(!valid())return;closePreview();const request=++previewTurn;previewOpener=opener;message.textContent='발행한 내용을 불러오는 중입니다…';
+        const current=()=>valid()&&request===previewTurn;
+        try{
+          const response=await window.WebNovelsAuth.api('/api/v2/creator/works/'+encodeURIComponent(workId)+'/episodes/'+encodeURIComponent(row.id));
+          if(!current())return;const episode=response.episode;
+          if(!episode||String(episode.id)!==String(row.id)||String(episode.workId)!==String(workId))throw Error('EPISODE_WORKSPACE_UNAVAILABLE');
+          root.querySelector('#coPublishedTitle').textContent=episode.episode_number+'화 · '+episode.title;
+          root.querySelector('#coPublishedMeta').textContent='최종 발행일 '+publicationDate(episode.published_at)+' · 회원 열람수 '+readCount(episode.member_read_count)+' · 발행한 내용 (읽기 전용)';
+          const comment=root.querySelector('#coPublishedComment');
+          preview.hidden=false;
+          if(episode.contentType==='WEBTOON'){
+            if(!window.ReaderWebtoon?.render||!episode.webtoon?.panels)throw Error('WEBTOON_UNAVAILABLE');
+            publishedPreviewDispose=window.ReaderWebtoon.render(previewBody,episode.webtoon.panels,{valid:current,
+              load:(panel,format,signal)=>window.WebNovelsAuth.api('/api/v2/creator/webtoon/panel/'+encodeURIComponent(panel.assetId)+'?workId='+encodeURIComponent(workId)+'&panelId='+encodeURIComponent(panel.id)+'&format='+format,{responseType:'blob',signal})});
+            comment.textContent=[window.ReaderWebtoon.formatCredits?.(episode.webtoon.credits),episode.authorComment].filter(Boolean).join('\n');
+          }else{
+            if(!window.ReaderContent?.render)throw Error('CONTENT_UNAVAILABLE');
+            window.ReaderContent.render(previewBody,comment,episode);
+          }
+          message.textContent='발행본을 열었습니다. 수정 중인 원고와 예약본은 반영되지 않습니다.';preview.focus();preview.scrollIntoView?.({block:'start'});
+        }catch(error){if(current()){closePreview();message.textContent='발행본을 불러오지 못했습니다. '+reportError(error);}}
+      };
+      let page=0;
       const render=()=>{
         if(!valid())return;
         const q=root.querySelector('#coEpisodeSearch').value.toLowerCase().trim();
         const filter=root.querySelector('#coEpisodeFilter').value;
+        const filtered=rows.filter(r=>(filter==='all'||(r.schedule_status||r.status)===filter)&&
+          (!q||String(r.episode_number).includes(q)||String(r.title).toLowerCase().includes(q)));
+        const pages=Math.max(1,Math.ceil(filtered.length/50));page=Math.min(page,pages-1);
+        root.querySelector('#coEpisodePage').textContent=filtered.length+'회차 · '+(page+1)+' / '+pages;
+        root.querySelector('#coEpisodePrevious').disabled=page===0;root.querySelector('#coEpisodeNext').disabled=page>=pages-1;
         list.replaceChildren();
-        for(const row of rows.filter(r=>(filter==='all'||(r.schedule_status||r.status)===filter)&&
-          (!q||String(r.episode_number).includes(q)||String(r.title).toLowerCase().includes(q)))){
-          const item=document.createElement('div');item.className='co-episode';
+        for(const row of filtered.slice(page*50,(page+1)*50)){
+          const item=document.createElement('tr');item.className='co-episode';
           const state=row.schedule_status||row.status;
-          text(item,'span',`${row.episode_number}화 · ${row.title} · ${{PUBLISHED:'공개',DRAFT:'비공개',PENDING:'예약',FAILED:'예약 실패',RUNNING:'발행 처리 중',CANCELLED:'예약 취소'}[state]||state}`);
-          const manage=text(item,'button',['PENDING','FAILED','RUNNING'].includes(row.schedule_status)?'예약 원고·시각 관리':row.status==='PUBLISHED'||row.has_head?'공개본 수정 요청':'원고·발행 관리');
+          const titleCell=text(item,'td',''),title=text(titleCell,row.has_head?'button':'span',`${row.episode_number}화 · ${row.title}`);
+          if(row.has_head){title.type='button';title.className='studio-episode-title';title.setAttribute('aria-label',`${row.episode_number}화 ${row.title} 발행한 본문 보기`);title.onclick=()=>showPublished(row,title);}
+          text(item,'td',publicationDate(row.published_at));text(item,'td',readCount(row.member_read_count));
+          text(item,'td',({PUBLISHED:'공개',DRAFT:'비공개',PENDING:'예약',FAILED:'예약 실패',RUNNING:'발행 처리 중',CANCELLED:'예약 취소'}[state]||state));
+          const actions=text(text(item,'td',''),'div','');actions.className='studio-episode-actions';
+          const canEdit=row.status==='PUBLISHED'&&!row.schedule_status;
+          const manage=text(actions,'button',['PENDING','FAILED','RUNNING'].includes(row.schedule_status)?'예약 원고·시각 관리':canEdit?'수정 원고 작성':row.has_head?'발행·검토 관리':'원고·발행 관리');
           manage.type='button';manage.className='btn btn-outline btn-sm';
-          manage.onclick=()=>{if(valid())return window.CreatorPublications.open(workId,{focusEpisodeId:String(row.id)});};
+          let editing=false,editRequest=null;
+          manage.onclick=async()=>{
+            if(!valid()||editing)return;
+            if(!canEdit)return window.CreatorPublications.open(workId,{focusEpisodeId:String(row.id)});
+            editing=true;manage.disabled=true;message.textContent='수정 원고를 여는 중입니다…';
+            try{
+              editRequest=editRequest||{key:crypto.randomUUID(),draftId:crypto.randomUUID()};
+              const edited=await window.WebNovelsAuth.api('/api/v2/creator/publications/edit/'+encodeURIComponent(row.id)+'?workId='+encodeURIComponent(workId),{method:'POST',headers:{'Idempotency-Key':editRequest.key},body:JSON.stringify({draftId:editRequest.draftId})});
+              if(!valid())return;
+              if(!edited?.draft?.id||String(edited.draft.workId)!==String(workId))throw Error('DRAFT_NOT_FOUND');
+              message.textContent='수정 원고를 저장한 뒤 관리자 승인을 요청하세요. 승인 전까지 발행본은 유지됩니다.';
+              await window.CreatorDraftEditor.openWork(workId,edited.draft.id);
+            }catch(error){if(valid())message.textContent='수정 원고를 열지 못했습니다. '+reportError(error);}
+            finally{if(valid()){editing=false;manage.disabled=false;}}
+          };
           if((row.status==='PUBLISHED'||(row.status==='DRAFT'&&row.has_head))&&!row.schedule_status){
             const withdraw=row.status==='PUBLISHED';
-            const toggle=text(item,'button',withdraw?'공개 철회 검토 요청':'공개 복구 검토 요청');
+            const toggle=text(actions,'button',withdraw?'공개 철회 검토 요청':'공개 복구 검토 요청');
             toggle.type='button';toggle.className='btn btn-outline btn-sm';
             let submitting=false;
             toggle.onclick=async()=>{
@@ -101,10 +160,12 @@
           }
           list.append(item);
         }
-        if(!list.childNodes.length)text(list,'p','해당 회차가 없습니다.');
+        if(!list.childNodes.length){const empty=text(list,'tr','');text(empty,'td','해당 회차가 없습니다.').setAttribute('colspan','5');}
       };
-      root.querySelector('#coEpisodeSearch').oninput=render;
-      root.querySelector('#coEpisodeFilter').onchange=render;
+      root.querySelector('#coEpisodeSearch').oninput=()=>{page=0;render();};
+      root.querySelector('#coEpisodeFilter').onchange=()=>{page=0;render();};
+      root.querySelector('#coEpisodePrevious').onclick=()=>{if(valid()&&page>0){page--;render();}};
+      root.querySelector('#coEpisodeNext').onclick=()=>{if(valid()){page++;render();}};
       render();
     }catch(error){if(valid())root.textContent='회차를 불러오지 못했습니다. '+reportError(error);}
     finally{if(valid())root.setAttribute('aria-busy','false');}
@@ -224,5 +285,5 @@
         '통계 또는 댓글을 불러오지 못했습니다.';
     }
   }
-  window.CreatorOperations=Object.freeze({active,api,home,episodes,serial,reactions,reset(){turn++;}});
+  window.CreatorOperations=Object.freeze({active,api,home,episodes,serial,reactions,reset(){turn++;clearPublishedPreview();}});
 })();

@@ -28,8 +28,8 @@ function setup(){
   const pending={key:'prior-key',data:{revision:'2',episodeNumber:1,mode:'NOW',rightsConfirmed:true}};
   return {window,get,storage,calls,marked,refreshed,next,draft,fixture,pending,setActor:value=>actor=value,get prepares(){return prepares;},key:'creator-publication:user-a:draft-uuid'};
 }
-test('incomplete first publication still previews; new publish needs metadata and explicit rights',async()=>{
-  const s=setup();s.fixture.missing=['소개'];await s.window.CreatorPublications.open('10');assert.equal(s.get('publicationPreviewBody').textContent,'body');
+test('compact first publication still needs metadata and explicit rights',async()=>{
+  const s=setup();s.fixture.missing=['소개'];await s.window.CreatorPublications.open('10');assert.equal(s.get('publicationPreview').hidden,true);assert.equal(s.get('publicationPreviewBody').textContent,'');
   await s.get('publicationCommit').onclick();assert.match(s.get('publicationMessage').textContent,/권리/);
   s.get('publicationRights').checked=true;await s.get('publicationCommit').onclick();assert.equal(s.calls.filter(c=>c.path.includes('/publish/')).length,0);
   assert.match(s.get('publicationChecklist').innerHTML,/소개/);assert.match(s.get('publicationMessage').textContent,/작품 소개/);

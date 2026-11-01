@@ -1,16 +1,66 @@
 import {webtoonEnabled} from './webtoon-api.mjs';
 import {creatorDistributionApi} from './creator-distribution-api.mjs';
+import '../public/js/shared/manuscript-document.js';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decimal = (value, zero = false) => typeof value === 'string' && (zero ? /^(0|[1-9]\d{0,18})$/ : /^[1-9]\d{0,18}$/).test(value) && BigInt(value) <= 9223372036854775807n;
+function episodeProjection(value,fail) {
+  if (!value || !decimal(value.id) || !Number.isSafeInteger(value.episode_number) || value.episode_number<1 ||
+      typeof value.title!=='string' || typeof value.status!=='string' ||
+      (value.member_read_count!==null && !decimal(value.member_read_count,true)) ||
+      (value.published_at!==null && (typeof value.published_at!=='string'||!Number.isFinite(Date.parse(value.published_at)))))
+    fail(503,'EPISODE_WORKSPACE_UNAVAILABLE');
+  return {id:value.id,episode_number:value.episode_number,title:value.title,status:value.status,
+    member_read_count:value.member_read_count,published_at:value.published_at};
+}
+async function episodeWorkspace({request,url,id,episodeId,who,env,db,fail}) {
+  if(request.method!=='GET')fail(405,'METHOD_NOT_ALLOWED');
+  if(url.searchParams.size || (episodeId&&!decimal(episodeId)))fail(400,'INVALID_ID');
+  const result=await db('rpc/creator_episode_workspace',{}, {method:'POST',body:{
+    p_user:who.userId,p_work:id,p_episode:episodeId||null
+  }});
+  if(result?.error)fail([400,403,404].includes(result.status)?result.status:503,result.error);
+  if(!episodeId) {
+    if(result?.workId!==id || !['NOVEL','WEBTOON'].includes(result.contentType)||!Array.isArray(result.episodes))
+      fail(503,'EPISODE_WORKSPACE_UNAVAILABLE');
+    return {workId:id,contentType:result.contentType,episodes:result.episodes.map(row=>({
+      ...episodeProjection(row,fail),has_head:row.has_head===true,
+      scheduled_at:row.scheduled_at,schedule_status:row.schedule_status,due_at:row.due_at,generation:row.generation
+    }))};
+  }
+  const value=result?.episode,episode=episodeProjection(value,fail);
+  if(value.workId!==id || value.id!==episodeId || !UUID.test(value.versionId||'') ||
+      !['NOVEL','WEBTOON'].includes(value.contentType)||typeof value.content!=='string'||typeof value.authorComment!=='string')
+    fail(503,'EPISODE_WORKSPACE_UNAVAILABLE');
+  Object.assign(episode,{workId:id,versionId:value.versionId,contentType:value.contentType,
+    content:value.content,authorComment:value.authorComment});
+  if(globalThis.ManuscriptDocument.valid(value.contentDocument,value.content))episode.contentDocument=value.contentDocument;
+  if(value.contentType==='WEBTOON') {
+    if(!webtoonEnabled(env))fail(503,'WEBTOON_NOT_ACTIVATED');
+    const manifest=value.webtoon;
+    if(manifest?.schemaVersion!==1||!Array.isArray(manifest.panels)||!manifest.panels.length||manifest.panels.length>300)
+      fail(503,'EPISODE_WORKSPACE_UNAVAILABLE');
+    const seen=new Set(),panels=manifest.panels.map(panel=>{
+      if(!UUID.test(panel.id||'')||!UUID.test(panel.assetId||'')||seen.has(panel.id)||
+        !Number.isInteger(panel.width)||panel.width<1||panel.width>800||!Number.isInteger(panel.height)||panel.height<1||panel.height>4096)
+        fail(503,'EPISODE_WORKSPACE_UNAVAILABLE');
+      seen.add(panel.id);return {id:panel.id,assetId:panel.assetId,width:panel.width,height:panel.height};
+    });
+    const credits={};for(const key of ['writer','artist','original'])if(typeof manifest.credits?.[key]==='string'&&manifest.credits[key].length<=100)credits[key]=manifest.credits[key];
+    episode.webtoon={schemaVersion:1,panels,credits};
+  }
+  return {episode};
+}
 export async function creatorWorkApi({ request, env, actor, db, readBody, fail, workspaceReady = false }) {
   if (env.AUTHOR_WORKS_ENABLED !== 'true' && !workspaceReady) fail(503, 'AUTHOR_WORKS_NOT_ACTIVATED');
   const who = await actor();
   if (!who.author || who.author.status !== 'APPROVED') fail(403, 'AUTHOR_REQUIRED');
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\/api\/v2\/creator\/works(?:\/([0-9]+)(?:\/(trash|restore|distribution))?)?$/);
+  const match = url.pathname.match(/^\/api\/v2\/creator\/works(?:\/([0-9]+)(?:\/(trash|restore|distribution|episodes)(?:\/([0-9]+))?)?)?$/);
   if (!match) fail(404, 'NOT_FOUND');
   const id = match[1] || null;
   if (id && !decimal(id)) fail(400, 'INVALID_ID');
+  if(match[2]==='episodes')return episodeWorkspace({request,url,id,episodeId:match[3],who,env,db,fail});
+  if(match[3])fail(404,'NOT_FOUND');
   // The partial private workspace can run before 022. Never let its legacy RPC
   // change a work with episode/publication history before the review migration is accepted.
   const checkWorkspaceChange=async()=>{if(workspaceReady && id && env.AUTHOR_PUBLICATION_REVIEW_ENABLED!=='true') {

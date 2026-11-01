@@ -3,12 +3,12 @@
   let opening;
   function open() {
     if(!opening)opening=new Promise((resolve,reject)=>{
-      const r=indexedDB.open('webnovels-creator-drafts',3);
+      const r=indexedDB.open('webnovels-creator-drafts',4);
       r.onupgradeneeded=()=>{
         const db=r.result;
         if(!db.objectStoreNames.contains('drafts'))db.createObjectStore('drafts',{keyPath:'key'});
         if(!db.objectStoreNames.contains('revisions')){const s=db.createObjectStore('revisions',{keyPath:'id',autoIncrement:true});s.createIndex('draftKey','draftKey');s.createIndex('createdAt','createdAt');}
-        for(const name of ['draftHeads','draftBackups','draftImports','fileImports'])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath:'key'});
+        for(const name of ['draftHeads','draftBackups','draftImports','fileImports','draftActivity'])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath:'key'});
       };
       r.onerror=()=>{opening=null;reject(r.error);};r.onblocked=()=>{opening=null;reject(Error('다른 탭을 닫고 저장소를 다시 열어주세요. 기존 원고는 보존됩니다.'));};
       r.onsuccess=()=>{r.result.onversionchange=()=>{r.result.close();opening=null;};resolve(r.result);};
@@ -42,7 +42,31 @@
         tx.oncomplete=()=>{db.close();resolve(result);};tx.onabort=()=>{db.close();reject(tx.error);};
       };
     }),
-    save:c=>put('draftHeads',{...c,key:c.userId+':'+c.id+':'+c.branch}),
+    async save(c) {
+      const db=await open(),value={...c,key:c.userId+':'+c.id+':'+c.branch};
+      return new Promise((resolve,reject)=>{
+        // The resume pointer must never acknowledge a head whose transaction failed.
+        // Sequence numbers compare only successive snapshots of the same branch;
+        // neither device clocks nor another branch's sequence arbitrate content.
+        const tx=db.transaction(['draftHeads','draftActivity'],'readwrite');
+        tx.oncomplete=()=>resolve(value.key);tx.onabort=()=>reject(tx.error||Error('LOCAL_TRANSACTION_ABORTED'));tx.onerror=()=>{};
+        try {
+          const heads=tx.objectStore('draftHeads'),request=heads.get(value.key);
+          request.onsuccess=()=>{
+            const previous=request.result;heads.put(value);
+            if(c.lifecycle==='ACTIVE'&&c.seq>0&&(!previous||previous.seq<c.seq))tx.objectStore('draftActivity').put({
+              key:c.userId+':'+c.workId,userId:c.userId,workId:c.workId,id:c.id,branch:c.branch
+            });
+          };
+        }catch(e){tx.abort();reject(e);}
+      });
+    },
+    async latest(userId,workId) {
+      const pointer=await transaction('draftActivity','readonly',s=>s.get(userId+':'+workId));
+      if(!pointer||pointer.userId!==userId||pointer.workId!==workId)return null;
+      const head=await transaction('draftHeads','readonly',s=>s.get(userId+':'+pointer.id+':'+pointer.branch));
+      return head?.userId===userId&&head.workId===workId&&head.id===pointer.id&&head.branch===pointer.branch&&head.lifecycle==='ACTIVE'?head:null;
+    },
     backup:(c,value,reason)=>put('draftBackups',{key:crypto.randomUUID(),userId:c.userId,workId:c.workId,id:c.id,snapshot:value,reason}),
     heads:async(userId,workId)=>(await all('draftHeads')).filter(x=>x.userId===userId&&x.workId===workId),
     history:async c=>(await all('draftBackups')).filter(x=>x.userId===c.userId&&x.id===c.id),

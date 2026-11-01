@@ -1,0 +1,157 @@
+{
+  "stage": "UI-R12",
+  "checkedAt": "2026-11-01T00:57:24.902Z",
+  "baseCommit": "d04e1cd1b472f29e99b8ca7ca3d112a1cd521d99",
+  "changes": [
+    "Work-to-episode CMS overview and authenticated member read counts",
+    "Read-only immutable published novel/webtoon content",
+    "Separate edit draft and administrator review for published changes",
+    "Compact publication; explicit preview remains",
+    "Single current draft card, preserved recovery copies and safe latest resume"
+  ],
+  "validation": {
+    "steps": [
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r12",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:creator-works",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:drafts",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:publication",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:operations",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:auth",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:naming",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage15",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:files",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r4",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r5",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r6",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r7",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r8",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r9",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r10",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "exitCode": 0,
+    "newTests": 48,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "fullRelease": "Final commit CI executes all49 release commands; local19 commands cover affected scope",
+    "independentReview": "NO_BLOCKING_FINDINGS",
+    "earlierTestAdjustments": "Existing VM harness traversal and publication expectations updated for intended recovery disclosure and compact publication; final reruns passed",
+    "security": {
+      "syntaxFiles": 23,
+      "syntaxPassed": true,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "userFilePreserved": true,
+      "ownerRoleAclTests": "PASS"
+    }
+  },
+  "production": {
+    "databaseApplied": true,
+    "migrations": [
+      "authoring-030",
+      "authoring-031"
+    ],
+    "originalRowsPreserved": true,
+    "backupsVerified": true,
+    "privateBackupArtifactsExcluded": true,
+    "exactCatalogGuards": true,
+    "flagsChanged": false,
+    "accountOrWorkMutations": false,
+    "publicTestPublication": false
+  },
+  "runtime": {
+    "browser": "NOT_RUN_PROJECT_RESTRICTION",
+    "localhost": "NOT_RUN",
+    "physicalDevice": "NOT_RUN",
+    "wordManualRoundtrip": "NOT_VERIFIED",
+    "screenReader": "NOT_VERIFIED",
+    "lcpCls": "NOT_MEASURED"
+  },
+  "metrics": {
+    "label": "회원 열람수",
+    "source": "reader_events_v2 OPEN/COMPLETE",
+    "deduplication": "Distinct authenticated user and hour bucket; owning author excluded",
+    "anonymousIncluded": false,
+    "uniqueReaders": false
+  },
+  "nextStage": "UI-R13: actual author acceptance and readership metric policy; SMTP/external beta and independent restore when configured",
+  "gitAndDelivery": "Commit, normal push, CI and Cloudflare asset parity reported after push"
+}

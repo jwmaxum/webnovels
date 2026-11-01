@@ -43,6 +43,7 @@ test('real work card enters the existing draft chooser with exact bigint identit
   assert.match(app.root.innerHTML,/웹툰 · 비공개 \/ 초안 · 연재 중 · 등록 회차 3개/);
   await app.root.querySelector('[data-write-work-id]').onclick();assert.deepEqual(app.drafts,[['9007199254740993']],'no fresh flag or silent new draft');
   app.root.querySelector('[data-work-id]').onclick();assert.equal(app.navigations.at(-1),'/creator/works/9007199254740993/settings');
+  app.root.querySelector('[data-open-work-id]').onclick();assert.equal(app.navigations.at(-1),'/creator/works/9007199254740993');
   assert.equal(app.root.getAttribute('aria-busy'),'false');assert.equal(app.calls.length,1);
 });
 

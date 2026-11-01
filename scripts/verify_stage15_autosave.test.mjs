@@ -117,7 +117,8 @@ test('edits after publish request are backed up; next episode opens a new UUID a
   assert.ok(s.backups.some(x=>x.reason==='after-publish-edits'&&x.snapshot.content==='later edits'));
   await s.editor.startNext('10');assert.notEqual(s.editor.getFileContext().id,expected.id);assert.equal(s.el('newEpContent').value,'');
   assert.ok([...s.heads.values()].some(x=>x.id===expected.id&&x.lifecycle==='PUBLISHED'&&x.snapshot.content==='later edits'));
-  const copy=s.el('draftCopies').children.flatMap(section=>section.children).find(x=>x.textContent.startsWith('보관 사본을 새 원고로 복사'));
+  const descendants=node=>[node,...node.children.flatMap(descendants)];
+  const copy=descendants(s.el('draftCopies')).find(x=>x.textContent.startsWith('보관 사본을 새 원고로 복사'));
   await copy.onclick();assert.notEqual(s.editor.getFileContext().id,expected.id);assert.equal(s.engine.current.lifecycle,'ACTIVE');assert.equal(s.engine.current.revision,'0');assert.equal(s.el('newEpContent').value,'later edits');
   assert.ok([...s.heads.values()].some(x=>x.id===expected.id&&x.lifecycle==='PUBLISHED'));
 });

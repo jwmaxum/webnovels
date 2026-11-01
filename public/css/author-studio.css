@@ -121,6 +121,26 @@
 #modalCreatorPublication #publicationSummary { padding: 12px; background: var(--bg-subtle); border-radius: 8px; overflow-wrap: anywhere; }
 #modalCreatorPublication #publicationControls fieldset { padding: 16px; margin-block: 20px; border: 1px solid var(--border-strong); border-radius: 8px; }
 #modalCreatorPublication #publicationControls label { display: block; margin-block: 12px; }
+#modalCreatorPublication [hidden] { display: none !important; }
+
+/* Owned episode overview and on-demand, read-only published contents. */
+#view-creator .studio-work-title { padding: 0; min-height: 44px; border: 0; background: transparent; color: var(--text-strong); font: inherit; font-weight: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; overflow-wrap: anywhere; }
+#view-creator .studio-episode-table-wrap { max-width: 100%; overflow-x: auto; }
+#view-creator .studio-episode-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+#view-creator .studio-episode-table :is(th, td) { padding: 14px 12px; border-bottom: 1px solid var(--border-default); vertical-align: top; }
+#view-creator .studio-episode-table th { background: var(--bg-subtle); color: var(--text-secondary); font-weight: 650; white-space: nowrap; }
+#view-creator .studio-episode-title { display: inline-block; min-height: 44px; text-align: left; font: inherit; font-weight: 650; color: var(--text-strong); background: transparent; border: 0; cursor: pointer; overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 4px; }
+#view-creator .studio-episode-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#view-creator .studio-episode-actions .btn { min-height: 44px; white-space: normal; }
+#view-creator .studio-published-preview { padding: 20px; margin-top: 20px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-elevated); overflow-wrap: anywhere; }
+#view-creator .studio-published-preview:focus { outline: 2px solid var(--border-focus); outline-offset: 3px; }
+#view-creator .studio-published-preview :is(.reader-content, .webtoon-preview) { width: 100%; max-width: 800px; margin-inline: auto; }
+#view-creator .studio-published-preview img { max-width: 100%; height: auto; }
+#view-creator .draft-latest-card { padding: 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-elevated); overflow-wrap: anywhere; }
+#view-creator .draft-latest-card .btn { min-height: 44px; margin-top: 8px; }
+#view-creator .draft-recovery-history { margin-top: 12px; padding: 12px; border: 1px solid var(--border-default); border-radius: 8px; }
+#view-creator .draft-recovery-history > summary { min-height: 44px; cursor: pointer; font-weight: 650; }
+#view-creator .draft-recovery-history[open] > summary { margin-bottom: 12px; }
 
 @media (max-width: 1023px) {
   #view-creator #cwList { grid-template-columns: minmax(0, 1fr); }

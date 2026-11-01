@@ -201,6 +201,9 @@
     const turn=++epoch,user=actor()?.userId;focusedEpisodeId=focusEpisodeId;
     if(!user||actor()?.author?.status!=='APPROVED')throw Error('AUTHOR_REQUIRED');
     previewOnly=preview||!canPublish();refreshAvailability();
+    window.ReaderWebtoon?.destroy($('publicationPreviewBody'));
+    for(const id of ['publicationPreviewTitle','publicationPreviewBody','publicationPreviewComment'])$(id)?.replaceChildren();
+    $('publicationPreview').hidden=true;
     work=null;context=null;lastResult=null;message('작품과 원고를 확인하는 중입니다.');
     if($('publicationWorkSettings')){$('publicationWorkSettings').hidden=true;$('publicationWorkSettings').onclick=null;$('publicationWorkSettings').disabled=false;}
     $('publicationResult').hidden=true;$('publicationDraftPanel').hidden=true;$('publicationRetryPanel').hidden=true;
@@ -211,7 +214,7 @@
     const result=await window.WebNovelsAuth.api('/api/v2/creator/works/'+workId);
     if(turn!==epoch||actor()?.userId!==user)throw Error('SESSION_CHANGED');
     work={...result.work,userId:user,episodes:result.episodes};
-    $('publicationHeading').textContent=work.title+(previewOnly?' · 저장본 미리보기':' · 미리보기·게시');
+    $('publicationHeading').textContent=work.title+(previewOnly?' · 저장본 미리보기':' · 발행');
     let rows=[],previewMessage=preview?'저장한 원고의 미리보기입니다. 발행하려면 편집 화면에서 지금 발행 또는 예약 발행을 선택해주세요.':previewNotice;
     if(!previewOnly)try{rows=await loadList(turn,user);}catch{
       assertOpen(turn,user);previewOnly=true;
@@ -242,9 +245,11 @@
       message('원고 작성 화면에서 초안을 열면 미리보기와 게시를 진행할 수 있습니다.');
       return;
     }
-    try { context=await window.CreatorDraftEditor.preparePublication(); }
-    catch(e){message(errorText(e));return;}
+    let prepared;
+    try { prepared=await window.CreatorDraftEditor.preparePublication(); }
+    catch(e){assertOpen(turn,user);message(errorText(e));return;}
     assertOpen(turn,user);
+    context=prepared;
     const suggestion=previewOnly||context.episodeId?{}:await api('/suggest');assertOpen(turn,user);
     const number=context.episodeId
       ? result.episodes.find(e=>String(e.id)===String(context.episodeId))?.episode_number||rows.find(row=>String(row.episodeId)===String(context.episodeId))?.episodeNumber
@@ -255,12 +260,15 @@
     $('publicationDraftPanel').hidden=false;
     document.querySelector('input[name="publicationMode"][value="NOW"]').checked=true;
     $('publicationScheduleFields').hidden=true;$('publicationCommit').textContent=review?'수정 검토 요청':'지금 발행';
-    $('publicationPreviewTitle').textContent=context.snapshot.title||'무제';
-    if(context.snapshot.webtoon){
+    $('publicationPreview').hidden=!previewOnly;
+    if(previewOnly){
+      $('publicationPreviewTitle').textContent=context.snapshot.title||'무제';
+      if(context.snapshot.webtoon){
       window.ReaderWebtoon?.destroy($('publicationPreviewBody'));
       await window.CreatorWebtoon.renderPreview($('publicationPreviewBody'),context,()=>turn===epoch&&actor()?.userId===user);
       assertOpen(turn,user);$('publicationPreviewComment').textContent=[window.ReaderWebtoon?.formatCredits?.(context.snapshot.webtoon.credits)||'',context.snapshot.authorComment||''].filter(Boolean).join('\n');
-    }else window.ReaderContent.render($('publicationPreviewBody'),$('publicationPreviewComment'),context.snapshot);
+      }else window.ReaderContent.render($('publicationPreviewBody'),$('publicationPreviewComment'),context.snapshot);
+    }
     $('publicationSummary').textContent=
       `${work.title}${number?' · '+number+'화':''} · ${context.snapshot.webtoon?'이미지 '+context.snapshot.webtoon.assetIds.length+'개':'본문 '+context.snapshot.content.length+'자'} · ${{ALL:'전체 이용가',AGE_15:'15세 이상',AGE_19:'19세 이상'}[work.rating]||'이용등급 확인 필요'} · ${{NONE:'AI 사용 안 함',ASSISTED:'AI 보조 사용',GENERATED:'AI 생성 포함'}[work.ai_usage_type]||'AI 표기 확인 필요'} · ${previewOnly?'비공개 저장본':review?'공개본 수정 · 승인 후 반영':'무료 발행'}`+
       (work.publication_missing?.length?' · 게시 전 미확인: '+work.publication_missing.join(', '):'');
@@ -270,7 +278,7 @@
     if(mode==='SCHEDULED'&&!previewOnly&&!review){document.querySelector('input[name="publicationMode"][value="NOW"]').checked=false;scheduled.checked=true;$('publicationScheduleFields').hidden=false;$('publicationCommit').textContent='예약 발행';}
     $('publicationRights').checked=false;
     bindWorkSettings(turn,user);checklist();
-    message(previewOnly?previewMessage:review?'공개본 수정은 관리자 검토를 요청합니다. 승인 전까지 기존 공개본을 유지합니다.':'비공개 원고는 자유롭게 수정·저장할 수 있습니다. 신규 회차는 관리자 사전 검수 없이 작가가 지금 또는 예약 발행합니다.');
+    message(previewOnly?previewMessage:review?'공개본 수정은 관리자 검토를 요청합니다. 승인 전까지 기존 공개본을 유지합니다.':'권리를 확인하고 바로 발행하거나 예약하세요. 본문 확인은 작성 화면의 미리보기를 이용할 수 있습니다.');
   }
   async function publish() {
     if(busy||!work||!context||lastResult)return;
@@ -314,6 +322,7 @@
     } finally {if(turn===epoch){busy=false;$('publicationCommit').disabled=false;$('publicationRetry').disabled=false;refreshAvailability();}}
   }
   function reset(){window.ReaderWebtoon?.destroy($('publicationPreviewBody'));epoch++;work=null;context=null;lastResult=null;busy=false;
+    $('publicationPreview').hidden=true;
     if($('publicationWorkSettings')){$('publicationWorkSettings').hidden=true;$('publicationWorkSettings').onclick=null;}
     for(const id of ['publicationList','publicationPreviewBody','publicationPreviewComment','publicationSummary','publicationMessage','publicationChecklist','publicationRetrySummary'])$(id)?.replaceChildren();
     $('publicationDraftPanel').hidden=true;$('publicationResult').hidden=true;$('publicationRetryPanel').hidden=true;

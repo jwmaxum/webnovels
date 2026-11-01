@@ -4,6 +4,7 @@
   const $=id=>document.getElementById(id), fields={title:'newEpTitle',content:'newEpContent',authorComment:'newEpAuthorComment'};
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let timer,remoteTimer,maxTimer,deadlineContext=null,dirtySince=null,composing=false,epoch=0,copiesRevision=0,selected=null,works=[];
+  const workDrafts=new Map();
   const actor=()=>window.WebNovelsAuth?.getActor(), toast=m=>window.showToast?.(m);
   function error(e) {
     const message=(e.code||e.message)==='DRAFT_COMPOSING'?'한글 입력을 마친 뒤 저장·미리보기를 다시 실행해주세요.':e.code==='AUTHOR_DRAFTS_NOT_ACTIVATED'?'서버 원고 저장 기능이 아직 활성화되지 않았습니다.':e.code==='DRAFT_CONFLICT'?'다른 곳에서 수정한 원고가 있습니다. 양쪽 내용을 비교해주세요.':'저장 또는 불러오기에 실패했습니다. 원고를 다운로드하고 다시 시도해주세요.';
@@ -44,6 +45,7 @@
     $('creatorDraftStatus').textContent=c.conflict?'충돌 · 양쪽 사본 보존':c.error?'저장 실패 · 다운로드 가능':c.localSeq<c.seq?'기기에 저장 중…':c.serverSeq<c.seq?'기기 저장 완료 · 서버 미동기화':'기기·서버 저장 완료';
     $('draftConflict').hidden=!c.conflict;
     $('draftIdentity').textContent=`원고 ${c.id} · 서버 버전 ${c.revision}${c.lifecycle!=='ACTIVE'?' · 보관 원고 (읽기 전용)':''}`;
+    if($('draftLatestTitle'))$('draftLatestTitle').textContent=c.snapshot.title||'제목 없는 원고';
     const checklist=$('creatorDraftChecklist');
     if(checklist)checklist.innerHTML=window.CreatorReadiness?.render(window.CreatorReadiness.draftItems(c))||'';
   }
@@ -81,18 +83,66 @@
     $('newEpWorkSelect').innerHTML='<option value="">작품을 선택해주세요</option>'+all.filter(w=>!w.trashed_at).map(w=>`<option value="${esc(w.id)}">${w.content_type==='WEBTOON'?'웹툰':'웹소설'} · ${esc(w.title)}</option>`).join('');
   }
   async function openWork(workId,id=null,{fresh=false,record=null,localOnly=false,refresh=false}={}) {
-    window.CreatorRecovery?.reset();const turn=++epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
+    window.CreatorRecovery?.reset();window.CreatorOperations?.reset();const turn=++epoch,user=actor()?.userId;if(!user)throw Error('AUTHOR_REQUIRED');
     stop();composing=false;await engine.checkpoint();selected=null;window.closeModal?.('modalDraftDiff');
     if(!works.some(w=>w.id===String(workId)))await loadWorks();
     const work=works.find(w=>w.id===String(workId));if(!work)throw Error('WORK_NOT_FOUND');
     if(turn!==epoch||user!==actor()?.userId)return;
-    if(!id&&!fresh)id=[...engine.contexts.values()].find(c=>c.userId===user&&c.workId===String(workId)&&c.lifecycle==='ACTIVE')?.id||null;
-    const c=await engine.open(user,String(workId),id,{localOnly,refresh});
+    let resume=null;
+    if(!fresh&&!record&&!refresh){
+      // Migration 031 orders immutable revision timestamps on PostgreSQL. Keep
+      // that order, including sub-millisecond precision unavailable to JS Date.
+      const latestServer=rows=>rows.find(row=>row.lifecycle==='ACTIVE'&&Number.isFinite(Date.parse(row.updatedAt)));
+      let memory=null,summary=null;
+      // Returning to the work must not replace an active edit with another branch.
+      if(!id&&engine.current?.userId===user&&engine.current.workId===String(workId)&&engine.current.lifecycle==='ACTIVE')id=engine.current.id;
+      if(!id){const current=engine.contexts.get(user+':'+workDrafts.get(user+':'+workId));if(current?.lifecycle==='ACTIVE'){memory=current;if(dirty(current))id=current.id;}}
+      if(!id||!engine.contexts.has(user+':'+id)){
+        const last=await DraftStore.latest?.(user,String(workId));
+        if(turn!==epoch||user!==actor()?.userId)return;
+        if(last&&(!id||last.id===id)){
+          if(!id&&!dirty(last)&&!last.conflict){
+            try{summary=(await api('list',{workId:String(workId),userId:user})).drafts;}
+            catch(e){if(e.status&&e.status<500&&e.status!==404)throw e;}
+            if(turn!==epoch||user!==actor()?.userId)return;
+            id=summary?latestServer(summary)?.id||last.id:last.id;
+          }else id=last.id;
+          if(id===last.id)resume=last;
+        }
+      }
+      if(!id){
+        const rows=summary||(await api('list',{workId:String(workId),userId:user})).drafts;
+        if(turn!==epoch||user!==actor()?.userId)return;
+        // Only server-authored revision times are comparable with each other.
+        // Legacy summaries without this metadata remain in explicit recovery.
+        id=latestServer(rows)?.id||memory?.id||null;
+      }
+    }
+    const cached=id&&engine.contexts.get(user+':'+id);
+    if(!fresh&&!record&&!localOnly&&!refresh&&cached&&cached!==engine.current&&!dirty(cached))refresh=true;
+    let c;
+    try{c=await engine.open(user,String(workId),id,{localOnly,refresh});}
+    catch(e){
+      // A durable device head remains usable offline; authorization failures do
+      // not become an offline bypass. Its old base revision still goes through CAS.
+      if(!resume||localOnly||e.status&&e.status!==404&&e.status<500)throw e;
+      if(turn!==epoch||user!==actor()?.userId)return;
+      c=await engine.open(user,String(workId),id,{localOnly:true});
+    }
     if(!c||turn!==epoch||user!==actor()?.userId)return;
     if(record)await engine.recover(record);
+    else if(resume&&c.lifecycle==='ACTIVE'&&(localOnly||c.revision==='0'||dirty(resume)||resume.conflict)){
+      const remote=c.revision==='0'?null:JSON.parse(JSON.stringify({...c.snapshot,id:c.id,revision:c.revision,lifecycle:c.lifecycle,
+        episodeId:c.episodeId,hasPublicationHistory:c.hasPublicationHistory}));
+      await engine.recover(resume);
+      if(remote&&(remote.revision!==resume.revision||resume.conflict)){
+        await DraftStore.backup(c,remote,'resume-server');c.conflict=remote;await engine.flush(c);
+      }
+    }
     if(work.content_type==='WEBTOON'&&!c.snapshot.webtoon&&c.revision==='0'&&window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true)engine.edit({...c.snapshot,content:'',webtoon:window.CreatorWebtoon.empty()},c);
     if(turn!==epoch||user!==actor()?.userId)return;
     window.switchCreatorTab?.('new-ep',false);$('newEpWorkSelect').value=String(workId);
+    workDrafts.set(user+':'+workId,c.id);
     form(c.snapshot,c.lifecycle!=='ACTIVE'||work.moderation_state!=='CLEAR'||!!work.trashed_at);
     history.replaceState(null,'','/creator/episodes?work='+workId+'&draft='+c.id);status(c);
     $('creatorDraftError').textContent='';if(record||c.seq>0)schedule(c);await listCopies(c);$('newEpTitle')?.focus();
@@ -103,13 +153,21 @@
     if(!c){box.textContent='작품을 선택하면 서버 원고와 이 계정의 기기 사본을 확인할 수 있습니다.';return;}
     const turn=epoch,authorId=actor()?.author?.id;
     const valid=()=>request===copiesRevision&&turn===epoch&&engine.current===c&&actor()?.userId===c.userId;
-    function section(label){const node=document.createElement('section'),title=document.createElement('strong'),state=document.createElement('p');title.textContent=label;state.textContent='불러오는 중…';state.setAttribute('role','status');node.append(title,state);box.append(node);return {node,state};}
-    const device=section('기기 사본'),server=section('서버 원고'),old=section('이전 편집기 원고');
+    function section(label,parent=box){const node=document.createElement('section'),title=document.createElement('strong'),state=document.createElement('p');title.textContent=label;state.textContent='불러오는 중…';state.setAttribute('role','status');node.append(title,state);parent.append(node);return {node,state};}
+    const latest=document.createElement('section');latest.className='draft-latest-card';
+    const heading=document.createElement('strong'),title=document.createElement('p'),state=document.createElement('p');
+    heading.textContent='현재 원고 · 최종 작성 내용';title.id='draftLatestTitle';title.textContent=c.snapshot.title||'제목 없는 원고';
+    state.textContent=c.lifecycle==='ACTIVE'?'선택한 원고의 마지막 내용을 표시합니다. 편집 중인 내용은 다른 저장 사본으로 자동 교체하지 않습니다.':'발행·보관된 최종 원고입니다. 새 회차는 새 원고에서 작성해주세요.';
+    latest.append(heading,title,state);box.append(latest);
+    const recovery=document.createElement('details'),summary=document.createElement('summary');recovery.className='draft-recovery-history';
+    summary.textContent='이전 원고·복구 사본 보기';recovery.append(summary);box.append(recovery);
+    function recoverySection(label){return section(label,recovery);}
+    const device=recoverySection('기기 복구 사본'),server=recoverySection('서버 원고 보관함'),old=recoverySection('이전 편집기 원고');
     function button(node,label,fn){const b=document.createElement('button');b.type='button';b.className='btn btn-outline btn-sm';b.textContent=label;b.onclick=safe(async()=>{if(valid())await fn();});node.append(b);}
     async function load(part,read,render,empty){try{const rows=await read();if(!valid())return;part.state.textContent=rows.length?`${rows.length}개` :empty;render(rows);}catch{if(valid())part.state.textContent='목록을 불러오지 못했습니다. 원본은 보존됩니다. 원고 목록 새로고침으로 다시 시도해주세요.';}}
     await Promise.all([
     load(device,async()=>(await DraftStore.heads(c.userId,c.workId)).filter(r=>r.branch!==c.branch),local=>{
-    if(local.some(r=>r.seq>r.serverSeq)&&$('draftCopyDetails'))$('draftCopyDetails').open=true;
+    if(local.some(r=>r.seq>r.serverSeq||r.pending))device.state.textContent+=' · 서버에 반영되지 않은 사본이 있을 수 있습니다.';
     for(const row of local){
       if(row.lifecycle!=='ACTIVE'||(row.id===c.id&&c.lifecycle!=='ACTIVE')){button(device.node,'보관 사본을 새 원고로 복사: '+(row.snapshot.title||'무제'),async()=>{
         if(!window.confirm('보관 원고를 유지하고 새 원고에 내용을 복사합니다. 계속할까요?'))return;
@@ -227,7 +285,7 @@
     window.openModal?.('modalDraftDiff');
   }
   async function beforeAccountChange(){stop();await engine.checkpoint();if(engine.current&&engine.current.seq>engine.current.serverSeq)toast('서버 미동기 원고는 이 기기에 보존됩니다. 같은 계정으로 로그인해 기기 사본을 복구해주세요.');}
-  function onAuthLost(){stop();composing=false;epoch++;const c=engine.detach();works=[];selected=null;form({},true);
+  function onAuthLost(){stop();composing=false;epoch++;const c=engine.detach();workDrafts.clear();works=[];selected=null;form({},true);
     window.CreatorFiles?.reset();window.CreatorWebtoon?.reset();
     window.CreatorPublications?.reset();
     for(const id of ['newEpWorkSelect','draftCopies','diffVersionList','diffSectionsContainer','diffPreviewHeader','draftIdentity','creatorDraftError','creatorDraftChecklist'])if($(id))$(id).replaceChildren();
@@ -238,6 +296,7 @@
   async function enter(){if(!works.length)await loadWorks();const params=new URLSearchParams(location.search);if(params.get('work')){
     const id=params.get('draft');let localOnly=false;
     if(id)try{await api('get',{workId:params.get('work'),id});}catch(e){
+      if(e.status===401||e.status===403)throw e;
       const saved=await DraftStore.heads(actor()?.userId,params.get('work'));
       if(e.status===404||saved.some(r=>r.id===id))localOnly=true;else throw e;
     }

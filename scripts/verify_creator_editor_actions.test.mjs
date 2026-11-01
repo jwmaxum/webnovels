@@ -87,7 +87,8 @@ function setup({publish=true,workspace=false,contentType='NOVEL'}={}){
   context.window=context;vm.createContext(context);sources.forEach((source,i)=>vm.runInContext(source,context,{filename:paths[i]}));
   const editor=context.CreatorDraftEditor;
   async function type(id,value){get(id).value=value;await get(id).emit('input');}
-  const buttons=()=>get('draftCopies').children.flatMap(s=>s.children).filter(n=>n.tagName==='BUTTON');
+  const descendants=node=>[node,...node.children.flatMap(descendants)];
+  const buttons=()=>descendants(get('draftCopies')).filter(n=>n.tagName==='BUTTON');
   return {context,editor,get,heads,backups,calls,remotes,fixture,storage,legacy,store,buttons,type,setActor:a=>actor=a};
 }
 
@@ -101,7 +102,8 @@ test('shipped form submits private save and publication button opens the real gu
   assert.match(s.get('toastContainer').textContent,/비공개 원고를 서버에 저장했습니다. 버전 1/);
   await s.get('btnOpenPublication').emit('click');
   assert.equal(s.get('modalCreatorPublication').hidden,false);assert.equal(s.get('modalCreatorPublication').classList.contains('active'),true);
-  assert.equal(s.get('publicationPreviewBody').textContent,'본문\n\n다음 문단');
+  assert.equal(s.get('publicationPreview').hidden,true);
+  assert.equal(s.get('publicationPreviewBody').textContent,'');
   assert.match(s.get('publicationSummary').textContent,/전체 이용가.*무료 발행/);
   assert.equal(s.get('publicationControls').hidden,false);
   s.get('publicationRights').checked=true;await s.get('publicationCommit').emit('click');

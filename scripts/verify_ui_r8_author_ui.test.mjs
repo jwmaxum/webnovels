@@ -55,6 +55,7 @@ function fixture(type='NOVEL'){
   WebNovelsAuth:{getActor:()=>who,api:async(path,options)=>{
    const url=new URL(path,'https://app.test'),id=url.pathname.split('/').at(-1),data=options?.body?JSON.parse(options.body):null;calls.push({path,url,method:options?.method||'GET',data});
    if(url.pathname==='/api/v2/creator/works')return {works:[work()],nextCursor:null};
+   if(/^\/api\/v2\/creator\/works\/\d+\/episodes$/.test(url.pathname))return behavior.episodeGate?behavior.episodeGate.promise:{episodes:copy(episodeRows)};
    if(url.pathname.startsWith('/api/v2/creator/works/'))return {work:work(),episodes:[{id:'700',episode_number:9,status:'DRAFT'},{id:'600',episode_number:1,status:'PUBLISHED'}]};
    if(url.pathname==='/api/v2/creator/drafts')return {drafts:[...remotes].map(([id,row])=>({id,title:row.title,lifecycle:row.lifecycle}))};
    if(url.pathname.startsWith('/api/v2/creator/drafts/')){

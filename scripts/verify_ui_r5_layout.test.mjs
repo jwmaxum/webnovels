@@ -113,13 +113,13 @@ test('studio CSS parses, stays in author surfaces and preserves keyboard/mobile/
 
 test('studio styles and changed role modules have local cache versions in compatibility load order',async()=>{
  const style=nodes.find(node=>node.tagName==='link'&&attr(node,'rel')==='stylesheet'&&attr(node,'href')?.startsWith('/css/author-studio.css'));
- assert(style);assert.equal(attr(style,'href'),'/css/author-studio.css?v=20261031r10');
+ assert(style);assert.equal(attr(style,'href'),'/css/author-studio.css?v=20261101r12');
  await readFile(new URL('../public'+attr(style,'href').split('?')[0],import.meta.url));
  const scripts=nodes.filter(node=>node.tagName==='script').map(node=>attr(node,'src')).filter(Boolean);
- assert(scripts.includes('/js/core/role-modules.js?v=20261031r10'));
+ assert(scripts.includes('/js/core/role-modules.js?v=20261101r12'));
  const files=[...loader.matchAll(/'([^']+)'/g)].map(match=>match[1]).filter(path=>path.startsWith('/js/creator/'));
  for(const name of ['creator-webtoon','creator-editor','creator-publications','creator-works']){
-  const version=name==='creator-editor'?'20261031r8':'20261031r10';
+  const version=name==='creator-webtoon'?'20261031r10':'20261101r12';
   const path='/js/creator/'+name+'.js?v='+version;assert(files.includes(path),name+' needs its new cache version');await readFile(new URL('../public'+path.split('?')[0],import.meta.url));
  }
  assert(files.findIndex(path=>path.includes('/draft-engine.js'))<files.findIndex(path=>path.includes('/creator-editor.js')));

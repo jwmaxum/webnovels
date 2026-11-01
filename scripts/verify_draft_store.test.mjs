@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 const code=await readFile(new URL('../public/js/creator/draft-store.js',import.meta.url),'utf8');
 function setup(){
-  let tx,request;const db={transaction(){request={};tx={objectStore:()=>({put:()=>request}),abort:()=>tx.onabort()};return tx;}};
+  let tx,request;const db={transaction(){request={};tx={objectStore:()=>({get:()=>request,put:()=>({})}),abort:()=>tx.onabort()};return tx;}};
   const context=vm.createContext({indexedDB:{open(){const r={result:db};queueMicrotask(()=>r.onsuccess());return r;}}});vm.runInContext(code,context);
   return {store:context.DraftStore,get tx(){return tx;},get request(){return request;}};
 }

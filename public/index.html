@@ -47,7 +47,7 @@
 <link rel="stylesheet" href="/css/policies.css?v=20261031r6">
   <link rel="stylesheet" href="/css/reader-shell.css?v=20261031r3">
   <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r7">
-  <link rel="stylesheet" href="/css/author-studio.css?v=20261031r10">
+  <link rel="stylesheet" href="/css/author-studio.css?v=20261101r12">
   <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
 </head>
 <body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
@@ -742,7 +742,7 @@
                 <div class="studio-save-state"><span id="creatorDraftStatus" class="creator-draft-status" role="status" aria-live="polite">원고를 선택해주세요</span><span class="text-muted small">저장한 원고는 발행 전까지 비공개입니다.</span></div>
                 <p id="creatorPublicationNotice" class="text-muted small" role="status"></p>
                 <div class="studio-editor-layout">
-                <details id="draftCopyDetails" class="studio-fold studio-draft-library"><summary>저장한 원고</summary><p class="text-muted small">서버·이 기기에 보관한 원고를 선택해 이어 쓰세요.</p><button type="button" id="btnDraftRefresh" class="btn btn-outline btn-sm">목록 새로고침</button><div id="draftCopies" class="draft-copy-list"></div></details>
+                <details id="draftCopyDetails" class="studio-fold studio-draft-library"><summary>저장한 원고</summary><p class="text-muted small">현재 작성본을 한곳에서 확인하세요. 이전 원고와 복구 사본은 펼쳐서 확인할 수 있습니다.</p><button type="button" id="btnDraftRefresh" class="btn btn-outline btn-sm">목록 새로고침</button><div id="draftCopies" class="draft-copy-list"></div></details>
                 <div class="studio-manuscript">
                 <p id="creatorDraftError" role="alert"></p>
                 <div id="draftConflict" hidden role="alert">
@@ -2477,7 +2477,7 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261031r10"></script>
+  <script src="/js/core/role-modules.js?v=20261101r12"></script>
   <script src="/js/core/router.js?v=20261031r4"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
@@ -2557,7 +2557,7 @@
 
   <div class="modal-backdrop" id="modalCreatorPublication" role="dialog" aria-modal="true" aria-labelledby="publicationHeading" hidden>
     <div class="modal-dialog creator-publication-modal">
-      <div class="modal-header"><h3 id="publicationHeading">원고 미리보기·게시</h3><button type="button" class="modal-close" aria-label="게시 화면 닫기">×</button></div>
+      <div class="modal-header"><h3 id="publicationHeading">원고 발행</h3><button type="button" class="modal-close" aria-label="게시 화면 닫기">×</button></div>
       <div class="modal-body">
         <p id="publicationMessage" role="status" aria-live="polite"></p>
         <section id="publicationRetryPanel" hidden aria-label="이전 게시 요청 확인">
@@ -2568,11 +2568,11 @@
           <p id="publicationSummary"></p>
           <div id="publicationChecklist" aria-label="공개 준비 체크리스트"></div>
           <button id="publicationWorkSettings" type="button" class="btn btn-outline" hidden>작품 정보 보완 (원고 저장 후 이동)</button>
-          <div class="creator-editor-actions">
+          <div class="creator-editor-actions" hidden>
             <button type="button" id="publicationDesktop" class="btn btn-outline">PC 폭</button>
             <button type="button" id="publicationMobile" class="btn btn-outline">모바일 폭</button>
           </div>
-          <article id="publicationPreview" class="publication-preview" aria-label="독자 화면 미리보기">
+          <article id="publicationPreview" class="publication-preview" aria-label="독자 화면 미리보기" hidden>
             <h4 id="publicationPreviewTitle"></h4>
             <div id="publicationPreviewBody"></div>
             <div id="publicationPreviewComment"></div>

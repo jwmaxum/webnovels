@@ -7,7 +7,7 @@ function node() {
   return {hidden:false,disabled:false,checked:false,value:'',textContent:'',classList:{add(){},remove(){}},
     children:[],replaceChildren(...items){this.children=items;this.textContent='';},append(...items){this.children.push(...items);}};
 }
-test('preview confirms a saved owner revision; lost publish response retries exact key and payload',async()=>{
+test('compact publication confirms a saved owner revision; lost response retries exact key and payload',async()=>{
   const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,node());return elements.get(id);};
   const radio={value:'NOW',checked:true};
   const document={readyState:'complete',getElementById:get,querySelector:()=>radio,
@@ -32,7 +32,8 @@ test('preview confirms a saved owner revision; lost publish response retries exa
   vm.runInNewContext(await readFile(new URL('../public/js/creator/creator-publications.js',import.meta.url),'utf8'),
     {window,document,sessionStorage,crypto,Date,location:{origin:'https://app.test'},navigator:{}});
   await window.CreatorPublications.open('10');
-  assert.equal(get('publicationPreviewBody').textContent,ctx.snapshot.content);
+  assert.equal(get('publicationPreview').hidden,true);
+  assert.equal(get('publicationPreviewBody').textContent,'');
   assert.match(get('publicationSummary').textContent,/전체 이용가.*AI 사용 안 함.*무료 발행/);
   get('publicationRights').checked=true;
   await Promise.all([get('publicationCommit').onclick(),get('publicationCommit').onclick()]);
