@@ -115,6 +115,24 @@ test('irrelevant kind/source filters do not bleed into another page',()=>{
   assert.deepEqual(Array.from(model.droppedParams),['kind','source']);
 });
 
+test('member detail links keep a profile ID within the selected author or reader tab',()=>{
+  const author=navigation.parse('/admin/authors?accountId=17&q=private%40example.com');
+  assert.equal(author.valid,true);assert.equal(author.kind,'author');assert.equal(author.params.accountId,'17');
+  assert.equal(author.href,'/admin/members?kind=author&accountId=17');assert.equal(author.explicit,true);
+  const readerId='7c45f9df-44f3-4c10-9dfe-7887464bf927';
+  const reader=navigation.parse('/admin/members?kind=reader&accountId='+readerId);
+  assert.equal(reader.valid,true);assert.equal(reader.kind,'reader');assert.equal(reader.params.accountId,readerId);
+  assert.equal(navigation.path(reader),reader.href);
+  const implicit=navigation.parse('/admin/members?accountId=17');
+  assert.equal(implicit.explicit,true,'a selected profile must never fall back to another permitted kind');
+  assert.equal(implicit.kind,'reader');
+  const content=navigation.parse('/admin/content?tab=works&accountId=17');
+  assert.equal(content.href,'/admin/content?tab=works');assert.deepEqual(Array.from(content.droppedParams),['accountId']);
+  assert.equal(navigation.path({group:'content',tab:'works',params:{accountId:'17'}}),'/admin/content?tab=works');
+  for(const id of ['0','-1','not-an-id','9223372036854775808','%3Cscript%3E'])assert.equal(navigation.parse('/admin/members?kind=reader&accountId='+id).valid,false,id);
+  assert.equal(navigation.parse('/admin/members?kind=author&accountId=17&accountId=18').valid,false);
+});
+
 test('explicit alias filters cannot change a legacy route into a different permission source',()=>{
   for(const path of ['/admin/comments?source=CONTENT_REVIEW','/admin/review?source=COMMENT_REPORT','/admin/users?kind=author','/admin/authors?kind=reader','/admin/members?tab=reader&kind=author'])assert.equal(navigation.parse(path).valid,false,path);
   assert.equal(navigation.parse('/admin/comments?source=COMMENT_REPORT').source,'COMMENT_REPORT');

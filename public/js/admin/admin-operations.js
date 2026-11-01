@@ -115,9 +115,16 @@
     const href=navigation.path(value);if(href)return openRoute(href);
     message('필터 형식을 확인해 주세요.');
   }
+  function memberNavigate(options={}){
+    if(!allowed()||page!=='accounts'||options.kind!==kind)return;
+    const href=navigation.path({group:'members',tab:kind,params:options.accountId?{accountId:options.accountId}:{}});
+    if(href)return openRoute(href);
+    message('회원 식별자를 확인해 주세요.');
+  }
   async function render(){
     if(!active()||!root())return;
-    const seq=++turn,user=actor()?.userId,isCurrent=()=>seq===turn&&actor()?.userId===user&&allowed();
+    const seq=++turn,user=actor()?.userId,isCurrent=()=>seq===turn&&actor()?.userId===user&&allowed()&&
+      (!window.currentActiveView||window.currentActiveView==='view-admin-cms');
     shell().hidden=false;
     document.getElementById('view-admin-cms')?.classList.add('stage9-admin');
     renderNav();root().replaceChildren();message('운영 정보를 불러오는 중입니다…');
@@ -143,6 +150,15 @@
       if(page==='beta-operations'){await window.AdminBetaOperations.render(root(),{isCurrent});return;}
       if(page==='virtual-accounts'){await window.VirtualAccounts.render(root());return;}
       if(page==='recovery'){await window.AdminRecovery.render(root(),{offset,isCurrent});return;}
+      if(page==='accounts'&&window.AdminMembers){
+        await window.AdminMembers.render(root(),{kind,accountId:route.params.accountId,isCurrent,
+          onNavigate:options=>{if(isCurrent())return memberNavigate(options);},onUnavailable:async()=>{
+            if(!isCurrent())return;window.AdminMembers.leave();
+            if(window.AdminWorkflow?.active())await window.AdminWorkflow.render(root(),'accounts',{accountKind:kind,offset,isCurrent,onNavigate:workflowNavigate,externalAccountTabs:true});
+            else await window.AdminConsole.render(root(),'accounts',{accountKind:kind,isCurrent,onNavigate:workflowNavigate,externalAccountTabs:true});
+            if(isCurrent())message('확장 회원 관리는 연결 준비 중입니다. 기존 회원 조회를 표시합니다.');
+          }});return;
+      }
       if(window.AdminWorkflow?.active()&&['cases','appeals','accounts','works','curation','audit'].includes(page)){
         await window.AdminWorkflow.render(root(),page,{...(page==='cases'?{source}:{}),...(page==='accounts'?{accountKind:kind}:{}),
           ...(['cases','appeals','accounts','audit'].includes(page)?{offset}:{}),...(page==='audit'?{target:route.params.target}:{}),isCurrent,
@@ -281,6 +297,7 @@
     window.VirtualAccounts?.reset();
     window.AdminConsole?.reset();
     window.AdminWorkflow?.reset();
+    window.AdminMembers?.leave();
   }
   function openRoute(input,shouldPushState=true){
     if(!active())return legacySwitch?.(String(input).split(/[/?]/).filter(Boolean).pop()||'dashboard',shouldPushState);
@@ -319,6 +336,7 @@
   window.switchAdminSubTab=(tab,shouldPush)=>navigate(tab,shouldPush);
   window.loadAdminDashboard=()=>active()?openRoute(/^\/admin(?:\/|$)/.test(location.pathname)?location.pathname+(location.search||''):'/admin',false):legacyDashboard?.();
   window.AdminOperations=Object.freeze({active,api,navigate,openRoute,refresh:render,reset(){turn++;route=null;clearModules();
+    window.AdminMembers?.reset();
     if(root())root().replaceChildren();document.getElementById('adminOperationsNav')?.replaceChildren();
     for(const id of ['adminSectionTabs','adminBreadcrumbs','adminGlobalSearchResults'])document.getElementById(id)?.replaceChildren();
     for(const id of ['adminWorkspaceHeading','adminWorkspaceDescription']){const node=document.getElementById(id);if(node)node.textContent='';}

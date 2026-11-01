@@ -7,6 +7,12 @@ const scope = require('./lib/launch-backup-scope.cjs');
 const quote = value => '"' + value.replaceAll('"', '""') + '"';
 const literal = value => "'" + value.replaceAll("'", "''") + "'";
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
+// Keep sequence bigint configuration exact across the API's JSON/JavaScript boundary.
+// Application rows are already JSON text; catalog integers need the same protection.
+const sequenceSnapshotSql = `select jsonb_agg(to_jsonb(s) || jsonb_build_object(
+  'start_value',s.start_value::text,'min_value',s.min_value::text,'max_value',s.max_value::text,
+  'increment_by',s.increment_by::text,'cache_size',s.cache_size::text,'last_value',s.last_value::text))
+  from pg_sequences s where schemaname in (${scope.schemaSql})`;
 
 async function query(sql) {
   const env = loadEnv(), { ref } = connection(env);
@@ -51,7 +57,7 @@ async function main() {
       join pg_class c on c.oid=co.conrelid join pg_namespace n on n.oid=c.relnamespace
       where n.nspname in (${scope.schemaSql})),
     'indexes',(select jsonb_agg(to_jsonb(i)) from pg_indexes i where schemaname in (${scope.schemaSql})),
-    'sequences',(select jsonb_agg(to_jsonb(s)) from pg_sequences s where schemaname in (${scope.schemaSql})),
+    'sequences',(${sequenceSnapshotSql}),
     'policies',(select jsonb_agg(to_jsonb(p)) from pg_policies p where schemaname in (${scope.schemaSql})),
     'views',(select jsonb_agg(to_jsonb(v)) from pg_views v where schemaname in (${scope.schemaSql})),
     'functions',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'signature',p.oid::regprocedure::text,
@@ -93,4 +99,4 @@ async function main() {
   console.log(JSON.stringify({ directory, ...report }, null, 2));
 }
 if (require.main === module) main().catch(error => { console.error(/^BACKUP_|^UNSUPPORTED_|^SCHEMA_/.test(error.message) ? error.message : 'BACKUP_FAILED_DETAILS_WITHHELD'); process.exitCode = 1; });
-module.exports = { query, quote, literal, hash };
+module.exports = { query, quote, literal, hash, sequenceSnapshotSql };

@@ -1,0 +1,221 @@
+{
+  "stage": "OP-02",
+  "checkedAt": "2026-11-01T07:30:31.605Z",
+  "baseCommit": "b78e8ab1239fedf45cf5d513be5d2ac87a3f3f41",
+  "scope": [
+    "Separate author and reader searches, filters, paging and details",
+    "Body-only exact email search for permitted administrators with masked output",
+    "Highest-admin public name/bio revision, reason, audit and exact idempotent retry",
+    "Per-source support/publication/settlement/audit permission boundaries",
+    "Safe existing inventory fallback when new directory is unavailable",
+    "Lossless bigint sequence metadata in logical backup JSON"
+  ],
+  "validation": {
+    "stage": "OP-02",
+    "startedAt": "2026-11-01T06:50:16.960Z",
+    "completedAt": "2026-11-01T07:01:51.423Z",
+    "steps": [
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op02",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op01",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:auth",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:naming",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:p0",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:launch",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage17",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:admin-operations",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage35",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage36",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r5",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r6",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r7",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r13",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "expectedCommands": 17,
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "browser": "NOT_RUN",
+    "database": "LOCAL_SYNTHETIC_ONLY",
+    "supplement": {
+      "checkedAt": "2026-11-01T07:25:41.892Z",
+      "steps": [
+        {
+          "command": "test:op02",
+          "exitCode": 0
+        },
+        {
+          "command": "test:op01",
+          "exitCode": 0
+        }
+      ],
+      "exitCode": 0
+    },
+    "newTests": 59,
+    "op01RegressionTests": 35,
+    "backupRegression": {
+      "command": "node --test scripts/verify_stage23_backup.test.mjs scripts/verify_op02_backup_precision.test.mjs",
+      "exitCode": 0,
+      "tests": 4
+    },
+    "independentReview": "Support/publication-source permission widening fixed and tested in SQL and API; legacy and uppercase reader IDs covered; no remaining blocking source-review finding",
+    "security": {
+      "syntaxFiles": 17,
+      "syntaxPassed": true,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "userChangesPreserved": true
+    }
+  },
+  "production": {
+    "schemaApplied": true,
+    "appliedAt": "2026-11-01T07:24:28.964Z",
+    "originalRowsAndCatalogsPreserved": true,
+    "sourceTablesVerified": 168,
+    "sourceRowsVerified": 2343,
+    "addedTables": [
+      "launch_recovery.member_profile_revisions",
+      "launch_recovery.member_profile_receipts"
+    ],
+    "addedFunctions": [
+      "launch_recovery.member_profile_changed()",
+      "launch_recovery.member_directory_meta(text,jsonb,jsonb,boolean,boolean,boolean,boolean)",
+      "public.admin_member_directory(uuid,text,jsonb)"
+    ],
+    "addedTriggers": [
+      {
+        "schema": "public",
+        "table": "authors",
+        "name": "member_public_profile_changed"
+      },
+      {
+        "schema": "public",
+        "table": "readers",
+        "name": "member_public_profile_changed"
+      }
+    ],
+    "existingFunctionChanges": 0,
+    "newSequences": 0,
+    "explicitSourceGuards": true,
+    "userApprovedLocalBackup": true,
+    "nativeArchiveVerified": true,
+    "backupMetadataBigintsPreserved": true,
+    "actualServiceRead": {
+      "checkedAt": "2026-11-01T07:25:42.347Z",
+      "actualServiceRestReady": true,
+      "activeAdminMappingVerified": true,
+      "results": [
+        {
+          "kind": "author",
+          "total": 1,
+          "listPassed": true,
+          "detailPassed": true
+        },
+        {
+          "kind": "reader",
+          "total": 0,
+          "listPassed": true,
+          "detailPassed": null
+        }
+      ],
+      "privileges": {
+        "anon_denied": true,
+        "authenticated_denied": true,
+        "service_allowed": true,
+        "triggers_active": true,
+        "private_receipts_denied": true,
+        "private_revisions_denied": true
+      },
+      "anonRestDenied": true,
+      "productionProfilesEdited": false,
+      "financialDataChanged": false,
+      "browser": "NOT_RUN"
+    },
+    "profilesEdited": false,
+    "authMappingsChanged": false,
+    "financialDataChanged": false,
+    "featureFlagsChanged": false,
+    "paymentPassPrivacyCollectionUnchanged": true
+  },
+  "readiness": {
+    "payments": "NOT_CONNECTED",
+    "paidReaderAndVerifiedBalanceFilters": false,
+    "readerProductionDetail": "NOT_RUN_NO_READER_RECORDS",
+    "profileEditAcceptance": "SYNTHETIC_DB_AND_VM_ONLY",
+    "browser": "NOT_RUN",
+    "physicalDevice": "NOT_RUN",
+    "hostedFullRestore": "NOT_ACCEPTED"
+  },
+  "gitAndDelivery": "Normal main push; CI and Cloudflare delivery status checked separately after push",
+  "nextStage": "OP-03: admin-selected recommendation and display CMS with ordering, publication windows and reader preview; actual financial ledgers remain OP-04/05/07"
+}

@@ -28,7 +28,7 @@
   };
   const targets=/^(?:WORK|EPISODE|AUTHOR|READER|APPEAL|CONTENT_REVIEW|COMMENT_REPORT|REPORT|author|reader):(.+)$/;
   const filters=Object.freeze({
-    source,kind:value=>['reader','author'].includes(value),caseId:identifier,workId:value=>decimal(value)&&value!=='0',episodeId:value=>decimal(value)&&value!=='0',changeId:identifier,
+    source,kind:value=>['reader','author'].includes(value),accountId:identifier,caseId:identifier,workId:value=>decimal(value)&&value!=='0',episodeId:value=>decimal(value)&&value!=='0',changeId:identifier,
     target:value=>{const match=value.match(targets);return !!match&&identifier(match[1]);},
     offset:value=>/^(0|[1-9][0-9]{0,5})$/.test(value)&&Number(value)<=100000,status:value=>/^[A-Z][A-Z0-9_]{0,39}$/.test(value),
     priority:value=>['LOW','NORMAL','HIGH','URGENT'].includes(value),assignee:value=>uuid.test(value)||['all','me','unassigned','UNASSIGNED'].includes(value),after:date,before:date,at:date
@@ -51,9 +51,10 @@
     if(tab.page==='cases')params.set('source',model.source||model.params?.source||'CONTENT_REVIEW');
     for(const key of Object.keys(filters)){
       if(key==='kind'||key==='source')continue;
+      if(key==='accountId'&&group.key!=='members')continue;
       if(!model.params||!Object.hasOwn(model.params,key))continue;
       const value=model.params[key];if(value===undefined)continue;
-      if(typeof value!=='string'||!filters[key](value))return null;params.set(key,value);
+      if(typeof value!=='string'||!filters[key](value))return null;params.set(key,key==='accountId'?value.toLowerCase():value);
     }
     if(tab.page==='cases'&&!source(params.get('source')))return null;
     const query=params.toString();return (group.key==='home'?'/admin':'/admin/'+group.key)+(query?'?'+query:'');
@@ -82,12 +83,15 @@
       if(value.length>200||!filters[name](value))return failure();params[name]=value;
     }
     if(group.key!=='members'&&params.kind){delete params.kind;dropped.push('kind');}
+    if(group.key!=='members'&&params.accountId){delete params.accountId;dropped.push('accountId');}
     if(group.key==='members'){
+      if(params.accountId)params.accountId=params.accountId.toLowerCase();
       if(params.kind){
         if(kind&&kind!==params.kind||url.searchParams.has('tab')&&tabKey!==params.kind)return failure();
         tabKey=params.kind;explicit=true;
       }
       kind=tabKey;params.kind=kind;
+      if(params.accountId)explicit=true;
     }
     const tab=tabFor(group,tabKey);if(!tab)return failure();
     if(forcedSource&&params.source&&params.source!==forcedSource)return failure();

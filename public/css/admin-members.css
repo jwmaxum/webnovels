@@ -1,0 +1,41 @@
+/* OP-02: member lists stay scoped to the administrator workspace. */
+#view-admin-cms .admin-members { min-width: 0; color: var(--text-primary); }
+#view-admin-cms .admin-members [hidden] { display: none !important; }
+#view-admin-cms .admin-members :is(h3, h4, h5) { color: var(--text-strong); line-height: 1.6; }
+#view-admin-cms .members-search { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-block: 20px; padding: 18px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-subtle); }
+#view-admin-cms .members-field { display: grid; min-width: 0; gap: 6px; margin: 0; color: var(--text-primary); font-size: 14px; font-weight: 650; }
+#view-admin-cms .members-field :is(input, select, textarea) { min-width: 0; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--bg-elevated); color: var(--text-primary); font: inherit; font-size: 16px; font-weight: 400; }
+#view-admin-cms .members-field textarea { min-height: 100px; resize: vertical; }
+#view-admin-cms .members-field :is(input, select, textarea):disabled { background: var(--bg-base); color: var(--text-secondary); opacity: 1; }
+#view-admin-cms .members-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+#view-admin-cms .members-actions :is(a, button) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; max-width: 100%; font: inherit; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+#view-admin-cms .members-search > :is(.members-actions, .members-hint) { grid-column: 1 / -1; }
+#view-admin-cms .members-hint { margin: 0; color: var(--text-secondary); font-size: 13px; font-weight: 400; line-height: 1.8; overflow-wrap: anywhere; }
+#view-admin-cms .members-status { color: var(--text-primary); font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+#view-admin-cms .members-table-wrap { max-width: 100%; overflow-x: auto; margin-block: 20px; }
+#view-admin-cms .members-table { width: 100%; border-collapse: collapse; color: var(--text-primary); font-size: 14px; line-height: 1.7; }
+#view-admin-cms .members-table caption { padding-block: 8px; color: var(--text-strong); font-weight: 650; text-align: left; }
+#view-admin-cms .members-table :is(th, td) { min-width: 110px; padding: 12px; border-bottom: 1px solid var(--border-default); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+#view-admin-cms .members-table th { background: var(--bg-subtle); color: var(--text-strong); font-weight: 700; }
+#view-admin-cms .members-table td :is(button, a) { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+#view-admin-cms .members-table td :is(p, small) { display: block; margin-block: 6px; color: var(--text-secondary); overflow-wrap: anywhere; }
+#view-admin-cms .members-detail { margin-top: 28px; padding: 20px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--bg-elevated); }
+#view-admin-cms .members-detail > section { padding-block: 16px; border-top: 1px solid var(--border-default); }
+#view-admin-cms .members-values { display: grid; grid-template-columns: minmax(100px, 150px) minmax(0, 1fr); gap: 10px 16px; font-size: 14px; line-height: 1.8; }
+#view-admin-cms .members-values dt { color: var(--text-secondary); font-weight: 650; }
+#view-admin-cms .members-values dd { min-width: 0; margin: 0; color: var(--text-primary); overflow-wrap: anywhere; }
+#view-admin-cms .members-request { margin-block: 10px; padding: 12px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--bg-subtle); overflow-wrap: anywhere; }
+#view-admin-cms .members-request p { margin-block: 4px; }
+#view-admin-cms .members-edit { margin-block: 16px; padding: 14px; border: 1px solid var(--border-default); border-radius: 8px; }
+#view-admin-cms .members-edit summary { display: list-item; min-height: 44px; padding-block: 10px; color: var(--text-strong); font-weight: 650; cursor: pointer; }
+#view-admin-cms .members-edit-form { display: grid; gap: 14px; margin-top: 14px; }
+#view-admin-cms .admin-members :is(button, a, input, select, textarea, summary):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+#view-admin-cms .admin-members:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+#view-admin-cms .members-detail:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+@media (max-width: 600px) {
+  #view-admin-cms .members-search { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  #view-admin-cms .members-detail { padding: 14px; }
+  #view-admin-cms .members-values { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  #view-admin-cms .members-values dd { margin-bottom: 12px; }
+  #view-admin-cms .members-actions :is(button, a) { flex: 1 1 140px; }
+}
