@@ -51,6 +51,8 @@
   <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
   <link rel="stylesheet" href="/css/admin-shell.css?v=20261101op01">
   <link rel="stylesheet" href="/css/admin-members.css?v=20261101op02">
+  <link rel="stylesheet" href="/css/admin-display.css?v=20261101op03">
+  <link rel="stylesheet" href="/css/reader-display.css?v=20261101op03">
   <link rel="stylesheet" href="/css/settlement.css?v=20261101r13">
 </head>
 <body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
@@ -72,19 +74,20 @@
         <!-- 1. 주요 메뉴 -->
         <div class="sidebar-nav-group">
           <div class="sidebar-group-label">주요 메뉴</div>
-          <button type="button" class="sidebar-nav-item active" data-side-target="view-home" onclick="switchWebNovelsView('view-home')">
+          <button type="button" class="sidebar-nav-item active" data-side-target="view-home" data-reader-route="home" onclick="switchWebNovelsView('view-home')">
             <i data-lucide="home" class="sidebar-nav-icon"></i>
             <span>홈</span>
           </button>
-          <button type="button" class="sidebar-nav-item" data-side-target="view-novel" onclick="openNovelFilterHome()">
+          <button type="button" class="sidebar-nav-item" data-side-target="view-novel" data-reader-route="novel" onclick="openNovelFilterHome()">
             <i data-lucide="book-open" class="sidebar-nav-icon"></i>
             <span>웹소설</span>
           </button>
-          <button type="button" class="sidebar-nav-item" data-side-target="view-webtoon" onclick="openWebtoonFilterHome()">
+          <button type="button" class="sidebar-nav-item" data-side-target="view-webtoon" data-reader-route="webtoon" onclick="openWebtoonFilterHome()">
             <i data-lucide="palette" class="sidebar-nav-icon"></i>
             <span>웹툰</span>
           </button>
-          <button type="button" class="sidebar-nav-item" data-side-target="view-ranking" onclick="scrollToSection('trendingWorksSection')">
+          <button type="button" class="sidebar-nav-item" data-side-target="view-recommendations" data-reader-route="recommendations" onclick="navigateTo('/recommendations')"><i data-lucide="star" class="sidebar-nav-icon" aria-hidden="true"></i><span>추천</span></button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-ranking" data-reader-route="ranking" onclick="navigateTo('/discover?sort=popular')">
             <i data-lucide="trophy" class="sidebar-nav-icon"></i>
             <span>랭킹</span>
           </button>
@@ -194,6 +197,7 @@
           <a href="/home" data-reader-route="home" aria-current="page" onclick="return handleReaderRouteClick(event)">홈</a>
           <a href="/discover?type=NOVEL" data-reader-route="novel" onclick="return handleReaderRouteClick(event)">웹소설</a>
           <a href="/discover?type=WEBTOON" data-reader-route="webtoon" onclick="return handleReaderRouteClick(event)">웹툰</a>
+          <a href="/recommendations" data-reader-route="recommendations" onclick="return handleReaderRouteClick(event)">추천</a>
           <a href="/discover?sort=popular" data-reader-route="ranking" onclick="return handleReaderRouteClick(event)">랭킹</a>
           <a href="/discover?sort=new" data-reader-route="new" onclick="return handleReaderRouteClick(event)">신작</a>
           <a href="/discover?status=COMPLETED" data-reader-route="completed" onclick="return handleReaderRouteClick(event)">완결</a>
@@ -236,6 +240,7 @@
             </div>
           </div>
 
+          <div id="readerDisplayHome" aria-label="관리자 선정 추천과 홈 구성"></div>
           <!-- 1. HERO / Featured Works Carousel -->
           <div class="cdg-hero-container" id="heroFeaturedSection" hidden>
             <h2 class="cdg-section-title">편집 추천</h2>
@@ -350,6 +355,9 @@
       </section>
 
       <!-- View 2: Discover View (design.md Section 20) -->
+      <section id="view-recommendations" class="main-view">
+        <div class="container section-padding"><div id="readerRecommendationsContent" role="region" aria-label="관리자 선정 추천 작품" tabindex="-1"></div></div>
+      </section>
       <section id="view-discover" class="main-view">
         <div class="container section-padding">
           <div class="section-header discover-header">
@@ -1603,6 +1611,7 @@
 
     </main>
     <footer class="legal-footer" aria-label="사업자정보">
+      <p id="readerDisplayFooterNote" hidden></p>
       <nav aria-label="정책 바로가기"><a href="/company/">회사정보</a><a href="/policies/terms/">이용약관</a><a href="/policies/refund/">환불정책</a><a href="/policies/settlement/">정산 정보·서류 확인</a></nav>
       <p><strong>(주)얼토당토</strong> · 대표이사 성재원 · 사업자등록번호 555-81-02749</p>
       <address>서울특별시 송파구 중대로 192, 201-18호</address>
@@ -2481,6 +2490,7 @@
           <i data-lucide="bookmark" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">내 서재</span>
         </a>
+        <a href="/recommendations" class="bottom-nav-item" data-target="view-recommendations" data-reader-route="recommendations" id="bnavRecommendations" onclick="return handleReaderRouteClick(event)"><i data-lucide="star" class="bottom-nav-icon" aria-hidden="true"></i><span class="bottom-nav-label">추천</span></a>
         <button type="button" class="bottom-nav-item" id="bnavMore" onclick="openMobileMoreModal(event)">
           <i data-lucide="user-round" class="bottom-nav-icon"></i>
           <span class="bottom-nav-label">내 정보</span>
@@ -2493,17 +2503,18 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261101op02b"></script>
-  <script src="/js/core/router.js?v=20261101op02"></script>
+  <script src="/js/core/role-modules.js?v=20261101op03"></script>
+  <script src="/js/core/router.js?v=20261101op03"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
   <script src="/js/reader/reader-content.js?v=124"></script>
   <script src="/js/reader/reader-catalog.js?v=117"></script>
-  <script src="/js/reader/reader-discovery.js?v=20261031r4"></script>
+  <script src="/js/reader/reader-display.js?v=20261101op03"></script>
+  <script src="/js/reader/reader-discovery.js?v=20261101op03"></script>
   <script src="/js/reader/reader-webtoon.js?v=20261031r10"></script>
   <script src="/js/reader/reader-position.js?v=20261031r4"></script>
   <script src="/js/reader/reader-fonts.js?v=20261031r8"></script>
-  <script src="/js/reader/reader.js?v=20261031r10"></script>
+  <script src="/js/reader/reader.js?v=20261101op03"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>

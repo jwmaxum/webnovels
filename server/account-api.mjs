@@ -8,6 +8,7 @@ import {betaSupportApi} from './beta-support-api.mjs';
 import {betaOperationsApi} from './beta-operations.mjs';
 import {authorSettlementApi} from './author-settlement-api.mjs';
 import {adminMembersApi} from './admin-members-api.mjs';
+import {siteDisplayAdminApi,siteDisplayPublicApi} from './site-display-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch}={}) {
@@ -16,7 +17,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
   const workspace=env.P0_API_ENABLED!=='true'&&/^\/api\/v2\/creator\/(works|drafts)(\/|$)/.test(path);
   const dashboard=path==='/api/v2/creator/dashboard';
   const settlement=/^\/api\/v2\/(?:creator\/settlement(?:\/|$)|admin\/settlements\/identity(?:\/|$))/.test(path);
-  if(!me&&!workspace&&!dashboard&&!settlement&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
+  if(!me&&!workspace&&!dashboard&&!settlement&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
@@ -45,6 +46,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
       return data;
     };
     if(await rpc('launch_accounts_ready')!==true)fail(503,'ACCOUNT_SERVICE_NOT_ACTIVATED');
+    if(path==='/api/v2/display')return reply(await siteDisplayPublicApi({request,rpc,fail}));
     const workspaceReady=async()=>{
       if(env.AUTHOR_WORKSPACE_DISABLED==='true')return false;
       try{return await rpc('launch_author_workspace_ready')===true;}catch{return false;}
@@ -75,6 +77,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
     if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));
     if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail,env}));
     if(path==='/api/v2/admin/members')return reply(await adminMembersApi({request,user,actor,rpc,fail}));
+    if(path==='/api/v2/admin/display')return reply(await siteDisplayAdminApi({request,user,actor,rpc,fail}));
     if(path==='/api/v2/admin/providers')return reply(await providerSettingsApi({request,user,actor,remote,rpc,fail,env}));
     if(path==='/api/v2/support'||path==='/api/v2/admin/support')return reply(await betaSupportApi({request,user,actor,rpc,fail,env}));
     if(path==='/api/v2/admin/beta-operations')return reply(await betaOperationsApi({request,user,actor,rpc,fail,env}));

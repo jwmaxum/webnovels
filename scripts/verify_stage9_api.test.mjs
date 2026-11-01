@@ -9,7 +9,7 @@ async function invoke(path,{method='GET',data,identity=who,flag='true',roleFlag=
   const request=new Request('https://example.test'+path,{method,
     ...(data?{headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
   const result=await stage9Api({request,env:{ADMIN_OPERATIONS_ENABLED:flag,ADMIN_ROLE_CHANGES_ENABLED:roleFlag},actor:async()=>identity,
-    db:async(route,query,options)=>{calls.push({route,options});return {works:[]};},
+    db:async(route,query,options)=>{calls.push({route,options});return route==='rpc/site_display_ready'?false:{works:[]};},
     readBody:async()=>data,fail});
   return {result,calls};
 }
@@ -32,7 +32,7 @@ test('case source and mutation fields are fixed before service RPC',async()=>{
     data:{workId:'10',version:'1',decision:'RESTRICT',reason:'정책 위반'}}),{code:'ORIGIN_REQUIRED'});
   const mutation=await invoke('/api/v2/admin/operations?action=curate',{method:'POST',data:{
     workId:'10',version:'1',flag:'is_top_recommended',enabled:true,reason:'편집 선정'}});
-  assert.equal(mutation.calls[0].options.body.p_action,'curate');
+  assert.equal(mutation.calls[0].route,'rpc/site_display_ready');assert.equal(mutation.calls.find(call=>call.route==='rpc/stage9_admin').options.body.p_action,'curate');
   await assert.rejects(invoke('/api/v2/admin/operations?action=role-update',{method:'POST',data:{
     adminId:'33333333-3333-4333-8333-333333333333',permissions:['CONTENT_WRITE'],reason:'권한 변경'}}),
   {code:'INVALID_PERMISSIONS'});

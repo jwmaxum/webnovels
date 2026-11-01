@@ -22,6 +22,7 @@
       if(renderCell)renderCell(cell,item);else cell.textContent=String(value(item)??'—');}}
   }
   function curationEditor(cell,work,valid){
+    if(window.AdminDisplay){const open=button(cell,'추천·전시 CMS 열기',()=>{if(valid())window.AdminOperations?.navigate('curation');});open.setAttribute('aria-label',work.title+' 추천·전시 관리');return;}
     if(!can('CURATION_WRITE')){el(cell,'span',[work.is_top_recommended?'추천':'',work.is_popular_work?'인기':'',work.is_new_work?'신작':''].filter(Boolean).join(' · ')||'없음');el(cell,'small','조회 전용 · 홈 큐레이션 권한 필요');return;}
     const fields=[['is_top_recommended','추천'],['is_popular_work','인기'],['is_new_work','신작']];
     const form=el(cell,'form',null,'cms-curation'),choices=el(form,'div',null,'cms-curation-options');

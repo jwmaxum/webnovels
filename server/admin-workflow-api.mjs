@@ -1,5 +1,6 @@
 import {publicationChangeApi} from './publication-change-api.mjs';
 import {adminRecoveryApi} from './admin-recovery-api.mjs';
+import {siteDisplayInstalled} from './site-display-readiness.mjs';
 // Administrator workflow boundary. Identity and permissions are checked again inside the RPC.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const decimal=(value,zero=false)=>typeof value==='string' && (zero?/^(0|[1-9]\d{0,18})$/:/^[1-9]\d{0,18}$/).test(value) && BigInt(value)<=9223372036854775807n;
@@ -29,6 +30,7 @@ export async function adminWorkflowApi({request,env,actor,db,readBody,fail,fetch
   for(const key of url.searchParams.keys())if(!allowed.includes(key)||url.searchParams.getAll(key).length!==1)fail(400,'INVALID_QUERY');
   const who=await actor();
   if(!who.admin?.is_active||!['SUPER_ADMIN','ADMIN','SUB_ADMIN'].includes(who.admin.role))fail(403,'ADMIN_REQUIRED');
+  if(action==='curation-save'&&await siteDisplayInstalled((name,body)=>db('rpc/'+name,{}, {method:'POST',body})))fail(409,'SITE_DISPLAY_REQUIRED');
   let data={};
   if(write) {
     if(request.headers.get('origin')!==url.origin)fail(403,'ORIGIN_REQUIRED');

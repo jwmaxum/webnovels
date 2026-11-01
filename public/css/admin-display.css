@@ -1,0 +1,48 @@
+/* OP-03: structured, administrator-selected display controls. */
+#view-admin-cms .admin-display { min-width: 0; color: var(--text-primary); }
+#view-admin-cms .admin-display [hidden] { display: none !important; }
+#view-admin-cms .admin-display :is(h3, h4, h5) { margin-block: 0 12px; color: var(--text-strong); line-height: 1.6; }
+#view-admin-cms .display-status { margin-block: 8px 16px; color: var(--text-primary); font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+#view-admin-cms .display-hint { margin-block: 6px 12px; color: var(--text-secondary); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+#view-admin-cms .display-panel { min-width: 0; margin-block: 18px; padding: 18px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-elevated); }
+#view-admin-cms .display-editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; min-width: 0; }
+#view-admin-cms .display-editor-grid > * { min-width: 0; }
+#view-admin-cms .display-form { display: grid; gap: 14px; min-width: 0; }
+#view-admin-cms .display-field { display: grid; min-width: 0; gap: 6px; margin: 0; color: var(--text-primary); font-size: 14px; font-weight: 650; }
+#view-admin-cms .display-field :is(input, select, textarea) { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--bg-elevated); color: var(--text-primary); font: inherit; font-size: 16px; font-weight: 400; }
+#view-admin-cms .display-field textarea { min-height: 96px; resize: vertical; }
+#view-admin-cms .display-field :is(input, select, textarea):disabled { background: var(--bg-base); color: var(--text-secondary); opacity: 1; }
+#view-admin-cms .display-check { display: flex; align-items: center; min-height: 44px; gap: 10px; font-size: 14px; line-height: 1.7; }
+#view-admin-cms .display-check input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--selected-fg); }
+#view-admin-cms .display-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+#view-admin-cms .display-actions :is(button, a), #view-admin-cms .admin-display > button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; max-width: 100%; font: inherit; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+#view-admin-cms .display-work-list, #view-admin-cms .display-selected { display: grid; gap: 12px; margin: 14px 0; padding: 0; list-style: none; }
+#view-admin-cms .display-work { min-width: 0; padding: 14px; border: 1px solid var(--border-default); border-radius: 9px; background: var(--bg-subtle); overflow-wrap: anywhere; }
+#view-admin-cms .display-work-summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+#view-admin-cms .display-work-summary p { margin-block: 4px; line-height: 1.7; }
+#view-admin-cms .display-work-summary strong { color: var(--text-strong); }
+#view-admin-cms .display-selected .display-form { margin-top: 12px; }
+#view-admin-cms .display-order { color: var(--selected-fg); font-size: 14px; font-weight: 700; }
+#view-admin-cms .display-details { margin-block: 14px; border: 1px solid var(--border-default); border-radius: 9px; background: var(--bg-elevated); }
+#view-admin-cms .display-details > summary { display: list-item; min-height: 44px; padding: 12px 16px; color: var(--text-strong); font-weight: 650; line-height: 1.7; cursor: pointer; }
+#view-admin-cms .display-details > :not(summary) { margin-inline: 16px; margin-bottom: 16px; }
+#view-admin-cms .display-preview { margin-top: 20px; padding: 18px; border: 2px solid var(--selected-fg); border-radius: 10px; background: var(--bg-elevated); }
+#view-admin-cms .display-preview :is(p, li) { line-height: 1.8; overflow-wrap: anywhere; }
+#view-admin-cms .display-values { display: grid; grid-template-columns: minmax(100px, 150px) minmax(0, 1fr); gap: 8px 16px; margin-block: 12px; font-size: 14px; line-height: 1.8; }
+#view-admin-cms .display-values dt { color: var(--text-secondary); font-weight: 650; }
+#view-admin-cms .display-values dd { min-width: 0; margin: 0; color: var(--text-primary); overflow-wrap: anywhere; }
+#view-admin-cms .display-notice { white-space: pre-wrap; overflow-wrap: anywhere; }
+#view-admin-cms .display-required-links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-block: 12px; }
+#view-admin-cms .display-required-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--link-color); text-decoration: underline; text-underline-offset: 3px; }
+#view-admin-cms .admin-display :is(button, a, input, select, textarea, summary):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+#view-admin-cms .admin-display:focus-visible, #view-admin-cms .display-preview:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+#view-admin-cms .display-selected .display-work:focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+@media (max-width: 800px) {
+  #view-admin-cms .display-editor-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  #view-admin-cms .display-panel, #view-admin-cms .display-preview { padding: 12px; }
+  #view-admin-cms .display-values { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  #view-admin-cms .display-values dd { margin-bottom: 12px; }
+  #view-admin-cms .display-actions :is(button, a) { flex: 1 1 140px; }
+}

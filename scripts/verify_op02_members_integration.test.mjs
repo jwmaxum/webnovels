@@ -47,10 +47,10 @@ test('OP-02 assets retain compatibility ordering and native separate member dest
   const attr=(node,key)=>node.attrs?.find(item=>item.name===key)?.value;
   const styles=all.filter(node=>node.tagName==='link').map(node=>attr(node,'href'));
   assert(styles.indexOf('/css/admin-members.css?v=20261101op02')>styles.indexOf('/css/admin-shell.css?v=20261101op01'));
-  for(const name of ['admin-navigation','admin-members','admin-operations'])assert(loader.includes('/js/admin/'+name+'.js?v='+(name==='admin-navigation'?'20261101op02':'20261101op02b')));
+  for(const name of ['admin-navigation','admin-members','admin-operations'])assert(loader.includes('/js/admin/'+name+'.js?v='+(name==='admin-navigation'?'20261101op02':name==='admin-operations'?'20261101op03':'20261101op02b')));
   assert(loader.indexOf('/admin-navigation.js?')<loader.indexOf('/admin-members.js?'));
   assert(loader.indexOf('/admin-members.js?')<loader.indexOf('/admin-operations.js?'));
-  for(const name of ['role-modules','router'])assert(html.includes('/js/core/'+name+'.js?v='+(name==='role-modules'?'20261101op02b':'20261101op02')));
+  for(const name of ['role-modules','router'])assert(html.includes('/js/core/'+name+'.js?v=20261101op03'));
   const navigation={window:{location:{origin:'https://webnovels.uk'}},URL,URLSearchParams};vm.runInNewContext(sources['admin-navigation'],navigation);
   const memberGroup=navigation.window.AdminNavigation.groups(()=>true).find(group=>group.key==='members');
   assert.deepEqual(Array.from(memberGroup.tabs,item=>[item.kind,item.href]),[['reader','/admin/members?kind=reader'],['author','/admin/members?kind=author']]);

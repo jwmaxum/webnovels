@@ -1,0 +1,49 @@
+/* OP-03 public display surfaces reuse the established light theme roles. */
+#view-home .reader-display-home { min-width: 0; }
+#view-home.reader-display-owned :is(#heroFeaturedSection, #editorialSpotlightSection, #genreRecSection, #goldenBestSection, #todayFreeSection, #newWorksSection, #completedWorksSection, #growthHome) { display: none !important; }
+#view-home .reader-display-home [hidden], #view-recommendations [hidden] { display: none !important; }
+#view-home .reader-display-block { margin: 0 0 36px; min-width: 0; }
+#view-home .reader-display-block > .cdg-section { padding: 0; margin: 0 0 36px; }
+#view-home .reader-display-block > .cdg-section:last-child { margin-bottom: 0; }
+#view-home .reader-display-heading { margin: 0 0 16px; color: var(--text-strong); font-size: clamp(20px, 2vw, 26px); line-height: 1.45; }
+#view-home .reader-display-section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+#view-home .reader-display-section-head .reader-display-heading { margin: 0; }
+#view-recommendations { max-width: 1280px; margin: 0 auto; padding: 32px 24px 48px; }
+#view-recommendations #readerRecommendationsContent { min-width: 0; outline-offset: 4px; }
+#view-recommendations .reader-display-intro { margin: 0 0 20px; color: var(--text-secondary); line-height: 1.7; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px 16px; min-width: 0; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-grid > :is(p, button, a.btn) { grid-column: 1 / -1; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-card { display: block; min-width: 0; color: var(--text-primary); text-decoration: none; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-cover { aspect-ratio: 2 / 3; border: 1px solid var(--border-default); border-radius: 8px; overflow: hidden; background: var(--bg-subtle); }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-cover-placeholder { display: flex; justify-content: center; align-items: center; height: 100%; min-height: 96px; padding: 12px; color: var(--text-secondary); text-align: center; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-info { padding-top: 12px; overflow-wrap: anywhere; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-info h3 { margin: 6px 0; color: var(--text-strong); font-size: 16px; line-height: 1.5; font-weight: 650; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-card:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-info p { margin: 6px 0; font-size: 14px; line-height: 1.6; }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-kind { color: var(--selected-fg); font-size: 13px; }
+:is(#view-home, #view-recommendations, #view-reader) :is(.reader-display-author, .reader-display-meta) { color: var(--text-secondary); }
+#view-home .reader-display-hero-card { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 24px; }
+#view-home .reader-display-hero-card .reader-display-info h3 { font-size: clamp(22px, 3vw, 28px); }
+#view-home .reader-display-hero-card .reader-display-info { padding: 0; }
+#view-home .reader-display-notice { border: 1px solid var(--border-default); background: var(--bg-elevated); padding: 16px; border-radius: 8px; margin-bottom: 12px; }
+#view-home .reader-display-notice h3 { margin: 0 0 8px; color: var(--text-strong); font-size: 17px; }
+#view-home .reader-display-notice p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; color: var(--text-primary); }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-status { color: var(--text-secondary); line-height: 1.7; }
+#view-recommendations :is(.reader-display-filters, .reader-display-pager) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 24px; }
+:is(#view-home, #view-recommendations, #view-reader) :is(.reader-display-block .btn, .reader-display-filters .btn, .reader-display-pager .btn, .reader-display-status + button) { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; white-space: normal; }
+#view-recommendations .reader-display-filters [aria-current="page"] { background: var(--selected-bg); color: var(--selected-fg); border-color: var(--selected-fg); }
+:is(#view-home, #view-recommendations, #view-reader) .reader-display-card:focus-visible,
+:is(#view-home, #view-recommendations, #view-reader) :is(.reader-display-block .btn, .reader-display-filters .btn, .reader-display-pager .btn):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 4px; }
+#view-reader #readerRecommendGrid .reader-display-card { width: auto; max-width: none; }
+.legal-footer #readerDisplayFooterNote { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 1000px) {
+  :is(#view-home, #view-recommendations, #view-reader) .reader-display-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  #view-recommendations { padding: 24px 16px 32px; }
+  :is(#view-home, #view-recommendations, #view-reader) .reader-display-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+  #view-home .reader-display-section-head { align-items: start; flex-direction: column; }
+  #view-home .reader-display-hero-card { grid-template-columns: 96px minmax(0, 1fr); gap: 16px; }
+  #view-home .reader-display-block { margin-bottom: 28px; }
+}

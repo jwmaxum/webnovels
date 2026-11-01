@@ -192,6 +192,7 @@ window.applyHomeCuration = function(work) {
 };
 async function renderHomeWorks() {
   if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.home();
+  const display = window.ReaderDisplay?.home();
   // The legacy public feed uses the same two primary shelves when discovery is off.
   const recentGrid = document.getElementById('recentNovelsGrid');
   if (recentGrid?.classList?.contains('reader-work-grid')) {
@@ -227,6 +228,8 @@ async function renderHomeWorks() {
       const section = document.getElementById(id); if (section) section.hidden = true;
     }
     const notice = document.getElementById('homeCatalogStatus'); if (notice) { notice.replaceChildren(); notice.hidden = true; }
+    window.ReaderDisplay?.syncHome();
+    await display;
     return;
   }
   try {
@@ -235,7 +238,9 @@ async function renderHomeWorks() {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '<p class="text-muted">표시할 작품이 없습니다.</p>';
       });
-      renderCdgHeroSlider([]);
+      if (!window.ReaderDisplay) renderCdgHeroSlider([]);
+      window.ReaderDisplay?.syncHome();
+      await display;
       return;
     }
 
@@ -246,7 +251,7 @@ async function renderHomeWorks() {
 
     // 1. HERO Carousel
     const topRecommended = getPublishedWorks().filter(isTop);
-    renderCdgHeroSlider(topRecommended);
+    if (!window.ReaderDisplay) renderCdgHeroSlider(topRecommended);
 
     // 2. 🔥 지금 가장 많이 읽는 작품
     const trendingContainer = document.getElementById('trendingWorksGrid');
@@ -273,8 +278,10 @@ async function renderHomeWorks() {
     }
 
     // 4. 장르별 추천 (기본: 전체)
-    renderGenreRecommendations('전체');
-    await renderGoldenBest();
+    if (!window.ReaderDisplay) {
+      renderGenreRecommendations('전체');
+      await renderGoldenBest();
+    }
 
     // 5. 🎨 인기 웹툰
     const webtoonsContainer = document.getElementById('webtoonsGrid');
@@ -307,6 +314,8 @@ async function renderHomeWorks() {
   } catch (error) {
     console.error('CDG PLAY 랜딩페이지 작품 로드 실패:', error);
   }
+  window.ReaderDisplay?.syncHome();
+  await display;
 }
 
 
@@ -1647,6 +1656,12 @@ window.toggleCommentLike = function(commentKey, commentId) {
 async function renderReaderRecommendations(currentWorkId) {
   const container = document.getElementById('readerRecommendGrid');
   if (!container) return;
+  if(window.ReaderDisplay?.viewer){
+    const session=window.ReaderSession?.current;
+    const isCurrent=()=>session?window.ReaderSession.valid(session)&&String(session.workId)===String(currentWorkId):
+      typeof activeWork==='undefined'||String(activeWork?.id)===String(currentWorkId);
+    return window.ReaderDisplay.viewer(currentWorkId,{isCurrent});
+  }
   const box=document.getElementById('readerRecommendBox'),heading=document.getElementById('readerRecommendHeading');
   const render=(works,valid=()=>true)=>{
     container.replaceChildren();const used=new Set([String(currentWorkId)]);

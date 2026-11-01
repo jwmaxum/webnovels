@@ -18,7 +18,7 @@
   const can=permission=>own()?.role==='SUPER_ADMIN'||own()?.permissions?.includes(permission);
   const canRead=key=>key==='virtual-accounts'?own()?.role==='SUPER_ADMIN':
     key==='recovery'?(window.AdminRecovery?.active()&&(can('CASE_READ')||can('CONTENT_REVIEW'))):
-    key==='curation'?(window.AdminWorkflow?.active()&&can('CURATION_WRITE')):
+    key==='curation'?((window.AdminDisplay||window.AdminWorkflow?.active())&&can('CURATION_WRITE')):
     key==='dashboard'?(can('OPERATIONS_READ')||can('DASHBOARD')):
     key==='beta-operations'?(can('OPERATIONS_READ')||can('CASE_READ')):
     key==='cases'?(can('CASE_READ')||can('CONTENT_REVIEW')||can('COMMENT_REPORT')):
@@ -150,6 +150,7 @@
       if(page==='beta-operations'){await window.AdminBetaOperations.render(root(),{isCurrent});return;}
       if(page==='virtual-accounts'){await window.VirtualAccounts.render(root());return;}
       if(page==='recovery'){await window.AdminRecovery.render(root(),{offset,isCurrent});return;}
+      if(page==='curation'&&window.AdminDisplay){await window.AdminDisplay.render(root(),{isCurrent});return;}
       if(page==='accounts'&&window.AdminMembers){
         const legacy=async unavailable=>{
           if(!isCurrent())return;window.AdminMembers.leave();
@@ -253,7 +254,7 @@
               decision:work.moderation_state==='RESTRICTED'?'UNRESTRICT':'RESTRICT',reason:reason.trim()});
               await render();}catch(e){message('조치 실패: '+errorText(e));}
           });
-          if(can('CURATION_WRITE'))for(const [flag,label] of [['is_top_recommended','추천'],
+          if(!window.AdminDisplay&&can('CURATION_WRITE'))for(const [flag,label] of [['is_top_recommended','추천'],
             ['is_popular_work','인기'],['is_new_work','신작']])
             button(card,`${label} ${work[flag]?'해제':'설정'}`,async()=>{
               const reason=prompt('편집 사유 (3~500자)');if(!reason||reason.trim().length<3)return;
@@ -302,6 +303,7 @@
     window.AdminConsole?.reset();
     window.AdminWorkflow?.reset();
     window.AdminMembers?.leave();
+    window.AdminDisplay?.leave();
   }
   function openRoute(input,shouldPushState=true){
     if(!active())return legacySwitch?.(String(input).split(/[/?]/).filter(Boolean).pop()||'dashboard',shouldPushState);
@@ -341,6 +343,7 @@
   window.loadAdminDashboard=()=>active()?openRoute(/^\/admin(?:\/|$)/.test(location.pathname)?location.pathname+(location.search||''):'/admin',false):legacyDashboard?.();
   window.AdminOperations=Object.freeze({active,api,navigate,openRoute,refresh:render,reset(){turn++;route=null;clearModules();
     window.AdminMembers?.reset();
+    window.AdminDisplay?.reset();
     if(root())root().replaceChildren();document.getElementById('adminOperationsNav')?.replaceChildren();
     for(const id of ['adminSectionTabs','adminBreadcrumbs','adminGlobalSearchResults'])document.getElementById(id)?.replaceChildren();
     for(const id of ['adminWorkspaceHeading','adminWorkspaceDescription']){const node=document.getElementById(id);if(node)node.textContent='';}

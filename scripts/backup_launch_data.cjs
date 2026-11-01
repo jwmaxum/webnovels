@@ -13,6 +13,13 @@ const sequenceSnapshotSql = `select jsonb_agg(to_jsonb(s) || jsonb_build_object(
   'start_value',s.start_value::text,'min_value',s.min_value::text,'max_value',s.max_value::text,
   'increment_by',s.increment_by::text,'cache_size',s.cache_size::text,'last_value',s.last_value::text))
   from pg_sequences s where schemaname in (${scope.schemaSql})`;
+const functionSnapshotSql = `select jsonb_agg(jsonb_build_object('schema',n.nspname,'signature',p.oid::regprocedure::text,
+  'definition',pg_get_functiondef(p.oid),'owner',pg_get_userbyid(p.proowner),'acl',p.proacl))
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in (${scope.schemaSql}) and p.prokind='f'`;
+const triggerSnapshotSql = `select jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,
+  'definition',pg_get_triggerdef(t.oid),'enabled',t.tgenabled::text))
+  from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace
+  where n.nspname in (${scope.schemaSql}) and not t.tgisinternal`;
 
 async function query(sql) {
   const env = loadEnv(), { ref } = connection(env);
@@ -60,12 +67,8 @@ async function main() {
     'sequences',(${sequenceSnapshotSql}),
     'policies',(select jsonb_agg(to_jsonb(p)) from pg_policies p where schemaname in (${scope.schemaSql})),
     'views',(select jsonb_agg(to_jsonb(v)) from pg_views v where schemaname in (${scope.schemaSql})),
-    'functions',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'signature',p.oid::regprocedure::text,
-      'definition',pg_get_functiondef(p.oid),'acl',p.proacl)) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-      where n.nspname in (${scope.schemaSql}) and p.prokind='f'),
-    'triggers',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,'definition',pg_get_triggerdef(t.oid)))
-      from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace
-      where n.nspname in (${scope.schemaSql}) and not t.tgisinternal),
+    'functions',(${functionSnapshotSql}),
+    'triggers',(${triggerSnapshotSql}),
     'relation_security',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'name',c.relname,'kind',c.relkind,
       'owner',pg_get_userbyid(c.relowner),'acl',c.relacl,'rls',c.relrowsecurity,'force_rls',c.relforcerowsecurity))
       from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in (${scope.schemaSql})),
@@ -99,4 +102,4 @@ async function main() {
   console.log(JSON.stringify({ directory, ...report }, null, 2));
 }
 if (require.main === module) main().catch(error => { console.error(/^BACKUP_|^UNSUPPORTED_|^SCHEMA_/.test(error.message) ? error.message : 'BACKUP_FAILED_DETAILS_WITHHELD'); process.exitCode = 1; });
-module.exports = { query, quote, literal, hash, sequenceSnapshotSql };
+module.exports = { query, quote, literal, hash, sequenceSnapshotSql, functionSnapshotSql, triggerSnapshotSql };

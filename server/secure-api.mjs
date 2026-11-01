@@ -103,6 +103,7 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
           method, headers: { ...serviceHeaders, 'Content-Type': 'application/json', Prefer: 'return=representation' },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(8000)
         });
+        if(response.status===404&&table==='rpc/site_display_ready')return false;
         if (!response.ok) fail(response.status === 409 ? 409 : response.status === 403 ? 403 : 503, response.status === 409 ? 'CONFLICT' : response.status === 403 ? 'ACCOUNT_INACTIVE' : 'DATABASE_UNAVAILABLE');
         if (response.status === 204) return [];
         return response.json();

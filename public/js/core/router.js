@@ -14,7 +14,7 @@ let routeRevision = 0;
 function syncReaderNavigation(viewId = window.currentActiveView, search = window.location.search) {
   document.body?.setAttribute?.('data-active-view', viewId || 'view-home');
   const params = new URLSearchParams(search || '');
-  const selected = viewId === 'view-home' ? 'home' : viewId === 'view-mypage' ? 'library' :
+  const selected = viewId === 'view-home' ? 'home' : viewId === 'view-recommendations' ? 'recommendations' : viewId === 'view-mypage' ? 'library' :
     viewId === 'view-discover' ? (['popular', 'views'].includes(params.get('sort')) ? 'ranking' :
       params.get('sort') === 'new' ? 'new' : params.get('status') === 'COMPLETED' ? 'completed' :
         params.get('type') === 'WEBTOON' ? 'webtoon' : 'novel') : null;
@@ -44,7 +44,7 @@ function handleReaderRouteClick(event) {
   let route;
   try { route = new URL(link.getAttribute('href'), window.location.origin); } catch { return true; }
   if (route.origin !== window.location.origin || route.username || route.password ||
-      !/^\/(?:home|discover|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
+      !/^\/(?:home|discover|recommendations|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
   event.preventDefault(); window.closeAllModals?.();
   navigateTo(route.pathname + route.search); return false;
 }
@@ -117,6 +117,8 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
   window.currentActiveView = currentActiveView;
   window.AdminRecovery?.leave(viewId);
   if(viewId!=='view-admin-cms')window.AdminMembers?.leave();
+  if(viewId!=='view-admin-cms')window.AdminDisplay?.leave();
+  window.ReaderDisplay?.leave(viewId);
   window.ReaderSession?.leave(viewId);
   window.ReaderDiscovery?.leave(viewId);
   if (!window.ReaderDiscovery?.active() && (viewId === 'view-home' || viewId === 'view-discover') && window.WEBNOVELS_CONFIG?.authorPublishEnabled)
@@ -165,6 +167,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
   if (shouldPushState) {
     let targetPath = null;
     if (viewId === 'view-home') targetPath = '/home';
+    else if (viewId === 'view-recommendations') targetPath = '/recommendations';
     else if (viewId === 'view-discover') targetPath = '/discover';
     else if (viewId === 'view-mypage') targetPath = '/library';
     else if (viewId === 'view-creator') targetPath = '/creator';
@@ -176,6 +179,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
   }
 
   syncReaderNavigation(viewId);
+  if(['view-discover','view-work-detail','view-mypage'].includes(viewId))window.ReaderDisplay?.syncChrome?.();
 
   // 데스크톱 사이드바 활성 탭 동기화
   if (window.ReaderDiscovery?.active()) {
@@ -224,6 +228,14 @@ function resolveRoute(pathname, isInitial = false) {
   }
 
   // 2. 탐색 경로 (/discover)
+  if(path==='/recommendations'){
+    switchWebNovelsView('view-recommendations',null,false);
+    const params=route.searchParams,type=params.get('type')||'ALL',offset=params.get('offset')||'0';
+    const valid=[...params.keys()].every(key=>['type','offset'].includes(key)&&params.getAll(key).length===1)&&['ALL','NOVEL','WEBTOON'].includes(type)&&/^(0|[1-9]\d{0,5})$/.test(offset)&&Number(offset)<=100000;
+    if(valid)window.ReaderDisplay?.enter({type,offset:Number(offset)});
+    else{const node=document.getElementById('readerRecommendationsContent');if(node)node.textContent='추천 목록 주소를 확인해 주세요.';}
+    syncReaderNavigation('view-recommendations',route.search);return;
+  }
   if (parts[0] === 'discover' || hash === '#discover') {
     switchWebNovelsView('view-discover', null, false);
     if (window.ReaderDiscovery?.active()) window.ReaderDiscovery.discover(route.search || window.location.search);

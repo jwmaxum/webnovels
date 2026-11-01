@@ -98,6 +98,7 @@ async function invoke({action='roles',method='GET',identity=admin,origin='https:
  }),{SUPABASE_URL:'https://example.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_test'},{fetchImpl:async(url,opt)=>{
    const path=new URL(url).pathname;calls.push({path,body:opt.body,headers:opt.headers});
    if(path.endsWith('launch_accounts_ready'))return Response.json(true);
+   if(path.endsWith('site_display_ready'))return Response.json(false); // This fixture represents the pre-OP03 console installation.
    if(path==='/auth/v1/user')return Response.json({id:identity,email:'verified@example.test',email_confirmed_at:'2026-09-25'});
    if(path.endsWith('launch_account_actor'))return Response.json({userId:identity,admin:identity===writer?null:{role:identity===admin?'SUPER_ADMIN':'SUB_ADMIN',is_active:true}});
    if(path==='/auth/v1/token')return Response.json({user:{id:reauthId},access_token:'temporary-verification-token'},{status:loginStatus});

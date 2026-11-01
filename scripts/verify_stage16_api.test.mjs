@@ -18,7 +18,7 @@ async function invoke(query,{method='GET',data,result={works:[work],nextCursor:n
   const request=new Request('https://example.test'+query,{method,...(data?{
     headers:{Origin:'https://example.test','Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
   const output=await stage8Api({request,env:settings,actor:async()=>identity,fail,readBody:async()=>data,
-    db:async(route,params,options)=>{calls.push({route,options});return result;}});
+    db:async(route,params,options)=>{calls.push({route,options});return route==='rpc/site_display_ready'?false:result;}});
   return {output,calls};
 }
 

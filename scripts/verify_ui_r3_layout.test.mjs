@@ -18,7 +18,7 @@ test('reader shell keeps one set of landmarks, real search forms and shareable t
   const ids=nodes.map(node=>attr(node,'id')).filter(Boolean);assert.equal(new Set(ids).size,ids.length,'duplicate DOM IDs');
   assert.equal(byId('readerMain').tagName,'main');assert.equal(attr(byId('readerMain'),'tabindex'),'-1');
   const nav=byId('readerPrimaryNav'),links=nodes.filter(node=>node.tagName==='a'&&within(node,nav));
-  assert.deepEqual(links.map(link=>attr(link,'href')),['/home','/discover?type=NOVEL','/discover?type=WEBTOON','/discover?sort=popular','/discover?sort=new','/discover?status=COMPLETED']);
+  assert.deepEqual(links.map(link=>attr(link,'href')),['/home','/discover?type=NOVEL','/discover?type=WEBTOON','/recommendations','/discover?sort=popular','/discover?sort=new','/discover?status=COMPLETED']);
   assert(links.every(link=>!attr(link,'class')?.split(' ').includes('nav-link')),'generic navigation must not drop queries');
   for(const [formId,inputId]of [['desktopHeaderSearch','inputSearchHeader'],['mobileSearchBarWrap','inputSearchMobile']]){
     const form=byId(formId),input=byId(inputId);assert.equal(form.tagName,'form');assert.equal(attr(form,'action'),'/discover');
@@ -27,7 +27,7 @@ test('reader shell keeps one set of landmarks, real search forms and shareable t
     assert(nodes.some(node=>node.tagName==='label'&&attr(node,'for')===inputId));
   }
   const bottom=byId('mobileBottomNav');
-  assert.deepEqual(nodes.filter(node=>within(node,bottom)&&['a','button'].includes(node.tagName)&&attr(node,'hidden')===undefined).map(node=>attr(node,'id')),['bnavHome','bnavDiscover','bnavLibrary','bnavMore']);
+  assert.deepEqual(nodes.filter(node=>within(node,bottom)&&['a','button'].includes(node.tagName)&&attr(node,'hidden')===undefined).map(node=>attr(node,'id')),['bnavHome','bnavDiscover','bnavLibrary','bnavRecommendations','bnavMore']);
 });
 
 test('home shelves and collapsed filters remain in their own views with sorting always reachable',()=>{

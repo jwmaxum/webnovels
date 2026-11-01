@@ -164,6 +164,7 @@
   }
   async function home() {
     configure();
+    const display = window.ReaderDisplay?.home();
     const request = ++homeRequest;
     const genreAtStart = genreRequest;
     const valid = () => request === homeRequest;
@@ -189,7 +190,7 @@
       const section = (id, grid, works, popular = false) => {
         cards($(grid), works, popular); if ($(id)) $(id).hidden = works.length === 0;
       };
-      if (summary) {
+      if (summary && !window.ReaderDisplay) {
         section('heroFeaturedSection', 'cdgHeroSlider', unique(summary.sections.recommended, 1));
         const hero = $('cdgHeroSlider'); hero?.classList.add('discovery-recommendations');
         hero?.children[0]?.classList.add('discovery-featured');
@@ -236,14 +237,15 @@
         notice.hidden = !!summary;
         if (summaryFailed) { notice.hidden = false; failure(notice, home); }
       }
+      window.ReaderDisplay?.syncHome();
     };
     const loadSummary = window.ReaderCatalog.home().then(result => {
-      if (!valid()) return; summary = result; render(); window.GrowthStudio?.home();
+      if (!valid()) return; summary = result; render(); if (!window.ReaderDisplay) window.GrowthStudio?.home();
     }, () => { if (valid()) { summaryFailed = true; render(); } });
     const loadRecent = hasRecent ? window.ReaderCatalog.list({ type: 'NOVEL', sort: 'latest', limit: 6 }).then(result => {
       if (!valid()) return; recent = result; render();
     }, () => { if (valid()) { recentFailed = true; render(); } }) : Promise.resolve();
-    render(); await Promise.all([loadSummary, loadRecent]);
+    render(); await Promise.all([loadSummary, loadRecent, display]);
   }
   async function genre(value) {
     const request = ++genreRequest;

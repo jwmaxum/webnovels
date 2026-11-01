@@ -1,4 +1,5 @@
 // Stage 9 operational API. No creator manuscript or general table mutation is exposed here.
+import {siteDisplayInstalled} from './site-display-readiness.mjs';
 const READS=new Set(['dashboard','cases','appeals','accounts','roles','work-list','audit']);
 const WRITES=new Set(['case-resolve','appeal-resolve','moderate','curate','role-update','account-moderate']);
 const SOURCES=new Set(['CONTENT_REVIEW','REPORT','COMMENT_REPORT']);
@@ -14,6 +15,7 @@ export async function stage9Api({request,env,actor,db,readBody,fail}){
   if(env.ADMIN_OPERATIONS_ENABLED!=='true')fail(503,'ADMIN_OPERATIONS_NOT_ACTIVATED');
   const url=new URL(request.url),action=url.searchParams.get('action')||'dashboard';
   if(!READS.has(action)&&!WRITES.has(action))fail(400,'INVALID_ACTION');
+  if(action==='curate'&&await siteDisplayInstalled((name,body)=>db('rpc/'+name,{}, {method:'POST',body})))fail(409,'SITE_DISPLAY_REQUIRED');
   if(env.ADMIN_WORKFLOW_ENABLED==='true'&&WRITES.has(action))fail(409,'ADMIN_WORKFLOW_REQUIRED');
   if(action==='role-update'&&env.ADMIN_ROLE_CHANGES_ENABLED!=='true')fail(503,'ADMIN_ROLE_CHANGES_NOT_ACTIVATED');
   if(READS.has(action)?request.method!=='GET':request.method!=='POST')fail(405,'METHOD_NOT_ALLOWED');

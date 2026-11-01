@@ -13,7 +13,7 @@ const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 const payload={requestId:id,reason:'근거 확인',source:'CONTENT_REVIEW',caseId:id,revision:'0',targetVersion:'',assigneeId:null,priority:'HIGH',dueAt:null,evidence:'원본 확인',duplicateId:null};
 async function invoke(action,{data,query='',settings=env,who=actor,method=data?'POST':'GET',origin='https://example.test',result={saved:true}}={}){
  const calls=[],request=new Request('https://example.test/api/v2/admin/workflow?action='+action+query,{method,headers:{Origin:origin,'Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})});
- const args={request,env:settings,actor:async()=>who,readBody:request=>request.json(),fail,db:async(path,query,options)=>{calls.push({path,body:options.body});return result;}};
+ const args={request,env:settings,actor:async()=>who,readBody:request=>request.json(),fail,db:async(path,query,options)=>{calls.push({path,body:options.body});return path==='rpc/site_display_ready'?false:result;}};
  return {output:await adminWorkflowApi(args),calls,args};
 }
 test('workflow gates, method and authenticated actor are mandatory; client identity cannot override RPC actor',async()=>{
@@ -42,19 +42,19 @@ test('all mutation payloads keep typed identifiers and service failures retain s
   'curation-save':{placementId:id,revision:'0',workId:'10',slot:'HOME_SPOTLIGHT',position:8,startsAt:'2026-10-09T00:00:00Z',endsAt:'2026-10-10T00:00:00Z',enabled:true},
   'draft-read':{source:'CONTENT_REVIEW',caseId:id,draftId:id}
  };
- for(const [action,data] of Object.entries(cases)){const result=await invoke(action,{data:{requestId:id,reason:'명시한 사유',...data}});assert.equal(result.calls[0].body.p_action,action);}
+ for(const [action,data] of Object.entries(cases)){const result=await invoke(action,{data:{requestId:id,reason:'명시한 사유',...data}});assert.equal(result.calls.find(call=>call.path==='rpc/stage17_admin').body.p_action,action);}
  await assert.rejects(invoke('case-update',{data:payload,result:{status:409,error:'CASE_CONFLICT'}}),{status:409,code:'CASE_CONFLICT'});
  await assert.rejects(invoke('cases',{query:'&source=REPORT',result:null}),{status:503});
 });
 test('workflow activation closes every legacy mutation bypass but leaves role reauthentication console intact',async()=>{
  for(const action of ['case-resolve','appeal-resolve','moderate','curate','role-update','account-moderate']){
   const request=new Request('https://example.test/api/v2/admin/operations?action='+action,{method:'POST'});
-  await assert.rejects(stage9Api({request,env,fail}),{code:'ADMIN_WORKFLOW_REQUIRED'});
+  await assert.rejects(stage9Api({request,env,fail,db:async path=>{assert.equal(path,'rpc/site_display_ready');return false;}}),{code:'ADMIN_WORKFLOW_REQUIRED'});
  }
  const request=new Request('https://example.test/api/v2/admin/console?action=curation-update',{method:'POST'});
  await assert.rejects(adminConsoleApi({request,actor,env,fail}),{code:'ADMIN_WORKFLOW_REQUIRED'});
  const legacyRequest=new Request('https://example.test/api/v2/admin/console?action=curation-update',{method:'POST',headers:{Origin:'https://example.test','Content-Type':'application/json'},body:JSON.stringify({workId:'10',revision:'0',flags:{is_top_recommended:true,is_popular_work:false,is_new_work:false},reason:'편집 추천'})});
- const legacy=await adminConsoleApi({request:legacyRequest,actor,user:{id},env:{...env,P0_API_ENABLED:'false'},fail,rpc:async()=>({saved:true})});assert.equal(legacy.saved,true);
+ const legacy=await adminConsoleApi({request:legacyRequest,actor,user:{id},env:{...env,P0_API_ENABLED:'false'},fail,rpc:async name=>name==='site_display_ready'?false:{saved:true}});assert.equal(legacy.saved,true);
  const calls=[];
  const result=await stage9AppealApi({request:new Request('https://example.test/api/v2/appeals?action=my'),env,actor:async()=>({userId:id,author:{id:'7'}}),fail,
   db:async(path,q,{body})=>{calls.push({path,body});return {appeals:[]};}});
@@ -65,7 +65,7 @@ test('scheduled public recommendation projection preserves real rankings and exc
  const ranking={periodDays:7,minSample:5,metric:'uniqueReaders',asOf:new Date().toISOString()};
  let placements=[{slot:'HOME_SPOTLIGHT',position:1,work}];
  const args={url:new URL('https://example.test/api/v2/catalog?action=home'),env:{...env,READER_DISCOVERY_ENABLED:'true',READER_SERVICE_ENABLED:'true',AUTHOR_PUBLISH_ENABLED:'true'},fail,
-  db:async path=>path==='rpc/stage16_catalog'?{sections:{recommended:[work],popular:[work],new:[],completed:[]},ranking}:{placements}};
+  db:async path=>path==='rpc/site_display_ready'?false:path==='rpc/stage16_catalog'?{sections:{recommended:[work],popular:[work],new:[],completed:[]},ranking}:{placements}};
  const result=await stage16Catalog(args);assert.equal(result.sections.popular[0].ranking_readers,6);assert.equal(result.sections.recommended.length,0);
  assert.equal(result.sections.spotlight[0].title,'편집 선정');assert.equal(result.sections.spotlight[0].content,undefined);
  placements=[...placements,...placements];await assert.rejects(stage16Catalog(args),{code:'CURATION_UNAVAILABLE'});

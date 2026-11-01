@@ -1,5 +1,6 @@
 // Server-authenticated operational inventory; monetary records are read-only.
 import {adminWorkflowEnabled} from './admin-workflow-api.mjs';
+import {siteDisplayInstalled} from './site-display-readiness.mjs';
 const READS=new Set(['dashboard','works','episodes','accounts','cases','settlements','roles','audit']);
 const PERMISSIONS=new Set(['OPERATIONS_READ','ACCOUNTS_READ','CONTENT_METADATA_READ','CASE_READ','CASE_RESOLVE',
   'CONTENT_REVIEW','COMMENT_REPORT','CONTENT_MODERATE','CURATION_WRITE','AUDIT_READ','ACCOUNT_MODERATE','SETTLEMENTS_READ']);
@@ -34,6 +35,7 @@ export async function adminConsoleApi({request,user,actor,remote,rpc,fail,env={}
     const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}
     let body;try{body=JSON.parse(new TextDecoder().decode(bytes));}catch{fail(400,'INVALID_PERMISSIONS');}
     if(action==='curation-update'){
+      if(await siteDisplayInstalled(rpc))fail(409,'SITE_DISPLAY_REQUIRED');
       const fields=['is_top_recommended','is_popular_work','is_new_work'];
       if(!body||Array.isArray(body)||typeof body!=='object'||Object.keys(body).some(k=>!['workId','revision','flags','reason'].includes(k))||
         typeof body.workId!=='string'||!/^[1-9]\d{0,18}$/.test(body.workId)||BigInt(body.workId)>9223372036854775807n||

@@ -142,12 +142,19 @@ export async function stage16Catalog({url,env,db,fail}) {
   if(!object(result))fail(503,'CATALOG_UNAVAILABLE');
   if(action==='home') {
     if(!object(result.sections))fail(503,'CATALOG_UNAVAILABLE');
+    const displayReady=await db('rpc/site_display_ready',{}, {method:'POST',body:{}})===true;
     const sections={};
     for(const key of ['recommended','popular','new','completed',...(webtoonEnabled(env)?['webtoons']:[])]) {
+      if(key==='recommended'&&displayReady){sections[key]=[];continue;}
       if(!Array.isArray(result.sections[key])||result.sections[key].length>8)fail(503,'CATALOG_UNAVAILABLE');
       sections[key]=result.sections[key].map(work=>projectWork(work,fail,false,webtoonEnabled(env)));
     }
-    if(adminWorkflowEnabled(env)) {
+    if(displayReady){
+      const display=await db('rpc/site_display_public',{}, {method:'POST',body:{p_data:{offset:0,type:'ALL'}}});
+      if(display?.ready!==true||!object(display.home)||!Array.isArray(display.home.featured)||display.home.featured.length>8)fail(503,'CURATION_UNAVAILABLE');
+      sections.recommended=display.home.hero===null?[]:[projectWork(display.home.hero,fail,true,true)];
+      sections.spotlight=display.home.featured.map(work=>projectWork(work,fail,true,true));
+    }else if(adminWorkflowEnabled(env)) {
       const editorial=await db('rpc/stage17_editorial',{}, {method:'POST',body:{}});
       if(!Array.isArray(editorial?.placements)||editorial.placements.length>16)fail(503,'CURATION_UNAVAILABLE');
       sections.recommended=[];sections.spotlight=[];

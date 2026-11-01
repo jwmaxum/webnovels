@@ -1,0 +1,244 @@
+{
+  "stage": "OP-03",
+  "checkedAt": "2026-11-01T09:17:19.515Z",
+  "baseCommit": "2fbc63cc022688d55fcdeb9dba610e0d7e07fda0",
+  "scope": [
+    "Administrator-only explicit NOVEL/WEBTOON selection, sequence and publication windows",
+    "Saved preview, immediate/scheduled release, stop/cancel and restore-to-draft",
+    "Independent reader recommendation route with 24-item paging and no automatic backfill",
+    "Structured home blocks, five navigation items, notices and protected legal footer",
+    "Service-only RPCs, current administrator authorization, revision and idempotent receipts",
+    "Historical recommendation write guards and explicit legacy review without automatic import",
+    "Lossless routine ownership and trigger activation metadata in private backup"
+  ],
+  "validation": {
+    "stage": "OP-03",
+    "startedAt": "2026-11-01T08:48:43.541Z",
+    "completedAt": "2026-11-01T09:17:19.524Z",
+    "steps": [
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op03",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op02",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op01",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:auth",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:naming",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:p0",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:launch",
+        "exitCode": 0,
+        "testCount": 34,
+        "error": null
+      },
+      {
+        "command": "test:stage16",
+        "exitCode": 0,
+        "testCount": 55,
+        "error": null
+      },
+      {
+        "command": "test:stage17",
+        "exitCode": 0,
+        "testCount": 24,
+        "error": null
+      },
+      {
+        "command": "test:admin-operations",
+        "exitCode": 0,
+        "testCount": 15,
+        "error": null
+      },
+      {
+        "command": "test:stage35",
+        "exitCode": 0,
+        "testCount": 40,
+        "error": null
+      },
+      {
+        "command": "test:stage36",
+        "exitCode": 0,
+        "testCount": 35,
+        "error": null
+      },
+      {
+        "command": "test:stage23",
+        "exitCode": 0,
+        "testCount": 12,
+        "error": null
+      },
+      {
+        "command": "test:ui-r3",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r4",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r5",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r6",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r7",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r13",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "expectedCommands": 22,
+    "exitCode": 0,
+    "newTests": 81,
+    "fixtureRegressionTests": 215,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "independentReview": "No remaining privilege escalation, draft exposure, hidden-work publication or duplicate-write blocker; document angle-bracket validation aligned across UI/API/SQL",
+    "initialFixtureFailure": "Legacy stubs now explicitly respond false to site_display_ready and still assert the actual write RPC; all affected commands rerun successfully",
+    "security": {
+      "syntaxFiles": 33,
+      "syntaxPassed": true,
+      "secretMatches": 0,
+      "diffCheck": "PASS",
+      "userChangesPreserved": true
+    }
+  },
+  "production": {
+    "schemaApplied": false,
+    "status": "PENDING_EXPLICIT_DB_APPROVAL",
+    "automaticApprovalRejected": true,
+    "rejectionReason": "Explicit production schema change approval required for new tables, routines, triggers and legacy-write consolidation",
+    "migrations": [
+      {
+        "file": "database/launch/018_site_display.sql",
+        "sha256": "4f2aaa04c734d0edbf837d138cdcdab4b2fc18b01b7275f5a6d4392072658392"
+      }
+    ],
+    "rehearsal": {
+      "engine": "PGlite current backup rows and exact application routines",
+      "sourceTablesVerified": 170,
+      "sourceRowsVerified": 2445,
+      "originalRowsPreserved": true,
+      "routineOwnersPreserved": true,
+      "triggerModesPreserved": true,
+      "roleAccessProbesPassed": true,
+      "repeatable": true,
+      "addedTables": [
+        "launch_recovery.site_display_draft",
+        "launch_recovery.site_display_releases",
+        "launch_recovery.site_display_actions",
+        "launch_recovery.site_display_receipts",
+        "launch_recovery.site_display_audit"
+      ],
+      "addedFunctions": [
+        "launch_recovery.site_display_default()",
+        "launch_recovery.site_display_immutable()",
+        "launch_recovery.site_display_document_valid(jsonb)",
+        "launch_recovery.site_display_projection(jsonb,timestamp with time zone,integer,text,jsonb)",
+        "launch_recovery.site_display_admin_state()",
+        "launch_recovery.site_display_legacy_guard()",
+        "public.site_display_ready()",
+        "public.site_display_public(jsonb)",
+        "public.admin_site_display(uuid,text,jsonb)"
+      ],
+      "addedTriggers": [
+        {
+          "schema": "authoring",
+          "table": "editorial_placements",
+          "name": "site_display_legacy_guard"
+        },
+        {
+          "schema": "launch_recovery",
+          "table": "site_display_actions",
+          "name": "site_display_immutable"
+        },
+        {
+          "schema": "launch_recovery",
+          "table": "site_display_audit",
+          "name": "site_display_immutable"
+        },
+        {
+          "schema": "launch_recovery",
+          "table": "site_display_receipts",
+          "name": "site_display_immutable"
+        },
+        {
+          "schema": "launch_recovery",
+          "table": "site_display_releases",
+          "name": "site_display_immutable"
+        },
+        {
+          "schema": "public",
+          "table": "works",
+          "name": "site_display_legacy_guard"
+        }
+      ],
+      "onlyAddedRows": [
+        "authoring.migrations:launch-018-site-display",
+        "launch_recovery.site_display_draft:default-empty-singleton"
+      ]
+    },
+    "userApprovedLocalBackup": true,
+    "nativeArchiveVerified": true,
+    "productionDataEdited": false,
+    "productionRecommendationsPublished": false,
+    "featureFlagsChanged": false,
+    "paymentPassPrivacyCollectionUnchanged": true
+  },
+  "readiness": {
+    "browser": "NOT_RUN",
+    "physicalDevice": "NOT_RUN",
+    "hostedFullRestore": "NOT_ACCEPTED",
+    "actualProductionServiceRead": "NOT_RUN_SCHEMA_PENDING",
+    "codeWithoutMigration": "New CMS reports connection not ready; no client-side auto-selection or fabricated publication",
+    "gitAndDelivery": "Normal main commit/push and CI/Cloudflare status checked separately; build runs no production migrations"
+  },
+  "nextStage": "OP-04: membership first two episodes free, default 100-point pricing and per-episode entitlements; TEST validation before payment contracts and LIVE activation"
+}
