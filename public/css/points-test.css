@@ -1,0 +1,30 @@
+/* OP-04 isolated TEST workspaces; no global reader or administrator overrides. */
+.points-test { min-width: 0; color: var(--text-primary); }
+.points-test [hidden] { display: none !important; }
+.points-test :is(h2,h3,h4,summary) { color: var(--text-strong); line-height: 1.6; overflow-wrap: anywhere; }
+.points-test :is(p,li,label) { line-height: 1.8; overflow-wrap: anywhere; }
+.points-test-banner { padding: 14px 16px; border: 2px solid var(--selected-fg); border-radius: 9px; background: var(--bg-elevated); color: var(--text-primary); font-weight: 650; }
+.points-test-panel { min-width: 0; margin-block: 18px; padding: 18px; border: 1px solid var(--border-default); border-radius: 10px; background: var(--bg-elevated); }
+.points-test-status { min-height: 1.8em; color: var(--text-primary); }
+.points-test-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin-block: 14px; }
+.points-test-field { display: grid; min-width: 0; gap: 6px; color: var(--text-primary); font-size: 14px; font-weight: 650; }
+.points-test-field :is(input,select) { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--bg-elevated); color: var(--text-primary); font: inherit; font-size: 16px; font-weight: 400; }
+.points-test :is(button,input,select):disabled { color: var(--text-secondary); background: var(--bg-base); opacity: 1; }
+.points-test button { min-height: 44px; max-width: 100%; margin-block: 6px; font: inherit; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+.points-test :is(button,a,input,select,summary):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+.points-test-list { display: grid; gap: 12px; margin-block: 14px; padding: 0; list-style: none; }
+.points-test-list > li,.points-test-item { min-width: 0; padding: 12px; margin-block: 8px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--bg-subtle); }
+.points-test-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.points-test-check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.points-test-check input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--selected-fg); }
+.points-test-content { min-width: 0; padding-block: 20px; border-top: 1px solid var(--border-default); }
+.points-test-novel { max-width: 760px; margin-inline: auto; font-size: 18px; line-height: 1.9; color: var(--text-primary); }
+.points-test-plain { white-space: pre-wrap; overflow-wrap: anywhere; }
+.points-test-webtoon { width: 100%; max-width: 800px; margin-inline: auto; }
+.points-test-webtoon :is(.webtoon-panel,.points-test-image) { width: 100%; max-width: 100%; margin-inline: auto; }
+.points-test-webtoon img { display: block; width: 100%; height: auto; }
+@media (max-width: 650px) {
+ .points-test-form { grid-template-columns: minmax(0,1fr); }
+ .points-test-panel { padding: 12px; }
+ .points-test-actions button { flex: 1 1 130px; }
+}

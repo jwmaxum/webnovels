@@ -15,6 +15,7 @@ import { discoveryEnabled, publicContent } from './stage16-api.mjs';
 import { paidEpisodeApi } from './paid-episode-api.mjs';
 import { growthApi,measurementEnabled } from './growth-api.mjs';
 import {observeOperation} from './beta-operations.mjs';
+import {pointsTestEnabled} from './points-test-api.mjs';
 const WORK_FIELDS = 'id,title,author,author_id,genre,tags,description,cover_image,view_count,like_count,created_at,status,is_top_recommended,is_popular_work,is_new_work,content_type,is_completed,rating,ai_usage_type,published_at';
 const EPISODE_FIELDS = 'id,work_id,episode_number,title,is_free,is_ad_free,author_comment,status,scheduled_at,access_policy,view_count,created_at';
 const READER_FIELDS = 'id,auth_user_id,username,nickname,status,is_adult_verified,adult_verified_at,points';
@@ -67,6 +68,10 @@ async function readBody(request) {
 }
 export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
   const handle=async function(request, env) {
+    // An isolated TEST reader must not bypass its gate through legacy FREE URLs.
+    const testPath=new URL(request.url).pathname;
+    if(pointsTestEnabled(env)&&(/^\/api\/v2\/episodes\/[^/]+\/content\/?$/.test(testPath)||testPath.startsWith('/api/v2/webtoon/images/')))
+      return json({error:'POINTS_TEST_ROUTE_REQUIRED'},409);
     const betaEnrollmentResponse = await freeBetaEnrollmentApi(request, env, { fetchImpl, now });
     if (betaEnrollmentResponse) return betaEnrollmentResponse;
     const enrollmentResponse = await authorEnrollmentApi(request, env, { fetchImpl, now });

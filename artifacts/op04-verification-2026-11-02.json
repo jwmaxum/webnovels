@@ -1,0 +1,423 @@
+{
+  "stage": "OP-04",
+  "checkedAt": "2026-11-01T23:58:13.833Z",
+  "clientDate": "2026-11-02",
+  "baseCommit": "a6fd936de3d98aacd728ff8e325555303aa06a6f",
+  "mode": "TEST",
+  "provenance": "LOCAL_SIMULATED",
+  "scope": [
+    "Verified ACTIVE readers: episode numbers1-2 free, later default100points",
+    "Immutable effective platform/work/episode prices, current-publication quotes and explicit purchases",
+    "Atomic wallet/debit/purchase/stable-episode rights and exact idempotent retry",
+    "Current-head novel/Word content and private authenticated webtoon proxy",
+    "Six-menu admin integration, separate reader TEST portal, account/route/Blob lifecycle",
+    "Strict independent TEST gate, legacy FREE URL denial only while TEST is active"
+  ],
+  "validation": {
+    "stage": "OP-04",
+    "startedAt": "2026-11-01T22:50:50.967Z",
+    "resumedAt": "2026-11-01T23:40:54.176Z",
+    "initialBuildAttempt": {
+      "command": "build",
+      "exitCode": 1,
+      "error": null
+    },
+    "initialFailure": "Windows sandbox denied junction creation in existing stage26 security test; test unchanged, rerun with filesystem permission",
+    "prefixPassed": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25"
+    ],
+    "steps": [
+      {
+        "command": "test:stage26",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage27",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage28",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage29",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage30",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage31",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage32",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage33",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage34",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage35",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage36",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:drafts",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:files",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:publication",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:operations",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:admin-operations",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage11",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:stage13",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:launch",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:author-publishing",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r2",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r3",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r4",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r5",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r6",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r7",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r8",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r9",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r10",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r12",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r13",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op01",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op02",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op03",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op04",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "verify:op04",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "compatibilityRetry": {
+      "command": "test:stage36",
+      "reason": "Existing auth-session asset cache expectation updated to exact OP-04 version; original security checks retained"
+    },
+    "hiddenTestNavigationRetry": {
+      "command": "test:ui-r3",
+      "reason": "Normal navigation assertion excludes and separately verifies the explicitly hidden TEST-only entry"
+    },
+    "dateBoundaryRetry": {
+      "command": "test:op02",
+      "reason": "Existing member date filter fixture uses explicit KST boundaries instead of current UTC day"
+    },
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "browser": "NOT_RUN",
+    "database": "SYNTHETIC_ONLY",
+    "provider": "NOT_CALLED",
+    "productionFlagsChanged": false,
+    "completedAt": "2026-11-01T23:43:52.037Z",
+    "releaseCommands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5",
+      "test:ui-r6",
+      "test:ui-r7",
+      "test:ui-r8",
+      "test:ui-r9",
+      "test:ui-r10",
+      "test:ui-r12",
+      "test:ui-r13",
+      "test:op01",
+      "test:op02",
+      "test:op03",
+      "test:op04"
+    ],
+    "releaseCommandCount": 54,
+    "buildCompilePassed": true,
+    "typesPassed": true,
+    "standalonePassed": true,
+    "newTests": 68,
+    "newTestBreakdown": {
+      "database": 13,
+      "api": 23,
+      "ui": 24,
+      "integration": 8
+    },
+    "standalone": {
+      "steps": [
+        {
+          "action": "member-episodes",
+          "type": "NOVEL",
+          "freeEpisodes": 2,
+          "lockedEpisodePricePoints": 100,
+          "metadataWithoutBody": true
+        },
+        {
+          "action": "member-episodes",
+          "type": "WEBTOON",
+          "freeEpisodes": 2,
+          "lockedEpisodePricePoints": 100,
+          "metadataWithoutBody": true
+        },
+        {
+          "action": "explicit-purchase-and-retry",
+          "chargedPoints": 100,
+          "balancePoints": 900,
+          "exactReceiptReplayed": true,
+          "differentRequestCharges": 0
+        },
+        {
+          "action": "owned-after-price-and-head-change",
+          "stableEpisodeEntitlement": true,
+          "reopenedCurrentHead": true,
+          "additionalChargePoints": 0
+        },
+        {
+          "action": "protected-webtoon-panel",
+          "memberAuthorized": true,
+          "crossAccountDenied": true,
+          "privatePathOnlyToServer": true
+        }
+      ],
+      "finalWalletPoints": 800,
+      "ledgerEntries": 3,
+      "ledgerReconciled": true
+    },
+    "security": {
+      "independentReview": "No remaining privilege escalation, draft/storage-address exposure, legacy FREE bypass or duplicate charge blocker. PNG fallback fixed; existing shared schema ACL preserved",
+      "syntaxFiles": 26,
+      "syntaxPassed": true,
+      "secretMatches": 0,
+      "documentLinksChecked": 50,
+      "diffCheck": "PASS",
+      "userChangesPreserved": true
+    }
+  },
+  "preparedMigration": {
+    "file": "database/launch/019_points_test.sql",
+    "sha256": "1bfca8f7369d441fc606995d3e439c8bdfe046259b95e1b3903f3c0c2917531a",
+    "privateTables": 10,
+    "privateFunctions": 7,
+    "serviceOnlyRpcs": 1,
+    "immutableTriggers": 6,
+    "newSequences": 0,
+    "seeds": [
+      "TEST singleton config",
+      "TEST default100-point policy",
+      "authoring migration marker"
+    ],
+    "existingSchemaTableRoutineAclsAndSentinelRowsPreserved": true
+  },
+  "production": {
+    "migrationApplied": false,
+    "flagsChanged": false,
+    "operationalTestRecordsCreated": false,
+    "existingBalancesOrEntitlementsChanged": false,
+    "existingWorksOrAccountsChanged": false,
+    "realProviderCalled": false,
+    "realPaymentsOrAuthorEarnings": false
+  },
+  "limitations": {
+    "realPostgresMultiConnectionConcurrency": "NOT_RUN",
+    "browser": "NOT_RUN",
+    "physicalDevice": "NOT_RUN",
+    "liveFinancialMigration": "NOT_RUN",
+    "paymentContract": "NOT_CONNECTED",
+    "hostedTestActivation": "NOT_ENABLED"
+  },
+  "research": {
+    "graph": "Transport closed/no index; rooted repository source fallback",
+    "dependenciesAdded": 0,
+    "registryAndGitHubPackageSearch": "NOT_NEEDED_EXISTING_TOOLS_REUSED",
+    "primarySources": [
+      "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "https://supabase.com/docs/guides/database/functions"
+    ]
+  },
+  "gitAndDelivery": "Normal main push; CI/Cloudflare and explicit production TEST-off read checks reported separately",
+  "nextStage": "OP-05: TEST charging products, manual deposit reconciliation, card approval/refund and original-transaction reconciliation; separate LIVE contract/go-live acceptance required"
+}

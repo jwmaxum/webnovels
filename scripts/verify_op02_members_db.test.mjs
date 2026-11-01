@@ -106,7 +106,22 @@ test('status, linkage, date, activity, works, settlement and pending filters use
  assert.equal((await list('author',{settlement:'REGISTERED'},authorAdmin)).error,'FILTER_NOT_AVAILABLE');
  assert.equal((await list('reader',{hasWorks:'YES'})).error,'FILTER_NOT_AVAILABLE');
  assert.deepEqual((await list('author',{pending:'YES'})).items.map(item=>item.id),['1']);
- const day=new Date(Date.now()-86400000*3).toISOString().slice(0,10);assert.ok((await list('author',{createdFrom:day})).total<=3);
+ // Date inputs are KST calendar days, independent of the runner's UTC day.
+ // Isolate exact midnight boundaries, including the preceding UTC date.
+ await db.exec('begin');
+ try{
+  await rows("update public.authors set created_at='2026-10-30T00:00:00Z'::timestamptz");
+  await rows(`update public.authors set created_at=case id
+   when 1 then '2026-11-01T14:59:59.999999Z'::timestamptz
+   when 2 then '2026-11-01T15:00:00Z'::timestamptz
+   when 3 then '2026-11-02T14:59:59.999999Z'::timestamptz
+   when 4 then '2026-11-02T15:00:00Z'::timestamptz end where id between 1 and 4`);
+  const from=await list('author',{createdFrom:'2026-11-02'});assert.equal(from.total,3);assert.deepEqual(from.items.map(item=>item.id),['4','3','2']);
+  const to=await list('author',{createdTo:'2026-11-02'});assert.equal(to.total,54);assert.ok(!to.items.some(item=>item.id==='4'));
+  const day=await list('author',{createdFrom:'2026-11-02',createdTo:'2026-11-02'});assert.equal(day.total,2);assert.deepEqual(day.items.map(item=>item.id),['3','2']);
+  assert.deepEqual((await list('author',{createdFrom:'2026-11-01',createdTo:'2026-11-01'})).items.map(item=>item.id),['1']);
+  assert.deepEqual((await list('author',{createdFrom:'2026-11-03',createdTo:'2026-11-03'})).items.map(item=>item.id),['4']);
+ }finally{await db.exec('rollback');}
  assert.equal((await list('reader',{activity:'7D'})).total,1,'reader progress is recent even when login is older');
  assert.equal((await list('author',{createdFrom:'2026-02-31'})).error,'INVALID_QUERY');
  assert.equal((await list('author',{createdFrom:'2026-11-10',createdTo:'2026-11-01'})).error,'INVALID_QUERY');

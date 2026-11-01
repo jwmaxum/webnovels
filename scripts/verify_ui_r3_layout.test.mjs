@@ -17,9 +17,16 @@ test('reader shell keeps one set of landmarks, real search forms and shareable t
   assert.deepEqual(errors,[]);
   const ids=nodes.map(node=>attr(node,'id')).filter(Boolean);assert.equal(new Set(ids).size,ids.length,'duplicate DOM IDs');
   assert.equal(byId('readerMain').tagName,'main');assert.equal(attr(byId('readerMain'),'tabindex'),'-1');
-  const nav=byId('readerPrimaryNav'),links=nodes.filter(node=>node.tagName==='a'&&within(node,nav));
+  const nav=byId('readerPrimaryNav'),allLinks=nodes.filter(node=>node.tagName==='a'&&within(node,nav));
+  const testLinks=allLinks.filter(link=>attr(link,'data-points-test-entry')!==undefined);
+  assert.equal(testLinks.length,1,'one explicitly gated TEST entry');
+  assert.equal(attr(testLinks[0],'hidden'),'','TEST entry is hidden in default HTML');
+  assert.equal(attr(testLinks[0],'href'),'/reading-test');
+  assert.equal(attr(testLinks[0],'onclick'),'return handleReaderRouteClick(event)');
+  const links=allLinks.filter(link=>attr(link,'data-points-test-entry')===undefined);
+  assert(links.every(link=>attr(link,'hidden')===undefined),'ordinary navigation remains visible');
   assert.deepEqual(links.map(link=>attr(link,'href')),['/home','/discover?type=NOVEL','/discover?type=WEBTOON','/recommendations','/discover?sort=popular','/discover?sort=new','/discover?status=COMPLETED']);
-  assert(links.every(link=>!attr(link,'class')?.split(' ').includes('nav-link')),'generic navigation must not drop queries');
+  assert(allLinks.every(link=>!attr(link,'class')?.split(' ').includes('nav-link')),'generic navigation must not drop queries');
   for(const [formId,inputId]of [['desktopHeaderSearch','inputSearchHeader'],['mobileSearchBarWrap','inputSearchMobile']]){
     const form=byId(formId),input=byId(inputId);assert.equal(form.tagName,'form');assert.equal(attr(form,'action'),'/discover');
     assert.equal(attr(form,'onsubmit'),'submitReaderSearch(event)');assert(within(input,form));assert.equal(attr(input,'name'),'q');

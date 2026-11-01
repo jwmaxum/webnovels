@@ -13,6 +13,7 @@ let routeRevision = 0;
 // Reader navigation follows the accepted view, not the account's role.
 function syncReaderNavigation(viewId = window.currentActiveView, search = window.location.search) {
   document.body?.setAttribute?.('data-active-view', viewId || 'view-home');
+  document.querySelectorAll('[data-points-test-entry]').forEach(link=>{link.hidden=window.WEBNOVELS_CONFIG?.pointsTestEnabled!==true;});
   const params = new URLSearchParams(search || '');
   const selected = viewId === 'view-home' ? 'home' : viewId === 'view-recommendations' ? 'recommendations' : viewId === 'view-mypage' ? 'library' :
     viewId === 'view-discover' ? (['popular', 'views'].includes(params.get('sort')) ? 'ranking' :
@@ -44,7 +45,7 @@ function handleReaderRouteClick(event) {
   let route;
   try { route = new URL(link.getAttribute('href'), window.location.origin); } catch { return true; }
   if (route.origin !== window.location.origin || route.username || route.password ||
-      !/^\/(?:home|discover|recommendations|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
+      !/^\/(?:home|discover|recommendations|reading-test|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
   event.preventDefault(); window.closeAllModals?.();
   navigateTo(route.pathname + route.search); return false;
 }
@@ -118,6 +119,8 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
   window.AdminRecovery?.leave(viewId);
   if(viewId!=='view-admin-cms')window.AdminMembers?.leave();
   if(viewId!=='view-admin-cms')window.AdminDisplay?.leave();
+  if(viewId!=='view-admin-cms')window.AdminPointsTest?.leave();
+  if(viewId!=='view-reading-test')window.ReaderPointsTest?.leave();
   window.ReaderDisplay?.leave(viewId);
   window.ReaderSession?.leave(viewId);
   window.ReaderDiscovery?.leave(viewId);
@@ -168,6 +171,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
     let targetPath = null;
     if (viewId === 'view-home') targetPath = '/home';
     else if (viewId === 'view-recommendations') targetPath = '/recommendations';
+    else if (viewId === 'view-reading-test') targetPath = '/reading-test';
     else if (viewId === 'view-discover') targetPath = '/discover';
     else if (viewId === 'view-mypage') targetPath = '/library';
     else if (viewId === 'view-creator') targetPath = '/creator';
@@ -228,6 +232,13 @@ function resolveRoute(pathname, isInitial = false) {
   }
 
   // 2. 탐색 경로 (/discover)
+  if(path==='/reading-test'){
+    switchWebNovelsView('view-reading-test',null,false);
+    const node=document.getElementById('readerPointsTestContent'),accepted=routeRevision;
+    if(route.searchParams.size){window.ReaderPointsTest?.leave();if(node)node.textContent='시험 열람 화면 주소를 확인해 주세요.';return;}
+    window.ReaderPointsTest?.render(node,{isCurrent:()=>accepted===routeRevision&&window.currentActiveView==='view-reading-test'});
+    return;
+  }
   if(path==='/recommendations'){
     switchWebNovelsView('view-recommendations',null,false);
     const params=route.searchParams,type=params.get('type')||'ALL',offset=params.get('offset')||'0';

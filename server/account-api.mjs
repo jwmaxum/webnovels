@@ -9,6 +9,7 @@ import {betaOperationsApi} from './beta-operations.mjs';
 import {authorSettlementApi} from './author-settlement-api.mjs';
 import {adminMembersApi} from './admin-members-api.mjs';
 import {siteDisplayAdminApi,siteDisplayPublicApi} from './site-display-api.mjs';
+import {pointsTestApi,pointsTestEnabled} from './points-test-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch}={}) {
@@ -17,10 +18,12 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
   const workspace=env.P0_API_ENABLED!=='true'&&/^\/api\/v2\/creator\/(works|drafts)(\/|$)/.test(path);
   const dashboard=path==='/api/v2/creator/dashboard';
   const settlement=/^\/api\/v2\/(?:creator\/settlement(?:\/|$)|admin\/settlements\/identity(?:\/|$))/.test(path);
-  if(!me&&!workspace&&!dashboard&&!settlement&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
+  const pointsTest=['/api/v2/points-test','/api/v2/admin/points-test'].includes(path);
+  if(!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
+    if(pointsTest&&!pointsTestEnabled(env))fail(503,'POINTS_TEST_NOT_ACTIVATED');
     if(env.ACCOUNT_API_DISABLED==='true')fail(503,'ACCOUNT_SERVICE_NOT_ACTIVATED');
     const base=env.SUPABASE_URL||env.NEXT_PUBLIC_SUPABASE_URL;
     const secret=env.SUPABASE_SECRET_KEY||env.SUPABASE_SERVICE_ROLE_KEY;
@@ -78,6 +81,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
     if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail,env}));
     if(path==='/api/v2/admin/members')return reply(await adminMembersApi({request,user,actor,rpc,fail}));
     if(path==='/api/v2/admin/display')return reply(await siteDisplayAdminApi({request,user,actor,rpc,fail}));
+    if(pointsTest){const result=await pointsTestApi({request,user,actor,rpc,remote,fail,env});return result instanceof Response?result:reply(result);}
     if(path==='/api/v2/admin/providers')return reply(await providerSettingsApi({request,user,actor,remote,rpc,fail,env}));
     if(path==='/api/v2/support'||path==='/api/v2/admin/support')return reply(await betaSupportApi({request,user,actor,rpc,fail,env}));
     if(path==='/api/v2/admin/beta-operations')return reply(await betaOperationsApi({request,user,actor,rpc,fail,env}));
