@@ -11,11 +11,12 @@
     return actor?.author?.status==='APPROVED'&&(actor.authorWorkspaceReady===true||(beta()&&actor.accountServiceOnly!==true));
   };
   const api=(action,data)=>window.WebNovelsAuth.api('/api/v2/creator/dashboard?action='+action,data?{method:'POST',body:JSON.stringify(data)}:undefined);
-  function reset(){generation++;ids.forEach(id=>document.getElementById(id)?.replaceChildren());}
-  function message(e){return ({PROFILE_CONFLICT:'다른 곳에서 정보가 변경되었습니다. 새로고침 후 다시 수정해주세요.',INVALID_PROFILE:'필명은 2~40자, 소개는 2,000자 이하로 입력해주세요.',INVALID_BANK_DETAILS:'은행명, 실명과 8~20자리 계좌번호를 확인해주세요.',BANK_REAUTH_REQUIRED:'현재 로그인 계정의 비밀번호를 확인해주세요. 추가 인증이 설정된 계정은 운영자에게 문의해주세요.',RATE_LIMITED:'확인 요청이 많습니다. 15분 후 다시 시도해주세요.'})[e?.code]||'정보를 처리하지 못했습니다. 다시 조회하여 저장 상태를 확인해주세요.';}
+  function reset(){generation++;window.CreatorSettlement?.reset();ids.forEach(id=>document.getElementById(id)?.replaceChildren());}
+  function message(e){return ({PROFILE_CONFLICT:'다른 곳에서 정보가 변경되었습니다. 새로고침 후 다시 수정해주세요.',INVALID_PROFILE:'필명은 2~40자, 소개는 2,000자 이하로 입력해주세요.',INVALID_BANK_DETAILS:'은행명, 실명과 8~20자리 계좌번호를 확인해주세요.',BANK_REAUTH_REQUIRED:'현재 로그인 계정의 비밀번호를 확인해주세요. 추가 인증이 설정된 계정은 운영자에게 문의해주세요.',PRIVACY_TRANSFER_NOT_READY:'개인정보 보관·국외이전 조건 확인 전에는 계좌 정보를 저장할 수 없습니다.',POLICY_CONFIRMATION_REQUIRED:'개인정보 처리와 국외이전 안내에 각각 동의해주세요.',RATE_LIMITED:'확인 요청이 많습니다. 15분 후 다시 시도해주세요.'})[e?.code]||'정보를 처리하지 못했습니다. 다시 조회하여 저장 상태를 확인해주세요.';}
   function begin(id){
     const root=document.getElementById(id),seq=++generation,user=window.WebNovelsAuth?.getActor()?.userId;
     if(!root||!active())return null;
+    window.CreatorSettlement?.reset();
     root.innerHTML='<p role="status">불러오는 중입니다.</p>';
     return {root,valid:()=>seq===generation&&active()&&window.WebNovelsAuth.getActor().userId===user};
   }
@@ -24,10 +25,11 @@
     const state=begin(ids[0]);if(!state)return;
     try{
       const data=await api('home');if(!state.valid())return;
+      window.CreatorSettlement?.updateBankSummary(data.bankRegistered===true);
       state.root.innerHTML=`<div class="author-section-heading"><div><h2>작가 대시보드</h2><p class="text-muted">${beta()?'작품 현황과 내 정보를 관리하세요.':'작품 현황과 수익, 내 정보를 한곳에서 관리하세요.'}</p></div><button type="button" class="btn btn-outline" id="adRefresh">새로고침</button></div>
         <div class="author-dashboard-stats">${[['내 작품',data.counts.works,'편'],['등록 회차',data.counts.episodes,'화'],['작성 중 원고',data.counts.drafts,'개'],...(beta()?[]:[['예상수익','집계 전','']])].map(([label,n,unit])=>`<div class="author-stat"><span>${esc(label)}</span><strong>${esc(n)}<small>${esc(unit)}</small></strong></div>`).join('')}</div>
-        <div class="author-dashboard-actions"><button type="button" class="btn btn-primary" data-go="works">작품 관리·원고 작성</button>${beta()?'':'<button type="button" class="btn btn-outline" data-go="earnings">수익 내역 조회</button>'}<button type="button" class="btn btn-outline" data-go="profile">${beta()?'내 정보':'내 정보·정산 계좌'}</button></div>
-        <p class="text-muted">${beta()?'무료 베타에서는 결제와 정산을 제공하지 않으며 계좌 정보를 받지 않습니다.':`수익 집계는 광고·결제 연동 후 시작됩니다. ${data.bankRegistered?'정산 계좌가 등록되어 있습니다. 계좌 확인은 대기 중입니다.':'정산을 위한 본인 명의 계좌를 등록해주세요.'}`}</p>
+        <div class="author-dashboard-actions"><button type="button" class="btn btn-primary" data-go="works">작품 관리·원고 작성</button>${beta()?'':'<button type="button" class="btn btn-outline" data-go="earnings">수익 내역 조회</button>'}<button type="button" class="btn btn-outline" data-go="profile">${beta()?'내 정보·정산 준비':'내 정보·정산 계좌'}</button></div>
+        <p class="text-muted">${beta()?'무료 베타에서는 결제와 송금을 제공하지 않습니다. 정산 정보 등록은 내 정보·정산 준비에서 연결 상태를 확인해주세요.':`수익 집계는 광고·결제 연동 후 시작됩니다. ${data.bankRegistered?'정산 계좌가 등록되어 있습니다. 계좌 확인은 대기 중입니다.':'정산을 위한 본인 명의 계좌를 등록해주세요.'}`}</p>
         <h3>최근 작품</h3><div class="author-recent-works">${data.recentWorks.length?data.recentWorks.map(w=>`<button type="button" class="btn btn-outline" data-work="${esc(w.id)}"><span>${esc(w.title)}</span><small>${w.visibility==='PUBLIC'?'공개':'비공개'}</small></button>`).join(''):'<p>첫 작품을 등록해보세요.</p>'}</div>`;
       state.root.querySelector('#adRefresh').onclick=home;
       state.root.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>window.switchCreatorTab(b.dataset.go));
@@ -58,8 +60,10 @@
     const state=begin(ids[2]);if(!state)return;
     try{
       const data=await api('profile');if(!state.valid())return;
+      const settlement=await window.CreatorSettlement?.capability();if(!state.valid())return;
+      window.CreatorSettlement?.updateBankSummary(!!data.bank);
       let profileVersion=data.profile.version,bankRevision=data.bank?.revision||'0';
-      state.root.innerHTML=`<div class="author-section-heading"><h2>${beta()?'내 정보':'내 정보·정산 계좌'}</h2><button type="button" class="btn btn-outline" id="adProfileRefresh">새로고침</button></div>
+      state.root.innerHTML=`<div class="author-section-heading"><h2>${beta()?'내 정보·정산 준비':'내 정보·정산 계좌'}</h2><button type="button" class="btn btn-outline" id="adProfileRefresh">새로고침</button></div>
         <div class="author-profile-grid"><form id="adProfileForm" class="author-profile-form"><h3>작가 정보</h3>
           <label>로그인 이메일<input class="form-input" type="email" value="${esc(data.profile.email)}" readonly autocomplete="username"></label>
           <label>필명<input class="form-input" name="penName" value="${esc(data.profile.penName)}" required minlength="2" maxlength="40"></label>
@@ -67,17 +71,18 @@
           <p class="text-muted">필명과 소개는 독자에게 공개됩니다.</p><button type="submit" class="btn btn-primary">작가 정보 저장</button><p id="adProfileStatus" role="status" aria-live="polite"></p>
         </form><form id="adBankForm" class="author-profile-form" autocomplete="off"><h3>정산 계좌</h3><p id="adBankSummary">${bankSummary(data.bank,data.legacyBankExists)}</p>
           <label>은행명<input class="form-input" name="bankName" value="${esc(data.bank?.bankName||'')}" placeholder="은행명" required minlength="2" maxlength="60"></label>
-          <label>실명(예금주)<input class="form-input" name="holder" value="${esc(data.bank?.holder||'')}" placeholder="본인 실명" required minlength="2" maxlength="80" autocomplete="off"></label>
+          <label>예금주 (개인은 실명, 사업자·법인은 계좌 명의)<input class="form-input" name="holder" value="${esc(data.bank?.holder||'')}" placeholder="계좌 명의" required minlength="2" maxlength="80" autocomplete="off"></label>
           <label>계좌번호<input class="form-input" name="accountNumber" inputmode="numeric" placeholder="저장할 전체 계좌번호를 입력하세요" required minlength="8" maxlength="32" autocomplete="off"></label>
           <label>현재 로그인 비밀번호<input class="form-input" name="password" type="password" required maxlength="256" autocomplete="current-password"></label>
-          <label class="author-bank-consent"><input type="checkbox" name="consent" required> 본인 명의 계좌이며, 정산을 위해 계좌 정보를 저장하는 데 동의합니다.</label>
+          <label class="author-bank-consent"><input type="checkbox" name="consent" required> 본인 또는 정당한 사업자·법인 명의 계좌이며, 정산 준비를 위해 계좌 정보를 저장하는 데 동의합니다.</label>
           <p class="text-muted">계좌번호는 암호화하여 저장하고 끝 4자리만 표시합니다. 저장만으로 실명·계좌 확인이나 지급이 완료되지는 않습니다.</p>
           <button type="submit" class="btn btn-primary">계좌 정보 저장</button><p id="adBankStatus" role="status" aria-live="polite"></p>
         </form></div>`;
       state.root.querySelector('#adProfileRefresh').onclick=profile;
       const profileForm=state.root.querySelector('#adProfileForm'),bankForm=state.root.querySelector('#adBankForm');
+      if(window.CreatorSettlement){const section=document.createElement('section');section.id='creatorSettlementSection';state.root.append(section);await window.CreatorSettlement.mount(section,{valid:state.valid,initial:settlement});if(!state.valid())return;}
       profileForm.onsubmit=async event=>{
-        event.preventDefault();const button=profileForm.querySelector('button'),status=state.root.querySelector('#adProfileStatus');if(button.disabled)return;
+        event.preventDefault();const button=profileForm.querySelector('button'),status=state.root.querySelector('#adProfileStatus');if(!state.valid()||button.disabled)return;
         button.disabled=true;status.textContent='저장 중입니다.';
         try{
           const result=await api('save-profile',{version:profileVersion,penName:profileForm.elements.penName.value,bio:profileForm.elements.bio.value});if(!state.valid())return;
@@ -86,20 +91,47 @@
           try{await window.WebNovelsAuth.validate();}catch{if(state.valid())status.textContent='저장되었습니다. 다시 로그인하면 변경한 필명이 표시됩니다.';}
         }catch(e){if(state.valid())status.textContent=message(e);}finally{if(state.valid())button.disabled=false;}
       };
-      if(beta()){
+      if(beta()&&settlement?.enabled!==true){
         bankForm.replaceChildren();bankForm.hidden=true;
         return;
       }
+      if(settlement?.enabled===true)bankForm.dataset.settlementRegistration='true';
+      let bankBusy=false,deletePending=null,removal=null,deletePassword=null,deleteButton=null;
+      if(settlement?.enabled===true){
+        const label=document.createElement('label'),transfer=document.createElement('input'),copy=document.createElement('span'),notice=document.createElement('p');transfer.type='checkbox';transfer.name='transferConsent';transfer.required=true;copy.textContent=' 안내한 개인정보 국외이전 조건에 별도로 동의합니다.';label.append(transfer,copy);bankForm.append(label);notice.textContent=settlement.policy?.transferNoticeText||'개인정보 국외이전 조건 확인이 필요합니다.';bankForm.append(notice);
+        if(settlement.collectionEnabled!==true){const info=document.createElement('p');info.textContent=settlement.policy?.collectionInfoText||'개인정보 보관·국외이전 조건 확인 전에는 계좌 정보를 입력하거나 저장할 수 없습니다.';bankForm.append(info);for(const control of [...bankForm.querySelectorAll('input'),...bankForm.querySelectorAll('button')])control.disabled=true;}
+        removal=document.createElement('section');removal.className='settlement-bank-removal';removal.hidden=!data.bank;
+        const deleteLabel=document.createElement('label');deleteLabel.textContent='등록 계좌 삭제용 현재 로그인 비밀번호';deletePassword=document.createElement('input');deletePassword.className='form-input';deletePassword.name='deletePassword';deletePassword.type='password';deletePassword.maxLength=256;deletePassword.autocomplete='current-password';deletePassword.disabled=!data.bank;deleteLabel.append(deletePassword);removal.append(deleteLabel);
+        deleteButton=document.createElement('button');deleteButton.type='button';deleteButton.className='btn btn-outline';deleteButton.textContent='현재 등록 계좌 삭제';removal.append(deleteButton);bankForm.append(removal);
+        deleteButton.onclick=async()=>{
+          if(!state.valid()||bankBusy||deleteButton.disabled||removal.hidden)return;const status=state.root.querySelector('#adBankStatus');
+          if(!deletePassword.value){status.textContent='계좌 삭제용 현재 로그인 비밀번호를 입력해주세요.';deletePassword.focus();return;}
+          if(!deletePending&&!window.confirm('현재 등록한 정산 계좌를 삭제할까요? 작품·계정과 이전 계좌 자료는 유지됩니다.'))return;
+          deletePending ||= {key:crypto.randomUUID(),revision:bankRevision};
+          const body={revision:deletePending.revision,password:deletePassword.value};deletePassword.value='';bankBusy=true;deleteButton.disabled=true;const saveButton=bankForm.querySelector('button');saveButton.disabled=true;
+          try{await window.WebNovelsAuth.api('/api/v2/creator/settlement/bank/delete',{method:'POST',headers:{'Idempotency-Key':deletePending.key},body:JSON.stringify(body)});if(!state.valid())return;
+            deletePending=null;bankRevision='0';removal.hidden=true;deletePassword.disabled=true;state.root.querySelector('#adBankSummary').innerHTML=bankSummary(null,data.legacyBankExists);for(const name of ['bankName','holder','accountNumber','password'])bankForm.elements[name].value='';window.CreatorSettlement?.updateBankSummary(false);status.textContent='현재 등록 계좌를 삭제했습니다. 이전 계좌 자료는 별도 확인이 필요할 수 있습니다.';
+          }catch(e){if(state.valid()){if(e.status>=400&&e.status<500)deletePending=null;status.textContent=message(e)+(deletePending?' 비밀번호를 다시 입력하면 같은 삭제 요청으로 확인합니다.':'');}}
+          finally{body.password='';deletePassword.value='';if(state.valid()){bankBusy=false;deleteButton.disabled=removal.hidden;saveButton.disabled=settlement.collectionEnabled!==true||!!deletePending;}}
+        };
+      }
       bankForm.onsubmit=async event=>{
-        event.preventDefault();const button=bankForm.querySelector('button'),status=state.root.querySelector('#adBankStatus');if(button.disabled||!bankForm.elements.consent.checked)return;
-        button.disabled=true;status.textContent='본인 확인 후 저장 중입니다.';
+        event.preventDefault();const button=bankForm.querySelector('button'),status=state.root.querySelector('#adBankStatus');if(!state.valid()||button.disabled||!bankForm.elements.consent.checked)return;
+        if(bankBusy||deletePending)return;
+        if(settlement?.enabled===true&&(settlement.collectionEnabled!==true||!bankForm.elements.transferConsent?.checked))return;
+        bankBusy=true;button.disabled=true;if(deleteButton)deleteButton.disabled=true;if(deletePassword)deletePassword.value='';status.textContent='본인 확인 후 저장 중입니다.';
         const payload={revision:bankRevision,bankName:bankForm.elements.bankName.value,holder:bankForm.elements.holder.value,accountNumber:bankForm.elements.accountNumber.value,password:bankForm.elements.password.value};
+        if(settlement?.enabled===true)Object.assign(payload,{consent:true,policyVersion:settlement.policy?.version,policyHash:settlement.policy?.hash,transferConsent:true,transferNoticeVersion:settlement.policy?.transferNoticeVersion,transferNoticeHash:settlement.policy?.transferNoticeHash});
         bankForm.elements.password.value='';bankForm.elements.accountNumber.value='';
         try{
           const result=await api('save-bank',payload);if(!state.valid())return;
           bankRevision=result.bank.revision;state.root.querySelector('#adBankSummary').innerHTML=bankSummary(result.bank,false);
+          window.CreatorSettlement?.updateBankSummary(true);
+          if(removal){removal.hidden=false;deletePassword.disabled=false;}
           bankForm.elements.consent.checked=false;status.textContent='계좌 정보를 저장했습니다. 계좌 확인은 대기 중입니다.';
-        }catch(e){if(state.valid())status.textContent=message(e);}finally{payload.password='';payload.accountNumber='';if(state.valid())button.disabled=false;}
+          if(bankForm.elements.transferConsent)bankForm.elements.transferConsent.checked=false;
+          await window.CreatorSettlement?.refreshStatus();
+        }catch(e){if(state.valid())status.textContent=message(e);}finally{payload.password='';payload.accountNumber='';if(state.valid()){bankBusy=false;button.disabled=false;if(deleteButton)deleteButton.disabled=false;}}
       };
     }catch(e){failed(state,e,profile);}
   }

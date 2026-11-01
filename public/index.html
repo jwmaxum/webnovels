@@ -40,7 +40,7 @@
   <link rel="preload" href="/fonts/suit-v2.0.5/SUIT-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/design-tokens.css?v=20261031">
   <link rel="stylesheet" href="/styles.css?v=20261031">
-  <link rel="stylesheet" href="/css/free-beta.css?v=20261031">
+  <link rel="stylesheet" href="/css/free-beta.css?v=20261101r13">
   <link rel="stylesheet" href="/css/beta-operations.css?v=20261031">
 <link rel="stylesheet" href="/css/webtoon.css?v=20261031">
 <link rel="stylesheet" href="/css/growth.css?v=20261031">
@@ -49,6 +49,7 @@
   <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r7">
   <link rel="stylesheet" href="/css/author-studio.css?v=20261101r12">
   <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
+  <link rel="stylesheet" href="/css/settlement.css?v=20261101r13">
 </head>
 <body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
   <a class="reader-skip-link" href="#readerMain">본문으로 이동</a>
@@ -658,7 +659,7 @@
             </div>
             <!-- Quick Info Bar -->
             <div id="creatorAuthorDetails" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 20px; font-size: 0.88rem;">
-              <div>🏦 <span class="text-muted">등록 정산 계좌:</span> <strong id="creatorBankInfo" class="text-white">미등록</strong></div>
+              <button type="button" id="creatorSettlementManage" class="btn btn-outline">🏦 정산 정보 관리 · <strong id="creatorBankInfo">확인 전</strong></button>
               <div>📈 <span class="text-muted">총 독자 조회수:</span> <strong id="creatorTotalViews" style="color:var(--cdg-pink);">—</strong></div>
               <div>📖 <span class="text-muted">총 연재 회차수:</span> <strong id="creatorTotalEpisodes" style="color:var(--accent-emerald);">—</strong></div>
             </div>
@@ -1587,7 +1588,7 @@
 
     </main>
     <footer class="legal-footer" aria-label="사업자정보">
-      <nav aria-label="정책 바로가기"><a href="/company/">회사정보</a><a href="/policies/terms/">이용약관</a><a href="/policies/refund/">환불정책</a></nav>
+      <nav aria-label="정책 바로가기"><a href="/company/">회사정보</a><a href="/policies/terms/">이용약관</a><a href="/policies/refund/">환불정책</a><a href="/policies/settlement/">정산 정보·서류 확인</a></nav>
       <p><strong>(주)얼토당토</strong> · 대표이사 성재원 · 사업자등록번호 555-81-02749</p>
       <address>서울특별시 송파구 중대로 192, 201-18호</address>
       <p>전화 <a href="tel:01021432120">010-2143-2120</a> · 이메일 <a href="mailto:bazier.stage@gmail.com">bazier.stage@gmail.com</a></p>
@@ -2477,7 +2478,7 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261101r12"></script>
+  <script src="/js/core/role-modules.js?v=20261101r13"></script>
   <script src="/js/core/router.js?v=20261031r4"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
@@ -2625,7 +2626,7 @@
   <script src="/js/core/beta-support.js?v=20261031r6"></script>
   <script src="/js/core/auth-ui.js?v=20261031r6"></script>
   <script src="/js/core/service-status.js?v=114"></script>
-  <script src="/js/core/free-beta-ui.js?v=135"></script>
+  <script src="/js/core/free-beta-ui.js?v=20261101r13"></script>
   <script src="/app.js?v=20261031r6"></script>
 </body>
 </html>

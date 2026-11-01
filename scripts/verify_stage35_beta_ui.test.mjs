@@ -23,7 +23,7 @@ test('free beta notice, email help and unavailable-action guard are scoped and i
  c.WEBNOVELS_CONFIG.freeBetaEnabled=true;c.FreeBetaUI.init();c.FreeBetaUI.init();
  assert.equal(f.html.dataset.freeBeta,'true');assert.equal(f.ids.get('mainContentWrapper').children.length,1);
  assert.match(f.ids.get('freeBetaNotice').children[1].textContent,/결제·유료 후원·PASS 인증은 아직 제공하지/);
- assert.equal(f.profile.textContent,'내 정보');assert.match(f.intro.textContent,/이메일 확인과 저작권 동의/);
+ assert.equal(f.profile.textContent,'내 정보·정산 준비');assert.match(f.intro.textContent,/이메일 확인과 저작권 동의/);
  for(const id of ['authForm-login','authForm-signup','authForm-signup-author']){
   assert.equal(f.ids.get(id).children.length,1);assert.equal(f.ids.get(id).children[0].children[0].textContent,'이메일 확인 메일이 오지 않나요?');
  }

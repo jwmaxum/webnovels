@@ -12,6 +12,7 @@ GROWTH_SERVICE_ENABLED = "false"
 GROWTH_MEASUREMENT_ENABLED = "false"
 AUTHOR_IDENTITY_ENABLED = "false"
 BETA_OPERATIONS_ENABLED = "false"
+AUTHOR_SETTLEMENT_CLEANUP_ENABLED = "false"
 
 # Set SUPABASE_URL and SUPABASE_SECRET_KEY as deployment secrets/vars.
 # Enable only after the reviewed 008 (and 015 for webtoons) migration and staging acceptance.

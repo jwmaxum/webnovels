@@ -6,6 +6,7 @@ import {authorDashboardApi} from './author-dashboard-api.mjs';
 import {providerSettingsApi} from './provider-settings-api.mjs';
 import {betaSupportApi} from './beta-support-api.mjs';
 import {betaOperationsApi} from './beta-operations.mjs';
+import {authorSettlementApi} from './author-settlement-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch}={}) {
@@ -13,7 +14,8 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
   const me=path==='/api/v2/me'&&env.P0_API_ENABLED!=='true';
   const workspace=env.P0_API_ENABLED!=='true'&&/^\/api\/v2\/creator\/(works|drafts)(\/|$)/.test(path);
   const dashboard=path==='/api/v2/creator/dashboard';
-  if(!me&&!workspace&&!dashboard&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
+  const settlement=/^\/api\/v2\/(?:creator\/settlement(?:\/|$)|admin\/settlements\/identity(?:\/|$))/.test(path);
+  if(!me&&!workspace&&!dashboard&&!settlement&&!['/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
@@ -68,6 +70,7 @@ export async function accountApi(request,env,{fetchImpl=fetch}={}) {
         authorWorkspaceReady,multiFormatWorksEnabled});
     }
     if(dashboard)return reply(await authorDashboardApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
+    if(settlement)return reply(await authorSettlementApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
     if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));
     if(path==='/api/v2/admin/console')return reply(await adminConsoleApi({request,user,actor,remote,rpc,fail,env}));
     if(path==='/api/v2/admin/providers')return reply(await providerSettingsApi({request,user,actor,remote,rpc,fail,env}));

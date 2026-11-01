@@ -1,4 +1,6 @@
 // Owner-only dashboard. Payout execution remains disabled.
+import {settlementRegistrationEnabled,settlementCollectionEnabled} from './author-settlement-api.mjs';
+import {settlementPolicy} from './author-settlement-policy.mjs';
 const text = (v,min,max) => typeof v==='string' && v.trim().length>=min && v.length<=max && !/[<>\x00-\x1f\x7f]/.test(v);
 const b64 = bytes => btoa(String.fromCharCode(...bytes));
 export async function encryptAccount(number, secret, owner) {
@@ -14,8 +16,10 @@ export async function authorDashboardApi({request,env,actor,user,rpc,remote,fail
   if(actor.author?.status!=='APPROVED')fail(403,'AUTHOR_REQUIRED');
   if(!ready)fail(503,'AUTHOR_WORKSPACE_NOT_ACTIVATED');
   const url=new URL(request.url),action=url.searchParams.get('action')||'home';
-  // Free beta has no payouts; do not collect bank details or password reauthentication.
-  if(env.FREE_BETA_ENABLED==='true'&&action==='save-bank')fail(503,'FREE_BETA_FEATURE_UNAVAILABLE');
+  // Optional registration is separate from paid features; the default beta remains unchanged.
+  const registration=settlementRegistrationEnabled(env),betaRegistration=env.FREE_BETA_ENABLED==='true'&&registration;
+  if(env.FREE_BETA_ENABLED==='true'&&action==='save-bank'&&!betaRegistration)fail(503,'FREE_BETA_FEATURE_UNAVAILABLE');
+  if(action==='save-bank'&&env.AUTHOR_SETTLEMENT_REGISTRATION_ENABLED==='true'&&!settlementCollectionEnabled(env))fail(503,'PRIVACY_TRANSFER_NOT_READY');
   if([...url.searchParams.keys()].some(k=>!['action','month','page'].includes(k)) ||
      [...url.searchParams.keys()].some(k=>url.searchParams.getAll(k).length!==1))fail(400,'INVALID_QUERY');
   const call=(a,data={})=>rpc('launch_author_dashboard',{p_user:user.id,p_action:a,p_data:data});
@@ -36,16 +40,18 @@ export async function authorDashboardApi({request,env,actor,user,rpc,remote,fail
   while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>12000){await reader.cancel();fail(413,'BODY_TOO_LARGE');}chunks.push(value);}
   const bytes=new Uint8Array(size);let pos=0;for(const chunk of chunks){bytes.set(chunk,pos);pos+=chunk.length;}
   let data;try{data=JSON.parse(new TextDecoder().decode(bytes));}catch{fail(400,'INVALID_JSON');}
-  const fields=action==='save-profile'?['version','penName','bio']:['revision','bankName','holder','accountNumber','password'];
+  const fields=action==='save-profile'?['version','penName','bio']:['revision','bankName','holder','accountNumber','password',...(registration?['consent','policyVersion','policyHash','transferConsent','transferNoticeVersion','transferNoticeHash']:[])];
   if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).some(k=>!fields.includes(k)))fail(400,'INVALID_PROFILE');
   if(action==='save-profile'){
     if(!/^[a-f0-9]{32}$/.test(data.version||'')||!text(data.penName,2,40)||typeof data.bio!=='string'||data.bio.length>2000||data.bio.includes('\0'))fail(400,'INVALID_PROFILE');
     return call(action,{version:data.version,penName:data.penName.trim(),bio:data.bio});
   }
+  if(registration){const policy=await settlementPolicy(env);if(data.consent!==true||data.policyVersion!==policy.version||data.policyHash!==policy.hash||data.transferConsent!==true||data.transferNoticeVersion!==policy.transferNoticeVersion||data.transferNoticeHash!==policy.transferNoticeHash)fail(400,'POLICY_CONFIRMATION_REQUIRED');}
   if(typeof data.revision!=='string'||!/^\d{1,16}$/.test(data.revision)||!text(data.bankName,2,60)||!text(data.holder,2,80)||
     typeof data.accountNumber!=='string'||!/^\d[\d -]{6,31}\d$/.test(data.accountNumber)||
     typeof data.password!=='string'||data.password.length<1||data.password.length>256)fail(400,'INVALID_BANK_DETAILS');
   const number=data.accountNumber.replace(/[ -]/g,'');if(!/^\d{8,20}$/.test(number))fail(400,'INVALID_BANK_DETAILS');
+  if(user.factors?.some(factor=>factor.status==='verified'))fail(403,'BANK_REAUTH_REQUIRED');
   await call('bank-attempt'); // Durable per-owner limit before asking Auth to verify a password.
   const auth=await remote('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:user.email,password:data.password})});
   data.password='';
@@ -54,7 +60,9 @@ export async function authorDashboardApi({request,env,actor,user,rpc,remote,fail
   try {
     if(session.user?.id!==user.id||!session.access_token||session.user?.factors?.some(f=>f.status==='verified'))fail(403,'BANK_REAUTH_REQUIRED');
     const envelope=await encryptAccount(number,env.AUTHOR_BANK_ENCRYPTION_KEY||env.SUPABASE_SECRET_KEY||env.SUPABASE_SERVICE_ROLE_KEY,user.id+':'+actor.author.id);
-    return await call(action,{revision:data.revision,bankName:data.bankName.trim(),holder:data.holder.trim(),last4:number.slice(-4),envelope});
+    const bankData={revision:data.revision,bankName:data.bankName.trim(),holder:data.holder.trim(),last4:number.slice(-4),envelope};
+    if(registration)return await rpc('author_settlement_bank',{p_user:user.id,p_data:{...bankData,policyVersion:data.policyVersion,policyHash:data.policyHash,transferNoticeVersion:data.transferNoticeVersion,transferNoticeHash:data.transferNoticeHash}});
+    return await call(action,bankData);
   } finally {
     // Revoke only this password-check session, never the author's existing login.
     if(session.access_token)try{await remote('/auth/v1/logout?scope=local',{method:'POST',headers:{Authorization:'Bearer '+session.access_token}});}catch{}

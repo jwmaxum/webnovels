@@ -24,7 +24,7 @@
   const intro=document.querySelector('#authForm-signup-author > p');
   if(intro)intro.textContent='무료 베타에서는 이메일 확인과 저작권 동의 후 필명으로 가입합니다. PASS 실명 인증은 추후 제공하며, 현재 본인확인 완료로 표시하지 않습니다. 별도 이메일 ID·필명 가입과 계정별 웹소설·웹툰 연재가 가능합니다.';
   for(const id of ['authForm-login','authForm-signup','authForm-signup-author'])help(document.getElementById(id));
-  document.querySelectorAll('[data-creator-tab="profile"]').forEach(button=>{button.textContent='내 정보';});
+  document.querySelectorAll('[data-creator-tab="profile"]').forEach(button=>{button.textContent='내 정보·정산 준비';});
  }
  document.addEventListener('click',event=>{
   if(window.WEBNOVELS_CONFIG?.freeBetaEnabled!==true||!event.target?.closest?.(blocked))return;

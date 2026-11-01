@@ -90,6 +90,9 @@ window.fetchCreatorDashboardData = async function({loadContent=true}={}) {
   if (badge) badge.textContent = '작가';
   const logout = document.getElementById('btnAuthorLogout');
   if (logout) logout.style.display = 'inline-block';
+  const settlementManage=document.getElementById('creatorSettlementManage'),user=window.WebNovelsAuth?.getActor()?.userId;
+  if(settlementManage)settlementManage.onclick=()=>{const who=window.WebNovelsAuth?.getActor();if(who?.userId===user&&who.author?.status==='APPROVED')window.switchCreatorTab('profile');};
+  window.CreatorSettlement?.refreshSummary();
   document.getElementById('view-creator')?.classList.toggle('stage8-creator',
     window.CreatorOperations?.active()===true);
   if(!loadContent)return;
