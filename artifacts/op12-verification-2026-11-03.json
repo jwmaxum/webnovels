@@ -1,0 +1,55 @@
+{
+  "stage": "OP-12",
+  "scope": "Manual account review, private proof and readiness snapshots; LIVE revenue unconnected and canPay always false",
+  "local": {
+    "buildCompile": "PASS",
+    "typeCheck": "PASS",
+    "cloudflareFunctionsBundle": "PASS (6 entrypoints)",
+    "targetedRegression": {
+      "files": 63,
+      "passed": 712,
+      "failed": 0
+    },
+    "op12": {
+      "passed": 14,
+      "failed": 0
+    },
+    "nativePostgres": {
+      "stage": "OP-12",
+      "result": "PASS",
+      "engine": "postgres (PostgreSQL) 17.11",
+      "steps": [
+        "bank change before review rejects stale proof",
+        "review before bank change preserves history and invalidates current readiness",
+        "duplicate requests create one encrypted evidence and independent request cannot confirm twice",
+        "archive restore preserves private documents, ACLs, review revocations and snapshots"
+      ],
+      "provenance": "NATIVE_POSTGRES_SYNTHETIC",
+      "productionTouched": false,
+      "realMoneyMovement": false,
+      "hostedRestoreVerified": false
+    },
+    "dependencyVulnerabilities": 0,
+    "syntaxSecurityDiff": {
+      "result": "PASS",
+      "syntaxFiles": 31,
+      "scope": "Changed source: syntax, secret patterns, safe DOM; authorization/ACL/locking/privacy/provenance review"
+    },
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "continuousFullRelease": "NOT_RUN_LOCALLY"
+  },
+  "productionDatabaseApplied": false,
+  "productionFlagsChanged": false,
+  "productionSchedulerDeployed": false,
+  "realProviderCalled": false,
+  "realBankProofUploaded": false,
+  "realRevenueConnected": false,
+  "actualBankTransfer": false,
+  "browserAcceptance": "NOT_RUN",
+  "remote": {
+    "gitPush": "PENDING",
+    "githubCI": "PENDING",
+    "cloudflarePages": "PENDING"
+  }
+}

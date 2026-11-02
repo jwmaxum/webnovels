@@ -7,6 +7,7 @@ import {pointsTestEnabled} from '../../server/points-test-api.mjs';
 import {chargingTestEnabled} from '../../server/topups-test-api.mjs';
 import {adRewardsTestEnabled} from '../../server/ad-rewards-test-api.mjs';
 import {settlementsTestEnabled,manualPayoutWorkflowEnabled} from '../../server/author-payouts-test-api.mjs';
+import {settlementReadinessEnabled} from '../../server/settlement-readiness-policy.mjs';
 // Cloudflare Pages runtime bindings; never serialize context.env.
 export function onRequestGet({ env }) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL;
@@ -35,5 +36,6 @@ export function onRequestGet({ env }) {
   config.adRewardsTestEnabled = adRewardsTestEnabled(env);
   config.settlementsTestEnabled = settlementsTestEnabled(env);
   config.manualPayoutWorkflowEnabled = manualPayoutWorkflowEnabled(env);
+  config.settlementReadinessEnabled = settlementReadinessEnabled(env);
   return new Response('window.WEBNOVELS_CONFIG = Object.freeze(' + JSON.stringify(config).replace(/</g, '\\u003c') + ');', { headers });
 }

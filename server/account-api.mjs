@@ -15,6 +15,7 @@ import {adRewardsTestApi,adRewardsTestEnabled,verifyInternalTestCallback,adRewar
 import {authorPayoutsTestApi,settlementsTestEnabled} from './author-payouts-test-api.mjs';
 import {payoutProviderTestApi,payoutProviderTestCallback,payoutTestSettingsEnabled,payoutTestRuntimeEnabled} from './payout-provider-test-api.mjs';
 import {manualPayoutWorkflowApi,manualPayoutWorkflowEnabled} from './manual-payout-workflow-api.mjs';
+import {settlementReadinessApi,settlementReadinessEnabled} from './settlement-readiness-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTransport}={}) {
@@ -29,12 +30,14 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
   const adRewardsTest=adRewardsCallback||['/api/v2/ad-rewards-test','/api/v2/admin/ad-rewards-test'].includes(path);
   const payoutsTest=['/api/v2/creator/payouts-test','/api/v2/admin/payouts-test'].includes(path);
   const payoutWorkflow=['/api/v2/creator/payout-workflow','/api/v2/admin/payout-workflow'].includes(path);
+  const settlementReadiness=['/api/v2/creator/settlement-readiness','/api/v2/admin/settlement-readiness'].includes(path);
   const payoutProvider=path==='/api/v2/admin/payout-provider-test',payoutCallback=path==='/api/v2/payout-provider-test/callback';
-  if(!payoutWorkflow&&!payoutProvider&&!payoutCallback&&!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!adRewardsTest&&!payoutsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
+  if(!settlementReadiness&&!payoutWorkflow&&!payoutProvider&&!payoutCallback&&!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!adRewardsTest&&!payoutsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const payoutCallbackDeadline=payoutCallback?AbortSignal.timeout(8000):null;
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
+    if(settlementReadiness&&!settlementReadinessEnabled(env))fail(503,'SETTLEMENT_READINESS_NOT_ACTIVATED');
     if(payoutWorkflow&&!manualPayoutWorkflowEnabled(env))fail(503,'MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED');
     if(payoutProvider&&!payoutTestSettingsEnabled(env)||payoutCallback&&(!payoutTestRuntimeEnabled(env)||env.PAYOUT_PROVIDER_TEST_WEBHOOK_ENABLED!=='true'))fail(503,'PAYOUT_TEST_NOT_ACTIVATED');
     if(pointsTest&&!pointsTestEnabled(env))fail(503,'POINTS_TEST_NOT_ACTIVATED');
@@ -98,6 +101,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
         authorWorkspaceReady,multiFormatWorksEnabled});
     }
     if(payoutsTest)return reply(await authorPayoutsTestApi({request,env,actor,user,rpc,fail}));
+    if(settlementReadiness)return reply(await settlementReadinessApi({request,env,actor,user,rpc,remote}));
     if(payoutWorkflow)return reply(await manualPayoutWorkflowApi({request,env,actor,user,rpc}));
     if(payoutProvider)return reply(await payoutProviderTestApi({request,env,actor,user,rpc,remote,fetchImpl}));
     if(dashboard)return reply(await authorDashboardApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));

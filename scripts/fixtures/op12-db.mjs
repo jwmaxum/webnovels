@@ -1,0 +1,51 @@
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+import {settlementPolicy} from '../../server/author-settlement-policy.mjs';
+import {encryptSettlement} from '../../server/author-settlement-crypto.mjs';
+import {encryptAccount} from '../../server/author-dashboard-api.mjs';
+export const owner='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',admin='33333333-3333-4333-8333-333333333333',limited='44444444-4444-4444-8444-444444444444';
+export const env={AUTHOR_SETTLEMENT_ENCRYPTION_KEY:'a'.repeat(64),AUTHOR_SETTLEMENT_KEY_VERSION:'v1',AUTHOR_SETTLEMENT_REGISTRATION_ENABLED:'true',AUTHOR_SETTLEMENT_PRIVACY_REVIEWED:'true',AUTHOR_SETTLEMENT_TRANSFER_NOTICE_VERSION:'approved-notice-v1',AUTHOR_SETTLEMENT_TRANSFER_NOTICE_TEXT:'Approved synthetic notice for local verification only. '.repeat(6),SETTLEMENT_READINESS_ENABLED:'true',BANK_PROOF_PRIVACY_REVIEWED:'true',BANK_PROOF_POLICY_VERSION:'synthetic-v1',BANK_PROOF_POLICY_TEXT:'Synthetic purpose, access, overseas processing, retention and deletion terms, not an operating legal policy. '.repeat(4),BANK_PROOF_RETENTION_DAYS:'30'};
+const read=path=>readFile(new URL('../../'+path,import.meta.url),'utf8');
+export async function setup({dbFactory=()=>PGlite.create()}={}){
+ const db=await dbFactory(),policy=await settlementPolicy(env);
+ await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create schema authoring;
+  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz default now(),is_anonymous boolean default false,deleted_at timestamptz,banned_until timestamptz);
+  insert into auth.users(id,email) values('${owner}','owner@example.test'),('${other}','other@example.test'),('${admin}','admin@example.test'),('${limited}','limited@example.test');
+  create table public.authors(id bigint primary key,auth_user_id uuid,username text,pen_name text,bio text,profile_image text,status text);
+  insert into public.authors values(1,'${owner}','author1','First author','','','APPROVED'),(2,'${other}','author2','Other author','','','APPROVED');
+  create table public.works(id bigint,author_id bigint);
+  create table public.episodes(id bigint,work_id bigint);
+  create table authoring.work_state(work_id bigint,author_id bigint,trashed_at timestamptz,updated_at timestamptz,visibility text);
+  create table authoring.drafts(work_id bigint,author_id bigint,lifecycle text);
+  create table public.author_earnings(id uuid,author_id bigint,work_id bigint,period_date date,author_revenue numeric,status text);
+  create table public.author_settlement_accounts(author_id bigint,account_number_encrypted text);
+  insert into public.author_settlement_accounts values(1,'legacy-preserved');
+  create table public.readers(id bigint,auth_user_id uuid,username text,nickname text,status text,is_adult_verified boolean,adult_verified_at timestamptz,points integer);
+  create table public.admin_users(id uuid,auth_user_id uuid,username text,nickname text,role text,is_active boolean,permissions text[]);
+  insert into public.admin_users values('${admin}','${admin}','admin','Admin','SUPER_ADMIN',true,'{}'),('${limited}','${limited}','limited','Limited','SUB_ADMIN',true,array['AUTHOR_SETTLEMENT','SETTLEMENTS_READ']);
+  create table authoring.migrations(version text primary key);`);
+ await db.exec(await read('database/launch/004_virtual_accounts.sql'));
+ await db.exec(`update launch_recovery.account_service set enabled=true;
+  insert into launch_recovery.account_links(kind,profile_id,auth_user_id,evidence_ref,operator_ref,backup_sha256) values('author','1','${owner}','test','test',repeat('a',64)),('author','2','${other}','test','test',repeat('a',64));
+  insert into launch_recovery.account_links(kind,profile_id,auth_user_id,evidence_ref,operator_ref,backup_sha256) values('admin','${admin}','${admin}','test','test',repeat('a',64)),('admin','${limited}','${limited}','test','test',repeat('a',64));
+  insert into launch_recovery.virtual_accounts(kind,profile_id,auth_user_id,login_email) values('author','1','${owner}','owner@example.test'),('author','2','${other}','other@example.test');
+  create function public.launch_author_workspace_ready() returns boolean language sql as $$select public.launch_accounts_ready()$$;
+  set webnovels.dashboard_apply_verified='true';
+  alter default privileges in schema public revoke execute on functions from public,anon,authenticated,service_role;
+  set webnovels.settlement_apply_verified='true';`);
+ await db.exec(await read('database/launch/009_author_dashboard.sql'));
+ await db.exec(await read('database/launch/016_author_settlement_registration.sql'));
+ await db.exec("set webnovels.settlement_readiness_apply_verified='true'");await db.exec(await read('database/launch/025_settlement_readiness.sql'));
+ const call=async(action,data={},user=admin,isAdmin=true)=>(await db.query('select public.op12_settlement_readiness($1,$2,$3,$4) r',[user,action,JSON.stringify(data),isAdmin])).rows[0].r;
+ const bank=async(revision='0',number='000000001234')=>{
+  const envelope=await encryptAccount(number,'synthetic-bank-key',owner+':1');
+  return (await db.query('select public.author_settlement_bank($1,$2) r',[owner,JSON.stringify({revision,bankName:'합성 은행',holder:'합성 신청인',last4:number.slice(-4),envelope,policyVersion:policy.version,policyHash:policy.hash,transferNoticeVersion:policy.transferNoticeVersion,transferNoticeHash:policy.transferNoticeHash})])).rows[0].r;
+ };
+ const seed=async()=>{
+  await bank();
+  const profile=await encryptSettlement({legalName:'합성 신청인'},{userId:owner,authorId:'1',revision:'1',purpose:'profile'},env);
+  await db.query("insert into launch_recovery.author_settlement_applications(author_id,user_id,revision,status,applicant_type,document_type,profile_envelope,policy_version,policy_hash,transfer_version,transfer_hash,submitted_at,expires_at,profile_expires_at,reviewed_at) values(1,$1,1,'APPROVED','INDIVIDUAL','RESIDENT_CARD',$2,'synthetic',repeat('a',64),'synthetic',repeat('b',64),now(),now()+interval '7 days',now()+interval '90 days',now())",[owner,JSON.stringify(profile)]);
+  return (await call('detail',{authorId:'1'})).facts;
+ };
+ return {db,policy,owner,other,admin,limited,call,bank,seed};
+}

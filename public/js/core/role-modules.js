@@ -9,12 +9,12 @@
       '/js/creator/draft-diff.js?v=105', '/js/creator/creator-readiness.js?v=126',
       '/js/creator/creator-webtoon.js?v=20261031r10', '/vendor/manuscript-paste.js?v=20261031r9', '/js/creator/creator-rich-editor.js?v=20261031r9', '/js/creator/creator-editor.js?v=20261101r12',
       '/js/creator/creator-publications.js?v=20261101r12', '/js/creator/creator-recovery.js?v=123', '/js/creator/creator-files.js?v=132',
-      '/js/creator/creator-settlement.js?v=20261101r13', '/js/shared/payout-workflow.js?v=20261102op11', '/js/shared/payouts-test.js?v=20261102op11', '/js/creator/creator-dashboard.js?v=20261102op07', '/js/creator/creator.js?v=20261101r13',
+      '/js/creator/creator-settlement.js?v=20261101r13', '/js/shared/settlement-readiness.js?v=20261102op12', '/js/shared/payout-workflow.js?v=20261102op11', '/js/shared/payouts-test.js?v=20261102op11', '/js/creator/creator-dashboard.js?v=20261102op12', '/js/creator/creator.js?v=20261101r13',
       '/js/creator/creator-works.js?v=20261101r12', '/js/creator/creator-distribution.js?v=124',
       '/js/creator/creator-operations.js?v=20261101r12'
     ],
     admin: [
-      '/js/admin/admin.js?v=20261012', '/js/admin/admin-provider-settings.js?v=20261102op08', '/js/admin/admin-settlement-review.js?v=20261101r13', '/js/shared/payout-workflow.js?v=20261102op11', '/js/shared/payouts-test.js?v=20261102op11', '/js/admin/admin-payout-provider-test.js?v=20261102op10', '/js/admin/admin-console.js?v=20261102op10',
+      '/js/admin/admin.js?v=20261012', '/js/admin/admin-provider-settings.js?v=20261102op08', '/js/admin/admin-settlement-review.js?v=20261101r13', '/js/shared/settlement-readiness.js?v=20261102op12', '/js/shared/payout-workflow.js?v=20261102op11', '/js/shared/payouts-test.js?v=20261102op11', '/js/admin/admin-payout-provider-test.js?v=20261102op10', '/js/admin/admin-console.js?v=20261102op12',
       '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=20261031r6', '/js/admin/admin-workflow.js?v=20261101op01', '/js/admin/admin-beta-operations.js?v=20261031r6', '/js/admin/admin-navigation.js?v=20261101op02', '/js/admin/admin-members.js?v=20261101op02b', '/js/admin/admin-display.js?v=20261101op03', '/js/admin/admin-points-test.js?v=20261102op04', '/js/admin/admin-topups.js?v=20261102op05', '/js/admin/admin-rewards-test.js?v=20261102op06', '/js/admin/admin-operations.js?v=20261102op10',
       '/js/admin/virtual-accounts.js?v=111'
     ]

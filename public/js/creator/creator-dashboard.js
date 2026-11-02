@@ -11,13 +11,13 @@
     return actor?.author?.status==='APPROVED'&&(actor.authorWorkspaceReady===true||(beta()&&actor.accountServiceOnly!==true));
   };
   const api=(action,data)=>window.WebNovelsAuth.api('/api/v2/creator/dashboard?action='+action,data?{method:'POST',body:JSON.stringify(data)}:undefined);
-  function reset(){generation++;window.CreatorSettlement?.reset();window.AuthorPayoutsTest?.leave();ids.forEach(id=>document.getElementById(id)?.replaceChildren());}
+  function reset(){window.SettlementReadiness?.reset();generation++;window.CreatorSettlement?.reset();window.AuthorPayoutsTest?.leave();ids.forEach(id=>document.getElementById(id)?.replaceChildren());}
   function message(e){return ({PROFILE_CONFLICT:'다른 곳에서 정보가 변경되었습니다. 새로고침 후 다시 수정해주세요.',INVALID_PROFILE:'필명은 2~40자, 소개는 2,000자 이하로 입력해주세요.',INVALID_BANK_DETAILS:'은행명, 실명과 8~20자리 계좌번호를 확인해주세요.',BANK_REAUTH_REQUIRED:'현재 로그인 계정의 비밀번호를 확인해주세요. 추가 인증이 설정된 계정은 운영자에게 문의해주세요.',PRIVACY_TRANSFER_NOT_READY:'개인정보 보관·국외이전 조건 확인 전에는 계좌 정보를 저장할 수 없습니다.',POLICY_CONFIRMATION_REQUIRED:'개인정보 처리와 국외이전 안내에 각각 동의해주세요.',RATE_LIMITED:'확인 요청이 많습니다. 15분 후 다시 시도해주세요.'})[e?.code]||'정보를 처리하지 못했습니다. 다시 조회하여 저장 상태를 확인해주세요.';}
   function begin(id){
     const root=document.getElementById(id),seq=++generation,user=window.WebNovelsAuth?.getActor()?.userId;
     if(!root||!active())return null;
     window.CreatorSettlement?.reset();
-    window.AuthorPayoutsTest?.leave();
+    window.AuthorPayoutsTest?.leave();window.SettlementReadiness?.reset();
     root.innerHTML='<p role="status">불러오는 중입니다.</p>';
     return {root,valid:()=>seq===generation&&active()&&window.WebNovelsAuth.getActor().userId===user};
   }
@@ -40,8 +40,8 @@
   }
   async function earnings(month='',page=0,legacy=false){
     const state=begin(ids[1]);if(!state)return;
-    if(!legacy&&window.WEBNOVELS_CONFIG?.settlementsTestEnabled===true&&window.AuthorPayoutsTest){await window.AuthorPayoutsTest.render(state.root,{isCurrent:state.valid,onLegacy:()=>earnings(month,page,true)});return;}
-    if(beta()){state.root.innerHTML='<h2>무료 베타 안내</h2><p>현재 무료 연재를 제공하며 결제·유료 후원·정산 기능은 추후 제공됩니다.</p>';return;}
+    if(!legacy&&window.WEBNOVELS_CONFIG?.settlementsTestEnabled===true&&window.AuthorPayoutsTest){await window.AuthorPayoutsTest.render(state.root,{isCurrent:state.valid,onLegacy:()=>earnings(month,page,true)});if(state.valid())await window.SettlementReadiness?.render(state.root,{isCurrent:state.valid});return;}
+    if(beta()){state.root.innerHTML='<h2>무료 베타 안내</h2><p>현재 무료 연재를 제공하며 결제·유료 후원·정산 기능은 추후 제공됩니다.</p>';await window.SettlementReadiness?.render(state.root,{isCurrent:state.valid});return;}
     try{
       const data=await api('earnings&month='+encodeURIComponent(month)+'&page='+page);if(!state.valid())return;
       const money=n=>n===null?'—':Number(n).toLocaleString('ko-KR',{maximumFractionDigits:2})+'원';
@@ -55,6 +55,7 @@
       state.root.querySelector('#adEarningsRefresh').onclick=()=>earnings(filter.value,0,legacy);
       state.root.querySelector('#adPrev').onclick=()=>earnings(month,page-1,legacy);
       state.root.querySelector('#adNext').onclick=()=>earnings(month,page+1,legacy);
+      await window.SettlementReadiness?.render(state.root,{isCurrent:state.valid});
     }catch(e){failed(state,e,()=>earnings(month,page,legacy));}
   }
   function bankSummary(bank,legacy){return bank?`${esc(bank.bankName)} · ${esc(bank.maskedNumber)} · 예금주 ${esc(bank.holder)}<br><small>등록 완료 · 계좌 확인 대기</small>`:legacy?'이전 계좌 자료가 있습니다. 본인 명의 계좌를 다시 등록해주세요.':'등록된 정산 계좌가 없습니다.';}

@@ -3,7 +3,7 @@ import {reconcileDuePayoutTests,payoutTestRuntimeEnabled} from '../server/payout
 export default {
   async scheduled(_event, env, context) {
     const payoutReconciliation=payoutTestRuntimeEnabled(env)&&env.PAYOUT_PROVIDER_TEST_RECONCILE_ENABLED==='true';
-    if (!payoutReconciliation && env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true' && env.AUTHOR_IDENTITY_ENABLED !== 'true' && env.BETA_OPERATIONS_ENABLED !== 'true' && env.AUTHOR_SETTLEMENT_CLEANUP_ENABLED !== 'true') return;
+    if (!payoutReconciliation && env.BANK_PROOF_CLEANUP_ENABLED !== 'true' && env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true' && env.AUTHOR_IDENTITY_ENABLED !== 'true' && env.BETA_OPERATIONS_ENABLED !== 'true' && env.AUTHOR_SETTLEMENT_CLEANUP_ENABLED !== 'true') return;
     if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(env.SUPABASE_URL || '') ||
         !env.SUPABASE_SECRET_KEY) throw Error('Scheduler configuration missing');
     const invoke=async (name,payload={p_limit:20})=>{
@@ -30,6 +30,7 @@ export default {
     // Separate disabled-by-default preparation job. It never changes a tier or sends messages.
     // Run jobs independently so a publication failure cannot starve the growth batch.
     const jobs=[];
+    if(env.BANK_PROOF_CLEANUP_ENABLED==='true')jobs.push(invoke('op12_purge_documents',{}));
     if(payoutReconciliation)jobs.push(reconcileDuePayoutTests({env,rpc:async(name,payload)=>{
       const result=await invoke(name,payload);if(result?.error)throw Error('Payout reconciliation RPC failed');return result;
     }}));

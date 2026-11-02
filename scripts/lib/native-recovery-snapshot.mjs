@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
-export async function snapshot(db){
- const schemas=['public','auth','storage','authoring','commerce'];
+export async function snapshot(db,{schemas=['public','auth','storage','authoring','commerce']}={}){
  const tables=(await db.query("select n.nspname schema,c.relname name,c.relrowsecurity rls,c.relforcerowsecurity force_rls,coalesce(c.relacl,acldefault('r',c.relowner))::text acl,pg_get_userbyid(c.relowner) owner from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind='r' order by 1,2",[schemas])).rows;
  const rows={};for(const t of tables){assert(/^[a-z0-9_]+$/.test(t.schema)&&/^[a-z0-9_]+$/.test(t.name));rows[t.schema+'.'+t.name]=(await db.query('select to_jsonb(x)::text data from "'+t.schema+'"."'+t.name+'" x order by to_jsonb(x)::text')).rows.map(x=>x.data);}
  const routines=(await db.query("select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) args,pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,p.proacl::text acl from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname=any($1) and p.prokind='f' order by 1,2,3",[schemas])).rows;

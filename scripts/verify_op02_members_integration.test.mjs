@@ -50,7 +50,7 @@ test('OP-02 assets retain compatibility ordering and native separate member dest
   for(const name of ['admin-navigation','admin-members','admin-operations'])assert(loader.includes('/js/admin/'+name+'.js?v='+(name==='admin-navigation'?'20261101op02':name==='admin-operations'?'20261102op10':'20261101op02b')));
   assert(loader.indexOf('/admin-navigation.js?')<loader.indexOf('/admin-members.js?'));
   assert(loader.indexOf('/admin-members.js?')<loader.indexOf('/admin-operations.js?'));
-  for(const name of ['role-modules','router'])assert(html.includes('/js/core/'+name+'.js?v='+(name==='role-modules'?'20261102op11':'20261102op07')));
+  for(const name of ['role-modules','router'])assert(html.includes('/js/core/'+name+'.js?v='+(name==='role-modules'?'20261102op12':'20261102op07')));
   const navigation={window:{location:{origin:'https://webnovels.uk'}},URL,URLSearchParams};vm.runInNewContext(sources['admin-navigation'],navigation);
   const memberGroup=navigation.window.AdminNavigation.groups(()=>true).find(group=>group.key==='members');
   assert.deepEqual(Array.from(memberGroup.tabs,item=>[item.kind,item.href]),[['reader','/admin/members?kind=reader'],['author','/admin/members?kind=author']]);

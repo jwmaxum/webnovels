@@ -54,7 +54,7 @@ async function readJson(request,limit,fail){
  let data;try{data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{fail(400,'INVALID_JSON');}
  if(!data||typeof data!=='object'||Array.isArray(data))fail(400,'INVALID_SETTLEMENT_DETAILS');return data;
 }
-async function reauthenticate({password,user,rpc,remote,admin,fail}){
+export async function reauthenticate({password,user,rpc,remote,admin,fail}){
  if(user.factors?.some(factor=>factor.status==='verified'))fail(403,'SETTLEMENT_REAUTH_REQUIRED');
  if(typeof password!=='string'||password.length<1||password.length>256)fail(403,'SETTLEMENT_REAUTH_REQUIRED');
  await rpc('author_settlement_registration',{p_user:user.id,p_action:admin?'admin-attempt':'attempt'});

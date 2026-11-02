@@ -54,3 +54,6 @@ jobs:
       run: npm run verify:op10:native
     - name: Verify manual versus provider settlement exclusivity and recovery
       run: npm run verify:op11:native
+
+    - name: Verify bank review races and private evidence recovery
+      run: npm run verify:op12:native
