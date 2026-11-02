@@ -1,6 +1,6 @@
 {
   "stage": "OP-05",
-  "checkedAt": "2026-11-02T01:26:39.923Z",
+  "checkedAt": "2026-11-02T01:39:00.811Z",
   "baseCommit": "fc18ed7e95322ee6b57ea14771379a76cb7e447d",
   "mode": "TEST",
   "provenance": "LOCAL_SIMULATED",
@@ -187,14 +187,108 @@
     "livePaymentContract": "NOT_CONNECTED"
   },
   "delivery": {
-    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+    "checkedAt": "2026-11-02T01:38:25.202Z",
+    "productCommit": "19a5d61d6d595e0d34924dd146584b8aa626a3c2",
+    "mainPush": "SUCCESS",
+    "force": false,
+    "ci": "SUCCESS",
+    "ciUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41372665630",
+    "cloudflare": "SUCCESS",
+    "deploymentId": "2d31b204-5f5b-4c1c-9b25-0ad9a1d18e60",
+    "matchingCodeAssets": 16,
+    "origins": [
+      {
+        "origin": "https://webnovels-db4.pages.dev",
+        "flagsDisabled": true,
+        "routes": [
+          {
+            "path": "/reading-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test/return",
+            "status": 200,
+            "portalReady": true,
+            "noReferrer": true,
+            "noStore": true
+          }
+        ],
+        "apis": [
+          {
+            "path": "/api/v2/points-test?action=wallet",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/topups-test?action=products",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/topups-test?action=state",
+            "status": 503,
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "origin": "https://webnovels.uk",
+        "flagsDisabled": true,
+        "routes": [
+          {
+            "path": "/reading-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test/return",
+            "status": 200,
+            "portalReady": true,
+            "noReferrer": true,
+            "noStore": true
+          }
+        ],
+        "apis": [
+          {
+            "path": "/api/v2/points-test?action=wallet",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/topups-test?action=products",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/topups-test?action=state",
+            "status": 503,
+            "disabled": true
+          }
+        ]
+      }
+    ],
+    "testOffVerified": true,
+    "productionDatabaseApplied": false,
+    "productionFlagsChanged": false,
+    "browser": "NOT_RUN"
   },
   "evidence": {
     "database/launch/020_topups_test.sql": "abbe61bbe026b24acbd3db61c35ad52c09637d3226a7bb3cf7d4f7db61ac6389",
-    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "b8893fd9b7df8ea271c18c5908a5f25faf650d02ae1d53c011e01dc0573aa0db",
-    "docs/launch/ui-redesign-plan-2026-10-30.md": "d23c1adb85ffa0c9889d8fff9bb221c5b08f79ececa4509a99230a9add5c4c8b",
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "6dc155c44d489a591672664d6c68dcfcb155583c262a9bf20cdb15dd0f8b79b2",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "c91b84fc69825c08705a6cecbf7a1411651f75d37fe3ed8ac3a9c0ced3deac1d",
     "docs/launch/op05-topups-contract-2026-11-02.md": "69e3bb09a2a85fb0a3ac75d8d203b7a935eabd87c37df21caf542ceb0b491ed5",
-    "docs/launch/op05-topups-implementation-2026-11-02.md": "225bd35274c6383859bf61d12d1ec4906381f20aa7cabb6b79663afc013ecf7f",
+    "docs/launch/op05-topups-implementation-2026-11-02.md": "7eb9d8a8aebeeead3c26f416b95853547b794c9e789d9bbff9050e6a6d708290",
     "improve37.md": "52e5994e33a4727ada67baf27fe20d3850afe3bb5682ed23c7f030863450443e",
     "functions/api/public-config.js": "e253f12aa63ec44903c6b099ddeeec682ac2a380b3176839255c9891f2e6b0ba",
     "package.json": "085f5d9499a55a4a47e31c0820f4fe9abe15b87e0913afaa13b288f884b49f6f",
@@ -230,5 +324,6 @@
     "scripts/verify_ui_r5_layout.test.mjs": "e9a5d2c69f2fd93d7dc9107ef809ca448419450d6ab062a252670e8eba74c779",
     "scripts/verify_ui_r6_layout.test.mjs": "98247f125c87d2b4db2bf263de915823cb8d400033470584c09c4ceb8a7ed58d"
   },
-  "nextStage": "OP-06 advertising reward sessions, provider server evidence and stable-episode rights. Real PG/bank/PostgreSQL/restore/terms acceptance remains separate."
+  "nextStage": "OP-06 advertising reward sessions, provider server evidence and stable-episode rights. Real PG/bank/PostgreSQL/restore/terms acceptance remains separate.",
+  "evidenceNote": "Product source hashes plus updated documentation hashes from the documentation-only delivery record."
 }

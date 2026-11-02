@@ -60,3 +60,7 @@ PROVIDER_TEST는 기존 관리자 외부 연동의 암호화된 TOSS TEST 설정
 다음은 **광고 보상 세션·제공자 서버 증거·열람권 발급**이다. 클릭·스크롤·타이머만으로 광고 매출이나 보상을 확정하지 않고, 회원/회차별 만료 세션과 제공자 거래 고유키·서명/재조회로 한 번만 발급한다. 광고 권리와 포인트 구매 권리는 독립 보존한다.
 
 금융 개방 전에는 독립 TEST/복원 DB에서 019→020, 실제 PostgreSQL 병렬 소비/환불·응답 유실·권한 회수, PG TEST와 도메인·복귀 헤더, 실제 은행 대사 및 REVIEW 예외 처리, 제공자 조회 남용 제한·장애 경보를 인수한다. 웹훅을 열 때는 현재 Toss의 raw payload·전송 시각·별도 서명 키 검증 계약을 구현한다. 자동 지급·차지백/외부 취소·실제 환불 약관·유효기간·소멸·세무/작가 수익은 각 계약과 후속 운영 단계에서 확정한다. 기존 무료 작품을 일괄 유료 전환하지 않는다.
+
+## 배포 후 확인
+
+제품 커밋 `19a5d61`의 [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41372665630)와 Cloudflare Pages 배포가 성공했다. 두 도메인의 새 JS·CSS 8개씩 총 16개가 로컬과 일치한다. 공개 pointsTestEnabled·chargingTestEnabled는 false이고 독자·관리자 TEST API는 503으로 닫혀 있다. /charging-test와 복귀 경로·no-referrer/no-store를 공개 HTTP로 확인했으며 브라우저 실행 인수는 아니다. 019·020·금융 운영 플래그와 기존 실제 자료는 변경하지 않았다. [검증 집계](../../artifacts/op05-verification-2026-11-02.json)에 근거를 남긴다. 후속 커밋은 문서·집계만 갱신한다.
