@@ -1,0 +1,442 @@
+{
+  "stage": "OP-07",
+  "checkedAt": "2026-11-02T05:33:16.027Z",
+  "baseCommit": "1f236f3c4cd98736623f3e4692eafc179e057608",
+  "mode": "TEST",
+  "provenance": "LOCAL_SIMULATED",
+  "validation": {
+    "stage": "OP-07",
+    "startedAt": "2026-11-02T05:03:12.912Z",
+    "steps": [
+      {
+        "command": "release prefix (completed before UI-R6 cache assertion)",
+        "exitCode": 0,
+        "commands": [
+          "test:data",
+          "test:p0",
+          "test:auth",
+          "test:naming",
+          "test:authoring-schema",
+          "test:creator-works",
+          "test:stage14",
+          "test:stage15",
+          "test:stage16",
+          "test:stage17",
+          "test:stage18",
+          "test:stage19",
+          "test:stage20",
+          "test:stage21",
+          "test:stage22",
+          "test:stage23",
+          "test:stage24",
+          "test:stage25",
+          "test:stage26",
+          "test:stage27",
+          "test:stage28",
+          "test:stage29",
+          "test:stage30",
+          "test:stage31",
+          "test:stage32",
+          "test:stage33",
+          "test:stage34",
+          "test:stage35",
+          "test:stage36",
+          "test:drafts",
+          "test:files",
+          "test:publication",
+          "test:operations",
+          "test:admin-operations",
+          "test:stage11",
+          "test:stage13",
+          "test:launch",
+          "test:cloudflare-bundle",
+          "test:author-publishing",
+          "test:ui-r2",
+          "test:ui-r3",
+          "test:ui-r4",
+          "test:ui-r5",
+          "test:ui-r6",
+          "test:ui-r7",
+          "test:ui-r8",
+          "test:ui-r9",
+          "test:ui-r10",
+          "test:ui-r12",
+          "test:ui-r13",
+          "test:op01",
+          "test:op02",
+          "test:op03",
+          "test:op04",
+          "test:op05",
+          "test:op06",
+          "test:op07"
+        ]
+      },
+      {
+        "command": "test:ui-r6",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r7",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r8",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r9",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r10",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r12",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:ui-r13",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op01",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op02",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op03",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op04",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op05",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op06",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op07",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "verify:op07",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "browser": "NOT_RUN",
+    "database": "SYNTHETIC_ONLY",
+    "provider": "NOT_CALLED",
+    "productionFlagsChanged": false,
+    "completedAt": "2026-11-02T05:24:41.964Z",
+    "releaseCommands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5",
+      "test:ui-r6",
+      "test:ui-r7",
+      "test:ui-r8",
+      "test:ui-r9",
+      "test:ui-r10",
+      "test:ui-r12",
+      "test:ui-r13",
+      "test:op01",
+      "test:op02",
+      "test:op03",
+      "test:op04",
+      "test:op05",
+      "test:op06",
+      "test:op07"
+    ],
+    "priorFullBuildAttempt": {
+      "exitCode": 1,
+      "stoppedAt": "test:ui-r6",
+      "reason": "outdated admin-console/admin-operations cache version assertion corrected; preceding release commands completed",
+      "log": "scratch/op07/full-build-before-cache-fix.private.log"
+    },
+    "supplemental": [
+      {
+        "command": "dashboard and OP07 UI/integration regression",
+        "exitCode": 0
+      },
+      {
+        "command": "Cloudflare bundle",
+        "exitCode": 0
+      }
+    ],
+    "newTests": 55,
+    "newTestsFailed": 0,
+    "syntaxFiles": 31,
+    "secretPatternMatches": 0,
+    "diff": "PASS",
+    "securityReview": [
+      "current Auth/author/admin identity and row locks",
+      "explicit service RPC ACL/RLS",
+      "source consumption and immutable adjustments/evidence",
+      "no cross-author netting",
+      "bounded attempt limit including rejected writes",
+      "same request replay after unknown response",
+      "safe projection and text DOM",
+      "no production PII/financial activation"
+    ]
+  },
+  "sandbox": {
+    "result": "PASS",
+    "steps": [
+      {
+        "action": "confirmed-topup-consumption",
+        "sourceAmountKrw": 100,
+        "testAuthorNetKrw": 70,
+        "topupFaceValueNotDoubleCounted": true
+      },
+      {
+        "action": "atomic-request-and-approval",
+        "reservationKrw": 70,
+        "approvedIsPaid": false,
+        "overdrawRejected": true
+      },
+      {
+        "action": "unknown-retains-reservation",
+        "externalTransferMade": false,
+        "newDispatchRejected": true,
+        "reservationKrw": 70
+      },
+      {
+        "action": "frozen-payee-simulated-evidence",
+        "originalPayeeUsedAfterChange": true,
+        "outcome": "PAID",
+        "evidenceSource": "LOCAL_SIMULATED",
+        "duplicateMoneyMovement": 0
+      },
+      {
+        "action": "postpayment-adjustment",
+        "originalPaidFactPreserved": true,
+        "debtKrw": 20,
+        "availableKrw": 0
+      },
+      {
+        "action": "unused-charge-refund",
+        "consumedEarningAndReaderRightPreserved": true,
+        "confirmedNetBeforeAdjustment": 70
+      }
+    ],
+    "finalSummary": {
+      "netKrw": 50,
+      "debtKrw": 20,
+      "heldKrw": 0,
+      "paidKrw": 70,
+      "deductedKrw": 20,
+      "reservedKrw": 0,
+      "availableKrw": 0,
+      "confirmedKrw": 70
+    },
+    "tables": [
+      "op07_adjustments",
+      "op07_audit",
+      "op07_config",
+      "op07_earnings",
+      "op07_evidence",
+      "op07_payees",
+      "op07_payouts",
+      "op07_policies",
+      "op07_receipts",
+      "op07_write_limits"
+    ],
+    "functions": [
+      {
+        "name": "commerce.op07_earning",
+        "prosecdef": false,
+        "proconfig": [
+          "search_path=\"\"",
+          "TimeZone=UTC"
+        ]
+      },
+      {
+        "name": "commerce.op07_immutable",
+        "prosecdef": false,
+        "proconfig": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "commerce.op07_payee",
+        "prosecdef": false,
+        "proconfig": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "commerce.op07_payout",
+        "prosecdef": false,
+        "proconfig": [
+          "search_path=\"\"",
+          "TimeZone=UTC"
+        ]
+      },
+      {
+        "name": "commerce.op07_policy",
+        "prosecdef": false,
+        "proconfig": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "commerce.op07_source_ready",
+        "prosecdef": false,
+        "proconfig": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "commerce.op07_summary",
+        "prosecdef": false,
+        "proconfig": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "public.op07_payouts",
+        "prosecdef": true,
+        "proconfig": [
+          "search_path=\"\"",
+          "TimeZone=UTC"
+        ]
+      }
+    ],
+    "preservedTables": 30,
+    "preservedRoutines": 56
+  },
+  "delivery": {
+    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+  },
+  "limitations": [
+    "Single in-memory PGlite tests SQL invariants and transactions, not native multiconnection races",
+    "Simulated payee references and financial outcomes are not real bank/PG/advertising or tax evidence"
+  ],
+  "evidence": {
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "b8c2c4d0e2fa74c4e7a55c8bbc23bbffbb203db9a5284d07de28f06ec26eca3a",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "a080baf05e7c278d1799eec11f5884aa8d42b39bbf56ff551781d4f5f8d3b424",
+    "functions/api/public-config.js": "bfb3920e2fb2a314b92b2abbf8462d02958527d6966a112d3e02218800f204d4",
+    "improve37.md": "b8f50bd9a066296901a7949f30e777f0d8384d22805b76cfaba458d4b62c2aae",
+    "package.json": "d6a3fdfefcc2c4c37644d10fb601cc33caebe393068169fdade626f8bbaee79f",
+    "public/index.html": "71afdaa617333570413eecb4c7faaaf34087aaba14c5f28b3014a3aa3488fcfe",
+    "public/js/admin/admin-console.js": "b0b47866f19d8ef0effa77c9f6da4b6284c03085567e38afdda7f993820703d4",
+    "public/js/admin/admin-operations.js": "f7d835f646c21919e76d2c5edeadddd502a39053cfb6b5eabd7490abbbab2e98",
+    "public/js/core/auth-session.js": "d5a26ef1a05ef84fef4feb359f462e148287b0642dd7f870282677abee7ad286",
+    "public/js/core/role-modules.js": "fe4c00e0ca85f87219dac8cf6f49823964e88ea80e3438119e56de474f39c10d",
+    "public/js/core/router.js": "1d36ed7b8cf8ae16598a3b8611dbb3b0c3824a0692f715b159d10f93c9f39a66",
+    "public/js/creator/creator-dashboard.js": "7c89052e4649f7efc7566bc9fe045371b55ec566255ca8e5091e15ebbc01d6a1",
+    "public/supabase-public-config.js": "c74ac12e470b46b4b681f588e47beaf04b90a614087bfc7e07c0b4c8c6306785",
+    "scripts/verify_auth_navigation.test.mjs": "3f7eabc20302947f324a9d4dcd6871cd139c4c35134c5b3a560534c6323235a1",
+    "scripts/verify_author_dashboard.test.mjs": "945877826f937da60980537bc3be08270091d6e50449bf8bddeff69b43f61818",
+    "scripts/verify_cloudflare_routes.test.mjs": "9452631ef7a736e70ec784e3c0ce9e8df61b738d285844c458d69e33017200ea",
+    "scripts/verify_op01_layout.test.mjs": "52c3a06d29a82c9b38e904db322ee04d64cb19c148ad5c484bb48b08ad67b368",
+    "scripts/verify_op02_members_integration.test.mjs": "ca0fded20cce12f08bacee13a0ac6299ab79f5658bad0106c908a829a55182e3",
+    "scripts/verify_op03_display_integration.test.mjs": "10cccca2f806480f4464af18c98d640e6a162907785be2d45bb770199d9f0db0",
+    "scripts/verify_op04_points_integration.test.mjs": "27936683f124b61981812c689b54cba025c10366dda31a20732678ac1fe764b9",
+    "scripts/verify_op05_topups_integration.test.mjs": "a9cc0feeb46b8fcb53cee8e66d44f1859818e94b8e1d59aa01e3399eb560bc27",
+    "scripts/verify_op06_rewards_integration.test.mjs": "183741faeaa5c0c0fab84c196f759b859bad4841aff02e44acbd8b7f6d35e9bf",
+    "scripts/verify_stage36_support_ui.test.mjs": "36ca798f397dc19d7e465eb99ad160f61b68dc4b63d39e050685ad8a2d2a9769",
+    "scripts/verify_ui_r13_settlement_integration.test.mjs": "f89c604f4f4f349aa242deff02137a824c6a4178097de4d529538e24fc7b03b9",
+    "scripts/verify_ui_r5_layout.test.mjs": "5c0ad96733726c13aa1a517a4aea892580d1296370384761730f494a86881c33",
+    "scripts/verify_ui_r6_layout.test.mjs": "4d5960a510198ade93f0fd39e4d0288004c6d8dd78a94bf53b5f55f4c8d63b07",
+    "server/account-api.mjs": "13575faaf407457ff06500855e68914f767998fdd8fccd7912ac004c248a3f38",
+    "database/launch/022_author_payouts_test.sql": "fd9a351839e75e48bb002df5a3d2e1d774546281045e35378c83e3298e66faa4",
+    "docs/launch/op07-payouts-contract-2026-11-02.md": "38169753c0bb3dff5c129b2e3b73fbe1a5a98479589d074450d0f970b1e942bc",
+    "docs/launch/op07-payouts-implementation-2026-11-02.md": "f56a12f0734276a281aeb126c6db69c0dc5312f3fd161f462c4a2be5e2612b1e",
+    "public/css/payouts-test.css": "43e83678ff36f1f47e530fad24983cfffc99a863702e656a25199c4e284b0559",
+    "public/js/shared/payouts-test.js": "ad06799b7bf69d4fc0c4722e2befbdfe2587180a9a57707d9afc56fb7ddd0787",
+    "scripts/fixtures/op07-api.mjs": "22194884fc901de31e514ddfc8916bdb0164f484beb9545057723cb860330aa9",
+    "scripts/fixtures/op07-db.mjs": "57cf5a6d4530364829590d0671d8c7cbf2713a6d8bd7f9773f457f61ad8ef8a2",
+    "scripts/verify_op07_payouts_api.test.mjs": "dff097f2990bd7620d9072bb8f1d272bbe7fab04c3c4b6d7f9d71ab02c0e16cc",
+    "scripts/verify_op07_payouts_db.test.mjs": "e6eed9fe36573010fc7c122aeba9f01683ee4c76500cb8a5e657c609e02a6509",
+    "scripts/verify_op07_payouts_integration.test.mjs": "1b089cc3e56c853132f6a09b22317ab09e7866d56ba665758943fcb18475463b",
+    "scripts/verify_op07_payouts_sandbox.mjs": "f617e764d780125a55d5f4040bf4092a4669b39c9ba5c27a30a73eaefd270d12",
+    "scripts/verify_op07_payouts_ui.test.mjs": "b9effbb14e0f7771ffdbd2c12994e6da81c4da6e2620a515f7979365fd6fade6",
+    "server/author-payouts-test-api.mjs": "9f0dcebfec6bfdab84ad19749d73218750d5dc41d644441d10bb7c7935245e4d",
+    "database/launch/019_points_test.sql": "1bfca8f7369d441fc606995d3e439c8bdfe046259b95e1b3903f3c0c2917531a",
+    "database/launch/020_topups_test.sql": "abbe61bbe026b24acbd3db61c35ad52c09637d3226a7bb3cf7d4f7db61ac6389",
+    "database/launch/021_ad_rewards_test.sql": "d140c6870d0c3be6e64457a797d00b1d7347fa1ed96048ac9fbee7e6a135a670"
+  },
+  "productionDatabaseApplied": false,
+  "productionFlagsChanged": false,
+  "realProviderCalled": false,
+  "browser": "NOT_RUN",
+  "nextStage": "OP-08 provider TEST, multi-connection races, independent recovery, privacy/tax/account readiness and controlled operational activation"
+}

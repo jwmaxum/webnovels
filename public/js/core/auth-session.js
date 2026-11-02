@@ -58,6 +58,8 @@
     window.AdminTopups?.reset();
     window.ReaderRewardsTest?.reset();
     window.AdminRewardsTest?.reset();
+    window.AuthorPayoutsTest?.reset();
+    window.AdminPayoutsTest?.reset();
     window.ReaderLibrary?.reset();
     window.ContinueReading?.reset();
     if(window.WEBNOVELS_CONFIG?.readerServiceEnabled)window.ReaderPreferencesManager?.reset();

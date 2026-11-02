@@ -66,6 +66,7 @@
   }
   async function render(root,page,{accountKind,caseSource,onNavigate,externalAccountTabs=false,isCurrent=()=>true}={}){
     window.AdminSettlementReview?.reset();
+    window.AdminPayoutsTest?.leave();
     const seq=++turn,owner=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===owner&&!!actor()?.admin&&actor().admin.is_active!==false&&isCurrent();
     if(current!==page){current=page;offset=0;query='';}
     if(accountKind&&kind!==accountKind){kind=accountKind;offset=0;query='';}
@@ -73,6 +74,9 @@
     root.replaceChildren();el(root,'h2',titles[page]||'운영 관리');root.setAttribute?.('aria-busy','false');
     if(!actor()?.admin){notice(root,'관리자 로그인이 필요합니다.');return;}
     if(page==='settlements'&&actor()?.admin?.role==='SUPER_ADMIN'){
+      const payouts=el(root,'section',null,'admin-payouts-test');
+      await window.AdminPayoutsTest?.render(payouts,{isCurrent:valid});
+      if(!valid())return;
       const review=el(root,'section',null,'admin-settlement-review');
       await window.AdminSettlementReview?.render(review,{isCurrent:valid});
       if(!valid())return;
@@ -174,5 +178,5 @@
   function errorText(e){return ({ADMIN_REAUTH_FAILED:'관리자 비밀번호를 확인해주세요.',ADMIN_REAUTH_REQUIRED:'현재 관리자 비밀번호를 입력해주세요.',
     CONFLICT:'다른 변경이 먼저 저장되었습니다. 새로고침 후 다시 확인해주세요.',ADMIN_FORBIDDEN:'이 정보를 조회하거나 변경할 권한이 없습니다.',
     ACCOUNT_SERVICE_NOT_ACTIVATED:'관리자 데이터 연결을 준비 중입니다. 잠시 후 새로고침해주세요.',RATE_LIMITED:'요청이 많습니다. 잠시 후 다시 시도해주세요.'})[e?.code]||'정보를 불러오거나 저장하지 못했습니다. 새로고침 후 상태를 확인해주세요.';}
-  window.AdminConsole=Object.freeze({render,reset(){turn++;current='';offset=0;query='';window.AdminProviderSettings?.reset();window.AdminSettlementReview?.reset();}});
+  window.AdminConsole=Object.freeze({render,reset(){window.AdminPayoutsTest?.leave();turn++;current='';offset=0;query='';window.AdminProviderSettings?.reset();window.AdminSettlementReview?.reset();}});
 })();

@@ -94,7 +94,7 @@ test('reader and admin profiles retain their own default destinations and role m
   const admin=fixture({who:{userId:'admin-auth-uuid',admin:{role:'SUPER_ADMIN'},author:null,reader:null}});
   await admin.c.WebNovelsAuth.init();await admin.c.initRouteHandler();
   assert.equal(admin.c.location.pathname,'/admin');assert.equal(admin.c.currentActiveView,'view-admin-cms');
-  assert.ok(admin.scripts.every(n=>n.src.includes('/admin/')));assert.ok(admin.portals.every(n=>n.hidden));
+  assert.ok(admin.scripts.every(n=>n.src.includes('/admin/')||n.src==='/js/shared/payouts-test.js?v=20261102op07'));assert.ok(admin.portals.every(n=>n.hidden));
 });
 
 for (const url of ['/creator/profile','/author/works/12','/home','/library/authors','/works/91','/read/91/4','/?auth=recovery','/#home']) {

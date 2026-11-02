@@ -122,6 +122,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
   if(viewId!=='view-admin-cms')window.AdminPointsTest?.leave();
   if(viewId!=='view-admin-cms')window.AdminTopups?.leave();
   if(viewId!=='view-admin-cms')window.AdminRewardsTest?.leave();
+  if(viewId!=='view-admin-cms')window.AdminPayoutsTest?.leave();
   if(viewId!=='view-reading-test')window.ReaderPointsTest?.leave();
   if(viewId!=='view-reading-test')window.ReaderRewardsTest?.leave();
   if(viewId!=='view-charging-test')window.ReaderTopups?.leave();

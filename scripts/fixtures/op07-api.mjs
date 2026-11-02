@@ -1,0 +1,12 @@
+export const uid='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-8000-000000000002',pid='20000000-0000-4000-8000-000000000001',eid='30000000-0000-4000-8000-000000000001';
+export const marker={mode:'TEST',provenance:'LOCAL_SIMULATED',currency:'KRW',livePayouts:false};
+export const env={POINTS_TEST_ENABLED:'true',POINTS_TEST_ENVIRONMENT:'TEST',POINTS_TEST_PROVENANCE:'LOCAL_SIMULATED',P0_API_ENABLED:'true',FREE_BETA_ENABLED:'false',SETTLEMENTS_TEST_ENABLED:'true',SETTLEMENTS_TEST_ENVIRONMENT:'TEST',SUPABASE_URL:'https://synthetic.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_synthetic_unit',NEXT_PUBLIC_SUPABASE_ANON_KEY:'sb_publishable_synthetic_unit'};
+export const policy={id:pid,enabled:true,authorBps:7000,deductionBps:0};
+export const summary={confirmedKrw:700,deductedKrw:0,netKrw:700,paidKrw:0,reservedKrw:0,heldKrw:0,availableKrw:700,debtKrw:0};
+export const payee={revision:'1',ready:true,testReference:'TEST-author-1'};
+export const author={userId:uid,author:{id:'1',status:'APPROVED'}},admin={userId:uid,admin:{role:'SUPER_ADMIN',is_active:true}},user={id:uid,email_confirmed_at:'2026-01-01T00:00:00Z'};
+export const overview=()=>({...marker,authorId:'1',policy:{...policy},payee:{...payee},summary:{...summary},eligibility:{canRequest:true,authorActive:true,accountReady:true,sourceHold:false}});
+export const state=()=>({...marker,revision:'1',policy:{...policy},summary:{...summary}});
+export const payout=(patch={})=>({id:pid,authorId:'1',authorName:'합성 작가',amountKrw:500,status:'REQUESTED',revision:'1',policyVersion:pid,payeeRevision:'1',testReference:'TEST-author-1',createdAt:'2026-11-02T00:00:00Z',approvedAt:null,dispatchedAt:null,completedAt:null,evidence:null,...patch});
+export const earning=(patch={})=>({id:eid,allocationId:pid,authorId:'1',workId:'1',workTitle:'합성 작품',sourceAmountKrw:1000,authorGrossKrw:700,policyDeductionKrw:0,netKrw:700,adjustedKrw:0,availableNetKrw:700,sourceHeld:false,policyVersion:pid,createdAt:'2026-11-02T00:00:00Z',adjustments:[],...patch});
+export const page=(items=[],offset=0,total=items.length)=>({...marker,items,offset,limit:50,total,hasMore:total>offset+50,nextOffset:total>offset+50?offset+50:null});

@@ -108,6 +108,20 @@ test('dashboard clears private forms on reset and suppresses late account respon
  assert.match(read('public/styles.css'),/#view-creator:not\(\.stage8-creator\):not\(\.private-author-workspace\) #creatorTabsBar/);
 });
 
+test('legacy earnings refresh and pagination retain history while TEST settlements are enabled',async()=>{
+ const controls=Object.fromEntries(['#adMonth','#adEarningsRefresh','#adPrev','#adNext'].map(id=>[id,{value:'2026-10'}]));
+ const root={innerHTML:'',querySelector:id=>controls[id]},calls=[];let renders=0,onLegacy;
+ const c={document:{getElementById:()=>root},WEBNOVELS_CONFIG:{settlementsTestEnabled:true},
+  WebNovelsAuth:{getActor:()=>({userId:author,author:{status:'APPROVED'},authorWorkspaceReady:true}),api:async url=>{calls.push(url);return {months:['2026-10'],total:60,records:[]};}},
+  AuthorPayoutsTest:{leave(){},async render(_,options){renders++;onLegacy=options.onLegacy;}}};
+ c.window=c;vm.createContext(c);vm.runInContext(read('public/js/creator/creator-dashboard.js'),c);
+ await c.CreatorDashboard.earnings();assert.equal(renders,1);assert.equal(calls.length,0);
+ await onLegacy();await controls['#adEarningsRefresh'].onclick();assert.match(calls.at(-1),/month=2026-10&page=0$/);
+ await controls['#adNext'].onclick();assert.match(calls.at(-1),/month=2026-10&page=1$/);
+ await controls['#adPrev'].onclick();assert.match(calls.at(-1),/month=2026-10&page=0$/);
+ await controls['#adMonth'].onchange();assert.equal(renders,1);assert.equal(calls.length,5);assert.match(root.innerHTML,/이전 수익 기록/);
+});
+
 test('author entry opens owned works; deep routes retain their selected section',async()=>{
  const calls=[],c={location:{pathname:'/home'},document:{getElementById:()=>null},
    WebNovelsAuth:{getActor:()=>({author:{pen_name:'Writer'}})},CreatorDashboard:{active:()=>true}};

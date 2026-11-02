@@ -356,3 +356,5 @@ R12는 [작품별 회차 관리·간결한 발행](ui-r12-author-cms-2026-11-01.
 OP-05 최종 반영: 제품 커밋 `19a5d61`의 [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41372665630)와 Cloudflare Pages 배포가 성공했다. 두 도메인의 새 JS·CSS 8개씩 총 16개가 로컬과 일치한다. 공개 pointsTestEnabled·chargingTestEnabled는 false이고 독자·관리자 TEST API는 503으로 닫혀 있다. /charging-test와 복귀 경로·no-referrer/no-store를 공개 HTTP로 확인했으며 브라우저 실행 인수는 아니다. 019·020·금융 운영 플래그와 기존 실제 자료는 변경하지 않았다. 다음은 OP-06 광고 보상 서버 증거·열람권이다.
 
 OP-06 최종 반영: 제품 커밋 `612d2e8`의 [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41380668087)와 Cloudflare Pages 배포가 성공했다. 두 도메인의 새 JS·CSS 9개씩 총 18개가 로컬과 일치한다. 공개 pointsTestEnabled·chargingTestEnabled·adRewardsTestEnabled는 false이고 독자·관리자 TEST API는 503으로 닫혀 있다. /charging-test와 복귀 경로·no-referrer/no-store를 공개 HTTP로 확인했으며 브라우저 실행 인수는 아니다. 019·020·021·금융/광고 운영 플래그와 기존 실제 자료는 변경하지 않았다. 다음은 OP-07 작가 정산 확정 수익·예약·지급 증빙이다.
+
+[OP-07 작가 정산 TEST](op07-payouts-implementation-2026-11-02.md)는 작가 수익 내역의 요약·명세·신청·상태와 관리자 작가 검색·수익 확정·감액·승인·모의 지급 증빙을 연결한다. 기존 R13 서류 검토와 이전 기록은 보존한다. native label·상태 알림·44px 조작 영역·초점·좁은 화면의 표 스크롤을 적용한다. 실제 브라우저/실기기 인수와 R13 개인정보 준비·은행 대사는 OP-08에서 별도 진행한다.

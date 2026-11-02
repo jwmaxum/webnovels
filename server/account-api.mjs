@@ -12,6 +12,7 @@ import {siteDisplayAdminApi,siteDisplayPublicApi} from './site-display-api.mjs';
 import {pointsTestApi,pointsTestEnabled} from './points-test-api.mjs';
 import {topupsTestApi,chargingTestEnabled} from './topups-test-api.mjs';
 import {adRewardsTestApi,adRewardsTestEnabled,verifyInternalTestCallback,adRewardsTestCallback} from './ad-rewards-test-api.mjs';
+import {authorPayoutsTestApi,settlementsTestEnabled} from './author-payouts-test-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTransport}={}) {
@@ -24,13 +25,15 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
   const topupsTest=['/api/v2/topups-test','/api/v2/admin/topups-test'].includes(path);
   const adRewardsCallback=path==='/api/v2/ad-rewards-test/callback';
   const adRewardsTest=adRewardsCallback||['/api/v2/ad-rewards-test','/api/v2/admin/ad-rewards-test'].includes(path);
-  if(!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!adRewardsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
+  const payoutsTest=['/api/v2/creator/payouts-test','/api/v2/admin/payouts-test'].includes(path);
+  if(!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!adRewardsTest&&!payoutsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
     if(pointsTest&&!pointsTestEnabled(env))fail(503,'POINTS_TEST_NOT_ACTIVATED');
     if(topupsTest&&!chargingTestEnabled(env))fail(503,'TOPUPS_TEST_NOT_ACTIVATED');
     if(adRewardsTest&&!adRewardsTestEnabled(env))fail(503,'AD_REWARDS_TEST_NOT_ACTIVATED');
+    if(payoutsTest&&!settlementsTestEnabled(env))fail(503,'SETTLEMENTS_TEST_NOT_ACTIVATED');
     // Unauthenticated callbacks have a separate server-only TEST proof. Reject
     // forged bytes before even checking DB readiness, never trust browser Auth.
     const rewardProof=adRewardsCallback?await verifyInternalTestCallback({request,env,fail}):null;
@@ -86,6 +89,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
       return reply({...actor,accountServiceReady:true,accountServiceOnly:true,
         authorWorkspaceReady,multiFormatWorksEnabled});
     }
+    if(payoutsTest)return reply(await authorPayoutsTestApi({request,env,actor,user,rpc,fail}));
     if(dashboard)return reply(await authorDashboardApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
     if(settlement)return reply(await authorSettlementApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
     if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));
