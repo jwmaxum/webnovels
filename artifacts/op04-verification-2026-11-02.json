@@ -1,6 +1,6 @@
 {
   "stage": "OP-04",
-  "checkedAt": "2026-11-01T23:58:13.833Z",
+  "checkedAt": "2026-11-02T00:10:58.628Z",
   "clientDate": "2026-11-02",
   "baseCommit": "a6fd936de3d98aacd728ff8e325555303aa06a6f",
   "mode": "TEST",
@@ -419,5 +419,34 @@
     ]
   },
   "gitAndDelivery": "Normal main push; CI/Cloudflare and explicit production TEST-off read checks reported separately",
-  "nextStage": "OP-05: TEST charging products, manual deposit reconciliation, card approval/refund and original-transaction reconciliation; separate LIVE contract/go-live acceptance required"
+  "nextStage": "OP-05: TEST charging products, manual deposit reconciliation, card approval/refund and original-transaction reconciliation; separate LIVE contract/go-live acceptance required",
+  "delivery": {
+    "checkedAt": "2026-11-02T00:09:43.749Z",
+    "productCommit": "9222ed6134eee0b49dab3a19374be1e4be4cdf2f",
+    "ci": "SUCCESS",
+    "ciUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41364764370",
+    "cloudflare": "SUCCESS",
+    "deploymentId": "21f0bc93-ad33-4e48-a7fa-b966ab12d7e4",
+    "matchingCodeAssets": 14,
+    "origins": [
+      {
+        "origin": "https://webnovels-db4.pages.dev",
+        "portalRouteReady": true,
+        "testFlagDisabled": true,
+        "testApiStatus": 503,
+        "testApiDisabled": true
+      },
+      {
+        "origin": "https://webnovels.uk",
+        "portalRouteReady": true,
+        "testFlagDisabled": true,
+        "testApiStatus": 503,
+        "testApiDisabled": true
+      }
+    ],
+    "testOffVerified": true,
+    "productionDatabaseApplied": false,
+    "productionFlagsChanged": false,
+    "browser": "NOT_RUN"
+  }
 }

@@ -71,7 +71,7 @@ TEST가 활성화된 환경에서는 기존 무료 소설 본문·웹툰 이미�
 | 실제 PostgreSQL 병렬성 | 미실행. 단일 PGlite의 순차/트랜잭션 검증을 실제 다중 연결 동시성으로 보고하지 않음 |
 | 운영 DB·API·제공자 | 019 미적용, 운영 TEST 자료 생성·실제 제공자 호출·운영 원장/권리 변경 없음 |
 | 브라우저·실기기 | 미실행. Word·뷰어·이미지 동작은 VM 검증이며 화면 인수와 구분 |
-| Git·CI·Cloudflare | 검증한 코드·미적용 SQL·문서를 main에 일반 커밋·push한다. CI·Cloudflare 및 운영 OFF 확인은 별도 최종 보고. Vercel 사용 없음 |
+| Git·CI·Cloudflare | 제품 커밋 `9222ed6`의 GitHub CI·Cloudflare 배포 성공. 두 도메인 코드 자산 14개 일치·TEST 공개 플래그 false·TEST API 503 확인. Vercel 사용 없음 |
 
 [독립 리허설](../../scripts/verify_op04_points_sandbox.mjs)은 새 합성 fixture에서 소설/웹툰 무료·잠금 목록, 명시적 구매와 재시도, 가격·head 변경 후 보유 회차 재열람, 인증 웹툰 패널과 타 계정 차단, 최종 지갑/원장 대조를 확인하도록 구성했다. `.env.local`·네트워크·운영 DB·제공자 없이 실행하며 결과는 Git 제외 `scratch/op04-sandbox/report.json`에 생성한다. 합성 검증 완료를 실제 서비스 전환으로 표시하지 않는다.
 
@@ -82,3 +82,7 @@ TEST가 활성화된 환경에서는 기존 무료 소설 본문·웹툰 이미�
 다음은 **충전상품·입금·카드 승인/환불·원거래 대사**다. 충전상품의 KRW 가격·지급 포인트와 회차의 소비 가격을 분리하고, 관리자 수동 입금은 실제 은행 거래 대조 후 한 번만 적립한다. 독자의 입금 신고나 결제 성공 복귀 URL만으로 지급하지 않는다.
 
 기존 포인트·결제·환불·권리 자료를 먼저 감사하고 TEST/LIVE·원결제별 충전 묶음·소비 배분·중복 웹훅·불명확 승인·환불 예약을 대조한다. TEST 원장을 실제 잔액으로 전환하지 않는다. 실제 PG 계약·고지·TEST 채널의 승인/조회/취소·장애·대사 인수와 별도 출시 승인 전에는 LIVE 결제·지급을 열지 않는다. 작가 정산과 R13 개인정보 접수, SMTP·독립 복원 인수는 각각의 준비 조건을 유지한다.
+
+## 배포 후 확인
+
+[GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41364764370)와 Cloudflare Pages 배포가 성공했다. `webnovels-db4.pages.dev`·`webnovels.uk`의 변경 JS·CSS 7개씩 총 14개가 로컬과 일치하며 `/reading-test` 경로를 확인했다. 운영 공개 `pointsTestEnabled`는 false이고 새 TEST API는 `503 POINTS_TEST_NOT_ACTIVATED`로 닫혀 있다. 019·TEST 작품·포인트·권리는 운영에 생성하지 않았다. 이는 공개 HTTP·자산 검증이며 브라우저 실행 인수는 아니다. [검증 집계](../../artifacts/op04-verification-2026-11-02.json)에 근거를 남긴다. 후속 커밋은 문서·집계만 변경한다.
