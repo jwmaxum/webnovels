@@ -13,6 +13,7 @@ import {pointsTestApi,pointsTestEnabled} from './points-test-api.mjs';
 import {topupsTestApi,chargingTestEnabled} from './topups-test-api.mjs';
 import {adRewardsTestApi,adRewardsTestEnabled,verifyInternalTestCallback,adRewardsTestCallback} from './ad-rewards-test-api.mjs';
 import {authorPayoutsTestApi,settlementsTestEnabled} from './author-payouts-test-api.mjs';
+import {payoutProviderTestApi,payoutProviderTestCallback,payoutTestSettingsEnabled,payoutTestRuntimeEnabled} from './payout-provider-test-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTransport}={}) {
@@ -26,10 +27,13 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
   const adRewardsCallback=path==='/api/v2/ad-rewards-test/callback';
   const adRewardsTest=adRewardsCallback||['/api/v2/ad-rewards-test','/api/v2/admin/ad-rewards-test'].includes(path);
   const payoutsTest=['/api/v2/creator/payouts-test','/api/v2/admin/payouts-test'].includes(path);
-  if(!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!adRewardsTest&&!payoutsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
+  const payoutProvider=path==='/api/v2/admin/payout-provider-test',payoutCallback=path==='/api/v2/payout-provider-test/callback';
+  if(!payoutProvider&&!payoutCallback&&!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!adRewardsTest&&!payoutsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
+  const payoutCallbackDeadline=payoutCallback?AbortSignal.timeout(8000):null;
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
+    if(payoutProvider&&!payoutTestSettingsEnabled(env)||payoutCallback&&(!payoutTestRuntimeEnabled(env)||env.PAYOUT_PROVIDER_TEST_WEBHOOK_ENABLED!=='true'))fail(503,'PAYOUT_TEST_NOT_ACTIVATED');
     if(pointsTest&&!pointsTestEnabled(env))fail(503,'POINTS_TEST_NOT_ACTIVATED');
     if(topupsTest&&!chargingTestEnabled(env))fail(503,'TOPUPS_TEST_NOT_ACTIVATED');
     if(adRewardsTest&&!adRewardsTestEnabled(env))fail(503,'AD_REWARDS_TEST_NOT_ACTIVATED');
@@ -48,7 +52,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
     const remote=async(route,options={})=>{
       let response;
       // workerd accepts manual/follow; reject redirects explicitly below.
-      try {response=await fetchImpl(new URL(route,base),{...options,redirect:'manual',signal:AbortSignal.timeout(12000),
+      try {response=await fetchImpl(new URL(route,base),{...options,redirect:'manual',signal:payoutCallbackDeadline||AbortSignal.timeout(12000),
         headers:{apikey:secret,...(secret.startsWith('eyJ')?{Authorization:'Bearer '+secret}:{}),'Content-Type':'application/json',...options.headers}});}
       catch{fail(503,'AUTH_UNAVAILABLE');}
       if(response.status>=300&&response.status<400)fail(503,'AUTH_UNAVAILABLE');
@@ -62,6 +66,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
       return data;
     };
     if(await rpc('launch_accounts_ready')!==true)fail(503,'ACCOUNT_SERVICE_NOT_ACTIVATED');
+    if(payoutCallback)return reply(await payoutProviderTestCallback({request,env,rpc}));
     if(adRewardsCallback)return reply(await adRewardsTestCallback({proof:rewardProof,rpc,fail}));
     if(path==='/api/v2/display')return reply(await siteDisplayPublicApi({request,rpc,fail}));
     const workspaceReady=async()=>{
@@ -90,6 +95,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
         authorWorkspaceReady,multiFormatWorksEnabled});
     }
     if(payoutsTest)return reply(await authorPayoutsTestApi({request,env,actor,user,rpc,fail}));
+    if(payoutProvider)return reply(await payoutProviderTestApi({request,env,actor,user,rpc,remote,fetchImpl}));
     if(dashboard)return reply(await authorDashboardApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
     if(settlement)return reply(await authorSettlementApi({request,env,actor,user,rpc,remote,fail,ready:await workspaceReady()}));
     if(workspace)return reply(await authorWorkspaceApi({request,env,actor,rpc,fail,ready:await workspaceReady()}));

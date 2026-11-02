@@ -44,3 +44,5 @@
 2026-11-02 OP-08: [제공자 TEST 준비·네이티브 경쟁·복원 인수](docs/launch/op08-operational-acceptance-2026-11-02.md)를 따른다. 사용자 결정에 따라 실제 TEST 키는 추후 준비하며, 기존 TEST 전송의 조회 도구·관리자 준비 상태·native PostgreSQL 다중 연결과 합성 복원을 검증한다. 운영 DB와 금융/광고/정산 플래그는 유지한다. 별도 hosted 복원·실제 제공자 및 계좌/세무 증빙은 미완료이며 Zod 메이저 보안 업데이트를 포함한 OP-09로 이어진다.
 
 2026-11-02 OP-09: [보안·지급 TEST·독립 복원](docs/launch/op09-security-provider-recovery-2026-11-02.md)에 따라 Zod 4.6.7 호환 수정, jose 기반 격리 TEST 지급 전송/조회, 원본 종료 후 별도 PostgreSQL 클러스터 복원을 구현한다. 실제 지급 키·hosted 대상은 미준비다. 운영 플래그·DB와 LOCAL_SIMULATED 원장은 유지한다. OP-10은 지급 전용 설정·영속 outbox·외부 조회 증빙/웹훅 대사와 실제 환경 인수다.
+
+2026-11-02 OP-10: [지급 TEST 요청·웹훅 조회 대사](docs/launch/op10-payout-provider-journal-2026-11-02.md)를 따른다. 전용 암호화 설정·상점/버전 고정·1회 발송 마커·외부 조회 증빙·서명 이벤트 중복 방지와 cron 대사를 구현한다. 승인된 모의 정산은 인수 자료로만 참조하며 기존 OP-07 잔액/상태를 바꾸지 않는다. 023은 합성 검증만 수행하고 운영 게이트는 유지한다. 다음 OP-11은 대사 예외 관리·관측과 master key 회전 준비이며, 실제 키/hosted 대상 준비 후 외부 인수를 이어간다.

@@ -1,4 +1,4 @@
-// Isolated TEST transport. Not wired to a route, worker, OP07 ledger or LIVE settings.
+// TEST transport. OP10 pins configuration and claims before calling; never LIVE.
 // The caller must durably freeze the request before create; uncertain results must
 // be reconciled by query, never by generating a new operation/refPayoutId.
 import {CompactEncrypt,compactDecrypt} from 'jose';
@@ -64,4 +64,23 @@ export async function payoutsTossTestRequest({operation,order,secretKey,security
   if(!response.ok)fail('PAYOUT_TEST_RESULT_UNKNOWN');
  }catch{fail('PAYOUT_TEST_RESULT_UNKNOWN');}
  return verifyPayoutTestReceipt(raw,order,operation);
+}
+
+// A response may be lost before a provider ID is saved. A bounded list scan is
+// discovery only: verify the exact reference and then GET the identified payout.
+// Missing/incomplete/ambiguous results never authorize another POST.
+export async function reconcilePayoutTest({order,secretKey,securityKey,now=Date.now()},fetchImpl=fetch){
+ if(order?.providerPayoutId)return payoutsTossTestRequest({operation:'query',order,secretKey,securityKey,now},fetchImpl);
+ if(!secret(secretKey))fail('PAYOUT_TEST_CONFIGURATION_REQUIRED');
+ validate({...order,providerPayoutId:'pending-discovery'},'query',now);
+ const deadline=AbortSignal.timeout(15000),seen=new Set();let cursor,candidate;
+ for(let page=0;page<3;page++){
+  const url=new URL('https://api.tosspayments.com/v2/payouts');url.searchParams.set('limit','50');if(cursor)url.searchParams.set('startingAfter',cursor);
+  let raw;try{const response=await fetchImpl(url.href,{method:'GET',headers:{Authorization:'Basic '+btoa(secretKey+':')},redirect:'error',signal:deadline});if(!response.ok)throw Error();raw=JSON.parse(await readBounded(response));}catch{fail('PAYOUT_TEST_RESULT_UNKNOWN');}
+  const list=raw?.entityBody;if(raw?.error||raw?.entityType!=='payout-list'||!Array.isArray(list?.items)||list.items.length>50||typeof list.hasMore!=='boolean')fail('PAYOUT_TEST_RESULT_UNKNOWN');
+  for(const item of list.items)if(item?.refPayoutId===order.refPayoutId){if(candidate)fail('PAYOUT_TEST_RECEIPT_MISMATCH');verifyPayoutTestReceipt({entityType:'payout',entityBody:item},order,'query');candidate=item.id;}
+  if(!list.hasMore){if(!candidate)fail('PAYOUT_TEST_RESULT_UNKNOWN');return payoutsTossTestRequest({operation:'query',order:{...order,providerPayoutId:candidate},secretKey,securityKey,now},fetchImpl);}
+  if(!identifier(list.nextCursor,200)||seen.has(list.nextCursor))fail('PAYOUT_TEST_RESULT_UNKNOWN');cursor=list.nextCursor;seen.add(cursor);
+ }
+ fail('PAYOUT_TEST_RESULT_UNKNOWN');
 }

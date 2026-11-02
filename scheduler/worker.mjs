@@ -1,7 +1,9 @@
 // Deploy separately from Pages. Only the scheduled event can call the service-only RPC.
+import {reconcileDuePayoutTests,payoutTestRuntimeEnabled} from '../server/payout-provider-test-api.mjs';
 export default {
   async scheduled(_event, env, context) {
-    if (env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true' && env.AUTHOR_IDENTITY_ENABLED !== 'true' && env.BETA_OPERATIONS_ENABLED !== 'true' && env.AUTHOR_SETTLEMENT_CLEANUP_ENABLED !== 'true') return;
+    const payoutReconciliation=payoutTestRuntimeEnabled(env)&&env.PAYOUT_PROVIDER_TEST_RECONCILE_ENABLED==='true';
+    if (!payoutReconciliation && env.AUTHOR_PUBLISH_ENABLED !== 'true' && env.GROWTH_SERVICE_ENABLED !== 'true' && env.AUTHOR_IDENTITY_ENABLED !== 'true' && env.BETA_OPERATIONS_ENABLED !== 'true' && env.AUTHOR_SETTLEMENT_CLEANUP_ENABLED !== 'true') return;
     if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(env.SUPABASE_URL || '') ||
         !env.SUPABASE_SECRET_KEY) throw Error('Scheduler configuration missing');
     const invoke=async (name,payload={p_limit:20})=>{
@@ -28,6 +30,9 @@ export default {
     // Separate disabled-by-default preparation job. It never changes a tier or sends messages.
     // Run jobs independently so a publication failure cannot starve the growth batch.
     const jobs=[];
+    if(payoutReconciliation)jobs.push(reconcileDuePayoutTests({env,rpc:async(name,payload)=>{
+      const result=await invoke(name,payload);if(result?.error)throw Error('Payout reconciliation RPC failed');return result;
+    }}));
     if(env.BETA_OPERATIONS_ENABLED==='true')jobs.push(invoke('maintain_beta_operations',{}));
     if(env.AUTHOR_IDENTITY_ENABLED==='true')jobs.push(invoke('cleanup_author_enrollment',{}));
     if(env.AUTHOR_SETTLEMENT_CLEANUP_ENABLED==='true')jobs.push(invoke('expire_author_settlement_registrations',{}));

@@ -50,3 +50,5 @@ jobs:
       run: npm run verify:op08:native
     - name: Verify recovery after source cluster shutdown
       run: npm run verify:op09:native
+    - name: Verify payout TEST dispatch race and restored dispatch marker
+      run: npm run verify:op10:native

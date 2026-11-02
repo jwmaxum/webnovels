@@ -66,7 +66,7 @@
   }
   async function render(root,page,{accountKind,caseSource,onNavigate,externalAccountTabs=false,isCurrent=()=>true}={}){
     window.AdminSettlementReview?.reset();
-    window.AdminPayoutsTest?.leave();
+    window.AdminPayoutsTest?.leave();window.AdminPayoutProviderTest?.reset();
     const seq=++turn,owner=actor()?.userId,valid=()=>seq===turn&&actor()?.userId===owner&&!!actor()?.admin&&actor().admin.is_active!==false&&isCurrent();
     if(current!==page){current=page;offset=0;query='';}
     if(accountKind&&kind!==accountKind){kind=accountKind;offset=0;query='';}
@@ -77,12 +77,14 @@
       const payouts=el(root,'section',null,'admin-payouts-test');
       await window.AdminPayoutsTest?.render(payouts,{isCurrent:valid});
       if(!valid())return;
+      const providerTest=el(root,'section');await window.AdminPayoutProviderTest?.render(providerTest,{isCurrent:valid});
+      if(!valid())return;
       const review=el(root,'section',null,'admin-settlement-review');
       await window.AdminSettlementReview?.render(review,{isCurrent:valid});
       if(!valid())return;
     }
     const refresh=()=>render(root,page,{accountKind:page==='accounts'?kind:accountKind,caseSource:page==='cases'?source:caseSource,onNavigate,externalAccountTabs,isCurrent});
-    if(page==='settings'){settings(root);const providers=el(root,'section');await window.AdminProviderSettings?.render(providers,{isCurrent:valid});return;}
+    if(page==='settings'){settings(root);const providers=el(root,'section');await window.AdminProviderSettings?.render(providers,{isCurrent:valid});if(!valid())return;const payouts=el(root,'section');await window.AdminPayoutProviderTest?.render(payouts,{isCurrent:valid,settings:true});return;}
     if(page==='appeals'){
       notice(root,'이의제기 처리 기능을 준비하고 있습니다. 신고·제재 처리 기능의 운영 연결 후 접수·심사를 사용할 수 있습니다.');
       button(root,'신고·검수로 이동',()=>window.AdminOperations.navigate('cases'));return;
@@ -178,5 +180,5 @@
   function errorText(e){return ({ADMIN_REAUTH_FAILED:'관리자 비밀번호를 확인해주세요.',ADMIN_REAUTH_REQUIRED:'현재 관리자 비밀번호를 입력해주세요.',
     CONFLICT:'다른 변경이 먼저 저장되었습니다. 새로고침 후 다시 확인해주세요.',ADMIN_FORBIDDEN:'이 정보를 조회하거나 변경할 권한이 없습니다.',
     ACCOUNT_SERVICE_NOT_ACTIVATED:'관리자 데이터 연결을 준비 중입니다. 잠시 후 새로고침해주세요.',RATE_LIMITED:'요청이 많습니다. 잠시 후 다시 시도해주세요.'})[e?.code]||'정보를 불러오거나 저장하지 못했습니다. 새로고침 후 상태를 확인해주세요.';}
-  window.AdminConsole=Object.freeze({render,reset(){window.AdminPayoutsTest?.leave();turn++;current='';offset=0;query='';window.AdminProviderSettings?.reset();window.AdminSettlementReview?.reset();}});
+  window.AdminConsole=Object.freeze({render,reset(){window.AdminPayoutsTest?.leave();window.AdminPayoutProviderTest?.reset();turn++;current='';offset=0;query='';window.AdminProviderSettings?.reset();window.AdminSettlementReview?.reset();}});
 })();

@@ -318,7 +318,7 @@
     window.AdminPointsTest?.leave();
     window.AdminTopups?.leave();
     window.AdminRewardsTest?.leave();
-    window.AdminPayoutsTest?.leave();
+    window.AdminPayoutsTest?.leave();window.AdminPayoutProviderTest?.reset();
   }
   function openRoute(input,shouldPushState=true){
     if(!active())return legacySwitch?.(String(input).split(/[/?]/).filter(Boolean).pop()||'dashboard',shouldPushState);
@@ -362,7 +362,7 @@
     window.AdminPointsTest?.reset();
     window.AdminTopups?.reset();
     window.AdminRewardsTest?.reset();
-    window.AdminPayoutsTest?.leave();
+    window.AdminPayoutsTest?.leave();window.AdminPayoutProviderTest?.reset();
     if(root())root().replaceChildren();document.getElementById('adminOperationsNav')?.replaceChildren();
     for(const id of ['adminSectionTabs','adminBreadcrumbs','adminGlobalSearchResults'])document.getElementById(id)?.replaceChildren();
     for(const id of ['adminWorkspaceHeading','adminWorkspaceDescription']){const node=document.getElementById(id);if(node)node.textContent='';}

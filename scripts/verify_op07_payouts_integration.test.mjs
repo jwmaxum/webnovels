@@ -42,10 +42,10 @@ test('shared module loads before both owners, stale sessions dispose and only ch
  const loader=read('public/js/core/role-modules.js'),html=read('public/index.html');
  const c={window:{},Map,Set};vm.runInNewContext(loader,c);
  assert.equal((loader.match(/\/js\/shared\/payouts-test\.js\?v=20261102op07/g)||[]).length,2);
- for(const file of ['creator/creator-dashboard','admin/admin-console'])assert(loader.indexOf('/js/shared/payouts-test.js?')<loader.indexOf('/js/'+file+'.js?v=20261102op07'));
+ for(const file of ['creator/creator-dashboard','admin/admin-console'])assert(loader.indexOf('/js/shared/payouts-test.js?')<loader.indexOf('/js/'+file+'.js?v='+(file==='admin/admin-console'?'20261102op10':'20261102op07')));
  assert.match(html,/payouts-test\.css\?v=20261102op07/);
  assert.match(html,/supabase-public-config\.js\?v=20261102op07/);
- for(const x of ['auth-session','router','role-modules'])assert(html.includes('/js/core/'+x+'.js?v='+(x==='role-modules'?'20261102op08':'20261102op07')));
+ for(const x of ['auth-session','router','role-modules'])assert(html.includes('/js/core/'+x+'.js?v='+(x==='router'?'20261102op07':'20261102op10')));
  for(const x of ['reader-rewards-test','reader-points-test','reader-topups'])assert(html.includes('/js/reader/'+x+'.js?v=20261102op06'));
  const auth=read('public/js/core/auth-session.js');assert.match(auth,/AuthorPayoutsTest\?\.reset\(\)/);assert.match(auth,/AdminPayoutsTest\?\.reset\(\)/);
  assert.match(read('public/js/creator/creator-dashboard.js'),/AuthorPayoutsTest\?\.leave\(\)/);
