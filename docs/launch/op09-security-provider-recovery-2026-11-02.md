@@ -58,3 +58,7 @@ search-first → 구현 → security-review → verification-loop 흐름을 적�
 ## 최종 로컬 검증
 
 전체 릴리스 59개 명령과 컴파일, 독립 타입 검사, 신규 OP-09 8개 테스트가 통과했다. npm 감사는 전체 0건이다. PostgreSQL 17.11 독립 클러스터 검사에서 테이블 103개·함수 98개·정책 3개·시퀀스 4개와 합성 파일 3개(237바이트)를 대조했고 비공개 원고/웹툰 메타데이터의 anon/authenticated RLS 차단을 확인했다. 초기 샌드박스의 로컬 TCP 차단 후 승인된 전용 합성 환경에서 재실행해 종료 코드 0을 확인했다. 별도 lint 명령과 수치 커버리지 측정은 없으며 구문·비밀 패턴·diff 검토를 수행했다. 브라우저/localhost HTTP 인수, 실제 제공자 호출, 운영 DB 적용은 하지 않았다. 결과는 [검증 집계](../../artifacts/op09-verification-2026-11-02.json)에 남긴다.
+
+## 원격 반영
+
+제품 커밋 `759da69`을 main에 정상 push했다. [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41421373101)의 전체 빌드·보안 감사·네이티브 복원 작업과 Cloudflare 배포가 성공했다. 두 공개 도메인의 HTTP 기준과 비인증 관리자 차단, 금융/정산 TEST 비활성 상태를 확인했다. 로컬 구간별 검사와 별도로 CI에서 전체 연속 실행을 통과했다. 운영 DB·플래그·실제 제공자 상태는 변경하지 않았다.

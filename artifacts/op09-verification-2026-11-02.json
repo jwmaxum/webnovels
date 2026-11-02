@@ -87,5 +87,167 @@
     "scripts/verify_op09_recovery.mjs": "bdca1815d11d757cbb1f83b0645c357ab696a66e2b0c979c2d8aa6f73d58d32c",
     "server/providers/payouts-toss-test.mjs": "5dae186db8e31080ab06da3e18b9dc05a727f58895159f4f8abced62bf621895"
   },
-  "delivery": "PENDING_PUSH"
+  "delivery": {
+    "commit": "759da69be58679ed44ed0ec6199437b330465f24",
+    "push": "SUCCESS",
+    "github": [
+      {
+        "name": "WebNovels CI / Build & Test Workflow",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41421373101"
+      }
+    ],
+    "checks": [
+      {
+        "name": "Cloudflare Pages",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/runs/125202865846"
+      },
+      {
+        "name": "native-settlement-recovery",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41421373101/job/125197445813"
+      },
+      {
+        "name": "build-and-test",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41421373101/job/125197445380"
+      }
+    ],
+    "cloudflare": {
+      "id": "2efaa74d-2aa1-43b8-8442-4687abb095d1",
+      "commit": "759da69be58679ed44ed0ec6199437b330465f24",
+      "environment": "production",
+      "url": "https://2efaa74d.webnovels-db4.pages.dev",
+      "stageStartedAt": "2026-11-02T09:43:38.845384Z",
+      "latestStage": "deploy",
+      "status": "success",
+      "stages": [
+        {
+          "name": "queued",
+          "status": "success"
+        },
+        {
+          "name": "initialize",
+          "status": "success"
+        },
+        {
+          "name": "clone_repo",
+          "status": "success"
+        },
+        {
+          "name": "build",
+          "status": "success"
+        },
+        {
+          "name": "deploy",
+          "status": "success"
+        }
+      ]
+    },
+    "http": {
+      "checkedAt": "2026-11-02T09:44:37.003Z",
+      "passed": true,
+      "results": [
+        {
+          "origin": "https://webnovels-db4.pages.dev",
+          "emailTransformationVerified": false,
+          "findings": [],
+          "checked": [
+            {
+              "path": "/",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/core/role-modules.js?v=20261102op08",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/admin/admin-provider-settings.js?v=20261102op08",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            }
+          ],
+          "flagsDisabled": true,
+          "checks": [
+            {
+              "path": "/api/v2/admin/providers",
+              "status": 401,
+              "code": "AUTH_REQUIRED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payouts-test?action=summary",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payouts-test?action=state",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "origin": "https://webnovels.uk",
+          "emailTransformationVerified": true,
+          "findings": [],
+          "checked": [
+            {
+              "path": "/",
+              "matchesLocal": false,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/core/role-modules.js?v=20261102op08",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/admin/admin-provider-settings.js?v=20261102op08",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            }
+          ],
+          "flagsDisabled": true,
+          "checks": [
+            {
+              "path": "/api/v2/admin/providers",
+              "status": 401,
+              "code": "AUTH_REQUIRED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payouts-test?action=summary",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payouts-test?action=state",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "browser": "NOT_RUN",
+      "productionFlagsChanged": false
+    }
+  }
 }
