@@ -8,11 +8,11 @@ class Node{
  set innerHTML(value){assert.fail('Never use HTML insertion for provider settings');}
 }
 const text=n=>n.textContent+' '+n.children.map(text).join(' ');
-function setup({keyReady=true,role='SUPER_ADMIN',post}={}){
+function setup({keyReady=true,role='SUPER_ADMIN',post,readiness}={}){
  const root=new Node('div'),calls=[];let who={userId:'admin',admin:{role}};
  const context={document:{createElement:t=>new Node(t)},WebNovelsAuth:{getActor:()=>who,api:async(path,options)=>{
   calls.push({path,body:options?.body});if(options)return post?post(JSON.parse(options.body)):{saved:true,provider:'TOSS',mode:'TEST',revision:'1',configuredFields:['secretKey'],complete:false,enabled:false};
-  return {keyReady,items:['TOSS','PASS'].flatMap(provider=>['TEST','LIVE'].map(mode=>({provider,mode,revision:'0',configuredFields:[],complete:false,enabled:false})))};
+  return {keyReady,readiness,items:['TOSS','PASS'].flatMap(provider=>['TEST','LIVE'].map(mode=>({provider,mode,revision:'0',configuredFields:[],complete:false,enabled:false})))};
  }}};context.window=context;vm.createContext(context);vm.runInContext(source,context);
  return {root,calls,context,api:context.AdminProviderSettings,setActor:v=>{who=v;}};
 }
@@ -36,4 +36,10 @@ test('missing server key disables writes and late save after account switch cann
  form.querySelectorAll('input').find(n=>n.autocomplete==='current-password').value='password';
  const pending=form.onsubmit({preventDefault(){}});s.setActor(null);s.api.reset();release({saved:true,provider:'TOSS',mode:'TEST',revision:'1',configuredFields:['secretKey']});await pending;
  assert.equal(s.root.children.length,0);
+});
+
+test('operational readiness uses text nodes, distinguishes input from verification, and clears on logout',async()=>{
+ const s=setup({readiness:{schemaVersion:1,liveReady:false,checks:[{id:'payment',label:'카드 TEST',status:'CONFIGURED',detail:'실제 결과 검증 필요'},{id:'bank',label:'<img src=x>',status:'NOT_VERIFIED',detail:'TEST 성공은 실명 확인이 아닙니다.'}]}});
+ await s.api.render(s.root);assert.match(text(s.root),/입력 완료 · 검증 대기/);assert.match(text(s.root),/미검증/);assert.equal(s.root.querySelectorAll('img').length,0);
+ assert.equal(s.calls.length,1);assert(!s.root.querySelectorAll('button').some(b=>b.textContent.includes('활성화')));s.api.reset();assert.equal(s.root.children.length,0);
 });

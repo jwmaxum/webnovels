@@ -29,3 +29,19 @@ jobs:
 
     - name: Verify release contracts, Functions bundle and build
       run: npm run build
+
+  native-settlement-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      # Ubuntu 24.04's shipped server; local acceptance also runs PostgreSQL 17.
+      OP08_PG_BIN: /usr/lib/postgresql/16/bin
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: '.node-version'
+        cache: 'npm'
+    - run: npm ci
+    - name: Verify disposable native PostgreSQL concurrency and restore
+      run: npm run verify:op08:native

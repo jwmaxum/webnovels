@@ -4,8 +4,8 @@ const read=p=>readFile(new URL('../../'+p,import.meta.url),'utf8');
 export const admin='11111111-1111-4111-8111-111111111111';
 export const reader='22222222-2222-4222-8222-222222222222';
 export const limited='33333333-3333-4333-8333-333333333333';
-export async function setup(){
-  const db=await PGlite.create();
+export async function setup({dbFactory=()=>PGlite.create()}={}){
+  const db=await dbFactory();
   try{
     await db.exec(await read('scripts/fixtures/authoring_legacy.sql'));
     await db.exec("alter table readers alter id drop default; alter table readers alter id type uuid using 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid; alter table works alter id type bigint; alter table episodes alter id type bigint,alter work_id type bigint");

@@ -1,0 +1,324 @@
+{
+  "stage": "OP-08",
+  "checkedAt": "2026-11-02T07:35:30.430Z",
+  "baseCommit": "30bf1e4030218fc39152af66123e21305e94f836",
+  "verification": {
+    "stage": "OP-08",
+    "startedAt": "2026-11-02T07:00:44.606Z",
+    "steps": [
+      {
+        "command": "release prefix (completed before OP-02 cache assertion)",
+        "exitCode": 0,
+        "commands": [
+          "test:data",
+          "test:p0",
+          "test:auth",
+          "test:naming",
+          "test:authoring-schema",
+          "test:creator-works",
+          "test:stage14",
+          "test:stage15",
+          "test:stage16",
+          "test:stage17",
+          "test:stage18",
+          "test:stage19",
+          "test:stage20",
+          "test:stage21",
+          "test:stage22",
+          "test:stage23",
+          "test:stage24",
+          "test:stage25",
+          "test:stage26",
+          "test:stage27",
+          "test:stage28",
+          "test:stage29",
+          "test:stage30",
+          "test:stage31",
+          "test:stage32",
+          "test:stage33",
+          "test:stage34",
+          "test:stage35",
+          "test:stage36",
+          "test:drafts",
+          "test:files",
+          "test:publication",
+          "test:operations",
+          "test:admin-operations",
+          "test:stage11",
+          "test:stage13",
+          "test:launch",
+          "test:cloudflare-bundle",
+          "test:author-publishing",
+          "test:ui-r2",
+          "test:ui-r3",
+          "test:ui-r4",
+          "test:ui-r5",
+          "test:ui-r6",
+          "test:ui-r7",
+          "test:ui-r8",
+          "test:ui-r9",
+          "test:ui-r10",
+          "test:ui-r12",
+          "test:ui-r13",
+          "test:op01",
+          "test:op02",
+          "test:op03",
+          "test:op04",
+          "test:op05",
+          "test:op06",
+          "test:op07",
+          "test:op08"
+        ]
+      },
+      {
+        "command": "test:op02",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op03",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op04",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op05",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op06",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op07",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "test:op08",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "build:compile",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "browser": "NOT_RUN",
+    "database": "PGLITE_AND_SEPARATE_NATIVE_SYNTHETIC",
+    "provider": "NOT_CALLED",
+    "productionFlagsChanged": false,
+    "completedAt": "2026-11-02T07:34:13.301Z",
+    "releaseCommands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5",
+      "test:ui-r6",
+      "test:ui-r7",
+      "test:ui-r8",
+      "test:ui-r9",
+      "test:ui-r10",
+      "test:ui-r12",
+      "test:ui-r13",
+      "test:op01",
+      "test:op02",
+      "test:op03",
+      "test:op04",
+      "test:op05",
+      "test:op06",
+      "test:op07",
+      "test:op08"
+    ],
+    "priorFullBuildAttempt": {
+      "exitCode": 1,
+      "stoppedAt": "test:op02",
+      "reason": "outdated dynamic role-modules cache assertion corrected; preceding release commands completed",
+      "log": "scratch/op08/full-build-before-cache-fix.private.log"
+    }
+  },
+  "native": {
+    "stage": "OP-08",
+    "result": "PASS",
+    "checkedAt": "2026-11-02T07:15:13.608Z",
+    "engine": "postgres (PostgreSQL) 17.11",
+    "provenance": "NATIVE_POSTGRES_SYNTHETIC",
+    "steps": [
+      {
+        "name": "same request replay across two native connections",
+        "result": "PASS"
+      },
+      {
+        "name": "concurrent distinct requests cannot overdraw",
+        "result": "PASS"
+      },
+      {
+        "name": "approval and cancellation preserve revision ordering",
+        "result": "PASS"
+      },
+      {
+        "name": "payee change blocks previously approved dispatch",
+        "result": "PASS"
+      },
+      {
+        "name": "deduction before approval prevents excess payout",
+        "result": "PASS"
+      },
+      {
+        "name": "success and failure evidence cannot both finalize",
+        "result": "PASS"
+      },
+      {
+        "name": "refund reserves points before concurrent consumption",
+        "result": "PASS"
+      },
+      {
+        "name": "connection loss rolls back evidence while UNKNOWN stays reserved",
+        "result": "PASS"
+      },
+      {
+        "name": "restored catalog inventory",
+        "result": "PASS",
+        "tables": 103,
+        "routines": 98,
+        "policies": 3,
+        "sequences": 4,
+        "archiveSha256": "e3e30f18cbe5202b814ba28a4bec0fd94de45b367407d590683ac57cc2860b75"
+      },
+      {
+        "name": "custom archive restores rows, ACL, RLS, routines, sequences and UNKNOWN replay",
+        "result": "PASS"
+      }
+    ],
+    "productionTouched": false,
+    "realProviderCalled": false,
+    "browser": "NOT_RUN",
+    "hostedRestoreVerified": false,
+    "storageBytesVerified": false,
+    "limitations": [
+      "Fresh database on the same disposable cluster; not a separate hosted fault domain",
+      "Synthetic roles are shared by source and target databases; not a managed Supabase Auth/Storage restore",
+      "No actual bank, tax, provider or real personal data evidence"
+    ]
+  },
+  "provider": {
+    "stage": "OP-08",
+    "kind": "READ_ONLY_PAYMENT_QUERY",
+    "checkedAt": "2026-11-02T06:53:50.642Z",
+    "providerCalled": false,
+    "liveReady": false,
+    "productionDatabaseWritten": false,
+    "result": "BLOCKED",
+    "reason": "TEST_KEYS_MISSING"
+  },
+  "syntaxFiles": 20,
+  "secretPatternMatches": 0,
+  "diff": "PASS",
+  "security": {
+    "review": "PASS_WITH_EXISTING_DEPENDENCY_BLOCKER",
+    "patched": [
+      "body-parser 1.20.9",
+      "qs 6.16.1"
+    ],
+    "remaining": [
+      {
+        "name": "zod",
+        "version": "3.25.76",
+        "severity": "high",
+        "next": "OP-09 major compatibility and security update"
+      }
+    ]
+  },
+  "evidence": {
+    ".github/workflows/ci.yml": "6175b6ba4f92845ead5d0bc2932aa4deff31914b9709c376ac18bb7be8d1cab7",
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "cc522258c666d624076218b4e9f7b62a540067b69150336d22f874fbb8e2fb9b",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "2e8bc5aacb97b5c750d4a21739d39418091d37d2a6f57461139193843ee923f8",
+    "improve37.md": "b513733e4468d4f363124746e7bc53262aed106b0c7583aff2e8763cf9b90504",
+    "package-lock.json": "23010de5cad4b3e46f6d9d4f06d57ddd536d3e1ab7244aefc1fb36ca5be26140",
+    "package.json": "dac7550e4853f35d776f0e98fe4fa78aa960edb980e6c95078f0c8ce191e50e6",
+    "public/index.html": "8522fe0c2a3050852cc791ee10decc5863f0534f76cc46fd1201a5944cdaba86",
+    "public/js/admin/admin-provider-settings.js": "8e36c5a92a185c8b2f9ec0e9a83cbbe835cf38bb2859e09e67df9526b06a01be",
+    "public/js/core/role-modules.js": "ec3e0b6203712a872ac5cf7bbbed75abd76ab91ed30a770133950d76df56c558",
+    "scripts/fixtures/op04-db.mjs": "ff107aa598adf4bb3a20125d664041951ff26dce2a618704f26d4f5d4f16d1cc",
+    "scripts/fixtures/op05-db.mjs": "5c102184bbf96f1432fe7dd846414a45332d0dcf4957c5ecf85366f83cd05977",
+    "scripts/fixtures/op06-db.mjs": "5e907528477a5e04eb8e0bfbf245813ad3596ab65df52461ea9d7c0870b88d26",
+    "scripts/fixtures/stage17-db.mjs": "5e70c5ddb9cf5ba935492ca48b545b81e3e7e2366d955a8ef576622621bf222e",
+    "scripts/verify_op01_layout.test.mjs": "9738895f7743dc6460b79ab4f03ca3b90554261817a4f878b41407e84080bd8b",
+    "scripts/verify_op02_members_integration.test.mjs": "1b7a01500a4ba188d4fba63ed6b90b8790198d31d3cbf1cad55827b558a0a6fb",
+    "scripts/verify_op03_display_integration.test.mjs": "f82a7245c1e169a5fc8b100f9a406ee084b5e3ae8d4fd3a381fa38729a162f8e",
+    "scripts/verify_op07_payouts_integration.test.mjs": "3cc26b227446add73454c192c89e7e1684f8da1a17833250b0c2de326233a9d6",
+    "scripts/verify_stage35_providers_ui.test.mjs": "4dd41a618b44ba119b60eca6b6fe64b488f8cae92996d1d91644fae67e8575ab",
+    "scripts/verify_ui_r5_layout.test.mjs": "8d07a3111715fffb8637daf74dd353a5ed8a113909ee51fceab282261486e4e1",
+    "scripts/verify_ui_r6_layout.test.mjs": "652ab8ec0416efdea13fc2ab7fb84b3657b1bfb519e88c2769cf03fe05561b16",
+    "server/provider-settings-api.mjs": "7526131e25f032b1f2c5553d79ca4570ac6fbf4c1887f8d8f5fa3d7c2956ec7f",
+    "docs/launch/op08-operational-acceptance-2026-11-02.md": "549c25ef1ca7f72ab756a5bc8c0c9f40049381b46c37e53c31f038a1003479c7",
+    "scripts/lib/op08-native-postgres.mjs": "57ddffab6af80f4919ce9c5c723485f8b10d7f58ed433c84713c8fa94557f4e1",
+    "scripts/lib/op08-provider-probe.mjs": "3201d4f3e87ad00095d144828292ae682b7ccad6a7e1945f7432d50cae2b9f69",
+    "scripts/verify_op08_native.mjs": "ddf9b31d054ffa0b9b6d0bf1e4274e2422ea44769dbca1113dbe74fcabff9a48",
+    "scripts/verify_op08_provider.mjs": "c6eb1efd8feb93a4c1bbe4b07885c8fd9301e65a5b12f741d6f5f9f8bb98429e",
+    "scripts/verify_op08_readiness.test.mjs": "9372be68b99a846b32d7ca2326b25aa0ebffbbb914f394ed08032aa7fa399c23",
+    "server/operations-readiness.mjs": "08a1cdce7b505d8ad1334c62f1ccaed7bd609a7a8a9ef93c1b262248ea7a63b9"
+  },
+  "productionDatabaseApplied": false,
+  "productionFlagsChanged": false,
+  "liveReady": false,
+  "browser": "NOT_RUN",
+  "delivery": {
+    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+  },
+  "nextStage": "OP-09 Zod security update, actual provider TEST and independent hosted restore acceptance"
+}

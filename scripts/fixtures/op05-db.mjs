@@ -5,8 +5,8 @@ import {setup as foundation,admin,reader,limited,otherReader,uuid} from './op04-
 export {admin,reader,limited,otherReader,uuid};
 export const sql=await readFile(new URL('../../database/launch/020_topups_test.sql',import.meta.url),'utf8');
 export const provider={providerMode:'LOCAL_SIMULATED',merchantId:'LOCAL_SIMULATED',binding:'a'.repeat(64)};
-export async function setup({seed=true,openingPoints=0}={}){
- const f=await foundation({seed});const {db}=f;
+export async function setup({seed=true,openingPoints=0,dbFactory}={}){
+ const f=await foundation({seed,dbFactory});const {db}=f;
  try{
   if(openingPoints)assert.equal((await f.credit(openingPoints)).creditedPoints,openingPoints);
   const before=(await db.query("select prosrc,proowner::text from pg_proc where oid='public.op04_points_test(uuid,text,jsonb)'::regprocedure")).rows[0];

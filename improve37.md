@@ -40,3 +40,5 @@
 테스트 자료 초기화는 반복하지 않는다. Vercel과 명시 요청 없는 브라우저/localhost 검증을 사용하지 않는다.
 
 2026-11-02 OP-07은 [정산 TEST 구현](docs/launch/op07-payouts-implementation-2026-11-02.md)과 [계약](docs/launch/op07-payouts-contract-2026-11-02.md)을 따른다. 원충전 소비의 수익 확정·감액·작가 신청·예약·승인·UNKNOWN 결과 대사와 모의 증빙을 연결한다. 신규022는 합성 DB에서 검증하며 운영 금융/정산 플래그는 변경하지 않는다. 다음 OP-08은 실제 제공자 TEST·다중 연결·복원·개인정보/세무 조건과 운영 전환 인수다.
+
+2026-11-02 OP-08: [제공자 TEST 준비·네이티브 경쟁·복원 인수](docs/launch/op08-operational-acceptance-2026-11-02.md)를 따른다. 사용자 결정에 따라 실제 TEST 키는 추후 준비하며, 기존 TEST 전송의 조회 도구·관리자 준비 상태·native PostgreSQL 다중 연결과 합성 복원을 검증한다. 운영 DB와 금융/광고/정산 플래그는 유지한다. 별도 hosted 복원·실제 제공자 및 계좌/세무 증빙은 미완료이며 Zod 메이저 보안 업데이트를 포함한 OP-09로 이어진다.

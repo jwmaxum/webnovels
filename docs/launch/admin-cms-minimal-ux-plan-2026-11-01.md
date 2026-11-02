@@ -464,3 +464,5 @@ OP-06 최종 반영: 제품 커밋 `612d2e8`의 [GitHub CI](https://github.com/j
 OP-07 [작가 정산 TEST](op07-payouts-implementation-2026-11-02.md)를 기존 결제·정산의 작가 정산에 연결했다. 정산 신청, 소비 수익 확정, 확정 명세·감액, 작가·지급 대상, 정책을 하위 업무로 제공하며 6개 최상위 메뉴를 유지한다. 요청 금액은 예약하고 승인과 결과 증빙을 구분한다. UNKNOWN은 증빙 확인까지 유지하며 실제 은행 이체를 호출하지 않는다. 합성 지급 대상은 R13 실명/계좌 상태와 별개다. 다음 OP-08에서 실제 금융·광고·정산 운영 전환을 각각 인수한다.
 
 OP-07 최종 반영: 제품 커밋 `67f9ddf`의 [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41394810337)와 Cloudflare Pages 배포가 성공했다. 두 도메인의 새 JS·CSS 9개씩 총 18개가 로컬과 일치한다. 공개 pointsTestEnabled·chargingTestEnabled·adRewardsTestEnabled·settlementsTestEnabled는 false이고 독자·관리자 TEST API는 503으로 닫혀 있다. /charging-test와 복귀 경로·no-referrer/no-store를 공개 HTTP로 확인했으며 브라우저 실행 인수는 아니다. 019·020·021·022·금융/광고/정산 운영 플래그와 기존 실제 자료는 변경하지 않았다. 다음은 OP-08 운영 전환 인수·실제 제공자 TEST·복원·개인정보/계좌·세무 준비다.
+
+2026-11-02 OP-08: [제공자 TEST 준비·네이티브 경쟁·복원 인수](op08-operational-acceptance-2026-11-02.md)를 따른다. 사용자 결정에 따라 실제 TEST 키는 추후 준비하며, 기존 TEST 전송의 조회 도구·관리자 준비 상태·native PostgreSQL 다중 연결과 합성 복원을 검증한다. 운영 DB와 금융/광고/정산 플래그는 유지한다. 별도 hosted 복원·실제 제공자 및 계좌/세무 증빙은 미완료이며 Zod 메이저 보안 업데이트를 포함한 OP-09로 이어진다.

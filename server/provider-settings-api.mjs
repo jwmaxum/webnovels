@@ -1,4 +1,5 @@
 import {providerKeyReady,encryptProviderSettings,decryptProviderSettings} from './provider-settings-crypto.mjs';
+import {operationsReadiness} from './operations-readiness.mjs';
 const fields={TOSS:['clientKey','secretKey','merchantId'],PASS:['storeId','channelKey','apiSecret','pgProvider','identifierType','hmacKey','keyVersion']};
 const revision=v=>typeof v==='string'&&/^(0|[1-9]\d{0,17})$/.test(v);
 export function validateProviderValues(provider,mode,value){
@@ -25,7 +26,7 @@ export async function providerSettingsApi({request,user,actor,remote,rpc,fail,en
  const url=new URL(request.url);
  if([...url.searchParams.keys()].length)fail(400,'INVALID_QUERY');
  const call=(action,data={})=>rpc('manage_provider_settings',{p_user:user.id,p_action:action,p_data:data});
- if(request.method==='GET')return {...await call('list'),keyReady:providerKeyReady(env),activationAvailable:false};
+ if(request.method==='GET'){const result=await call('list');return {...result,keyReady:providerKeyReady(env),activationAvailable:false,readiness:operationsReadiness({env,items:result.items})};}
  if(request.method!=='POST')fail(405,'METHOD_NOT_ALLOWED');
  if(request.headers.get('origin')!==url.origin)fail(403,'ORIGIN_REQUIRED');
  if(!providerKeyReady(env))fail(503,'PROVIDER_KEY_REQUIRED');

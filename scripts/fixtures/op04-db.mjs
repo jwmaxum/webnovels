@@ -6,8 +6,8 @@ export const otherReader='44444444-4444-4444-8444-444444444444';
 export const uuid=()=>crypto.randomUUID();
 const read=file=>readFile(new URL('../../'+file,import.meta.url),'utf8');
 export const sql=await read('database/launch/019_points_test.sql');
-export async function setup({seed=true}={}){
- const {db}=await foundation();
+export async function setup({seed=true,dbFactory}={}){
+ const {db}=await foundation({dbFactory});
  try{
   for(const file of ['database/authoring/015_webtoon.sql','database/authoring/021_manuscript_documents.sql'])await db.exec(await read(file));
   // Reproduce the explicit-ACL future baseline rather than relying on automatic grants.

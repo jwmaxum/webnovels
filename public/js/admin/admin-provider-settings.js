@@ -21,6 +21,15 @@
   const status=el(root,'p','설정 상태를 확인 중입니다…');status.setAttribute('role','status');
   let result;try{result=await window.WebNovelsAuth.api('/api/v2/admin/providers');}catch(e){if(valid())status.textContent=errors[e.code]||'설정 상태를 확인하지 못했습니다.';return;}
   if(!valid())return;status.textContent=result.keyReady?'키는 암호화하여 저장되며 저장된 값은 다시 표시하지 않습니다.':'키 저장을 준비 중입니다. 운영 담당자가 Cloudflare의 암호화 키와 버전을 먼저 설정해야 합니다.';
+  if(result.readiness?.schemaVersion===1&&Array.isArray(result.readiness.checks)){
+   const readiness=el(root,'section');readiness.className='co-panel';el(readiness,'h4','운영 전환 준비 상태');
+   el(readiness,'p','설정 입력과 실제 서비스 검증은 구분합니다. 상태 갱신은 설정 새로고침을 이용하세요.');
+   const labels={CONFIGURED:'입력 완료 · 검증 대기',MISSING:'미설정',INCOMPLETE:'일부 입력',INVALID:'설정 확인 필요',NOT_VERIFIED:'미검증',BLOCKED:'전환 보류'};
+   const list=el(readiness,'ul');
+   for(const check of result.readiness.checks.slice(0,10))if(check&&typeof check.label==='string'&&typeof check.detail==='string'){
+    const row=el(list,'li');el(row,'strong',check.label+' — '+(labels[check.status]||'확인 필요'));el(row,'p',check.detail);
+   }
+  }
   for(const [provider,spec] of Object.entries(specs)){
    const card=el(root,'section');card.className='co-panel';el(card,'h4',spec.title);
    const form=el(card,'form'),modeLabel=el(form,'label','환경'),mode=el(modeLabel,'select');

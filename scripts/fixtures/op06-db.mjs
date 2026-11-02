@@ -5,8 +5,8 @@ import {setup as foundation,admin,reader,limited,otherReader,uuid} from './op05-
 export {admin,reader,limited,otherReader,uuid};
 export const sql=await readFile(new URL('../../database/launch/021_ad_rewards_test.sql',import.meta.url),'utf8');
 export const provider={provider:'INTERNAL_TEST',channelId:'synthetic-op06-channel',binding:'a'.repeat(64)};
-export async function setup({seed=true,openingPoints=0}={}){
- const f=await foundation({seed,openingPoints}),{db}=f;
+export async function setup({seed=true,openingPoints=0,dbFactory}={}){
+ const f=await foundation({seed,openingPoints,dbFactory}),{db}=f;
  try{
   const routine=async signature=>(await db.query('select oid::text,prosrc,proowner::text,proconfig,proacl::text from pg_proc where oid=$1::regprocedure',[signature])).rows[0];
   const originalBase=await routine('commerce.op05_points_base(uuid,text,jsonb)'),originalAccess=await routine('commerce.op04_access(uuid,bigint,integer,integer)'),originalWrapper=await routine('public.op04_points_test(uuid,text,jsonb)');
