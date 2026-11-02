@@ -285,8 +285,8 @@
   },
   "evidence": {
     ".github/workflows/ci.yml": "6175b6ba4f92845ead5d0bc2932aa4deff31914b9709c376ac18bb7be8d1cab7",
-    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "cc522258c666d624076218b4e9f7b62a540067b69150336d22f874fbb8e2fb9b",
-    "docs/launch/ui-redesign-plan-2026-10-30.md": "2e8bc5aacb97b5c750d4a21739d39418091d37d2a6f57461139193843ee923f8",
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "c7f14d5df1d74fdf416ef8b8208e91103b6af6d2a6a4337f59baacf389ca7edc",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "b0fbf6b4ea515037d2b7f8e5586fd880ad1be045bfe1e678ab825ac1e6bcf00c",
     "improve37.md": "b513733e4468d4f363124746e7bc53262aed106b0c7583aff2e8763cf9b90504",
     "package-lock.json": "23010de5cad4b3e46f6d9d4f06d57ddd536d3e1ab7244aefc1fb36ca5be26140",
     "package.json": "dac7550e4853f35d776f0e98fe4fa78aa960edb980e6c95078f0c8ce191e50e6",
@@ -305,7 +305,7 @@
     "scripts/verify_ui_r5_layout.test.mjs": "8d07a3111715fffb8637daf74dd353a5ed8a113909ee51fceab282261486e4e1",
     "scripts/verify_ui_r6_layout.test.mjs": "652ab8ec0416efdea13fc2ab7fb84b3657b1bfb519e88c2769cf03fe05561b16",
     "server/provider-settings-api.mjs": "7526131e25f032b1f2c5553d79ca4570ac6fbf4c1887f8d8f5fa3d7c2956ec7f",
-    "docs/launch/op08-operational-acceptance-2026-11-02.md": "549c25ef1ca7f72ab756a5bc8c0c9f40049381b46c37e53c31f038a1003479c7",
+    "docs/launch/op08-operational-acceptance-2026-11-02.md": "8dfe21bb912d4227a347b706dbd55314fb6f20cbdbbee2e3164f5f999593b949",
     "scripts/lib/op08-native-postgres.mjs": "57ddffab6af80f4919ce9c5c723485f8b10d7f58ed433c84713c8fa94557f4e1",
     "scripts/lib/op08-provider-probe.mjs": "3201d4f3e87ad00095d144828292ae682b7ccad6a7e1945f7432d50cae2b9f69",
     "scripts/verify_op08_native.mjs": "ddf9b31d054ffa0b9b6d0bf1e4274e2422ea44769dbca1113dbe74fcabff9a48",
@@ -318,7 +318,112 @@
   "liveReady": false,
   "browser": "NOT_RUN",
   "delivery": {
-    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+    "productCommit": "7245007dbb915a5735f77ddfa5b2b6f61fe586c2",
+    "mainPush": "SUCCESS",
+    "ci": "SUCCESS",
+    "nativeCi": "SUCCESS",
+    "ciUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41407474534",
+    "cloudflare": "SUCCESS",
+    "deploymentId": "3601b953-b0bb-4ddf-998a-2a464f565efe",
+    "checkedAt": "2026-11-02T07:54:03.065Z",
+    "passed": true,
+    "results": [
+      {
+        "origin": "https://webnovels-db4.pages.dev",
+        "emailTransformationVerified": false,
+        "findings": [],
+        "checked": [
+          {
+            "path": "/",
+            "matchesLocal": true,
+            "verifiedEquivalent": true,
+            "status": 200
+          },
+          {
+            "path": "/js/core/role-modules.js?v=20261102op08",
+            "matchesLocal": true,
+            "verifiedEquivalent": true,
+            "status": 200
+          },
+          {
+            "path": "/js/admin/admin-provider-settings.js?v=20261102op08",
+            "matchesLocal": true,
+            "verifiedEquivalent": true,
+            "status": 200
+          }
+        ],
+        "flagsDisabled": true,
+        "checks": [
+          {
+            "path": "/api/v2/admin/providers",
+            "status": 401,
+            "code": "AUTH_REQUIRED",
+            "passed": true
+          },
+          {
+            "path": "/api/v2/creator/payouts-test?action=summary",
+            "status": 503,
+            "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+            "passed": true
+          },
+          {
+            "path": "/api/v2/admin/payouts-test?action=state",
+            "status": 503,
+            "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+            "passed": true
+          }
+        ]
+      },
+      {
+        "origin": "https://webnovels.uk",
+        "emailTransformationVerified": true,
+        "findings": [],
+        "checked": [
+          {
+            "path": "/",
+            "matchesLocal": false,
+            "verifiedEquivalent": true,
+            "status": 200
+          },
+          {
+            "path": "/js/core/role-modules.js?v=20261102op08",
+            "matchesLocal": true,
+            "verifiedEquivalent": true,
+            "status": 200
+          },
+          {
+            "path": "/js/admin/admin-provider-settings.js?v=20261102op08",
+            "matchesLocal": true,
+            "verifiedEquivalent": true,
+            "status": 200
+          }
+        ],
+        "flagsDisabled": true,
+        "checks": [
+          {
+            "path": "/api/v2/admin/providers",
+            "status": 401,
+            "code": "AUTH_REQUIRED",
+            "passed": true
+          },
+          {
+            "path": "/api/v2/creator/payouts-test?action=summary",
+            "status": 503,
+            "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+            "passed": true
+          },
+          {
+            "path": "/api/v2/admin/payouts-test?action=state",
+            "status": 503,
+            "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+            "passed": true
+          }
+        ]
+      }
+    ],
+    "browser": "NOT_RUN",
+    "productionFlagsChanged": false
   },
-  "nextStage": "OP-09 Zod security update, actual provider TEST and independent hosted restore acceptance"
+  "nextStage": "OP-09 Zod security update, actual provider TEST and independent hosted restore acceptance",
+  "evidenceNote": "Product source hashes with delivery-only documentation updates."
 }
