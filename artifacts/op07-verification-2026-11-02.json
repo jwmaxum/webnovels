@@ -1,6 +1,6 @@
 {
   "stage": "OP-07",
-  "checkedAt": "2026-11-02T05:33:16.027Z",
+  "checkedAt": "2026-11-02T05:46:08.065Z",
   "baseCommit": "1f236f3c4cd98736623f3e4692eafc179e057608",
   "mode": "TEST",
   "provenance": "LOCAL_SIMULATED",
@@ -383,15 +383,149 @@
     "preservedRoutines": 56
   },
   "delivery": {
-    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+    "checkedAt": "2026-11-02T05:45:54.050Z",
+    "productCommit": "67f9ddfc0421f3bf867cd73545934470f2b423f9",
+    "mainPush": "SUCCESS",
+    "force": false,
+    "ci": "SUCCESS",
+    "ciUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41394810337",
+    "cloudflare": "SUCCESS",
+    "deploymentId": "3b70eac1-25cd-417a-920d-9599f16db12c",
+    "matchingCodeAssets": 18,
+    "origins": [
+      {
+        "origin": "https://webnovels-db4.pages.dev",
+        "flagsDisabled": true,
+        "routes": [
+          {
+            "path": "/reading-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test/return",
+            "status": 200,
+            "portalReady": true,
+            "noReferrer": true,
+            "noStore": true
+          }
+        ],
+        "apis": [
+          {
+            "path": "/api/v2/creator/payouts-test?action=summary",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/payouts-test?action=state",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/points-test?action=wallet",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/topups-test?action=products",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test?action=options&episodeId=3",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/ad-rewards-test?action=state",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test/callback",
+            "status": 503,
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "origin": "https://webnovels.uk",
+        "flagsDisabled": true,
+        "routes": [
+          {
+            "path": "/reading-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test/return",
+            "status": 200,
+            "portalReady": true,
+            "noReferrer": true,
+            "noStore": true
+          }
+        ],
+        "apis": [
+          {
+            "path": "/api/v2/creator/payouts-test?action=summary",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/payouts-test?action=state",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/points-test?action=wallet",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/topups-test?action=products",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test?action=options&episodeId=3",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/ad-rewards-test?action=state",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test/callback",
+            "status": 503,
+            "disabled": true
+          }
+        ]
+      }
+    ],
+    "testOffVerified": true,
+    "productionDatabaseApplied": false,
+    "productionFlagsChanged": false,
+    "browser": "NOT_RUN"
   },
   "limitations": [
     "Single in-memory PGlite tests SQL invariants and transactions, not native multiconnection races",
     "Simulated payee references and financial outcomes are not real bank/PG/advertising or tax evidence"
   ],
   "evidence": {
-    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "b8c2c4d0e2fa74c4e7a55c8bbc23bbffbb203db9a5284d07de28f06ec26eca3a",
-    "docs/launch/ui-redesign-plan-2026-10-30.md": "a080baf05e7c278d1799eec11f5884aa8d42b39bbf56ff551781d4f5f8d3b424",
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "d71ed7dc2f03a30e88618e3d11be69e9358a2ee12717e3c88a86fa51b60a55d7",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "0a556b54c365f5ee022060b680312cf4ffa2e3968175bb5c987712c567bf8e19",
     "functions/api/public-config.js": "bfb3920e2fb2a314b92b2abbf8462d02958527d6966a112d3e02218800f204d4",
     "improve37.md": "b8f50bd9a066296901a7949f30e777f0d8384d22805b76cfaba458d4b62c2aae",
     "package.json": "d6a3fdfefcc2c4c37644d10fb601cc33caebe393068169fdade626f8bbaee79f",
@@ -419,7 +553,7 @@
     "server/account-api.mjs": "13575faaf407457ff06500855e68914f767998fdd8fccd7912ac004c248a3f38",
     "database/launch/022_author_payouts_test.sql": "fd9a351839e75e48bb002df5a3d2e1d774546281045e35378c83e3298e66faa4",
     "docs/launch/op07-payouts-contract-2026-11-02.md": "38169753c0bb3dff5c129b2e3b73fbe1a5a98479589d074450d0f970b1e942bc",
-    "docs/launch/op07-payouts-implementation-2026-11-02.md": "f56a12f0734276a281aeb126c6db69c0dc5312f3fd161f462c4a2be5e2612b1e",
+    "docs/launch/op07-payouts-implementation-2026-11-02.md": "e57b3b5fcad2a80c6b3b931323b7972b28bc0b5b82b614f53d1c9bb2bef1379f",
     "public/css/payouts-test.css": "43e83678ff36f1f47e530fad24983cfffc99a863702e656a25199c4e284b0559",
     "public/js/shared/payouts-test.js": "ad06799b7bf69d4fc0c4722e2befbdfe2587180a9a57707d9afc56fb7ddd0787",
     "scripts/fixtures/op07-api.mjs": "22194884fc901de31e514ddfc8916bdb0164f484beb9545057723cb860330aa9",
@@ -438,5 +572,6 @@
   "productionFlagsChanged": false,
   "realProviderCalled": false,
   "browser": "NOT_RUN",
-  "nextStage": "OP-08 provider TEST, multi-connection races, independent recovery, privacy/tax/account readiness and controlled operational activation"
+  "nextStage": "OP-08 provider TEST, multi-connection races, independent recovery, privacy/tax/account readiness and controlled operational activation",
+  "evidenceNote": "Product source hashes plus updated documentation hashes from the documentation-only delivery record."
 }

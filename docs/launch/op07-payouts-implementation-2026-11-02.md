@@ -45,3 +45,7 @@
 로컬 검증 완료: OP-07 신규 55개 테스트, 전체 릴리스 57개 명령과 컴파일, 독립 타입 검사, 6개 흐름 정산 리허설을 통과했다. 실제 종료 코드와 변경 해시는 [검증 집계](../../artifacts/op07-verification-2026-11-02.json)에 기록한다.
 
 최종 검토에서 이전 수익 기록의 조회가 새 TEST 화면으로 이동하던 동작을 수정했다. 기존 대시보드에 회귀 테스트 1개를 추가하고 대시보드·OP07 UI/통합 테스트와 Cloudflare 번들을 다시 통과했다. 전체 로컬 릴리스 검사는 기존 캐시 버전 기대값 수정 전후로 나누어 완료했으며, 최종 소스의 연속 전체 빌드는 GitHub CI에서 별도로 확인한다.
+
+## 배포 후 확인
+
+제품 커밋 `67f9ddf`의 [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41394810337)와 Cloudflare Pages 배포가 성공했다. 두 도메인의 새 JS·CSS 9개씩 총 18개가 로컬과 일치한다. 공개 pointsTestEnabled·chargingTestEnabled·adRewardsTestEnabled·settlementsTestEnabled는 false이고 독자·관리자 TEST API는 503으로 닫혀 있다. /charging-test와 복귀 경로·no-referrer/no-store를 공개 HTTP로 확인했으며 브라우저 실행 인수는 아니다. 019·020·021·022·금융/광고/정산 운영 플래그와 기존 실제 자료는 변경하지 않았다. [검증 집계](../../artifacts/op07-verification-2026-11-02.json)에 근거를 남긴다. 후속 커밋은 문서·집계만 갱신한다.
