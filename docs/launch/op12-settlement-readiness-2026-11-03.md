@@ -90,3 +90,7 @@ Toss의 TEST 승인은 실제 자금 이동과 다르므로 상태값만으로 L
 - PostgreSQL 17.11의 실제 두 연결에서 계좌 변경/검토의 순서별 경쟁, 중복 요청, 비공개 스키마·증빙·철회·준비 기록·ACL의 archive 복원 4개 시나리오를 통과했다. 합성 로컬 DB이며 hosted 복원 인수는 아니다.
 - 컴파일·TypeScript·Cloudflare Functions 6개 번들·변경 JS 구문·보안·diff 검사를 통과했다. npm audit은 초기 네트워크 DNS 실패 후 정상 재조회하여 취약점 0건을 확인했다. 별도 lint 설정과 coverage 측정은 없으며 로컬 전체 release 연속 실행은 하지 않았다.
 - 상세 집계: `artifacts/op12-verification-2026-11-03.json`. 운영 DB/기능/scheduler 변경, 실제 증빙 업로드·송금·제공자 호출·브라우저 인수는 하지 않았다.
+
+## 원격 반영
+
+제품 커밋 `85e3b01`을 main에 정상 push했다. [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41468818129)의 전체 빌드·보안 감사·네이티브 복원 작업과 Cloudflare 배포가 성공했다. 두 공개 도메인의 HTTP 기준과 비인증 관리자 차단, 금융/정산 TEST 비활성 상태를 확인했다. 로컬 관련 회귀 검사와 별도로 CI에서 전체 연속 실행을 통과했다. 운영 DB·플래그·실제 제공자 상태는 변경하지 않았다.
