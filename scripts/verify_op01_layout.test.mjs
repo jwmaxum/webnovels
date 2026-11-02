@@ -124,9 +124,9 @@ test('OP-01 assets are versioned and load after their existing compatibility dep
   const shellStyle = styles.indexOf('/css/admin-shell.css?v=20261101op01');
   assert(originalStyle >= 0 && shellStyle > originalStyle, 'shell overrides load after the operations stylesheet');
   const navigation = '/js/admin/admin-navigation.js?v=20261101op02';
-  const operations = '/js/admin/admin-operations.js?v=20261102op05';
+  const operations = '/js/admin/admin-operations.js?v=20261102op06';
   assert(loader.includes(navigation) && loader.includes(operations));
   assert(loader.indexOf(navigation) < loader.indexOf(operations), 'navigation model must exist before admin operations');
   for (const asset of [navigation, operations]) await read('public' + asset.split('?')[0]);
-  assert(nodes.some(node => node.tagName === 'script' && attr(node, 'src') === '/js/core/role-modules.js?v=20261102op05'));
+  assert(nodes.some(node => node.tagName === 'script' && attr(node, 'src') === '/js/core/role-modules.js?v=20261102op06'));
 });

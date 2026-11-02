@@ -13,12 +13,12 @@ const timestamp=value=>typeof value==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d
 const keys=(value,allowed)=>object(value)&&Object.keys(value).every(key=>allowed.includes(key));
 const pick=(value,fields)=>Object.fromEntries(fields.filter(key=>Object.hasOwn(value,key)).map(key=>[key,value[key]]));
 const marker={mode:'TEST',provenance:'LOCAL_SIMULATED'};
-const access=['MEMBER_FREE','OWNED','LOCKED'];
+const access=['MEMBER_FREE','OWNED','AD_REWARD','CAMPAIGN_FREE','LOCKED'];
 const maxPanelBytes=8*1024*1024;
 const reads={works:['offset'],episodes:['workId','offset'],wallet:[],content:['episodeId'],panel:['episodeId','versionId','panelId','format']};
 const writes={quote:['episodeId'],purchase:['quoteId','requestId']};
 const adminActions={state:[],search:['q','type','offset'],enroll:['workId','enabled','revision','reason','requestId'],policy:['scope','targetId','points','startsAt','revision','reason','requestId'],credit:['targetUserId','points','reason','requestId']};
-const safeErrors=new Set(['AUTH_REQUIRED','INVALID_SESSION','EMAIL_CONFIRMATION_REQUIRED','READER_REQUIRED','ADMIN_FORBIDDEN','FINANCE_PERMISSION_REQUIRED','READER_NOT_FOUND','WORK_NOT_FOUND','TEST_WORK_NOT_FOUND','TEST_WORK_LIMIT','CONTENT_NOT_AVAILABLE','PANEL_NOT_FOUND','EPISODE_LOCKED','PRICE_CHANGED','PUBLICATION_CHANGED','QUOTE_EXPIRED','QUOTE_NOT_FOUND','INSUFFICIENT_POINTS','BALANCE_LIMIT','REVISION_CONFLICT','IDEMPOTENCY_CONFLICT','RATE_LIMITED','INVALID_POINTS_REQUEST','INVALID_TEST_REQUEST','REASON_REQUIRED','INVALID_REQUEST','INVALID_INPUT','POINTS_TEST_NOT_READY','POINTS_TEST_UNAVAILABLE']);
+const safeErrors=new Set(['AUTH_REQUIRED','INVALID_SESSION','EMAIL_CONFIRMATION_REQUIRED','READER_REQUIRED','ADMIN_FORBIDDEN','FINANCE_PERMISSION_REQUIRED','READER_NOT_FOUND','WORK_NOT_FOUND','TEST_WORK_NOT_FOUND','TEST_WORK_LIMIT','CONTENT_NOT_AVAILABLE','PANEL_NOT_FOUND','EPISODE_LOCKED','PRICE_CHANGED','PUBLICATION_CHANGED','QUOTE_EXPIRED','QUOTE_NOT_FOUND','REWARD_EXPIRED','INSUFFICIENT_POINTS','BALANCE_LIMIT','REVISION_CONFLICT','IDEMPOTENCY_CONFLICT','RATE_LIMITED','INVALID_POINTS_REQUEST','INVALID_TEST_REQUEST','REASON_REQUIRED','INVALID_REQUEST','INVALID_INPUT','POINTS_TEST_NOT_READY','POINTS_TEST_UNAVAILABLE']);
 
 export const pointsTestEnabled=(env={})=>env.POINTS_TEST_ENABLED==='true'&&env.POINTS_TEST_ENVIRONMENT==='TEST'&&env.POINTS_TEST_PROVENANCE==='LOCAL_SIMULATED'&&env.P0_API_ENABLED==='true'&&env.FREE_BETA_ENABLED!=='true'&&env.FREE_BETA_ENABLED!==true;
 
@@ -39,13 +39,21 @@ function balances(result,fail){
   if(total!==reserved||total&&(!balance(result.totalPoints)||!balance(result.reservedPoints)||result.totalPoints!==result.balancePoints+result.reservedPoints))fail(503,'POINTS_TEST_UNAVAILABLE');
   return pick(result,['balancePoints',...(total?['totalPoints','reservedPoints']:[])]);
 }
+function rewardAccess(value,fail){
+  if(!['AD_REWARD','CAMPAIGN_FREE'].includes(value.access)){
+    if(value.rewardAccess!=null)fail(503,'POINTS_TEST_UNAVAILABLE');return {};
+  }
+  const grant=value.rewardAccess;
+  if(!object(grant)||grant.kind!==value.access||!uuid(grant.grantId)||!timestamp(grant.expiresAt))fail(503,'POINTS_TEST_UNAVAILABLE');
+  return {rewardAccess:pick(grant,['kind','grantId','expiresAt'])};
+}
 function work(value,fail,admin=false){
   if(!object(value)||!decimal(value.id)||!text(value.title,500)||!text(value.author,200)||!['NOVEL','WEBTOON'].includes(value.contentType)||admin&&typeof value.enabled!=='boolean')fail(503,'POINTS_TEST_UNAVAILABLE');
   return pick(value,['id','title','author','contentType',...(admin?['enabled']:[])]);
 }
 function episode(value,fail,workId){
   if(!object(value)||!decimal(value.id)||value.workId!==workId||!integer(value.episodeNumber,1,2147483647)||!text(value.title,500)||!uuid(value.versionId)||!uuid(value.priceVersion)||!access.includes(value.access)||!points(value.pricePoints))fail(503,'POINTS_TEST_UNAVAILABLE');
-  return pick(value,['id','workId','episodeNumber','title','versionId','access','pricePoints','priceVersion']);
+  return {...pick(value,['id','workId','episodeNumber','title','versionId','access','pricePoints','priceVersion']),...rewardAccess(value,fail)};
 }
 function page(result,data,fail,project){
   const offset=data.offset??0;
@@ -124,11 +132,11 @@ export async function pointsTestApi({request,user,actor,rpc,remote,fail,env={}})
   }
   if(action==='quote'){
     const q=result.quote;if(!object(q)||!uuid(q.id)||q.episodeId!==data.episodeId||!decimal(q.workId)||!uuid(q.versionId)||!uuid(q.priceVersion)||!points(q.pricePoints)||!access.includes(q.access)||!timestamp(q.expiresAt)||!balance(result.balancePoints))fail(503,'POINTS_TEST_UNAVAILABLE');
-    return {...marker,quote:pick(q,['id','episodeId','workId','versionId','priceVersion','pricePoints','access','expiresAt']),...balances(result,fail)};
+    return {...marker,quote:{...pick(q,['id','episodeId','workId','versionId','priceVersion','pricePoints','access','expiresAt']),...rewardAccess(q,fail)},...balances(result,fail)};
   }
   if(action==='purchase'){
-    if(!decimal(result.episodeId)||!['MEMBER_FREE','OWNED'].includes(result.access)||!points(result.chargedPoints)||!balance(result.balancePoints)||!(result.entitlementId===null||uuid(result.entitlementId))||typeof result.replayed!=='boolean'||result.chargedPoints>0&&(result.access!=='OWNED'||result.entitlementId===null))fail(503,'POINTS_TEST_UNAVAILABLE');
-    return {...marker,...pick(result,['episodeId','access','chargedPoints','entitlementId','replayed']),...balances(result,fail)};
+    if(!decimal(result.episodeId)||!['MEMBER_FREE','OWNED','AD_REWARD','CAMPAIGN_FREE'].includes(result.access)||!points(result.chargedPoints)||!balance(result.balancePoints)||!(result.entitlementId===null||uuid(result.entitlementId))||typeof result.replayed!=='boolean'||result.chargedPoints>0&&(result.access!=='OWNED'||result.entitlementId===null)||['AD_REWARD','CAMPAIGN_FREE'].includes(result.access)&&(result.chargedPoints!==0||result.entitlementId!==null))fail(503,'POINTS_TEST_UNAVAILABLE');
+    return {...marker,...pick(result,['episodeId','access','chargedPoints','entitlementId','replayed']),...balances(result,fail),...rewardAccess(result,fail)};
   }
   if(action==='credit'){
     if(result.targetUserId!==data.targetUserId||!balance(result.balancePoints)||result.creditedPoints!==data.points||typeof result.replayed!=='boolean')fail(503,'POINTS_TEST_UNAVAILABLE');return {...marker,...pick(result,['targetUserId','creditedPoints','replayed']),...balances(result,fail)};

@@ -1,0 +1,267 @@
+{
+  "stage": "OP-06",
+  "checkedAt": "2026-11-02T02:47:49.244Z",
+  "baseCommit": "685e5f6c05f9526c54b3c567f7e833349318f234",
+  "mode": "TEST",
+  "provenance": "LOCAL_SIMULATED",
+  "provider": "INTERNAL_TEST",
+  "protocol": "OP06_INTERNAL_TEST_V1",
+  "requestedDefault": {
+    "whenNoAds": "POINT_PURCHASE",
+    "amountKrw": 10000,
+    "points": 10000,
+    "episodeDefaultPoints": 100,
+    "automaticCreditOrFreeFallback": false,
+    "skuMustMatchCurrentServerVersion": true
+  },
+  "validation": {
+    "stage": "OP-06",
+    "startedAt": "2026-11-02T02:09:21.491Z",
+    "steps": [
+      {
+        "command": "build",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "verify:op06",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "post-build test:op06",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "post-build test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "browser": "NOT_RUN",
+    "database": "SYNTHETIC_ONLY",
+    "provider": "NOT_CALLED",
+    "productionFlagsChanged": false,
+    "completedAt": "2026-11-02T02:39:39.192Z",
+    "releaseCommands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5",
+      "test:ui-r6",
+      "test:ui-r7",
+      "test:ui-r8",
+      "test:ui-r9",
+      "test:ui-r10",
+      "test:ui-r12",
+      "test:ui-r13",
+      "test:op01",
+      "test:op02",
+      "test:op03",
+      "test:op04",
+      "test:op05",
+      "test:op06"
+    ],
+    "postBuildSupplement": "Ended campaign policy receipt replay preserves exact retry; fresh reward tests and Functions bundle",
+    "newTests": 84,
+    "newTestBreakdown": {
+      "database": 26,
+      "api": 12,
+      "provider": 8,
+      "ui": 25,
+      "integration": 13
+    },
+    "relatedOp05UiTests": 36,
+    "releaseCommandCount": 56,
+    "buildCompilePassed": true,
+    "typesPassed": true,
+    "standalone": {
+      "steps": [
+        {
+          "action": "no-ad-point-purchase-default",
+          "amountKrw": 10000,
+          "points": 10000,
+          "freeRightAutomaticallyIssued": false
+        },
+        {
+          "action": "test-bank-proof-and-explicit-point-purchase",
+          "verifiedCreditPoints": 10000,
+          "episodeDebitPoints": 100,
+          "replayedDepositCredits": 0,
+          "remainingPoints": 9900
+        },
+        {
+          "action": "verified-internal-test-reward",
+          "webtoonProtected": true,
+          "crossReaderDenied": true,
+          "eventReplayDoesNotExtendExpiry": true,
+          "pointMovement": 0
+        },
+        {
+          "action": "temporary-expiry-and-old-receipt",
+          "oldZeroPointReceiptCannotUnlock": true,
+          "permanentNovelRightPreserved": true
+        },
+        {
+          "action": "separate-explicit-campaign",
+          "kind": "CAMPAIGN_FREE",
+          "advertisingRevenueOrPaidPoints": false,
+          "pointsUnchanged": true
+        },
+        {
+          "action": "late-pre-close-proof-and-frozen-terms",
+          "grantedAfterClose": true,
+          "originalRewardHours": 24,
+          "terminalGrantPreserved": true
+        }
+      ],
+      "ledgerReconciled": true,
+      "ledgerEntries": 2,
+      "balancePoints": 9900,
+      "tables": 7,
+      "functions": 8,
+      "triggers": 5
+    },
+    "security": {
+      "review": "Verified raw-byte TEST proof before DB; current actor and private ACL; temporary rights expiry and old-receipt denial; immutable purchase/refund preservation; policy consent and pending-session races; account/episode/generation lifecycle; no remaining identified blocker",
+      "syntaxFiles": 31,
+      "syntaxPassed": true,
+      "secretMatches": 0,
+      "userChangesPreserved": true,
+      "diffCheck": "PASS"
+    }
+  },
+  "preparedMigration": {
+    "file": "database/launch/021_ad_rewards_test.sql",
+    "privateTables": 7,
+    "relatedFunctionsIncludingAccessAndWrapper": 8,
+    "newImmutableTriggers": 5,
+    "newSequences": 0,
+    "original019And020Unchanged": true,
+    "originalRpcBodySha256": "dd5ca9aba1a49cb1df8208b22764f61075cf99ffe6c7c0c473917f332bf8cde2",
+    "originalRpcOwnerAndAclsPreserved": true,
+    "accessAndWrapperOidsPreserved": true,
+    "sharedCommerceAclsAndExistingRowsPreserved": true
+  },
+  "production": {
+    "migrations019020021Applied": false,
+    "flagsChanged": false,
+    "realAdProviderCalled": false,
+    "realPaymentsOrBankTransfers": false,
+    "operationalTestRecordsCreated": false,
+    "existingBalancesEntitlementsWorksOrAccountsChanged": false,
+    "realMoneyOrAuthorEarnings": false
+  },
+  "limitations": {
+    "realPostgresMultiConnectionConcurrency": "NOT_RUN",
+    "advertisingContract": "NOT_CONNECTED",
+    "realWebProviderSignatureMappingAndSdk": "NOT_IMPLEMENTED_PENDING_CONTRACT",
+    "browser": "NOT_RUN",
+    "liveFinancialMigration": "NOT_RUN"
+  },
+  "research": {
+    "graph": "Transport closed/empty index; canonical source fallback",
+    "dependenciesAdded": 0,
+    "packageRegistry": "npm page returned403; no registry adoption",
+    "officialSources": [
+      "https://support.google.com/admanager/answer/9116812?hl=en",
+      "https://developers.google.com/publisher-tag/samples/display-rewarded-ad",
+      "https://developers.google.com/admob/android/ssv",
+      "https://support.google.com/admanager/answer/7496282?hl=en"
+    ]
+  },
+  "delivery": {
+    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+  },
+  "evidence": {
+    "database/launch/021_ad_rewards_test.sql": "bc41df650da0ea8f842c7e03fb9a18fe9c35c3f2fd72e3a33256cd735010df98",
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "15b3c2eaf2b06e5a7d33e3c1485e894176e6a6a8bbb0fc09bf30713a37218d94",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "fd10047d65f927e24b5016c2bcb2b320575f4a938c0c85990eb3c08087a59c7b",
+    "docs/launch/op06-ad-rewards-contract-2026-11-02.md": "7508c39191902dc7b56cda294a3e507c158cd41bd82615088bebd869312f3951",
+    "docs/launch/op06-ad-rewards-implementation-2026-11-02.md": "e343fb0698ade4032c827a410ea16883a48e5ba7ca4cb3487c0c0236ecd74f1d",
+    "improve37.md": "7c9a327cf36425ef90342e80ee5b0e36176ce50a914a6f10a924b2450bdaccc4",
+    "functions/api/public-config.js": "02ed116d9011ffea29034f74a7d98ba85360561a59a9ac97eaebd327982f98db",
+    "package.json": "3d80ec6e81e9cf92c021c24cb12c6db1a7499ece86a7827c25af3604e2c0f8c9",
+    "public/index.html": "14f4787af149c15c25f9479f2e7e73379b7c5dd98cc8a85e120581109d950dc9",
+    "public/supabase-public-config.js": "c75549e65fee1f8866c0d6cbc5a73b252c684b84a9c39a6d6224b723ddb8d9d8",
+    "public/css/rewards-test.css": "93d13c0282200ef11398a75d063d32d79eb9df98d887110166e5eaeb94eb2bc9",
+    "public/js/admin/admin-rewards-test.js": "03bcf2a1c632dd6f6192ed82b7c0ec05164854c6a197f656237fb4218802370d",
+    "public/js/reader/reader-rewards-test.js": "5d08c18095e41ec35a6c57ef111c2cc32585e5d1420f0a3bb48939c28d7b5b46",
+    "public/js/reader/reader-topups.js": "8409dc801c38d39a10d82aaf8b24f8091d383fb8a74eba6b957f5530ab439956",
+    "public/js/admin/admin-operations.js": "ec03b71097a575ac3976070cd1fc3b4cc36c1d029fa39ecbe180ff4fef68e6cc",
+    "public/js/core/auth-session.js": "7ad4db47c34c9824f6474da4c3ae2b388064a2eb0bc0fd04b442df26349b8131",
+    "public/js/core/role-modules.js": "01feab08bc240cf0e7a893e4e75d66acc449b5874c195b24a68296b4e066837a",
+    "public/js/core/router.js": "dbf1921949a92ed0679504509c049902c1c5cae5c5cbfd43ef08f57b9ee78bdc",
+    "public/js/reader/reader-points-test.js": "b80a5f0705c2cc62062c98dba83f41243cdd8696b4931ef15c595eaad2333f41",
+    "server/account-api.mjs": "81c7473ecb034ffb0e8d34e35f4cd00385e500653720b00e371a7e73c57a9f28",
+    "server/points-test-api.mjs": "c4c7fdc86fb98b40e750b43f98adf611f4ca25fcfb825d4942a3a7082db1c171",
+    "server/ad-rewards-test-api.mjs": "fa2d7300a2260f64c43e3da8125230a128f6b7ff5305c8c9c9f69245e81b2ff1",
+    "server/providers/internal-test-reward.mjs": "025df1b6472227f46d223c3577670f95f4b80a8b6870f753ce4b2d6aaaac9fe0",
+    "scripts/fixtures/op06-db.mjs": "a2793d5925ee297913f60baee497643df1adfb1d08a59718db4d42799110df4d",
+    "scripts/verify_op06_rewards_api.test.mjs": "360e7823d00bb591fff5295fa123e1f348ab850b47428d0deeb441e04fef5b46",
+    "scripts/verify_op06_rewards_db.test.mjs": "6bd5965e50801f70e553bc594749d6c1a603f2a6dbec06d42dbb5186f48fd74c",
+    "scripts/verify_op06_rewards_integration.test.mjs": "a45844c7a0f6a7be5f72fb63f29572dc68cdcc522078770df0973d31d45ecbae",
+    "scripts/verify_op06_rewards_provider.test.mjs": "47c100f3cc9f6abac9c34a8093bfe09aa0e445a2cb544151a5be99036a46ed65",
+    "scripts/verify_op06_rewards_sandbox.mjs": "20b16228cfc59172bd4fd48821e433eac842f82938755a24d5ae34094cba2760",
+    "scripts/verify_op06_rewards_ui.test.mjs": "5fa7e9389afdb817a91bacdc1233801be661b5e708136ad340f9c805b9b19c04",
+    "scripts/verify_cloudflare_routes.test.mjs": "fba03fab1ac2c5dcd6f997a47e5f0e9b9a68df85306b5c3a29e39a3b1660cf75",
+    "scripts/verify_op01_layout.test.mjs": "5d6e760c2103e16103190fcce353a0555137c9556a1eb12db2972b025e008fe3",
+    "scripts/verify_op02_members_integration.test.mjs": "93e9d387e046f73f70a0bcec76686a935aed0b5d7c735956b5677caa079dd689",
+    "scripts/verify_op03_display_integration.test.mjs": "0f4ec61dfe5213bfc05cbb89bdd85f14360514ebc137596a48195bf499b8ad0a",
+    "scripts/verify_op04_points_integration.test.mjs": "b88604b1e93216771d7d6a1ca254c5c5a82686cec0507d7ec780e31cd764e1d6",
+    "scripts/verify_op05_topups_integration.test.mjs": "4d63a3a300caa72daa868ab2abcb1acbe78308097dd8066cc5ed8633822478fb",
+    "scripts/verify_op05_topups_ui.test.mjs": "f0f6e018cb6403b134c60ffd2bd813881f141fd002e6ee0a53f1cf0749fccb44",
+    "scripts/verify_stage36_support_ui.test.mjs": "0946fa4987df2dc8d03a5845970b9ac0696326e5b67d8ce6cf016f5e2aea0c2d",
+    "scripts/verify_ui_r5_layout.test.mjs": "473621a89cafb5cb7f83d696a7614b262786827d8c67432fc59943eb285e4cdf",
+    "scripts/verify_ui_r6_layout.test.mjs": "e30fdbc4d012eb7d16ca3c03181177b93f40520501a1ed67fba7ae162d430556"
+  },
+  "nextStage": "OP-07 author settlement requests, confirmed earnings, deductions, reservations, approvals and verified payout evidence; separate privacy/tax/bank/provider acceptance."
+}

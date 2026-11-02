@@ -14,7 +14,7 @@
    - #view-admin-cms   : 통합 관리자 콘솔 (KPI 통계, 서브관리자, PG설정, 정산 승인)
 3. Modals:
    - #modalAuth              : 일반 독자/작가 회원가입 및 로그인 팝업
-   - #modalAdUnlock          : 보상형 광고 3초 시청 & 회차 언락 모달
+   - #modalAdUnlock          : 회차 열람 안내 모달 (실제 광고 연동 준비 중)
    - #modalPassAdultVerify   : PASS / KCP 19세 성인 본인인증 모달
    - #modalSearch            : 실시간 글로벌 작품/작가 검색 모달
    - #modalReaderSettings    : 뷰어 폰트/테마 설정 모달
@@ -55,6 +55,7 @@
   <link rel="stylesheet" href="/css/reader-display.css?v=20261101op03">
   <link rel="stylesheet" href="/css/points-test.css?v=20261102op04">
   <link rel="stylesheet" href="/css/topups-test.css?v=20261102op05">
+  <link rel="stylesheet" href="/css/rewards-test.css?v=20261102op06">
   <link rel="stylesheet" href="/css/settlement.css?v=20261101r13">
 </head>
 <body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
@@ -1637,25 +1638,25 @@
         </div>
         <div class="ad-modal-content text-center">
           <div class="ad-unlock-icon" style="font-size:2.2rem; margin-bottom:6px;">🔓</div>
-          <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:6px;">다음 회차를 무료로 읽으시겠습니까?</h2>
-          <p class="text-muted small mb-4" style="line-height:1.45;">광고를 시청하면 작가에게 직접 정산금이 후원되고 회차가 무료 해금되며, 보유 포인트를 사용하여 즉시 열람할 수도 있습니다.</p>
+          <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:6px;">다음 회차 열람 방법</h2>
+          <p class="text-muted small mb-4" style="line-height:1.45;">광고가 없는 경우 포인트 구매로 이용합니다. 기본 충전상품은 10,000원 / 10,000P입니다. 회차 가격과 열람권은 서버 확인 후 적용하며 실제 결제는 연동 준비 중입니다.</p>
 
-          <!-- Ad Video Player Simulation Box -->
+          <!-- Compatibility region only: no simulated ad completion. -->
           <div class="ad-player-box mb-4" id="adPlayerBox" style="display: none; background:var(--bg-surface); border-radius:12px; padding:20px; border:1px solid var(--cdg-pink-border);">
             <div class="ad-video-sim">
               <i data-lucide="play" class="pulse-icon" style="color:var(--cdg-pink); width:28px; height:28px;"></i>
-              <span id="adTimerText" style="display:block; margin-top:8px; font-weight:700; color:var(--text-on-accent);">📺 광고 시청 중... 3초</span>
+              <span id="adTimerText" style="display:block; margin-top:8px; font-weight:700; color:var(--text-on-accent);">광고 제공자 서버 확인 준비 중</span>
             </div>
           </div>
 
           <div class="ad-modal-actions" style="display:flex; flex-direction:column; gap:10px;">
             <!-- Option 1: ▶ 광고 보고 무료읽기 (UX.md) -->
             <button class="btn btn-primary btn-lg w-full" id="btnWatchAdSubmit" style="height:50px; font-size:0.95rem; font-weight:800;">
-              <i data-lucide="play-circle"></i> ▶ 30초 광고 보고 무료열람
+              <i data-lucide="play-circle"></i> 광고 제공자 연동 준비 중
             </button>
             <!-- Option 2: 🪙 포인트 사용 (UX.md) -->
             <button class="btn btn-outline btn-lg w-full" id="btnUsePointUnlock" onclick="handlePointUnlockEpisode()" style="height:48px; font-size:0.92rem; font-weight:700;">
-              🪙 100P 포인트 즉시해금 (보유: <span id="modalCurrentPoints">0P</span>)
+              🪙 포인트 열람 준비 중 (표시 잔액: <span id="modalCurrentPoints">0P</span>)
             </button>
             <button class="btn btn-ghost modal-close w-full mt-1" style="font-size:0.85rem;">나중에 보기</button>
           </div>
@@ -2512,15 +2513,16 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261102op05"></script>
-  <script src="/js/core/router.js?v=20261102op05"></script>
+  <script src="/js/core/role-modules.js?v=20261102op06"></script>
+  <script src="/js/core/router.js?v=20261102op06"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
   <script src="/js/reader/reader-content.js?v=124"></script>
   <script src="/js/reader/reader-catalog.js?v=117"></script>
   <script src="/js/reader/reader-display.js?v=20261101op03"></script>
-  <script src="/js/reader/reader-points-test.js?v=20261102op05"></script>
-  <script src="/js/reader/reader-topups.js?v=20261102op05"></script>
+  <script src="/js/reader/reader-rewards-test.js?v=20261102op06"></script>
+  <script src="/js/reader/reader-points-test.js?v=20261102op06"></script>
+  <script src="/js/reader/reader-topups.js?v=20261102op06"></script>
   <script src="/js/reader/reader-discovery.js?v=20261101op03"></script>
   <script src="/js/reader/reader-webtoon.js?v=20261031r10"></script>
   <script src="/js/reader/reader-position.js?v=20261031r4"></script>
@@ -2653,10 +2655,10 @@
     </section>
   </div>
   <!-- Supabase Extension & Bootstrap Entry -->
-  <script src="/supabase-public-config.js?v=20261102op05"></script>
+  <script src="/supabase-public-config.js?v=20261102op06"></script>
   <script src="/api/public-config.js"></script>
   <script src="/supabase-admin.js?v=116"></script>
-  <script src="/js/core/auth-session.js?v=20261102op05"></script>
+  <script src="/js/core/auth-session.js?v=20261102op06"></script>
   <script src="/js/core/author-enrollment.js?v=135"></script>
   <script src="/js/core/account-access.js?v=20261031r6"></script>
   <script src="/js/core/appeals.js?v=117"></script>

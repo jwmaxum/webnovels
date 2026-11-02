@@ -6,6 +6,7 @@ window.WEBNOVELS_CONFIG = Object.freeze({
   "readerDiscoveryEnabled": false,
   "pointsTestEnabled": false,
   "chargingTestEnabled": false,
+  "adRewardsTestEnabled": false,
   "growthServiceEnabled": false,
   "growthMeasurementEnabled": false,
   "adminWorkflowEnabled": false,

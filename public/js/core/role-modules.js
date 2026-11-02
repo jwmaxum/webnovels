@@ -15,7 +15,7 @@
     ],
     admin: [
       '/js/admin/admin.js?v=20261012', '/js/admin/admin-provider-settings.js?v=135', '/js/admin/admin-settlement-review.js?v=20261101r13', '/js/admin/admin-console.js?v=20261101op03',
-      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=20261031r6', '/js/admin/admin-workflow.js?v=20261101op01', '/js/admin/admin-beta-operations.js?v=20261031r6', '/js/admin/admin-navigation.js?v=20261101op02', '/js/admin/admin-members.js?v=20261101op02b', '/js/admin/admin-display.js?v=20261101op03', '/js/admin/admin-points-test.js?v=20261102op04', '/js/admin/admin-topups.js?v=20261102op05', '/js/admin/admin-operations.js?v=20261102op05',
+      '/js/admin/admin-recovery.js?v=123', '/js/admin/admin-publication-changes.js?v=20261031r6', '/js/admin/admin-workflow.js?v=20261101op01', '/js/admin/admin-beta-operations.js?v=20261031r6', '/js/admin/admin-navigation.js?v=20261101op02', '/js/admin/admin-members.js?v=20261101op02b', '/js/admin/admin-display.js?v=20261101op03', '/js/admin/admin-points-test.js?v=20261102op04', '/js/admin/admin-topups.js?v=20261102op05', '/js/admin/admin-rewards-test.js?v=20261102op06', '/js/admin/admin-operations.js?v=20261102op06',
       '/js/admin/virtual-accounts.js?v=111'
     ]
   };

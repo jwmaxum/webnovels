@@ -1,0 +1,25 @@
+/* Reward TEST panels remain inside their reader/admin hosts. */
+.rewards-test { min-width: 0; color: var(--text-primary); }
+.rewards-test :is(h3,h4,h5,strong) { color: var(--text-strong); line-height: 1.6; overflow-wrap: anywhere; }
+.rewards-test :is(p,li,label) { line-height: 1.8; overflow-wrap: anywhere; }
+.rewards-test-banner { padding: 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-elevated); }
+.rewards-test-panel { min-width: 0; padding: 14px; margin-block: 14px; border: 1px solid var(--border-default); border-radius: 9px; background: var(--bg-elevated); }
+.rewards-test-fallback { padding: 14px; margin-block: 14px; border: 2px solid var(--selected-fg); border-radius: 9px; background: var(--bg-elevated); }
+.rewards-test-status { min-height: 1.8em; color: var(--text-primary); }
+.rewards-test-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.rewards-test-form > :is(h4,p) { grid-column: 1 / -1; }
+.rewards-test-field { display: grid; gap: 6px; min-width: 0; font-weight: 650; }
+.rewards-test-field :is(input,select) { min-width: 0; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--control-border); border-radius: 8px; color: var(--text-primary); background: var(--bg-elevated); font: inherit; font-size: 16px; font-weight: 400; }
+.rewards-test-check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.rewards-test-check input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--selected-fg); }
+.rewards-test :is(button,a.btn,select) { min-height: 44px; max-width: 100%; margin-block: 6px; white-space: normal; overflow-wrap: anywhere; }
+.rewards-test :is(button,a,input,select,summary):focus-visible { outline: 3px solid var(--border-focus); outline-offset: 3px; }
+.rewards-test :is(button,input,select):disabled { color: var(--text-secondary); background: var(--bg-base); opacity: 1; }
+.rewards-test-list { padding: 0; list-style: none; display: grid; gap: 12px; }
+.rewards-test-list > li { padding: 12px; border: 1px solid var(--border-default); border-radius: 8px; background: var(--bg-subtle); }
+.rewards-test-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+@media (max-width: 650px) {
+ .rewards-test-form { grid-template-columns: minmax(0,1fr); }
+ .rewards-test-panel { padding: 12px; }
+ .rewards-test-actions button { flex: 1 1 130px; }
+}

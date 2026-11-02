@@ -1,0 +1,32 @@
+// Isolated synthetic rehearsal: no environment, network, operational DB or advertising SDK.
+import assert from 'node:assert/strict';
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {setup,reader,otherReader,uuid} from './fixtures/op06-db.mjs';
+const f=await setup();
+try{
+ const steps=[];
+ const none=await f.options(undefined,{provider:'NONE',channelId:null,binding:null});assert.equal(none.availability,'UNAVAILABLE');assert.equal(none.fallback.amountKrw,10000);assert.equal(none.fallback.points,10000);assert.equal((await f.wallet()).totalPoints,0);
+ steps.push({action:'no-ad-point-purchase-default',amountKrw:10000,points:10000,freeRightAutomaticallyIssued:false});
+ const product=await f.makeProduct({title:'기본 10,000P TEST 충전',amountKrw:10000,points:10000}),order=(await f.create(product)).order,proof={requestId:uuid(),bankReference:'synthetic-op06-bank-'+uuid(),receivedAt:new Date().toISOString()};
+ assert.equal((await f.deposit(order,proof)).order.status,'PAID');assert.equal((await f.deposit(order,proof)).replayed,true);assert.equal((await f.wallet()).totalPoints,10000);
+ const quote=await f.quote(f.novel.episodes[2].id);assert.equal((await f.purchase(quote.quote.id)).chargedPoints,100);assert.equal((await f.wallet()).totalPoints,9900);
+ steps.push({action:'test-bank-proof-and-explicit-point-purchase',verifiedCreditPoints:10000,episodeDebitPoints:100,replayedDepositCredits:0,remainingPoints:9900});
+ await f.rewardPolicy({adEnabled:true});const comic=f.webtoon.episodes[2],ad=await f.grantAd(comic.id);assert.equal(ad.applied.session.status,'GRANTED');assert.equal((await f.applyEvidence(ad.proof)).replayed,true);assert.equal((await f.wallet()).totalPoints,9900);
+ assert.equal((await f.panel(comic.id,comic.versionId,comic.panelId)).bucket,'authoring-webtoons');assert.equal((await f.panel(comic.id,comic.versionId,comic.panelId,'webp',otherReader)).error,'EPISODE_LOCKED');
+ const adQuote=await f.quote(comic.id),adRequest=uuid();assert.equal((await f.purchase(adQuote.quote.id,adRequest)).chargedPoints,0);
+ steps.push({action:'verified-internal-test-reward',webtoonProtected:true,crossReaderDenied:true,eventReplayDoesNotExtendExpiry:true,pointMovement:0});
+ await f.expireGrant(ad.applied.session.grant.id);assert.equal((await f.panel(comic.id,comic.versionId,comic.panelId)).error,'EPISODE_LOCKED');assert.equal((await f.purchase(adQuote.quote.id,adRequest)).error,'REWARD_EXPIRED');
+ steps.push({action:'temporary-expiry-and-old-receipt',oldZeroPointReceiptCannotUnlock:true,permanentNovelRightPreserved:(await f.quote(f.novel.episodes[2].id)).quote.access==='OWNED'});
+ await f.rewardPolicy({campaignEnabled:true,campaignTitle:'명시적 무료 캠페인 TEST',campaignStartsAt:new Date(Date.now()-60000).toISOString(),campaignEndsAt:new Date(Date.now()+86400000).toISOString()});const campaign=await f.start(comic.id,'CAMPAIGN_FREE');assert.equal(campaign.session.grant.kind,'CAMPAIGN_FREE');assert.equal((await f.wallet()).totalPoints,9900);
+ steps.push({action:'separate-explicit-campaign',kind:'CAMPAIGN_FREE',advertisingRevenueOrPaidPoints:false,pointsUnchanged:true});
+ const extra=await f.makeWork('NOVEL'),started=await f.start(extra.episodes[2].id),evidence=f.evidence(started);await f.closeReward(started.session.id);await f.rewardPolicy({adEnabled:false,rewardHours:1});const delayed=await f.applyEvidence(evidence);assert.equal(delayed.session.status,'GRANTED');assert.equal(delayed.session.rewardHours,24);assert.equal((await f.closeReward(started.session.id)).session.status,'GRANTED');
+ steps.push({action:'late-pre-close-proof-and-frozen-terms',grantedAfterClose:true,originalRewardHours:24,terminalGrantPreserved:true});
+ const wallet=await f.wallet(),ledger=(await f.db.query('select count(*)::int entries,coalesce(sum(delta_points),0)::int points from commerce.op04_ledger where user_id=$1',[reader])).rows[0];assert.equal(wallet.totalPoints,9900);assert.equal(ledger.points,wallet.totalPoints);assert.equal(wallet.reservedPoints,0);
+ const tables=(await f.db.query("select tablename from pg_tables where schemaname='commerce' and tablename like 'op06_%' order by tablename")).rows.map(r=>r.tablename);
+ const functions=(await f.db.query("select n.nspname||'.'||p.proname name,p.prosecdef,p.proconfig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.proname like 'op06_%' or n.nspname='commerce' and p.proname='op04_access' or n.nspname='public' and p.proname='op04_points_test' order by 1")).rows;
+ const triggers=(await f.db.query("select t.tgname,c.relname from pg_trigger t join pg_class c on c.oid=t.tgrelid where not t.tgisinternal and t.tgname like 'op06_%' order by c.relname,t.tgname")).rows;
+ const hashes={};for(const file of ['database/launch/019_points_test.sql','database/launch/020_topups_test.sql','database/launch/021_ad_rewards_test.sql','scripts/fixtures/op06-db.mjs','scripts/verify_op06_rewards_db.test.mjs','scripts/verify_op06_rewards_sandbox.mjs'])hashes[file]=createHash('sha256').update(await readFile(file)).digest('hex');
+ const report={stage:'OP-06',checkedAt:new Date().toISOString(),result:'PASS',mode:'TEST',provenance:'LOCAL_SIMULATED',provider:'INTERNAL_TEST',protocol:'OP06_INTERNAL_TEST_V1',realDatabaseApplied:false,operationalFlagsChanged:false,realProviderCalled:false,realMoneyOrAuthorEarnings:false,browser:'NOT_RUN',postgresMultiConnectionConcurrency:'NOT_RUN',steps,finalWallet:wallet,ledgerEntries:ledger.entries,ledgerReconciled:true,originalOp04BodySha256:createHash('sha256').update(f.originalBase.prosrc).digest('hex'),originalOp04Owner:f.originalBase.proowner,oldTablesAndSchemaAclPreserved:true,tables,functions,triggers,evidence:hashes,limitations:['One in-memory PGlite instance exercises SQL transactions/invariants and replay, not native PostgreSQL parallel connections','Internal TEST proof is not Google or any contracted advertising evidence; external SDK/provider and production services remain disabled']};
+ await mkdir('scratch/op06-sandbox',{recursive:true});await writeFile('scratch/op06-sandbox/report.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({result:'PASS',steps:steps.length,tables:tables.length,functions:functions.length,triggers:triggers.length,finalPoints:wallet.totalPoints,ledgerReconciled:true,realDatabaseApplied:false,report:'scratch/op06-sandbox/report.json'}));
+}finally{await f.db.close();}

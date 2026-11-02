@@ -5,6 +5,7 @@ import {recoveryEnabled} from '../../server/creator-draft-api.mjs';
 import {recoveryReviewEnabled} from '../../server/recovery-review-policy.mjs';
 import {pointsTestEnabled} from '../../server/points-test-api.mjs';
 import {chargingTestEnabled} from '../../server/topups-test-api.mjs';
+import {adRewardsTestEnabled} from '../../server/ad-rewards-test-api.mjs';
 // Cloudflare Pages runtime bindings; never serialize context.env.
 export function onRequestGet({ env }) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL;
@@ -30,5 +31,6 @@ export function onRequestGet({ env }) {
   config.freeBetaEnabled = env.FREE_BETA_ENABLED === 'true';
   config.pointsTestEnabled = pointsTestEnabled(env);
   config.chargingTestEnabled = chargingTestEnabled(env);
+  config.adRewardsTestEnabled = adRewardsTestEnabled(env);
   return new Response('window.WEBNOVELS_CONFIG = Object.freeze(' + JSON.stringify(config).replace(/</g, '\\u003c') + ');', { headers });
 }

@@ -11,6 +11,7 @@ import {adminMembersApi} from './admin-members-api.mjs';
 import {siteDisplayAdminApi,siteDisplayPublicApi} from './site-display-api.mjs';
 import {pointsTestApi,pointsTestEnabled} from './points-test-api.mjs';
 import {topupsTestApi,chargingTestEnabled} from './topups-test-api.mjs';
+import {adRewardsTestApi,adRewardsTestEnabled,verifyInternalTestCallback,adRewardsTestCallback} from './ad-rewards-test-api.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
 export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTransport}={}) {
@@ -21,12 +22,18 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
   const settlement=/^\/api\/v2\/(?:creator\/settlement(?:\/|$)|admin\/settlements\/identity(?:\/|$))/.test(path);
   const pointsTest=['/api/v2/points-test','/api/v2/admin/points-test'].includes(path);
   const topupsTest=['/api/v2/topups-test','/api/v2/admin/topups-test'].includes(path);
-  if(!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
+  const adRewardsCallback=path==='/api/v2/ad-rewards-test/callback';
+  const adRewardsTest=adRewardsCallback||['/api/v2/ad-rewards-test','/api/v2/admin/ad-rewards-test'].includes(path);
+  if(!me&&!workspace&&!dashboard&&!settlement&&!pointsTest&&!topupsTest&&!adRewardsTest&&!['/api/v2/display','/api/v2/accounts/health','/api/v2/admin/virtual-accounts','/api/v2/admin/console','/api/v2/admin/members','/api/v2/admin/display','/api/v2/admin/providers','/api/v2/support','/api/v2/admin/support','/api/v2/admin/beta-operations'].includes(path))return null;
   const requestId=crypto.randomUUID();
   const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Request-ID':requestId}});
   try {
     if(pointsTest&&!pointsTestEnabled(env))fail(503,'POINTS_TEST_NOT_ACTIVATED');
     if(topupsTest&&!chargingTestEnabled(env))fail(503,'TOPUPS_TEST_NOT_ACTIVATED');
+    if(adRewardsTest&&!adRewardsTestEnabled(env))fail(503,'AD_REWARDS_TEST_NOT_ACTIVATED');
+    // Unauthenticated callbacks have a separate server-only TEST proof. Reject
+    // forged bytes before even checking DB readiness, never trust browser Auth.
+    const rewardProof=adRewardsCallback?await verifyInternalTestCallback({request,env,fail}):null;
     if(env.ACCOUNT_API_DISABLED==='true')fail(503,'ACCOUNT_SERVICE_NOT_ACTIVATED');
     const base=env.SUPABASE_URL||env.NEXT_PUBLIC_SUPABASE_URL;
     const secret=env.SUPABASE_SECRET_KEY||env.SUPABASE_SERVICE_ROLE_KEY;
@@ -52,6 +59,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
       return data;
     };
     if(await rpc('launch_accounts_ready')!==true)fail(503,'ACCOUNT_SERVICE_NOT_ACTIVATED');
+    if(adRewardsCallback)return reply(await adRewardsTestCallback({proof:rewardProof,rpc,fail}));
     if(path==='/api/v2/display')return reply(await siteDisplayPublicApi({request,rpc,fail}));
     const workspaceReady=async()=>{
       if(env.AUTHOR_WORKSPACE_DISABLED==='true')return false;
@@ -86,6 +94,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
     if(path==='/api/v2/admin/display')return reply(await siteDisplayAdminApi({request,user,actor,rpc,fail}));
     if(pointsTest){const result=await pointsTestApi({request,user,actor,rpc,remote,fail,env});return result instanceof Response?result:reply(result);}
     if(topupsTest)return reply(await topupsTestApi({request,user,actor,rpc,remote,fail,env,fetchImpl,providerTransport:topupsProviderTransport}));
+    if(adRewardsTest)return reply(await adRewardsTestApi({request,user,actor,rpc,env,fail}));
     if(path==='/api/v2/admin/providers')return reply(await providerSettingsApi({request,user,actor,remote,rpc,fail,env}));
     if(path==='/api/v2/support'||path==='/api/v2/admin/support')return reply(await betaSupportApi({request,user,actor,rpc,fail,env}));
     if(path==='/api/v2/admin/beta-operations')return reply(await betaOperationsApi({request,user,actor,rpc,fail,env}));

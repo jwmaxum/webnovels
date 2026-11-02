@@ -100,7 +100,7 @@ test('service policy stays within highest-admin settings and module departure li
 test('HTML and loader include TEST resources without changing production navigation or legal links',()=>{
  const html=read('public/index.html'),loader=read('public/js/core/role-modules.js'),all=node=>[node,...(node.childNodes||[]).flatMap(all)],nodes=all(parse(html)),attr=(node,name)=>node.attrs?.find(row=>row.name===name)?.value;
  assert.equal(nodes.filter(node=>attr(node,'id')==='view-reading-test').length,1);const entry=nodes.find(node=>attr(node,'data-points-test-entry')!==undefined);assert(entry&&attr(entry,'hidden')!==undefined);assert.equal(attr(entry,'href'),'/reading-test');
- assert(loader.indexOf('/admin-points-test.js?v=20261102op04')<loader.indexOf('/admin-operations.js?v=20261102op05'));
+ assert(loader.indexOf('/admin-points-test.js?v=20261102op04')<loader.indexOf('/admin-operations.js?v=20261102op06'));
  for(const href of ['/company/','/policies/terms/','/policies/refund/'])assert(nodes.some(node=>attr(node,'href')===href));
  for(const hook of ['ReaderPointsTest?.reset()','AdminPointsTest?.reset()'])assert(read('public/js/core/auth-session.js').includes(hook));
 });

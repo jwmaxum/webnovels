@@ -144,7 +144,13 @@
           page==='content-pages'?'/admin/content?tab=works':'/admin/finance?tab=payouts',page==='content-pages'?'작품 관리로 이동':'작가 정산 확인');return;
       }
       if(page==='settings'&&route.tab==='service'){
-        if(window.AdminPointsTest){root().replaceChildren();await window.AdminPointsTest.render(root(),{isCurrent});return;}
+        if(window.AdminPointsTest){
+          root().replaceChildren();
+          const pointsHost=el(root(),'section',null,'admin-points-policy-host');
+          await window.AdminPointsTest.render(pointsHost,{isCurrent});
+          if(isCurrent()&&window.AdminRewardsTest){const rewardsHost=el(root(),'section',null,'admin-rewards-policy-host');await window.AdminRewardsTest.render(rewardsHost,{isCurrent});}
+          return;
+        }
         root().replaceChildren();prepared('서비스 운영 정책','최초 발행과 예약 발행은 작가가 직접 진행합니다. 공개 이후 변경 요청은 통합처리함에서 검토합니다. 유료 열람·광고 보상 정책은 후속 개발 단계에서 설정합니다.',
           '/admin/settings?tab=connections','외부 연동·운영 설정 열기');return;
       }
@@ -311,6 +317,7 @@
     window.AdminDisplay?.leave();
     window.AdminPointsTest?.leave();
     window.AdminTopups?.leave();
+    window.AdminRewardsTest?.leave();
   }
   function openRoute(input,shouldPushState=true){
     if(!active())return legacySwitch?.(String(input).split(/[/?]/).filter(Boolean).pop()||'dashboard',shouldPushState);
@@ -353,6 +360,7 @@
     window.AdminDisplay?.reset();
     window.AdminPointsTest?.reset();
     window.AdminTopups?.reset();
+    window.AdminRewardsTest?.reset();
     if(root())root().replaceChildren();document.getElementById('adminOperationsNav')?.replaceChildren();
     for(const id of ['adminSectionTabs','adminBreadcrumbs','adminGlobalSearchResults'])document.getElementById(id)?.replaceChildren();
     for(const id of ['adminWorkspaceHeading','adminWorkspaceDescription']){const node=document.getElementById(id);if(node)node.textContent='';}

@@ -163,3 +163,11 @@ test('SDK documentation keys are rejected independently of server checkout proje
 test('reader and administrator reject refund reasons over the shared 200-character provider limit',async()=>{
  for(const kind of ['reader','admin']){const app=setup(kind,{tab:'refunds',initialOrder:order({status:'PAID',credited:true,refundablePoints:10000,refundAmountKrw:8000})});await app.render();await(kind==='reader'?open(app):choose(app));const input=field(app.root,'환불 사유 (3~200자)');assert.equal(input.maxLength,200);enter(input,'가'.repeat(201));await submit(form(app.root,kind==='reader'?'TEST 미사용분 환불':'TEST 환불 예약'));assert.equal(app.calls.filter(row=>row.action==='refund').length,0);assert.match(app.root.textContent,/200자/);}
 });
+
+test('default10000 product requires exact server SKU and explicit selection before any order',async()=>{
+ const app=setup('reader',{handler(action,data,{list}){if(action==='products')return list([{...product(),amountKrw:10000,points:10000}]);}});await app.render();assert.match(app.root.textContent,/기본 충전 · 10,000원 → 10,000P/);assert(!form(app.root,'TEST 주문 생성'));assert(!app.calls.some(v=>v.action==='create'));await button(app.root,'기본 10,000원·10,000P 상품 선택').onclick();assert(form(app.root,'TEST 주문 생성'));assert.match(form(app.root,'TEST 주문 생성').textContent,/10,000원 \/ 10,000P/);assert.equal(button(app.root,'확인한 조건으로 TEST 주문 생성').disabled,true);assert(!app.calls.some(v=>v.action==='create'));
+});
+
+test('missing or different default SKU never fabricates a product, order or point credit',async()=>{
+ for(const products of [[],[{...product(),amountKrw:8000,points:10000}],[{...product(),amountKrw:10000,points:12000}],[{...product(),amountKrw:10000,points:10000,enabled:false}]]){const app=setup('reader',{handler(action,data,{list}){if(action==='products')return list(products);}});await app.render();assert(!button(app.root,'기본 10,000원·10,000P 상품 선택'));assert.match(app.root.textContent,/관리자에게 10,000원·10,000P 기본 상품 등록/);assert(!app.calls.some(v=>['create','confirm','credit'].includes(v.action)));}
+});
