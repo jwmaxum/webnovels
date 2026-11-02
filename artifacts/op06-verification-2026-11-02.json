@@ -1,6 +1,6 @@
 {
   "stage": "OP-06",
-  "checkedAt": "2026-11-02T03:00:00.579Z",
+  "checkedAt": "2026-11-02T03:16:52.098Z",
   "baseCommit": "685e5f6c05f9526c54b3c567f7e833349318f234",
   "mode": "TEST",
   "provenance": "LOCAL_SIMULATED",
@@ -236,14 +236,128 @@
     ]
   },
   "delivery": {
-    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+    "checkedAt": "2026-11-02T03:12:27.198Z",
+    "productCommit": "612d2e88ebaf5ad1bf0c5b1ecaa7208ad17713fe",
+    "mainPush": "SUCCESS",
+    "force": false,
+    "ci": "SUCCESS",
+    "ciUrl": "https://github.com/jwmaxum/webnovels/actions/runs/41380668087",
+    "cloudflare": "SUCCESS",
+    "deploymentId": "26b05aeb-2f62-4291-97db-f0c9c29e092f",
+    "matchingCodeAssets": 18,
+    "origins": [
+      {
+        "origin": "https://webnovels-db4.pages.dev",
+        "flagsDisabled": true,
+        "routes": [
+          {
+            "path": "/reading-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test/return",
+            "status": 200,
+            "portalReady": true,
+            "noReferrer": true,
+            "noStore": true
+          }
+        ],
+        "apis": [
+          {
+            "path": "/api/v2/points-test?action=wallet",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/topups-test?action=products",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test?action=options&episodeId=3",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/ad-rewards-test?action=state",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test/callback",
+            "status": 503,
+            "disabled": true
+          }
+        ]
+      },
+      {
+        "origin": "https://webnovels.uk",
+        "flagsDisabled": true,
+        "routes": [
+          {
+            "path": "/reading-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test",
+            "status": 200,
+            "portalReady": true
+          },
+          {
+            "path": "/charging-test/return",
+            "status": 200,
+            "portalReady": true,
+            "noReferrer": true,
+            "noStore": true
+          }
+        ],
+        "apis": [
+          {
+            "path": "/api/v2/points-test?action=wallet",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/topups-test?action=products",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test?action=options&episodeId=3",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/admin/ad-rewards-test?action=state",
+            "status": 503,
+            "disabled": true
+          },
+          {
+            "path": "/api/v2/ad-rewards-test/callback",
+            "status": 503,
+            "disabled": true
+          }
+        ]
+      }
+    ],
+    "testOffVerified": true,
+    "productionDatabaseApplied": false,
+    "productionFlagsChanged": false,
+    "browser": "NOT_RUN"
   },
   "evidence": {
     "database/launch/021_ad_rewards_test.sql": "d140c6870d0c3be6e64457a797d00b1d7347fa1ed96048ac9fbee7e6a135a670",
-    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "15b3c2eaf2b06e5a7d33e3c1485e894176e6a6a8bbb0fc09bf30713a37218d94",
-    "docs/launch/ui-redesign-plan-2026-10-30.md": "fd10047d65f927e24b5016c2bcb2b320575f4a938c0c85990eb3c08087a59c7b",
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "6cb9e4935801fc34ffd39b98e939c53fd7404c50a9c4150c40afd53fac9505ac",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "ecb099fd1b452abb5a83cef45517900da5c701f59e48fba4163f194e3dc755b4",
     "docs/launch/op06-ad-rewards-contract-2026-11-02.md": "22d48be25ff2011e5e729db9c3171989e2a659f325ab4efb00ef3dc1082d74e4",
-    "docs/launch/op06-ad-rewards-implementation-2026-11-02.md": "00790991e28b9417e79157fa565074f5116bb671b49c1c922bab49169721f335",
+    "docs/launch/op06-ad-rewards-implementation-2026-11-02.md": "4aa8eb61750181dc67be00e068e7d3de0149b797aa42eb624c659bea2474bc56",
     "improve37.md": "7c9a327cf36425ef90342e80ee5b0e36176ce50a914a6f10a924b2450bdaccc4",
     "functions/api/public-config.js": "02ed116d9011ffea29034f74a7d98ba85360561a59a9ac97eaebd327982f98db",
     "package.json": "3d80ec6e81e9cf92c021c24cb12c6db1a7499ece86a7827c25af3604e2c0f8c9",
@@ -280,5 +394,6 @@
     "scripts/verify_ui_r5_layout.test.mjs": "473621a89cafb5cb7f83d696a7614b262786827d8c67432fc59943eb285e4cdf",
     "scripts/verify_ui_r6_layout.test.mjs": "e30fdbc4d012eb7d16ca3c03181177b93f40520501a1ed67fba7ae162d430556"
   },
-  "nextStage": "OP-07 author settlement requests, confirmed earnings, deductions, reservations, approvals and verified payout evidence; separate privacy/tax/bank/provider acceptance."
+  "nextStage": "OP-07 author settlement requests, confirmed earnings, deductions, reservations, approvals and verified payout evidence; separate privacy/tax/bank/provider acceptance.",
+  "evidenceNote": "Product source hashes plus updated documentation hashes from the documentation-only delivery record."
 }
