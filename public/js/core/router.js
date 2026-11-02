@@ -45,7 +45,7 @@ function handleReaderRouteClick(event) {
   let route;
   try { route = new URL(link.getAttribute('href'), window.location.origin); } catch { return true; }
   if (route.origin !== window.location.origin || route.username || route.password ||
-      !/^\/(?:home|discover|recommendations|reading-test|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
+      !/^\/(?:home|discover|recommendations|reading-test|charging-test|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
   event.preventDefault(); window.closeAllModals?.();
   navigateTo(route.pathname + route.search); return false;
 }
@@ -120,7 +120,9 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
   if(viewId!=='view-admin-cms')window.AdminMembers?.leave();
   if(viewId!=='view-admin-cms')window.AdminDisplay?.leave();
   if(viewId!=='view-admin-cms')window.AdminPointsTest?.leave();
+  if(viewId!=='view-admin-cms')window.AdminTopups?.leave();
   if(viewId!=='view-reading-test')window.ReaderPointsTest?.leave();
+  if(viewId!=='view-charging-test')window.ReaderTopups?.leave();
   window.ReaderDisplay?.leave(viewId);
   window.ReaderSession?.leave(viewId);
   window.ReaderDiscovery?.leave(viewId);
@@ -172,6 +174,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
     if (viewId === 'view-home') targetPath = '/home';
     else if (viewId === 'view-recommendations') targetPath = '/recommendations';
     else if (viewId === 'view-reading-test') targetPath = '/reading-test';
+    else if (viewId === 'view-charging-test') targetPath = '/charging-test';
     else if (viewId === 'view-discover') targetPath = '/discover';
     else if (viewId === 'view-mypage') targetPath = '/library';
     else if (viewId === 'view-creator') targetPath = '/creator';
@@ -217,6 +220,21 @@ function resolveRoute(pathname, isInitial = false) {
   const legacyPath = /^#(?:home|discover|library|author|creator|admin)$/.test(hash) ? '/' + hash.slice(1) : rawPath;
   const path = legacyPath.replace(/\/$/, '') || '/';
   const parts = path.split('/').filter(Boolean);
+  // A provider redirect is evidence to verify, never proof of payment. Remove
+  // its payment key from browser history before loading data or SDK resources.
+  let chargingCallback=null,chargingReturnValid=true;
+  if(path==='/charging-test/return'){
+    const params=route.searchParams,entries=[...params.keys()],single=entries.every(key=>params.getAll(key).length===1);
+    const orderId=params.get('orderId'),validId=/^wn05-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId||'');
+    if(!route.hash&&single&&entries.length===3&&entries.every(key=>['paymentKey','orderId','amount'].includes(key))&&validId&&
+      /^[A-Za-z0-9_=-]{1,200}$/.test(params.get('paymentKey')||'')&&/^[1-9]\d{0,6}$/.test(params.get('amount')||'')&&Number(params.get('amount'))<=1000000)
+      chargingCallback={orderId:orderId.slice(5),paymentKey:params.get('paymentKey'),expectedAmountKrw:Number(params.get('amount'))};
+    else if(!route.hash&&single&&entries.every(key=>['code','message','orderId'].includes(key))&&params.has('code')&&params.has('message')&&
+      /^[A-Z0-9_]{1,100}$/.test(params.get('code')||'')&&(params.get('message')||'').length<=500&&(!params.has('orderId')||validId))
+      chargingCallback={code:params.get('code'),message:params.get('message')};
+    else chargingReturnValid=false;
+    window.history.replaceState({view:'view-charging-test',path:'/charging-test'},'','/charging-test');
+  }
 
   window.WebNovelsModules?.cancel();
   const moduleGroup = ['author','creator'].includes(parts[0]) ? 'creator' : parts[0] === 'admin' ? 'admin' : null;
@@ -232,6 +250,13 @@ function resolveRoute(pathname, isInitial = false) {
   }
 
   // 2. 탐색 경로 (/discover)
+  if(path==='/charging-test'||path==='/charging-test/return'){
+    switchWebNovelsView('view-charging-test',null,false);
+    const node=document.getElementById('readerTopupsContent'),accepted=routeRevision;
+    if(!chargingReturnValid||(path==='/charging-test'&&(route.searchParams.size||route.hash))){window.ReaderTopups?.leave();if(node)node.textContent='시험 충전 화면 주소를 확인해 주세요.';return;}
+    window.ReaderTopups?.render(node,{callback:chargingCallback,isCurrent:()=>accepted===routeRevision&&window.currentActiveView==='view-charging-test'});
+    return;
+  }
   if(path==='/reading-test'){
     switchWebNovelsView('view-reading-test',null,false);
     const node=document.getElementById('readerPointsTestContent'),accepted=routeRevision;

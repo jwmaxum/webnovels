@@ -26,7 +26,8 @@
     key==='accounts'?(can('ACCOUNTS_READ')||can('USER_MGMT')||can('CREATOR_MGMT')):
     ['works','content-pages'].includes(key)?(can('CONTENT_METADATA_READ')||can('WORK_MGMT')||can('CURATION_WRITE')):
     key==='episodes'?(can('CONTENT_METADATA_READ')||can('EPISODE_MGMT')):
-    ['settlements','payments','refunds','reconciliation'].includes(key)?(can('SETTLEMENTS_READ')||can('AUTHOR_SETTLEMENT')):
+    ['payments','refunds','reconciliation'].includes(key)?own()?.role==='SUPER_ADMIN':
+    key==='settlements'?(can('SETTLEMENTS_READ')||can('AUTHOR_SETTLEMENT')):
     key==='settings'?own()?.role==='SUPER_ADMIN':
     key==='roles'?own()?.role==='SUPER_ADMIN':
     key==='audit'?(can('AUDIT_READ')||can('SECURITY_MGMT')):false;
@@ -134,6 +135,9 @@
       }
       if(!allowed()){root().replaceChildren();message('이 화면을 볼 권한이 없습니다.');return;}
       const offset=Number(route.params.offset||0);
+      if(['payments','refunds','reconciliation'].includes(page)&&window.AdminTopups){
+        root().replaceChildren();await window.AdminTopups.render(root(),{tab:page,isCurrent});return;
+      }
       if(['payments','refunds','reconciliation','content-pages'].includes(page)){
         root().replaceChildren();prepared(page==='content-pages'?'공지·정책 관리 준비 중':'결제 운영 기능 준비 중',
           page==='content-pages'?'공지·정책의 현재 공개 페이지는 유지됩니다. 페이지 편집·검토 기능은 후속 단계에서 연결합니다.':'현재 무료 베타 운영입니다. 결제·입금, 포인트·환불, 대사는 계약과 검증이 완료된 후 단계적으로 연결합니다.',
@@ -306,6 +310,7 @@
     window.AdminMembers?.leave();
     window.AdminDisplay?.leave();
     window.AdminPointsTest?.leave();
+    window.AdminTopups?.leave();
   }
   function openRoute(input,shouldPushState=true){
     if(!active())return legacySwitch?.(String(input).split(/[/?]/).filter(Boolean).pop()||'dashboard',shouldPushState);
@@ -347,6 +352,7 @@
     window.AdminMembers?.reset();
     window.AdminDisplay?.reset();
     window.AdminPointsTest?.reset();
+    window.AdminTopups?.reset();
     if(root())root().replaceChildren();document.getElementById('adminOperationsNav')?.replaceChildren();
     for(const id of ['adminSectionTabs','adminBreadcrumbs','adminGlobalSearchResults'])document.getElementById(id)?.replaceChildren();
     for(const id of ['adminWorkspaceHeading','adminWorkspaceDescription']){const node=document.getElementById(id);if(node)node.textContent='';}

@@ -66,7 +66,7 @@ async function readBody(request) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) fail(400, 'INVALID_JSON');
   return body;
 }
-export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = {}) {
+export function createSecureApi({ fetchImpl = fetch, now = () => Date.now(), topupsProviderTransport } = {}) {
   const handle=async function(request, env) {
     // An isolated TEST reader must not bypass its gate through legacy FREE URLs.
     const testPath=new URL(request.url).pathname;
@@ -76,7 +76,7 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now() } = 
     if (betaEnrollmentResponse) return betaEnrollmentResponse;
     const enrollmentResponse = await authorEnrollmentApi(request, env, { fetchImpl, now });
     if (enrollmentResponse) return enrollmentResponse;
-    const accountResponse = await accountApi(request, env, { fetchImpl });
+    const accountResponse = await accountApi(request, env, { fetchImpl, topupsProviderTransport });
     if (accountResponse) return accountResponse;
     const requestId = crypto.randomUUID();
     const reply = (data, status = 200) => {

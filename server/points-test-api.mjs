@@ -33,6 +33,12 @@ async function readJson(request,fail){
   if(!object(data))fail(400,'INVALID_POINTS_REQUEST');return data;
 }
 function marked(result,fail){if(!object(result)||result.mode!=='TEST'||result.provenance!=='LOCAL_SIMULATED')fail(503,'POINTS_TEST_UNAVAILABLE');}
+function balances(result,fail){
+  if(!balance(result.balancePoints))fail(503,'POINTS_TEST_UNAVAILABLE');
+  const total=Object.hasOwn(result,'totalPoints'),reserved=Object.hasOwn(result,'reservedPoints');
+  if(total!==reserved||total&&(!balance(result.totalPoints)||!balance(result.reservedPoints)||result.totalPoints!==result.balancePoints+result.reservedPoints))fail(503,'POINTS_TEST_UNAVAILABLE');
+  return pick(result,['balancePoints',...(total?['totalPoints','reservedPoints']:[])]);
+}
 function work(value,fail,admin=false){
   if(!object(value)||!decimal(value.id)||!text(value.title,500)||!text(value.author,200)||!['NOVEL','WEBTOON'].includes(value.contentType)||admin&&typeof value.enabled!=='boolean')fail(503,'POINTS_TEST_UNAVAILABLE');
   return pick(value,['id','title','author','contentType',...(admin?['enabled']:[])]);
@@ -113,19 +119,19 @@ export async function pointsTestApi({request,user,actor,rpc,remote,fail,env={}})
   if(action==='episodes'){if(result.work?.id!==data.workId)fail(503,'POINTS_TEST_UNAVAILABLE');return {...page(result,data,fail,row=>episode(row,fail,data.workId)),work:work(result.work,fail)};}
   if(action==='wallet'){
     if(!balance(result.balancePoints)||!Array.isArray(result.ledger)||result.ledger.length>50)fail(503,'POINTS_TEST_UNAVAILABLE');
-    const ledger=result.ledger.map(row=>{if(!object(row)||!uuid(row.id)||!['CREDIT','DEBIT'].includes(row.kind)||!integer(row.deltaPoints,-1_000_000,1_000_000)||row.deltaPoints===0||(row.kind==='CREDIT')!==(row.deltaPoints>0)||!timestamp(row.createdAt))fail(503,'POINTS_TEST_UNAVAILABLE');return pick(row,['id','kind','deltaPoints','createdAt']);});
-    return {...marker,balancePoints:result.balancePoints,ledger};
+    const ledger=result.ledger.map(row=>{if(!object(row)||!uuid(row.id)||!['CREDIT','DEBIT','TOPUP','REFUND'].includes(row.kind)||!integer(row.deltaPoints,-1_000_000,1_000_000)||row.deltaPoints===0||(['CREDIT','TOPUP'].includes(row.kind))!==(row.deltaPoints>0)||!timestamp(row.createdAt))fail(503,'POINTS_TEST_UNAVAILABLE');return pick(row,['id','kind','deltaPoints','createdAt']);});
+    return {...marker,...balances(result,fail),ledger};
   }
   if(action==='quote'){
     const q=result.quote;if(!object(q)||!uuid(q.id)||q.episodeId!==data.episodeId||!decimal(q.workId)||!uuid(q.versionId)||!uuid(q.priceVersion)||!points(q.pricePoints)||!access.includes(q.access)||!timestamp(q.expiresAt)||!balance(result.balancePoints))fail(503,'POINTS_TEST_UNAVAILABLE');
-    return {...marker,quote:pick(q,['id','episodeId','workId','versionId','priceVersion','pricePoints','access','expiresAt']),balancePoints:result.balancePoints};
+    return {...marker,quote:pick(q,['id','episodeId','workId','versionId','priceVersion','pricePoints','access','expiresAt']),...balances(result,fail)};
   }
   if(action==='purchase'){
     if(!decimal(result.episodeId)||!['MEMBER_FREE','OWNED'].includes(result.access)||!points(result.chargedPoints)||!balance(result.balancePoints)||!(result.entitlementId===null||uuid(result.entitlementId))||typeof result.replayed!=='boolean'||result.chargedPoints>0&&(result.access!=='OWNED'||result.entitlementId===null))fail(503,'POINTS_TEST_UNAVAILABLE');
-    return {...marker,...pick(result,['episodeId','access','chargedPoints','balancePoints','entitlementId','replayed'])};
+    return {...marker,...pick(result,['episodeId','access','chargedPoints','entitlementId','replayed']),...balances(result,fail)};
   }
   if(action==='credit'){
-    if(result.targetUserId!==data.targetUserId||!balance(result.balancePoints)||result.creditedPoints!==data.points||typeof result.replayed!=='boolean')fail(503,'POINTS_TEST_UNAVAILABLE');return {...marker,...pick(result,['targetUserId','balancePoints','creditedPoints','replayed'])};
+    if(result.targetUserId!==data.targetUserId||!balance(result.balancePoints)||result.creditedPoints!==data.points||typeof result.replayed!=='boolean')fail(503,'POINTS_TEST_UNAVAILABLE');return {...marker,...pick(result,['targetUserId','creditedPoints','replayed']),...balances(result,fail)};
   }
   if(action==='content')return content(result,data,fail);
   if(action==='panel')return panel(result,data,remote,fail);

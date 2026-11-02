@@ -1,0 +1,234 @@
+{
+  "stage": "OP-05",
+  "checkedAt": "2026-11-02T01:26:39.923Z",
+  "baseCommit": "fc18ed7e95322ee6b57ea14771379a76cb7e447d",
+  "mode": "TEST",
+  "provenance": "LOCAL_SIMULATED",
+  "validation": {
+    "stage": "OP-05",
+    "startedAt": "2026-11-02T00:55:44.502Z",
+    "steps": [
+      {
+        "command": "build",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "types",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "verify:op05",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "post-build test:op05",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "command": "post-build test:cloudflare-bundle",
+        "exitCode": 0,
+        "error": null
+      }
+    ],
+    "exitCode": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "VM source not instrumented; no numeric coverage claim",
+    "browser": "NOT_RUN",
+    "database": "SYNTHETIC_ONLY",
+    "provider": "NOT_CALLED",
+    "productionFlagsChanged": false,
+    "completedAt": "2026-11-02T01:22:43.836Z",
+    "releaseCommands": [
+      "test:data",
+      "test:p0",
+      "test:auth",
+      "test:naming",
+      "test:authoring-schema",
+      "test:creator-works",
+      "test:stage14",
+      "test:stage15",
+      "test:stage16",
+      "test:stage17",
+      "test:stage18",
+      "test:stage19",
+      "test:stage20",
+      "test:stage21",
+      "test:stage22",
+      "test:stage23",
+      "test:stage24",
+      "test:stage25",
+      "test:stage26",
+      "test:stage27",
+      "test:stage28",
+      "test:stage29",
+      "test:stage30",
+      "test:stage31",
+      "test:stage32",
+      "test:stage33",
+      "test:stage34",
+      "test:stage35",
+      "test:stage36",
+      "test:drafts",
+      "test:files",
+      "test:publication",
+      "test:operations",
+      "test:admin-operations",
+      "test:stage11",
+      "test:stage13",
+      "test:launch",
+      "test:cloudflare-bundle",
+      "test:author-publishing",
+      "test:ui-r2",
+      "test:ui-r3",
+      "test:ui-r4",
+      "test:ui-r5",
+      "test:ui-r6",
+      "test:ui-r7",
+      "test:ui-r8",
+      "test:ui-r9",
+      "test:ui-r10",
+      "test:ui-r12",
+      "test:ui-r13",
+      "test:op01",
+      "test:op02",
+      "test:op03",
+      "test:op04",
+      "test:op05"
+    ],
+    "postBuildSupplement": "SDK orderName100 UTF16-safe validation and fresh Functions bundle",
+    "newTests": 89,
+    "newTestBreakdown": {
+      "database": 24,
+      "apiAndProvider": 18,
+      "ui": 34,
+      "integration": 13
+    },
+    "releaseCommandCount": 55,
+    "buildCompilePassed": true,
+    "typesPassed": true,
+    "standalone": {
+      "steps": [
+        {
+          "action": "bank-proof-and-replay",
+          "creditCount": 1,
+          "points": 1000,
+          "amountKrw": 700
+        },
+        {
+          "action": "fifo-partial-consumption-bank-refund",
+          "openingConsumedPoints": 50,
+          "topupConsumedPoints": 50,
+          "consumedAmountKrw": 35,
+          "refundPoints": 950,
+          "refundAmountKrw": 665,
+          "reservedPurchaseDenied": true
+        },
+        {
+          "action": "card-unknown-query-explicit-same-cancel-retry",
+          "reservedUntilConfirmed": true,
+          "sameCancellationId": true
+        },
+        {
+          "action": "monotonic-financial-facts",
+          "paidSurvivesUnknown": true,
+          "completedRefundSurvivesUnknownAndReview": true,
+          "contradictionsAudited": true
+        },
+        {
+          "action": "retained-purchase-and-current-head",
+          "entitlementPreserved": true
+        }
+      ],
+      "ledgerReconciled": true,
+      "ledgerEntries": 6,
+      "tables": 12,
+      "functions": 13,
+      "triggers": 8
+    },
+    "security": {
+      "review": "API/gateway/current actor, private ACL and base EXECUTE denial, per-order proof/idempotency, reserved purchase guard, late receipt monotonic state, callback/secret and account/route lifecycle reviewed; no remaining identified blocker",
+      "syntaxFiles": 29,
+      "syntaxPassed": true,
+      "secretMatches": 0,
+      "userChangesPreserved": true
+    }
+  },
+  "preparedMigration": {
+    "file": "database/launch/020_topups_test.sql",
+    "privateTables": 12,
+    "relatedFunctionsIncludingMovedBaseAndWrapper": 13,
+    "newTriggers": 8,
+    "newSequences": 0,
+    "original019Unchanged": true,
+    "originalRpcBodySha256": "dd5ca9aba1a49cb1df8208b22764f61075cf99ffe6c7c0c473917f332bf8cde2",
+    "originalRpcOwnerPreserved": true,
+    "sharedCommerceAclsAndExistingRowsPreserved": true
+  },
+  "production": {
+    "migration019Applied": false,
+    "migration020Applied": false,
+    "flagsChanged": false,
+    "realProviderCalled": false,
+    "operationalTestRecordsCreated": false,
+    "existingBalancesOrEntitlementsChanged": false,
+    "existingWorksOrAccountsChanged": false,
+    "realMoneyOrAuthorEarnings": false
+  },
+  "limitations": {
+    "realPostgresMultiConnectionConcurrency": "NOT_RUN",
+    "providerSdkAndTestAcceptance": "NOT_RUN",
+    "browser": "NOT_RUN",
+    "liveFinancialMigration": "NOT_RUN",
+    "automaticWebhookOrBankTransfer": "NOT_IMPLEMENTED",
+    "livePaymentContract": "NOT_CONNECTED"
+  },
+  "delivery": {
+    "status": "PUSH_AND_REMOTE_CHECK_PENDING"
+  },
+  "evidence": {
+    "database/launch/020_topups_test.sql": "abbe61bbe026b24acbd3db61c35ad52c09637d3226a7bb3cf7d4f7db61ac6389",
+    "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "b8893fd9b7df8ea271c18c5908a5f25faf650d02ae1d53c011e01dc0573aa0db",
+    "docs/launch/ui-redesign-plan-2026-10-30.md": "d23c1adb85ffa0c9889d8fff9bb221c5b08f79ececa4509a99230a9add5c4c8b",
+    "docs/launch/op05-topups-contract-2026-11-02.md": "69e3bb09a2a85fb0a3ac75d8d203b7a935eabd87c37df21caf542ceb0b491ed5",
+    "docs/launch/op05-topups-implementation-2026-11-02.md": "225bd35274c6383859bf61d12d1ec4906381f20aa7cabb6b79663afc013ecf7f",
+    "improve37.md": "52e5994e33a4727ada67baf27fe20d3850afe3bb5682ed23c7f030863450443e",
+    "functions/api/public-config.js": "e253f12aa63ec44903c6b099ddeeec682ac2a380b3176839255c9891f2e6b0ba",
+    "package.json": "085f5d9499a55a4a47e31c0820f4fe9abe15b87e0913afaa13b288f884b49f6f",
+    "public/_headers": "6ece315ce7b7249be9f1a745a9974b4ad01d6e6bfc6e6a2f7cb89c2d46b8be42",
+    "public/index.html": "03195cf46f9df4ef7bd4ce7af762c9c5e307ef4e2eb69d997fa58b6b71b62596",
+    "public/supabase-public-config.js": "37c7c6144e9d7b440d95372a703b199ff129e02b3c389e307f08d26dd4c51b89",
+    "public/css/topups-test.css": "6dc4bbf6b77ac93b1b03b0d21150c3087124e8fe65512206ceac1b936ebc5383",
+    "public/js/admin/admin-topups.js": "1b1ce5b4679ff4f339dcec622b94f3658abc8ead61811ba3869626783d7f4903",
+    "public/js/reader/reader-topups.js": "4e005b282329a2b3272488f3b25fe87c806df4d664f5498e22c9480eb139ad9f",
+    "public/js/admin/admin-operations.js": "8996507932d3445b428e2735d4f03e746963cfe50103b91950684e3fb83e15fe",
+    "public/js/core/auth-session.js": "8cf51bd8cc277af4520de153ffef6c9302a94a5f38f2b31915f56dd7fe133ae1",
+    "public/js/core/role-modules.js": "326421324caa0d12027c993751aa2844331a7bcd827ee26d9edda77758382f2c",
+    "public/js/core/router.js": "d0ab9d627442f9ee07efd3700a618e3c91972246a2877fb44121cebe3c27d519",
+    "public/js/reader/reader-points-test.js": "a8b763d8caea322af0d4eaa864dfaf230a82a57f4ef06f96f604f81c8df12dad",
+    "server/account-api.mjs": "7b830c377a0bf5c68f0f7eeb35730f8fee6e530d2889a4e152dabe747092d330",
+    "server/points-test-api.mjs": "10bb7cc79caece704b73579294d147540346fab6537303d5c2a4c5fc5a4d6e96",
+    "server/secure-api.mjs": "8d7288225dc69e81bf7421f3bb77d8cc07ab6ee24617a32a18f1981b7ad681cd",
+    "server/topups-test-api.mjs": "732d59b1211967dfc9e313c50eacf487fd5b3cafa745a04a0f4bd3b5bfcc79ff",
+    "server/providers/topups-toss.mjs": "9b37a88427469cdc1463d4ed08f2ef40a089655ebaa30f7ff5bd7011f41e2b61",
+    "scripts/fixtures/op05-db.mjs": "61c5b8d992a03b1e1a4fbba9f572296bd6e2dfb632eb4cc4e28512f434b74e1c",
+    "scripts/verify_op05_topups_api.test.mjs": "ca532cd95f755f45543338d561a1b93d545f7d0243cedc59a1e5ef4947a0c0d6",
+    "scripts/verify_op05_topups_db.test.mjs": "97291a374931987cddb25a35bd118d4073922189d262d6773ffc8bd7b47e1350",
+    "scripts/verify_op05_topups_integration.test.mjs": "6beed49d24e64c55ec1293ee7065467062a9d9718824a7d14fc1432e64237f39",
+    "scripts/verify_op05_topups_provider.test.mjs": "d2777cb05c39717b9cc6b8006d245a9ad91cc7d33eeaf6bcae34c1238b938228",
+    "scripts/verify_op05_topups_sandbox.mjs": "5330c35b9e4961044c5aa203d0e620641747052d1d2c9406e2255ffcced3db7e",
+    "scripts/verify_op05_topups_ui.test.mjs": "f19cde64ffc87d94a6b2d7bd8c27434946e6081d6097aabb203247698f19d812",
+    "scripts/verify_cloudflare_routes.test.mjs": "1450cc4f3393a8751ced73eb287aeaacc4119e6b9c321d18b5065c68ffbb333b",
+    "scripts/verify_op01_layout.test.mjs": "7e7be1a94b6ec29ec6903770a1ad29085f24b5d20a8371db402981438988c50b",
+    "scripts/verify_op02_members_integration.test.mjs": "2b2e97b000dc7879a5bd0eb148288d748913802bce8cc3fb4000f25c64a9a1fa",
+    "scripts/verify_op03_display_integration.test.mjs": "f0798a7df80a4699675ad95261991af52d1570b9bb0c641a80eb4f163a363bd5",
+    "scripts/verify_op04_points_integration.test.mjs": "3aad2a0fa84238cec8a013dbe77166b5f65bc6a7c104939a298aad7c5dd536b1",
+    "scripts/verify_stage36_support_ui.test.mjs": "d2624139f09478c236fba32beb62a98c041d1ffcf816eb9b7f78faddb3653b7a",
+    "scripts/verify_ui_r5_layout.test.mjs": "e9a5d2c69f2fd93d7dc9107ef809ca448419450d6ab062a252670e8eba74c779",
+    "scripts/verify_ui_r6_layout.test.mjs": "98247f125c87d2b4db2bf263de915823cb8d400033470584c09c4ceb8a7ed58d"
+  },
+  "nextStage": "OP-06 advertising reward sessions, provider server evidence and stable-episode rights. Real PG/bank/PostgreSQL/restore/terms acceptance remains separate."
+}

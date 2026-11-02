@@ -5,6 +5,7 @@ window.WEBNOVELS_CONFIG = Object.freeze({
   "supabaseAnonKey": "sb_publishable_XYQ7ydRrTZQ94V6r1WKEtQ_pnL9Po5c",
   "readerDiscoveryEnabled": false,
   "pointsTestEnabled": false,
+  "chargingTestEnabled": false,
   "growthServiceEnabled": false,
   "growthMeasurementEnabled": false,
   "adminWorkflowEnabled": false,

@@ -105,8 +105,8 @@ test('display integration ships unique labelled workspaces, protected legal node
   const sources=nodes.filter(node=>node.tagName==='script').map(node=>attr(node,'src')),styles=nodes.filter(node=>node.tagName==='link').map(node=>attr(node,'href')),loader=read('public/js/core/role-modules.js');
   assert(sources.indexOf('/js/reader/reader-catalog.js?v=117')<sources.indexOf('/js/reader/reader-display.js?v=20261101op03'));
   assert(sources.indexOf('/js/reader/reader-display.js?v=20261101op03')<sources.indexOf('/js/reader/reader-discovery.js?v=20261101op03'));
-  for(const path of ['/js/core/role-modules.js','/js/core/router.js','/js/reader/reader.js'])assert(sources.includes(path+'?v='+(path.endsWith('/reader.js')?'20261101op03':'20261102op04')));
+  for(const path of ['/js/core/role-modules.js','/js/core/router.js','/js/reader/reader.js'])assert(sources.includes(path+'?v='+(path.endsWith('/reader.js')?'20261101op03':'20261102op05')));
   for(const path of ['/css/admin-display.css','/css/reader-display.css'])assert(styles.includes(path+'?v=20261101op03'));
-  assert(loader.indexOf('/admin-display.js?v=20261101op03')<loader.indexOf('/admin-operations.js?v=20261102op04'));
+  assert(loader.indexOf('/admin-display.js?v=20261101op03')<loader.indexOf('/admin-operations.js?v=20261102op05'));
   assert(loader.includes('/admin-console.js?v=20261101op03'));assert(loader.includes('/admin-members.js?v=20261101op02b'));
 });

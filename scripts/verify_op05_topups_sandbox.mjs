@@ -1,0 +1,42 @@
+// Synthetic, in-memory TEST rehearsal only. No .env, network, PG or operational DB.
+import assert from 'node:assert/strict';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {setup,reader,uuid} from './fixtures/op05-db.mjs';
+const f=await setup({openingPoints:50});
+try{
+ const steps=[];
+ const product=await f.makeProduct({amountKrw:700,points:1000});
+ const bank=(await f.create(product,'BANK')).order;
+ const proof={bankReference:'synthetic-deposit-'+uuid(),receivedAt:new Date().toISOString(),requestId:uuid()};
+ assert.equal((await f.deposit(bank,proof)).order.status,'PAID');assert.equal((await f.deposit(bank,proof)).replayed,true);
+ steps.push({action:'bank-proof-and-replay',creditCount:1,points:1000,amountKrw:700});
+ const quote=await f.quote(f.novel.episodes[2].id);assert.equal((await f.purchase(quote.quote.id)).chargedPoints,100);
+ const reserved=await f.refund(bank);assert.equal(reserved.order.refund.points,950);assert.equal(reserved.order.refund.amountKrw,665);
+ const locked=await f.quote(f.webtoon.episodes[2].id);assert.equal((await f.purchase(locked.quote.id)).error,'INSUFFICIENT_POINTS');
+ assert.equal((await f.bankRefund(reserved.order)).order.status,'REFUNDED');
+ steps.push({action:'fifo-partial-consumption-bank-refund',openingConsumedPoints:50,topupConsumedPoints:50,consumedAmountKrw:35,refundPoints:950,refundAmountKrw:665,reservedPurchaseDenied:true});
+ const {order}=await f.card(product);const paidQuery=await f.claim('claim-query',order);assert.equal((await f.apply(paidQuery.transport,{state:'UNKNOWN'})).order.status,'PAID');
+ const unknown=await f.refund(order);const cancelId=unknown.transport.operationId;
+ assert.equal((await f.apply(unknown.transport,{state:'UNKNOWN'})).order.status,'REFUND_UNKNOWN');
+ const query=await f.claim('claim-refund-retry',order);assert.equal(query.transport.operation,'query');
+ const approvalKey=(await f.db.query('select approval_transaction from commerce.op05_orders where id=$1',[order.id])).rows[0].approval_transaction;
+ assert.equal((await f.apply(query.transport,f.approved(query.transport,{transactionKey:approvalKey}))).order.status,'REFUND_UNKNOWN');
+ assert.equal((await f.wallet()).reservedPoints,1000);
+ const retry=await f.claim('claim-refund-retry',order);assert.equal(retry.transport.operationId,cancelId);assert.equal((await f.apply(retry.transport,f.cancelled(retry.transport))).order.status,'REFUNDED');
+ steps.push({action:'card-unknown-query-explicit-same-cancel-retry',reservedUntilConfirmed:true,sameCancellationId:true});
+ const lateQuery=await f.claim('claim-query',order);assert.equal((await f.apply(lateQuery.transport,{state:'UNKNOWN'})).order.status,'REFUNDED');
+ const conflictingQuery=await f.claim('claim-query',order);assert.equal((await f.apply(conflictingQuery.transport,{state:'REVIEW'})).order.status,'REFUNDED');
+ steps.push({action:'monotonic-financial-facts',paidSurvivesUnknown:true,completedRefundSurvivesUnknownAndReview:true,contradictionsAudited:true});
+ const head=await f.replaceHead(f.novel.episodes[2]);assert.equal((await f.content(head.id)).versionId,head.versionId);
+ steps.push({action:'retained-purchase-and-current-head',entitlementPreserved:true});
+ const wallet=await f.wallet(),lots=await f.lots(),ledger=(await f.db.query('select count(*)::int entries,coalesce(sum(delta_points),0)::int points from commerce.op04_ledger where user_id=$1',[reader])).rows[0];
+ assert.equal(wallet.totalPoints,ledger.points);assert.equal(wallet.totalPoints,wallet.balancePoints+wallet.reservedPoints);assert.equal(wallet.totalPoints,lots.reduce((n,l)=>n+Number(l.issued_points)-Number(l.consumed_points)-Number(l.refunded_points),0));
+ const tables=(await f.db.query("select tablename from pg_tables where schemaname='commerce' and tablename like 'op05_%' order by tablename")).rows.map(r=>r.tablename);
+ const functions=(await f.db.query("select n.nspname||'.'||p.proname name,p.prosecdef,p.proconfig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.proname like 'op05_%' or n.nspname='public' and p.proname='op04_points_test' order by 1")).rows;
+ const triggers=(await f.db.query("select t.tgname,c.relname from pg_trigger t join pg_class c on c.oid=t.tgrelid where not t.tgisinternal and t.tgname like 'op05_%' order by c.relname,t.tgname")).rows;
+ const evidence={};for(const path of ['database/launch/019_points_test.sql','database/launch/020_topups_test.sql','scripts/fixtures/op05-db.mjs','scripts/verify_op05_topups_db.test.mjs','scripts/verify_op05_topups_sandbox.mjs'])evidence[path]=createHash('sha256').update(await readFile(path)).digest('hex');
+ const report={stage:'OP-05',checkedAt:new Date().toISOString(),mode:'TEST',provenance:'LOCAL_SIMULATED',providerMode:'LOCAL_SIMULATED',result:'PASS',realDatabaseApplied:false,operationalFlagsChanged:false,realProviderCalled:false,realMoneyOrAuthorEarnings:false,browser:'NOT_RUN',postgresMultiConnectionConcurrency:'NOT_RUN',steps,finalWallet:wallet,ledgerEntries:ledger.entries,ledgerReconciled:true,originalOp04BodySha256:f.sourceHash,originalOp04Owner:f.sourceOwner,tables,functions,triggers,evidence,limitations:['Single in-memory PGlite transaction/invariant verification; real PostgreSQL parallel connections not exercised','No operational apply, provider TEST SDK call, real deposits/refunds or LIVE activation']};
+ await mkdir('scratch/op05-sandbox',{recursive:true});await writeFile('scratch/op05-sandbox/report.json',JSON.stringify(report,null,2)+'\n');
+ console.log(JSON.stringify({result:'PASS',mode:'TEST',provenance:'LOCAL_SIMULATED',steps:steps.length,ledgerReconciled:true,realDatabaseApplied:false,tables:tables.length,functions:functions.length,triggers:triggers.length,sourceHash:f.sourceHash,report:'scratch/op05-sandbox/report.json'}));
+}finally{await f.db.close();}

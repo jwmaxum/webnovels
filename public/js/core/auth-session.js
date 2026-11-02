@@ -54,6 +54,8 @@
     window.ReaderSession?.reset();
     window.ReaderPointsTest?.reset();
     window.AdminPointsTest?.reset();
+    window.ReaderTopups?.reset();
+    window.AdminTopups?.reset();
     window.ReaderLibrary?.reset();
     window.ContinueReading?.reset();
     if(window.WEBNOVELS_CONFIG?.readerServiceEnabled)window.ReaderPreferencesManager?.reset();
