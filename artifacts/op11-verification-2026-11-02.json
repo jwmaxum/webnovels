@@ -1,0 +1,60 @@
+{
+  "stage": "OP-11",
+  "scope": "Manual-first settlement TEST workflow; mutually exclusive provider TEST route; no actual transfer",
+  "local": {
+    "buildCompile": "PASS",
+    "typeCheck": "PASS",
+    "cloudflareFunctionsBundle": "PASS (6 entrypoints)",
+    "targetedRegression": {
+      "files": 54,
+      "total": 644,
+      "initialPassed": 643,
+      "initialFailed": 1,
+      "corrected": "Public configuration allowlist updated for new disabled flag",
+      "affectedFileRerun": {
+        "passed": 8,
+        "failed": 0
+      },
+      "remainingFailures": 0
+    },
+    "op11": {
+      "passed": 20,
+      "failed": 0
+    },
+    "nativePostgres": {
+      "stage": "OP-11",
+      "result": "PASS",
+      "engine": "postgres (PostgreSQL) 17.11",
+      "steps": [
+        "manual-first excludes concurrent Toss selection",
+        "Toss-first excludes concurrent manual transfer selection",
+        "duplicate completion across connections applies once",
+        "different requests cannot both finalize; archive preserves route/proof/roles"
+      ],
+      "provenance": "NATIVE_POSTGRES_SYNTHETIC",
+      "productionTouched": false,
+      "actualBankTransfer": false,
+      "hostedRestoreVerified": false
+    },
+    "dependencyVulnerabilities": 0,
+    "syntaxSecurityDiff": {
+      "result": "PASS",
+      "syntaxFiles": 23,
+      "scope": "Changed source: syntax, secret patterns, safe DOM; manual authorization/ACL/locking/provenance review"
+    },
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "continuousFullRelease": "NOT_RUN_LOCALLY"
+  },
+  "productionDatabaseApplied": false,
+  "productionFlagsChanged": false,
+  "productionSchedulerDeployed": false,
+  "realProviderCalled": false,
+  "actualBankTransfer": false,
+  "browserAcceptance": "NOT_RUN",
+  "remote": {
+    "gitPush": "PENDING",
+    "githubCI": "PENDING",
+    "cloudflarePages": "PENDING"
+  }
+}

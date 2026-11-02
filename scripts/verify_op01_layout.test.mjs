@@ -128,5 +128,5 @@ test('OP-01 assets are versioned and load after their existing compatibility dep
   assert(loader.includes(navigation) && loader.includes(operations));
   assert(loader.indexOf(navigation) < loader.indexOf(operations), 'navigation model must exist before admin operations');
   for (const asset of [navigation, operations]) await read('public' + asset.split('?')[0]);
-  assert(nodes.some(node => node.tagName === 'script' && attr(node, 'src') === '/js/core/role-modules.js?v=20261102op10'));
+  assert(nodes.some(node => node.tagName === 'script' && attr(node, 'src') === '/js/core/role-modules.js?v=20261102op11'));
 });

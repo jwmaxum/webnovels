@@ -52,3 +52,5 @@ jobs:
       run: npm run verify:op09:native
     - name: Verify payout TEST dispatch race and restored dispatch marker
       run: npm run verify:op10:native
+    - name: Verify manual versus provider settlement exclusivity and recovery
+      run: npm run verify:op11:native

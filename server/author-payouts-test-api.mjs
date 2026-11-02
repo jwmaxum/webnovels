@@ -1,6 +1,7 @@
 import {pointsTestEnabled} from './points-test-api.mjs';
 
 export const settlementsTestEnabled=(env={})=>pointsTestEnabled(env)&&env.SETTLEMENTS_TEST_ENABLED==='true'&&env.SETTLEMENTS_TEST_ENVIRONMENT==='TEST';
+export const manualPayoutWorkflowEnabled=(env={})=>settlementsTestEnabled(env)&&env.MANUAL_PAYOUT_WORKFLOW_ENABLED==='true';
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 const id=v=>typeof v==='string'&&/^[1-9]\d{0,18}$/.test(v)&&BigInt(v)<=9223372036854775807n;

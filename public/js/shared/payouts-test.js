@@ -17,8 +17,8 @@
  const marked=v=>v?.mode==='TEST'&&v.provenance==='LOCAL_SIMULATED'&&v.currency==='KRW'&&v.livePayouts===false;
  function module(admin){
   let owner=null,epoch=0,dispose=()=>{},pending=null;
-  function leave(){epoch++;dispose();dispose=()=>{};}
-  function reset(){leave();owner=null;pending=null;}
+  function leave(){window.PayoutWorkflow?.leave();epoch++;dispose();dispose=()=>{};}
+  function reset(){window.PayoutWorkflow?.reset();leave();owner=null;pending=null;}
   const allowed=()=>!!actor()?.userId&&(admin?actor()?.admin?.role==='SUPER_ADMIN'&&actor()?.admin?.is_active===true:actor()?.author?.status==='APPROVED');
   async function render(root,{isCurrent=()=>true,onLegacy}={}){
    if(owner!==actor()?.userId){reset();owner=actor()?.userId||null;}else leave();const generation=epoch,user=owner;
@@ -81,6 +81,10 @@
    }
    function drawDetail(){
     const p=detail;el(content,'h3',`${p.authorName} · ${money(p.amountKrw)} · ${labels[p.status]}`);el(content,'p',`신청 ${date(p.createdAt)} / 승인 ${date(p.approvedAt)} / 결과 확인 시작 ${date(p.dispatchedAt)}`);el(content,'p',`신청 당시 TEST 대상: ${p.testReference} · 버전 ${p.payeeRevision}`);
+    if(window.WEBNOVELS_CONFIG?.manualPayoutWorkflowEnabled===true){
+     if(!window.PayoutWorkflow){el(content,'p','지급 처리 화면을 다시 불러와주세요. 확인 전 송금하지 마세요.');return;}
+     void window.PayoutWorkflow.render(content,{payout:p,admin,isCurrent:()=>current()&&view==='detail'&&detail?.id===p.id,onRefresh:()=>load()});return;
+    }
     if(p.evidence){const e=p.evidence;el(content,'h4','확인된 TEST 증빙');el(content,'p',`${labels[e.outcome]} · ${e.reference} · ${money(e.amountKrw)} · ${date(e.occurredAt)}`);el(content,'p','증빙 출처: 모의 대사. 실제 은행 지급 증빙이 아닙니다.');}
     const actions=admin?(p.status==='REQUESTED'?['approve','reject']:p.status==='APPROVED'?['begin','reject']:p.status==='UNKNOWN'?['paid','fail']:[]):(['REQUESTED','APPROVED'].includes(p.status)?['cancel']:[]);
     if(!actions.length)return;
