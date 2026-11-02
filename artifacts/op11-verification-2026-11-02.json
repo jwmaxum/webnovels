@@ -53,8 +53,219 @@
   "actualBankTransfer": false,
   "browserAcceptance": "NOT_RUN",
   "remote": {
-    "gitPush": "PENDING",
-    "githubCI": "PENDING",
-    "cloudflarePages": "PENDING"
+    "gitPush": "SUCCESS",
+    "githubCI": "PASS",
+    "cloudflarePages": "SUCCESS"
+  },
+  "delivery": {
+    "commit": "31cade27911f4e77c2c0736180ee037fc511b857",
+    "push": "SUCCESS",
+    "github": [
+      {
+        "name": "WebNovels CI / Build & Test Workflow",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41460110447"
+      }
+    ],
+    "checks": [
+      {
+        "name": "Cloudflare Pages",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/runs/125332467632"
+      },
+      {
+        "name": "build-and-test",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41460110447/job/125326681488"
+      },
+      {
+        "name": "native-settlement-recovery",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41460110447/job/125326681466"
+      }
+    ],
+    "cloudflare": {
+      "id": "0dc4a283-0d8c-4ebb-b27c-2982552a0ba0",
+      "commit": "31cade27911f4e77c2c0736180ee037fc511b857",
+      "environment": "production",
+      "url": "https://0dc4a283.webnovels-db4.pages.dev",
+      "stageStartedAt": "2026-11-02T14:25:16.531362Z",
+      "latestStage": "deploy",
+      "status": "success",
+      "stages": [
+        {
+          "name": "queued",
+          "status": "success"
+        },
+        {
+          "name": "initialize",
+          "status": "success"
+        },
+        {
+          "name": "clone_repo",
+          "status": "success"
+        },
+        {
+          "name": "build",
+          "status": "success"
+        },
+        {
+          "name": "deploy",
+          "status": "success"
+        }
+      ]
+    },
+    "http": {
+      "checkedAt": "2026-11-02T14:26:42.576Z",
+      "passed": true,
+      "results": [
+        {
+          "origin": "https://webnovels-db4.pages.dev",
+          "emailTransformationVerified": false,
+          "findings": [],
+          "checked": [
+            {
+              "path": "/",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/core/role-modules.js?v=20261102op11",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/shared/payout-workflow.js?v=20261102op11",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            }
+          ],
+          "flagsDisabled": true,
+          "checks": [
+            {
+              "path": "/api/v2/admin/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/providers",
+              "status": 401,
+              "code": "AUTH_REQUIRED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payouts-test?action=summary",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payouts-test?action=state",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payout-provider-test",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/payout-provider-test/callback",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "origin": "https://webnovels.uk",
+          "emailTransformationVerified": true,
+          "findings": [],
+          "checked": [
+            {
+              "path": "/",
+              "matchesLocal": false,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/core/role-modules.js?v=20261102op11",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/shared/payout-workflow.js?v=20261102op11",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            }
+          ],
+          "flagsDisabled": true,
+          "checks": [
+            {
+              "path": "/api/v2/admin/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/providers",
+              "status": 401,
+              "code": "AUTH_REQUIRED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payouts-test?action=summary",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payouts-test?action=state",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payout-provider-test",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/payout-provider-test/callback",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "browser": "NOT_RUN",
+      "productionFlagsChanged": false
+    }
   }
 }

@@ -81,3 +81,7 @@ API·SQL·가상 DOM 검증, PostgreSQL 두 연결의 수동/Toss 경쟁·중복
 - PostgreSQL 17.11 두 연결에서 수동/Toss 상호 배제, 동일/서로 다른 완료 요청 경쟁, archive 복원 후 경로·증빙·역할 보존 4개 시나리오를 통과했다. 합성 로컬 DB 결과이며 hosted 복원 인수는 아니다.
 - 컴파일, TypeScript, Cloudflare Functions 6개 번들, 변경 JS 구문·보안·diff 검사를 통과했다. npm audit 취약점 0건. 별도 lint 설정은 없으며 coverage와 로컬 전체 release 연속 실행은 수행하지 않았다.
 - 상세 집계: `artifacts/op11-verification-2026-11-02.json`. 운영 DB·플래그·실제 송금·제공자 실호출·브라우저 인수는 수행하지 않았다.
+
+## 원격 반영
+
+제품 커밋 `31cade2`을 main에 정상 push했다. [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41460110447)의 전체 빌드·보안 감사·네이티브 복원 작업과 Cloudflare 배포가 성공했다. 두 공개 도메인의 HTTP 기준과 비인증 관리자 차단, 금융/정산 TEST 비활성 상태를 확인했다. 로컬 관련 회귀 검사와 별도로 CI에서 전체 연속 실행을 통과했다. 운영 DB·플래그·실제 제공자 상태는 변경하지 않았다.
