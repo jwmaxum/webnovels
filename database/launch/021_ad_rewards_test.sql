@@ -47,6 +47,7 @@ create table commerce.op06_grants(
 );
 create index op06_grants_active_lookup on commerce.op06_grants(user_id,episode_id,expires_at desc);
 create table commerce.op06_receipts(actor_id uuid not null references auth.users(id),request_id uuid not null,action text not null,fingerprint text not null check(fingerprint~'^[a-f0-9]{64}$'),session_id uuid references commerce.op06_sessions(id),result jsonb not null,created_at timestamptz not null default now(),primary key(actor_id,request_id));
+create index op06_receipts_actor_recent on commerce.op06_receipts(actor_id,created_at desc);
 create table commerce.op06_audit(id uuid primary key default gen_random_uuid(),actor_id uuid not null references auth.users(id),action text not null,detail jsonb not null,created_at timestamptz not null default now());
 
 create function commerce.op06_policy(p_id uuid) returns jsonb language sql stable set search_path='' set timezone='UTC' as $$
@@ -112,6 +113,12 @@ begin
    if rec.action<>p_action or rec.fingerprint<>fp then return jsonb_build_object('error','IDEMPOTENCY_CONFLICT','status',409);end if;
    if rec.session_id is not null then return base||jsonb_build_object('provider',case when (select kind from commerce.op06_sessions where id=rec.session_id)='AD_REWARD' then 'INTERNAL_TEST' else 'NONE' end,'session',commerce.op06_session(rec.session_id),'replayed',true)||case when act='start' and (select kind from commerce.op06_sessions where id=rec.session_id)='AD_REWARD' then jsonb_build_object('challenge',(select jsonb_build_object('protocol','OP06_INTERNAL_TEST_V1','sessionId',id,'nonce',nonce,'channelId',channel_id,'policyVersion',policy_id) from commerce.op06_sessions where id=rec.session_id)) else '{}'::jsonb end;end if;
    return rec.result||jsonb_build_object('replayed',true);
+  end if;
+  -- Bound receipt/audit growth even for no-fill, already-accessible and close
+  -- requests. Exact retries above remain available without consuming this cap.
+  perform pg_advisory_xact_lock(hashtextextended('op06-write-user:'||p_user,0));
+  if (select count(*) from commerce.op06_receipts where actor_id=p_user and created_at>now()-interval '1 minute')>=60 then
+   return jsonb_build_object('error','RATE_LIMITED','status',429);
   end if;
  end if;
  if act='policy' then select * into cfg from commerce.op06_config where singleton for update;else select * into cfg from commerce.op06_config where singleton for share;end if;select * into strict p from commerce.op06_policies where id=cfg.policy_id;

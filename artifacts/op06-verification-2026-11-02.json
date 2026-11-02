@@ -1,6 +1,6 @@
 {
   "stage": "OP-06",
-  "checkedAt": "2026-11-02T02:47:49.244Z",
+  "checkedAt": "2026-11-02T03:00:00.579Z",
   "baseCommit": "685e5f6c05f9526c54b3c567f7e833349318f234",
   "mode": "TEST",
   "provenance": "LOCAL_SIMULATED",
@@ -111,9 +111,9 @@
       "test:op06"
     ],
     "postBuildSupplement": "Ended campaign policy receipt replay preserves exact retry; fresh reward tests and Functions bundle",
-    "newTests": 84,
+    "newTests": 85,
     "newTestBreakdown": {
-      "database": 26,
+      "database": 27,
       "api": 12,
       "provider": 8,
       "ui": 25,
@@ -177,6 +177,23 @@
       "secretMatches": 0,
       "userChangesPreserved": true,
       "diffCheck": "PASS"
+    },
+    "writeReceiptHardening": {
+      "initialProductCommit": "587d24b403611157ac6ca97154c3e76b50fd3978",
+      "newTestCount": 85,
+      "commands": [
+        {
+          "command": "test:op06",
+          "exitCode": 0
+        },
+        {
+          "command": "verify:op06",
+          "exitCode": 0
+        }
+      ],
+      "newWritesPerMinute": 60,
+      "exactReplayExempt": true,
+      "sessionsAndBalancesUnchanged": true
     }
   },
   "preparedMigration": {
@@ -222,11 +239,11 @@
     "status": "PUSH_AND_REMOTE_CHECK_PENDING"
   },
   "evidence": {
-    "database/launch/021_ad_rewards_test.sql": "bc41df650da0ea8f842c7e03fb9a18fe9c35c3f2fd72e3a33256cd735010df98",
+    "database/launch/021_ad_rewards_test.sql": "d140c6870d0c3be6e64457a797d00b1d7347fa1ed96048ac9fbee7e6a135a670",
     "docs/launch/admin-cms-minimal-ux-plan-2026-11-01.md": "15b3c2eaf2b06e5a7d33e3c1485e894176e6a6a8bbb0fc09bf30713a37218d94",
     "docs/launch/ui-redesign-plan-2026-10-30.md": "fd10047d65f927e24b5016c2bcb2b320575f4a938c0c85990eb3c08087a59c7b",
-    "docs/launch/op06-ad-rewards-contract-2026-11-02.md": "7508c39191902dc7b56cda294a3e507c158cd41bd82615088bebd869312f3951",
-    "docs/launch/op06-ad-rewards-implementation-2026-11-02.md": "e343fb0698ade4032c827a410ea16883a48e5ba7ca4cb3487c0c0236ecd74f1d",
+    "docs/launch/op06-ad-rewards-contract-2026-11-02.md": "22d48be25ff2011e5e729db9c3171989e2a659f325ab4efb00ef3dc1082d74e4",
+    "docs/launch/op06-ad-rewards-implementation-2026-11-02.md": "00790991e28b9417e79157fa565074f5116bb671b49c1c922bab49169721f335",
     "improve37.md": "7c9a327cf36425ef90342e80ee5b0e36176ce50a914a6f10a924b2450bdaccc4",
     "functions/api/public-config.js": "02ed116d9011ffea29034f74a7d98ba85360561a59a9ac97eaebd327982f98db",
     "package.json": "3d80ec6e81e9cf92c021c24cb12c6db1a7499ece86a7827c25af3604e2c0f8c9",
@@ -247,7 +264,7 @@
     "server/providers/internal-test-reward.mjs": "025df1b6472227f46d223c3577670f95f4b80a8b6870f753ce4b2d6aaaac9fe0",
     "scripts/fixtures/op06-db.mjs": "a2793d5925ee297913f60baee497643df1adfb1d08a59718db4d42799110df4d",
     "scripts/verify_op06_rewards_api.test.mjs": "360e7823d00bb591fff5295fa123e1f348ab850b47428d0deeb441e04fef5b46",
-    "scripts/verify_op06_rewards_db.test.mjs": "6bd5965e50801f70e553bc594749d6c1a603f2a6dbec06d42dbb5186f48fd74c",
+    "scripts/verify_op06_rewards_db.test.mjs": "d13ab385fff447098138960e1bec2889e0acb0999c56ff30ebe97c56765b7ce3",
     "scripts/verify_op06_rewards_integration.test.mjs": "a45844c7a0f6a7be5f72fb63f29572dc68cdcc522078770df0973d31d45ecbae",
     "scripts/verify_op06_rewards_provider.test.mjs": "47c100f3cc9f6abac9c34a8093bfe09aa0e445a2cb544151a5be99036a46ed65",
     "scripts/verify_op06_rewards_sandbox.mjs": "20b16228cfc59172bd4fd48821e433eac842f82938755a24d5ae34094cba2760",

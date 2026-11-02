@@ -33,6 +33,16 @@ test('no advertising defaults to 10000KRW/10000P charging without granting or ch
  const unavailable=await f.start();assert.equal(unavailable.availability,'UNAVAILABLE');assert.equal(unavailable.session,null);assert.equal(await count('op06_sessions'),0);assert.equal(await count('op06_grants'),0);assert.deepEqual(await f.wallet(),before);
 });
 
+test('unavailable requests and close writes share a bounded per-user budget while exact retries stay available',async()=>{
+ const requestId=uuid(),first=await f.start(undefined,'AD_REWARD',{requestId});assert.equal(first.availability,'UNAVAILABLE');
+ for(let i=1;i<60;i++)assert.equal((await f.start()).availability,'UNAVAILABLE');
+ error(await f.start(),'RATE_LIMITED',429);error(await f.closeReward(uuid()),'RATE_LIMITED',429);
+ assert.equal((await f.start(undefined,'AD_REWARD',{requestId})).replayed,true);
+ assert.equal(Number((await db.query('select count(*) n from commerce.op06_receipts where actor_id=$1',[reader])).rows[0].n),60);
+ assert.equal((await f.start(undefined,'AD_REWARD',{},otherReader)).availability,'UNAVAILABLE');
+ assert.equal(await count('op06_sessions'),0);assert.equal(await count('op06_grants'),0);assert.equal((await f.wallet()).totalPoints,500);
+});
+
 test('policy changes require current SUPER_ADMIN, strict fields, CAS and immutable exact request receipts',async()=>{
  const state=await f.adminRewards('state'),{id,...p}=state.policy,requestId=uuid(),body={...p,adEnabled:true,revision:state.revision,reason:'명시 정책 변경',requestId};const saved=await f.adminRewards('policy',body);assert.equal(saved.saved,true);assert.equal((await f.adminRewards('policy',body)).replayed,true);error(await f.adminRewards('policy',{...body,adEnabled:false}),'IDEMPOTENCY_CONFLICT',409);
  error(await f.adminRewards('policy',{...body,requestId:uuid()}),'REVISION_CONFLICT',409);error(await f.rewards('admin-state',{},limited),'ADMIN_FORBIDDEN',403);
