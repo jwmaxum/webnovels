@@ -1,3 +1,4 @@
+import {snapshot} from './lib/native-recovery-snapshot.mjs';
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -36,20 +37,7 @@ async function race(database,first,second){
 const request=async(amount=50,id=uuid())=>{const s=await f.payouts('summary');return {amountKrw:amount,policyVersion:s.policy.id,payeeRevision:s.payee.revision,requestId:id};};
 const change=(p,extra={})=>({payoutId:p.id,revision:p.revision,reason:'OP08 합성 경쟁 검증',requestId:uuid(),...extra});
 async function pendingPayout(){await f.prepared();const r=(await f.requestPayout()).payout,a=(await f.transition('approve',r)).payout;return (await f.transition('begin',a)).payout;}
-async function snapshot(db){
- const schemas=['public','auth','storage','authoring','commerce'];
- const tables=(await db.query("select n.nspname schema,c.relname name,c.relrowsecurity rls,c.relforcerowsecurity force_rls,coalesce(c.relacl,acldefault('r',c.relowner))::text acl,pg_get_userbyid(c.relowner) owner from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind='r' order by 1,2",[schemas])).rows;
- const rows={};for(const t of tables){assert(/^[a-z0-9_]+$/.test(t.schema)&&/^[a-z0-9_]+$/.test(t.name));rows[t.schema+'.'+t.name]=(await db.query('select to_jsonb(x)::text data from "'+t.schema+'"."'+t.name+'" x order by to_jsonb(x)::text')).rows.map(x=>x.data);}
- const routines=(await db.query("select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) args,pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,p.proacl::text acl from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname=any($1) and p.prokind='f' order by 1,2,3",[schemas])).rows;
- const policies=(await db.query('select schemaname,tablename,policyname,permissive,roles::text,cmd,qual,with_check from pg_policies where schemaname=any($1) order by 1,2,3',[schemas])).rows;
- const triggers=(await db.query('select n.nspname,c.relname,t.tgname,pg_get_triggerdef(t.oid) definition,t.tgenabled from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and not t.tgisinternal order by 1,2,3',[schemas])).rows;
- const constraints=(await db.query('select n.nspname,c.relname,k.conname,pg_get_constraintdef(k.oid,true) definition from pg_constraint k join pg_class c on c.oid=k.conrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) order by 1,2,3',[schemas])).rows;
- const sequences=(await db.query('select schemaname,sequencename,sequenceowner,data_type::text,start_value::text,min_value::text,max_value::text,increment_by::text,cycle,cache_size::text,last_value::text from pg_sequences where schemaname=any($1) order by 1,2',[schemas])).rows;
- for(const s of sequences){const state=(await db.query('select last_value::text,is_called from "'+s.schemaname+'"."'+s.sequencename+'"')).rows[0];Object.assign(s,state);}
- const grants=(await db.query("select n.nspname,c.relname,c.relkind,coalesce(c.relacl,acldefault(case when c.relkind='S' then 's'::char else 'r'::char end::\"char\",c.relowner))::text relacl from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname=any($1) and c.relkind in ('r','S') order by 1,2",[schemas])).rows;
- const defaults=(await db.query('select pg_get_userbyid(d.defaclrole) owner,coalesce(n.nspname,\'\') schema,d.defaclobjtype,d.defaclacl::text from pg_default_acl d left join pg_namespace n on n.oid=d.defaclnamespace order by 1,2,3')).rows;
- return {tables,rows,routines,policies,triggers,constraints,sequences,grants,defaults};
-}
+
 try{
  await cluster.createDatabase('op08_template');current=await connect('op08_template');f=await setup({dbFactory:async()=>proxy});await close(current);
  await scenario('same request replay across two native connections',async database=>{await f.prepared();const body=await request();const [a,b]=await race(database,c=>rpc(c,'request',body),c=>rpc(c,'request',body));assert(a.payout);assert.equal(b.payout.id,a.payout.id);assert.equal(b.replayed,true);assert.equal((await f.payouts('summary')).summary.reservedKrw,50);});

@@ -1,0 +1,91 @@
+{
+  "stage": "OP-09",
+  "checkedAt": "2026-11-02T09:30:53.814Z",
+  "build": "PASS_SEGMENTED_RELEASE_AND_COMPILE",
+  "initialBuildExit": 1,
+  "initialBlocker": "Windows sandbox EPERM creating stage26 test symlink; resumed stage26 onward with escalation",
+  "releaseCommands": 59,
+  "types": "PASS",
+  "op09Tests": 8,
+  "lint": "NOT_CONFIGURED",
+  "numericCoverage": "NOT_MEASURED",
+  "audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "syntax": "PASS",
+  "secretPatternScan": "PASS",
+  "native": {
+    "stage": "OP-09",
+    "result": "PASS",
+    "provenance": "INDEPENDENT_NATIVE_SYNTHETIC",
+    "productionTouched": false,
+    "hostedRestoreVerified": false,
+    "storageServiceVerified": false,
+    "steps": [
+      "SOURCE_STOPPED_BEFORE_RESTORE",
+      "ROWS_CATALOG_ACL_RLS_SEQUENCES_MATCH",
+      "SYNTHETIC_OBJECT_BYTES_AND_METADATA_MATCH",
+      "ROLE_DENIAL_AND_UNKNOWN_IDEMPOTENT_RECONCILIATION"
+    ],
+    "engine": "postgres (PostgreSQL) 17.11",
+    "tables": 103,
+    "routines": 98,
+    "policies": 3,
+    "sequences": 4,
+    "syntheticObjects": 3,
+    "syntheticObjectBytes": 237,
+    "archiveSha256": "077eb3c5ab14d64d516f34c312f394e20ecf84ccd0945d3fd34752b8835c59bb",
+    "elapsedMs": 155352,
+    "limitations": [
+      "Two local clusters on the same PC; not a separate hosted fault domain",
+      "Synthetic Auth/Storage SQL and invented object bytes, not Supabase Auth service or Storage HTTP acceptance",
+      "Elapsed time is a synthetic drill, not production RPO/RTO"
+    ]
+  },
+  "externalPrerequisites": {
+    "stage": "OP-09",
+    "checkedAt": "2026-11-02T08:53:55.719Z",
+    "payout": {
+      "stage": "OP-09",
+      "kind": "READ_ONLY_PAYOUT_QUERY",
+      "providerCalled": false,
+      "ledgerWritten": false,
+      "liveReady": false,
+      "result": "BLOCKED",
+      "reason": "PAYOUT_TEST_KEY_MISSING"
+    },
+    "restore": {
+      "status": "BLOCKED",
+      "blockers": [
+        "ISOLATED_TARGET_NOT_CONFIGURED"
+      ],
+      "emptyTargetVerified": false,
+      "restoreExecuted": false,
+      "hostedRestoreAccepted": false
+    },
+    "liveReady": false
+  },
+  "browser": "NOT_RUN",
+  "productionDatabaseChanged": false,
+  "flagsChanged": false,
+  "sourceHashes": {
+    ".github/workflows/ci.yml": "c7faed8e583446525878b9d2b9c0969c7fc3cb34a66298432f92540242399973",
+    "package.json": "65d6655475104ea1d5c12822e6eef3724533d914403669f1c0c8f3623608245c",
+    "package-lock.json": "888cc4fbbee2d01d2eee2b055492dd3c1cd1a0e1c547bd923d8ba5ebbc0899ac",
+    "scripts/lib/recovery-evidence.mjs": "030e588284c9d3b238db01e7566f2bd7d7bbeb42b543d62e21a25770e3a05121",
+    "scripts/lib/native-recovery-snapshot.mjs": "c9b59c6c3f6bc3b7c0c7c7114f780f6eed085181b1a3556851653e698760fc03",
+    "scripts/lib/op09-payout-probe.mjs": "105861185d5092191e4999d6497566d2b8e864b726e1bd5d698ec570d77ce925",
+    "scripts/verify_op08_native.mjs": "0d58e702ac22cc38a6d7e8649490f64843c51ed3eb6b69d5d21adee69377a8bb",
+    "scripts/verify_op09_payouts.test.mjs": "780e836f5ff89a652f3033ef2851c3400e16f57413c3a9b6e12ade1b8b3d128d",
+    "scripts/verify_op09_validation.test.mjs": "cfa54535aef9b1a5a4ec7d0053769689b4edf7d812514a09f563546e1b21e7c9",
+    "scripts/verify_op09_prerequisites.mjs": "8d6cb2b4f3af7c7fad6e0bdeab8d6cb29dce754207862d2abfe8a29944286c2c",
+    "scripts/verify_op09_recovery.mjs": "bdca1815d11d757cbb1f83b0645c357ab696a66e2b0c979c2d8aa6f73d58d32c",
+    "server/providers/payouts-toss-test.mjs": "5dae186db8e31080ab06da3e18b9dc05a727f58895159f4f8abced62bf621895"
+  },
+  "delivery": "PENDING_PUSH"
+}

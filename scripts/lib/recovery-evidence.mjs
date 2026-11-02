@@ -20,7 +20,7 @@ const entrySchema=z.object({requestId:uuid,workId:id,authorId:id,draftId:uuid,ep
  reviewRevision:revision,reviewStatus:z.enum(['PENDING','HOLD','REJECTED','READY_FOR_RESTORE_REVIEW']),contextDigest:md5,
  submitted:body,imported:body,submittedSha256:digest,importedSha256:digest,sourceDigest:digest,
  imageCount:z.number().int().nonnegative(),blockedReasons:z.array(z.string()).max(30),
- source:z.record(z.union([z.string(),z.array(z.string()),z.null()]))}).strict();
+ source:z.record(z.string(),z.union([z.string(),z.array(z.string()),z.null()]))}).strict();
 const packetSchema=z.object({format:z.literal('webnovels-recovery-evidence-packet-v1'),projectRef:z.string().regex(/^[a-z0-9]{20}$/),
  snapshotSha256:digest,capturedAt:z.string().datetime({offset:true}),helperSha256:digest,seedSha256:digest,
  missingPrerequisites:z.array(z.string()).max(100),entries:z.array(entrySchema).max(1000)}).strict();
