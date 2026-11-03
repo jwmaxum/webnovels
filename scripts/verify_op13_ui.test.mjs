@@ -37,7 +37,7 @@ test('OP13 bank upload confirmation, password clearing, reset and late response 
 test('OP13 integration preserves role routes and safe DOM, account reset and hidden entry',()=>{
  assert(!/innerHTML|localStorage|sessionStorage|fetch\(/.test(code));assert(code.includes("notice.setAttribute('aria-live','polite')"));
  for(const p of ['public/js/core/auth-session.js','public/js/creator/creator-dashboard.js','public/js/admin/admin-console.js'])assert(readFileSync(p,'utf8').includes('LiveCommerce?.reset()'));
- const html=readFileSync('public/index.html','utf8');assert(html.includes('id="liveCommerceReader"'));assert(html.includes('data-live-commerce-entry hidden'));assert(html.includes('/js/shared/live-commerce.js?v=20261103op13'));
+ const html=readFileSync('public/index.html','utf8');assert(html.includes('id="liveCommerceReader"'));assert(html.includes('data-live-commerce-entry hidden'));assert(html.includes('/js/shared/live-commerce.js?v=20261103op13b'));
 });
 test('OP13 webtoon uses the shared responsive lazy viewer; logout destroys content and balances',async()=>{
  let disposed=0,renderer;const f=fixture({handler:b=>b.action==='episodes'?{episodes:[{id:'11',number:1,title:'웹툰 1화',price:0,owned:false}]}:b.action==='quote'?{price:0}:b.action==='content'?{title:'웹툰 1화',contentType:'WEBTOON',versionId:randomUUID(),panels:[{id:randomUUID(),format:'webp',order:0,width:800,height:1000}]}:undefined});f.state.works=[{id:'1',title:'그림 이야기',type:'WEBTOON'}];
@@ -52,4 +52,8 @@ test('OP13 reader redirects only on the server commerce guard; other works retai
   const context={window,document,console:{warn(){}},history:{pushState(){}},encodeURIComponent,showToast(){},activeWork:null,refreshReaderCatalog:async()=>{},getPublishedWorks:()=>[{id:'1',genre:[],episodes:[{id:'11',episodeNumber:1,isFree:true}]}],switchWebNovelsView:view=>{window.currentActiveView=view;},fetch:async path=>{fetches.push(path);return {ok:false,status:409,json:async()=>({error:denied})};}};
   vm.runInNewContext(code,context);await window.openReaderDirect('1',1);assert.deepEqual(fetches,['/api/v2/episodes/11/content']);assert.equal(renders.length,denied==='LIVE_COMMERCE_ROUTE_REQUIRED'?1:0);
  }
+});
+test('OP13 successful purchase refreshes displayed wallet balance from the server result',async()=>{
+ const f=fixture({handler:b=>b.action==='episodes'?{episodes:[{id:'11',number:3,title:'3화',price:100,owned:false}]}:b.action==='quote'?{id:randomUUID(),price:100,balance:10000}:b.action==='purchase'?{balance:9900}:b.action==='content'?{title:'3화',contentType:'NOVEL',content:'합성 본문',contentDocument:null,versionId:randomUUID(),panels:[]}:undefined});f.state.works=[{id:'1',title:'이야기',type:'NOVEL'}];
+ await f.render();await all(f.root).find(n=>n.tag==='button'&&n.textContent==='이야기 · 웹소설').onclick();await all(f.root).find(n=>n.tag==='button'&&n.textContent==='가격 확인 후 구매').onclick();field(f,'가격과 유료 열람에 동의합니다.').checked=true;await all(f.root).find(n=>n.tag==='button'&&n.textContent==='100P 사용하여 읽기').onclick();assert(all(f.root).some(n=>n.tag==='h3'&&n.textContent==='9,900P'));assert.match(f.root.textContent,/합성 본문/);
 });

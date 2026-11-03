@@ -11,7 +11,7 @@
  function input(parent,label,type='text',value=''){const l=el(parent,'label',null,'form-group');el(l,'span',label);const n=el(l,'input',null,'form-input');n.type=type;n.value=value;n.required=true;if(type==='checkbox')n.className='';return n;}
  async function imageData(file){if(!file||!['image/png','image/jpeg'].includes(file.type)||file.size>150000)throw Error('INVALID_IMAGE');const bytes=new Uint8Array(await file.arrayBuffer());let str='';for(let i=0;i<bytes.length;i+=8192)str+=String.fromCharCode(...bytes.subarray(i,i+8192));return {mime:file.type,data:btoa(str)};}
  async function render(root,{role='reader',isCurrent=()=>true,workId=null,episodeNumber=null}={}){
-  reset();if(!root)return;if(!active()){root.textContent='포인트·정산 서비스는 아직 활성화되지 않았습니다.';return;}roots.add(root);const seq=generation,owner=window.WebNovelsAuth?.getActor()?.userId;let busy=false,offset=0,query='',policy=null;
+  reset();if(!root)return;if(!active()){root.textContent='포인트·정산 서비스는 아직 활성화되지 않았습니다.';return;}roots.add(root);const seq=generation,owner=window.WebNovelsAuth?.getActor()?.userId;let busy=false,offset=0,query='',policy=null,walletHeading=null;
   const valid=()=>seq===generation&&active()&&isCurrent()&&owner===window.WebNovelsAuth?.getActor()?.userId;
   root.replaceChildren();const section=el(root,'section',null,'live-commerce'),notice=el(section,'p','불러오는 중입니다.');notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');const body=el(section,'div');
   if(!owner){notice.textContent='로그인 후 이용해 주세요.';return;}
@@ -69,7 +69,7 @@
     el(body,'p','현재 신청 가능 수익 '+data.available.toLocaleString()+'원');el(body,'p',data.bankConfirmed?'계좌 검토 완료':'계좌·신원 검토가 필요합니다.');
     if(data.available>0&&data.bankConfirmed)form(body,'정산 신청','request',{binding:data.binding});payoutRows(body,data.payouts);
    }else{
-    el(body,'h3',data.balance.toLocaleString()+'P');if(data.instructions){el(body,'p',data.instructions.text);form(body,'10,000원 충전 주문 만들기','order',{destinationHash:data.instructions.destinationHash});}else el(body,'p','입금 안내가 준비되지 않았습니다.');
+    walletHeading=el(body,'h3',data.balance.toLocaleString()+'P');if(data.instructions){el(body,'p',data.instructions.text);form(body,'10,000원 충전 주문 만들기','order',{destinationHash:data.instructions.destinationHash});}else el(body,'p','입금 안내가 준비되지 않았습니다.');
     for(const o of data.orders)el(body,'p',`주문 ${o.id} · ${o.amount}원 · ${o.confirmed?'충전 완료':'입금 확인 대기'}`);
     el(body,'p','환불은 문의하기에서 주문 ID와 함께 요청해 주세요. 계좌번호·신분증은 문의 본문에 입력하지 마세요.');
     for(const w of data.works)button(body,w.title+' · '+(w.type==='WEBTOON'?'웹툰':'웹소설'),()=>episodes(w.id));
@@ -80,7 +80,7 @@
   async function episodes(id,offset=0){try{const result=await api('reader','episodes',{workId:id,offset});if(!valid())return;const old=body.querySelector('[data-live-episodes]');old?.remove();const box=el(body,'section');box.setAttribute('data-live-episodes','');el(box,'h3','회차 목록');for(const ep of result.episodes){const row=el(box,'article');el(row,'p',`${ep.number}화 ${ep.title} · ${ep.owned?'구매 완료':ep.price===0?'무료':ep.price+'P'}`);button(row,ep.owned||ep.price===0?'읽기':'가격 확인 후 구매',()=>open(ep,row));}if(offset)button(box,'이전 회차',()=>episodes(id,Math.max(0,offset-30)));if(result.episodes.length===30)button(box,'다음 회차',()=>episodes(id,offset+30));if(episodeNumber){const ep=result.episodes.find(e=>e.number===Number(episodeNumber));episodeNumber=null;if(ep)await open(ep,box);}}catch(e){if(valid())notice.textContent=errorText(e);}}
   async function open(ep,parent){if(busy)return;busy=true;try{
    const q=await api('reader','quote',{episodeId:ep.id});if(!valid())return;
-   if(q.price>0){const box=el(parent,'section');el(box,'p',`차감 ${q.price}P · 잔액 ${q.balance}P · 확인 가격 5분 유효`);const confirm=input(box,'가격과 유료 열람에 동의합니다.','checkbox');const requestId=crypto.randomUUID();button(box,q.price+'P 사용하여 읽기',async()=>{if(!valid()||busy||!confirm.checked)return;busy=true;try{await api('reader','purchase',{quoteId:q.id,requestId});if(valid()){box.replaceChildren();await read(ep.id,parent);}}catch(e){if(valid())notice.textContent=errorText(e);}finally{busy=false;}});
+   if(q.price>0){const box=el(parent,'section');el(box,'p',`차감 ${q.price}P · 잔액 ${q.balance}P · 확인 가격 5분 유효`);const confirm=input(box,'가격과 유료 열람에 동의합니다.','checkbox');const requestId=crypto.randomUUID();button(box,q.price+'P 사용하여 읽기',async()=>{if(!valid()||busy||!confirm.checked)return;busy=true;try{const purchased=await api('reader','purchase',{quoteId:q.id,requestId});if(valid()){if(walletHeading)walletHeading.textContent=purchased.balance.toLocaleString()+'P';box.replaceChildren();await read(ep.id,parent);}}catch(e){if(valid())notice.textContent=errorText(e);}finally{busy=false;}});
    }else await read(ep.id,parent);
   }catch(e){if(valid())notice.textContent=errorText(e);}finally{busy=false;}}
   async function read(episodeId,parent){const data=await api('reader','content',{episodeId});if(!valid())return;const article=el(parent,'article',null,'points-test-content');el(article,'h3',data.title);if(data.contentType==='NOVEL'){if(window.ReaderContent?.render)window.ReaderContent.render(article,null,{content:data.content,contentDocument:data.contentDocument,version:data.versionId});else el(article,'p',data.content);return;}

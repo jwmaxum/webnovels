@@ -7,8 +7,8 @@
     "cloudflareFunctionsBundle": "PASS (6 entrypoints)",
     "targetedRegression": {
       "files": 68,
-      "uniqueTests": 744,
-      "finalPassed": 744,
+      "uniqueTests": 745,
+      "finalPassed": 745,
       "finalFailed": 0,
       "initial": {
         "tests": 726,
@@ -25,20 +25,20 @@
         "failed": 0
       },
       "finalUI": {
-        "passed": 22,
+        "passed": 23,
         "failed": 0,
         "files": [
           "scripts/verify_op13_ui.test.mjs",
           "scripts/verify_ui_r4_reader.test.mjs",
           "scripts/verify_ui_r4_webtoon.test.mjs"
         ],
-        "op13Passed": 6,
+        "op13Passed": 7,
         "additionalReaderTests": 16,
-        "additionalOP13Tests": 2
+        "additionalOP13Tests": 3
       }
     },
     "op13": {
-      "passed": 16,
+      "passed": 17,
       "failed": 0
     },
     "nativePostgres": {
