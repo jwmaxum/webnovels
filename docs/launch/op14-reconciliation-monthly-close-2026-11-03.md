@@ -72,3 +72,9 @@ search-first 연구 에이전트와 제한된 저장소 검색으로 기존 Zod�
 - 네이티브 PostgreSQL 17.11에서 보류/입금 확정 경쟁, 재증빙 중복 승인, 월마감 중복 승인, 비공개 증빙·마감·ACL 복원 4개 시나리오 통과. 첫 로컬 DB 연결은 샌드박스 EACCES로 제한돼 허용된 임시 클러스터 권한으로 재실행했다.
 - 컴파일·TypeScript·Functions 6개 번들·변경 구문/보안/diff 검사 통과. npm audit 취약점 0건. 별도 lint와 coverage 설정은 없으며 로컬 전체 release 연속 실행은 하지 않았다.
 - 운영 DB/키/플래그/SMTP/scheduler·실제 자금·제공자·브라우저 인수는 변경/실행하지 않았다.
+
+## 원격 반영
+
+제품 커밋 `56ddccd`을 main에 정상 push했다. [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41584688420)의 전체 release 빌드·테스트·보안 감사 및 네이티브 정산 복원 검사가 성공했다.
+
+Cloudflare 배포와 두 공개 도메인의 최종 파일·금융 API 비활성·비인증 관리자 차단 HTTP 검증도 통과했다. 운영 DB·키·금융 플래그·실제 자금·메일은 변경하지 않았다.
