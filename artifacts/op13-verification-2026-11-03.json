@@ -78,11 +78,11 @@
   "remote": {
     "gitPush": "SUCCESS",
     "githubCI": "PASS",
-    "cloudflarePages": "IN_PROGRESS",
-    "finalPublicHttpAcceptance": "PENDING"
+    "cloudflarePages": "SUCCESS",
+    "finalPublicHttpAcceptance": "PASS"
   },
   "delivery": {
-    "checkedAt": "2026-11-03T01:39:58.998Z",
+    "checkedAt": "2026-11-03T04:59:40.874Z",
     "commit": "d0fb3bed93354fd8f23c1f0d5cf7002f985f2928",
     "push": "SUCCESS",
     "github": [
@@ -95,6 +95,12 @@
     ],
     "checks": [
       {
+        "name": "Cloudflare Pages",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/runs/125672443378"
+      },
+      {
         "name": "native-settlement-recovery",
         "status": "completed",
         "conclusion": "success",
@@ -105,12 +111,6 @@
         "status": "completed",
         "conclusion": "success",
         "url": "https://github.com/jwmaxum/webnovels/actions/runs/41556632878/job/125657008323"
-      },
-      {
-        "name": "Cloudflare Pages",
-        "status": "in_progress",
-        "conclusion": null,
-        "url": "https://github.com/jwmaxum/webnovels/runs/125657004523"
       }
     ],
     "cloudflare": {
@@ -118,9 +118,9 @@
       "commit": "d0fb3bed93354fd8f23c1f0d5cf7002f985f2928",
       "environment": "production",
       "url": "https://6d1cc824.webnovels-db4.pages.dev",
-      "stageStartedAt": "2026-11-03T01:12:40.615426Z",
-      "latestStage": "build",
-      "status": "active",
+      "stageStartedAt": "2026-11-03T01:40:59.495769Z",
+      "latestStage": "deploy",
+      "status": "success",
       "stages": [
         {
           "name": "queued",
@@ -136,61 +136,27 @@
         },
         {
           "name": "build",
-          "status": "active"
+          "status": "success"
         },
         {
           "name": "deploy",
-          "status": "idle"
+          "status": "success"
         }
-      ],
-      "progress": {
-        "entries": 9,
-        "includesContainerLogs": true,
-        "total": 9,
-        "lastPhases": [
-          {
-            "at": "2026-11-03T01:12:40.041761Z",
-            "phase": "other build log"
-          },
-          {
-            "at": "2026-11-03T01:12:40.042225Z",
-            "phase": "other build log"
-          },
-          {
-            "at": "2026-11-03T01:12:40.065709Z",
-            "phase": "Success"
-          }
-        ],
-        "lastCommands": [],
-        "nonzeroTestFailureSummaries": 0
-      }
+      ]
     },
-    "intermediateHttp": {
-      "checkedAt": "2026-11-03T01:13:44.837Z",
-      "passed": false,
+    "http": {
+      "checkedAt": "2026-11-03T05:00:17.002Z",
+      "passed": true,
       "results": [
         {
           "origin": "https://webnovels-db4.pages.dev",
           "emailTransformationVerified": false,
-          "findings": [
-            {
-              "code": "DEPLOYED_CONTENT_DIFFERS",
-              "path": "/js/shared/live-commerce.js?v=20261103op13b"
-            },
-            {
-              "code": "DEPLOYED_CONTENT_DIFFERS",
-              "path": "/"
-            },
-            {
-              "code": "DOCUMENT_REFERENCES_DIFFER",
-              "path": "/"
-            }
-          ],
+          "findings": [],
           "checked": [
             {
               "path": "/",
-              "matchesLocal": false,
-              "verifiedEquivalent": false,
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
               "status": 200
             },
             {
@@ -201,8 +167,8 @@
             },
             {
               "path": "/js/shared/live-commerce.js?v=20261103op13b",
-              "matchesLocal": false,
-              "verifiedEquivalent": false,
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
               "status": 200
             }
           ],
@@ -284,26 +250,13 @@
         },
         {
           "origin": "https://webnovels.uk",
-          "emailTransformationVerified": false,
-          "findings": [
-            {
-              "code": "DEPLOYED_CONTENT_DIFFERS",
-              "path": "/js/shared/live-commerce.js?v=20261103op13b"
-            },
-            {
-              "code": "DEPLOYED_CONTENT_DIFFERS",
-              "path": "/"
-            },
-            {
-              "code": "DOCUMENT_REFERENCES_DIFFER",
-              "path": "/"
-            }
-          ],
+          "emailTransformationVerified": true,
+          "findings": [],
           "checked": [
             {
               "path": "/",
               "matchesLocal": false,
-              "verifiedEquivalent": false,
+              "verifiedEquivalent": true,
               "status": 200
             },
             {
@@ -314,8 +267,8 @@
             },
             {
               "path": "/js/shared/live-commerce.js?v=20261103op13b",
-              "matchesLocal": false,
-              "verifiedEquivalent": false,
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
               "status": 200
             }
           ],
@@ -399,6 +352,6 @@
       "browser": "NOT_RUN",
       "productionFlagsChanged": false
     },
-    "finalDeploymentConfirmed": false
+    "finalDeploymentConfirmed": true
   }
 }

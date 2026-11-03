@@ -60,3 +60,5 @@ jobs:
 
     - name: Verify live manual ledger concurrency and private recovery
       run: npm run verify:op13:native
+    - name: Verify reconciliation, monthly report concurrency and private recovery
+      run: npm run verify:op14:native

@@ -15,13 +15,20 @@ const fail=code=>{throw Object.assign(Error(code),{safeCode:code});};
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
 const knownText=(value,max)=>typeof value==='string'&&value.trim().length>0&&value.length<=max&&!/[\x00-\x1f\x7f]/.test(value);
 const list=config=>typeof config.uri_allow_list==='string'?config.uri_allow_list.split(',').map(x=>x.trim()).filter(Boolean):[];
+const approvedSites=new Set([BETA_SITE_URL,'https://webnovels.uk']);
+function authSite(current,env={}){
+ const explicit=env.BETA_AUTH_SITE_URL;if(explicit!==undefined&&!approvedSites.has(explicit))fail('AUTH_REDIRECT_ORIGIN_NOT_APPROVED');
+ return explicit||(approvedSites.has(current.site_url?.replace(/\/$/,''))?current.site_url.replace(/\/$/,''):BETA_SITE_URL);
+}
+const redirectPatterns=site=>['/?auth=confirm','/?auth=recovery'].map(p=>(site+p).replace('?',String.raw`\?`));
 export function buildAuthPatch(current,env={}){
  if(!object(current)||typeof current.site_url!=='string'||typeof current.mailer_autoconfirm!=='boolean'||
   (current.uri_allow_list!=null&&typeof current.uri_allow_list!=='string'))fail('AUTH_CONFIG_INVALID');
  const existing=list(current);
  if(existing.some(s=>s.length>2048||/[\x00-\x1f\x7f]/.test(s))||existing.length>200)fail('AUTH_REDIRECT_REVIEW_REQUIRED');
  // Preserve existing administrator-approved destinations; never add wildcard hosts/paths.
- const patch={site_url:BETA_SITE_URL,uri_allow_list:[...new Set([...existing,...BETA_REDIRECT_PATTERNS])].join(','),mailer_autoconfirm:false};
+ const site=authSite(current,env);
+ const patch={site_url:site,uri_allow_list:[...new Set([...existing,...redirectPatterns(site)])].join(','),mailer_autoconfirm:false};
  const supplied=SMTP_KEYS.filter(key=>Object.hasOwn(env,key));
  if(!supplied.length)return patch;
  if(supplied.length!==SMTP_KEYS.length||SMTP_KEYS.some(key=>!knownText(env[key],key==='BETA_SMTP_PASS'?4096:512)))fail('BETA_SMTP_ALL_SIX_FIELDS_REQUIRED');
@@ -41,7 +48,7 @@ export function summarizeAuthConfig(current){
  if(!object(current))fail('AUTH_CONFIG_INVALID');
  let siteHostname=null;try{siteHostname=new URL(current.site_url).hostname;}catch{}
  const redirects=list(current),smtpReady=!!(current.smtp_host&&current.smtp_user&&current.smtp_pass&&current.smtp_admin_email&&current.smtp_port);
- const publicRedirectsReady=current.site_url?.replace(/\/$/,'')===BETA_SITE_URL&&BETA_REDIRECT_PATTERNS.every(p=>redirects.includes(p));
+ const site=current.site_url?.replace(/\/$/,'');const publicRedirectsReady=approvedSites.has(site)&&redirectPatterns(site).every(p=>redirects.includes(p));
  const emailConfirmationRequired=current.mailer_autoconfirm===false,signupDisabled=current.disable_signup===true;
  return {siteHostname,publicRedirectsReady,redirectCount:redirects.length,smtpReady,
   smtpHostConfigured:!!current.smtp_host,smtpUserConfigured:!!current.smtp_user,smtpPasswordConfigured:!!current.smtp_pass,

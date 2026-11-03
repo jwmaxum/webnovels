@@ -37,7 +37,7 @@ test('OP13 bank upload confirmation, password clearing, reset and late response 
 test('OP13 integration preserves role routes and safe DOM, account reset and hidden entry',()=>{
  assert(!/innerHTML|localStorage|sessionStorage|fetch\(/.test(code));assert(code.includes("notice.setAttribute('aria-live','polite')"));
  for(const p of ['public/js/core/auth-session.js','public/js/creator/creator-dashboard.js','public/js/admin/admin-console.js'])assert(readFileSync(p,'utf8').includes('LiveCommerce?.reset()'));
- const html=readFileSync('public/index.html','utf8');assert(html.includes('id="liveCommerceReader"'));assert(html.includes('data-live-commerce-entry hidden'));assert(html.includes('/js/shared/live-commerce.js?v=20261103op13b'));
+ const html=readFileSync('public/index.html','utf8');assert(html.includes('id="liveCommerceReader"'));assert(html.includes('data-live-commerce-entry hidden'));assert(html.includes('/js/shared/live-commerce.js?v=20261103op14'));
 });
 test('OP13 webtoon uses the shared responsive lazy viewer; logout destroys content and balances',async()=>{
  let disposed=0,renderer;const f=fixture({handler:b=>b.action==='episodes'?{episodes:[{id:'11',number:1,title:'웹툰 1화',price:0,owned:false}]}:b.action==='quote'?{price:0}:b.action==='content'?{title:'웹툰 1화',contentType:'WEBTOON',versionId:randomUUID(),panels:[{id:randomUUID(),format:'webp',order:0,width:800,height:1000}]}:undefined});f.state.works=[{id:'1',title:'그림 이야기',type:'WEBTOON'}];

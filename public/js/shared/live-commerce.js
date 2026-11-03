@@ -7,12 +7,14 @@
  function button(parent,text,fn){const n=el(parent,'button',text,'btn btn-outline');n.type='button';n.onclick=fn;return n;}
  const messages={INSUFFICIENT_POINTS:'포인트가 부족합니다. 입금 확인 후 다시 이용해 주세요.',INDEPENDENT_REVIEW_REQUIRED:'등록한 관리자와 다른 관리자가 확인해야 합니다.',AMOUNT_MISMATCH:'주문·입금 또는 송금 금액이 일치하지 않습니다.',BANK_REFERENCE_USED:'이미 등록한 은행 거래입니다.',PRICE_CHANGED:'가격 또는 회차가 변경됐습니다. 다시 조회해 주세요.',PAYOUT_NOT_READY:'계좌 확인·수익·승인 상태를 다시 확인해 주세요.',IDEMPOTENCY_CONFLICT:'같은 요청의 입력이 달라졌습니다. 원래 입력으로 결과를 확인해 주세요.',AUTH_REQUIRED:'로그인 후 이용해 주세요.',READER_REQUIRED:'독자 계정으로 로그인해 주세요.',DOCUMENT_UNAVAILABLE:'증빙이 만료되었거나 사용할 수 없습니다.',EPISODE_LOCKED:'포인트로 열람권을 구매해 주세요.'};
  function errorText(e){return messages[e?.code]||'처리 결과를 확인하지 못했습니다. 입력을 유지하고 같은 요청을 다시 확인해 주세요.';}
+ Object.assign(messages,{OP14_CASE_OPEN:'보류 건 또는 재증빙 검토를 먼저 완료해 주세요.',OP14_REVIEW_PENDING:'이미 제출한 재증빙의 검토를 기다려 주세요.',OP14_EVIDENCE_MISMATCH:'기존 거래의 은행 계좌 식별자·거래번호와 일치하지 않습니다.',OP14_TARGET_NOT_READY:'이미 처리되었거나 검토할 수 없는 거래입니다.',OP14_REPORT_CHANGED:'월 내역 또는 마감 버전이 변경됐습니다. 다시 조회해 주세요.',OP14_REPORT_UNCHANGED:'직전 마감과 같은 내역입니다.',OP14_REPORT_TOO_LARGE:'월 내역이 내보내기 한도를 초과합니다. 운영 담당자에게 문의해 주세요.'});
  const api=(role,action,data={},options={})=>window.WebNovelsAuth.api('/api/v2/'+(role==='admin'?'admin/':role==='author'?'creator/':'')+'live-commerce',{method:'POST',body:JSON.stringify({action,...data}),...options});
  function input(parent,label,type='text',value=''){const l=el(parent,'label',null,'form-group');el(l,'span',label);const n=el(l,'input',null,'form-input');n.type=type;n.value=value;n.required=true;if(type==='checkbox')n.className='';return n;}
  async function imageData(file){if(!file||!['image/png','image/jpeg'].includes(file.type)||file.size>150000)throw Error('INVALID_IMAGE');const bytes=new Uint8Array(await file.arrayBuffer());let str='';for(let i=0;i<bytes.length;i+=8192)str+=String.fromCharCode(...bytes.subarray(i,i+8192));return {mime:file.type,data:btoa(str)};}
  async function render(root,{role='reader',isCurrent=()=>true,workId=null,episodeNumber=null}={}){
-  reset();if(!root)return;if(!active()){root.textContent='포인트·정산 서비스는 아직 활성화되지 않았습니다.';return;}roots.add(root);const seq=generation,owner=window.WebNovelsAuth?.getActor()?.userId;let busy=false,offset=0,query='',policy=null,walletHeading=null;
+  reset();if(!root)return;if(!active()){root.textContent='포인트·정산 서비스는 아직 활성화되지 않았습니다.';return;}roots.add(root);const seq=generation,owner=window.WebNovelsAuth?.getActor()?.userId;let busy=false,offset=0,query='',policy=null,walletHeading=null,operationsOpen=false,operationOffset=0,operationFilter='ALL',operationQuery='',loadGeneration=0;
   const valid=()=>seq===generation&&active()&&isCurrent()&&owner===window.WebNovelsAuth?.getActor()?.userId;
+  async function reload(){try{await load();}catch(e){if(valid())notice.textContent=errorText(e);}}
   root.replaceChildren();const section=el(root,'section',null,'live-commerce'),notice=el(section,'p','불러오는 중입니다.');notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');const body=el(section,'div');
   if(!owner){notice.textContent='로그인 후 이용해 주세요.';return;}
   function form(parent,title,action,initial={},fields=[],proof=false){
@@ -29,12 +31,12 @@
    const submit=el(form,'button',title,'btn btn-primary');submit.type='submit';const feedback=el(form,'p');feedback.setAttribute('role','status');
    form.onsubmit=async event=>{event.preventDefault();if(!valid()||busy)return;busy=true;submit.disabled=true;feedback.textContent='처리 중입니다.';
     try{
-     const payload={...initial,...(action==='reveal'?{}:{requestId})};for(const [key,,type]of fields)payload[key]=type==='number'?Number(controls[key].value):type==='datetime-local'?new Date(controls[key].value).toISOString():type==='checkbox'?controls[key].checked:controls[key].value.trim();
+     const payload={...initial,...(['reveal','month-detail'].includes(action)?{}:{requestId})};for(const [key,,type]of fields)payload[key]=type==='number'?Number(controls[key].value):type==='datetime-local'?new Date(controls[key].value).toISOString():type==='checkbox'?controls[key].checked:controls[key].value.trim();
      if(proof){if(!confirmed.checked)throw Error();Object.assign(payload,{documentId,image:await imageData(upload.files[0]),policyHash:policy.hash,policyVersion:policy.version,bankAccountId:account.value.trim(),bankReference:reference.value.trim(),confirmed:true});}
      if(!valid())return;
      if(password)payload.password=password.value;
      const result=await api(role,action,payload);if(password){password.value='';payload.password='';}if(!valid())return;
-     if(action==='reveal')showProof(result,form);else {feedback.textContent='처리했습니다.';await load();}
+     if(action==='reveal')showProof(result,form);else if(action==='month-detail')showReport(result,form);else {feedback.textContent='처리했습니다.';await load();}
     }catch(e){if(valid())feedback.textContent=errorText(e);}finally{if(password)password.value='';busy=false;if(valid())submit.disabled=false;}
    };
   }
@@ -42,6 +44,47 @@
    const box=el(parent,'div');box.setAttribute('data-live-sensitive','');el(box,'p','계좌 식별자 '+data.bankAccountId+' · 은행 거래번호 '+data.bankReference);
    const bytes=Uint8Array.from(atob(data.image.data),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:data.image.mime}));urls.add(url);const img=el(box,'img');img.src=url;img.alt='관리자 확인용 금융 증빙';img.style.maxWidth='100%';
    const close=()=>{URL.revokeObjectURL(url);urls.delete(url);box.replaceChildren();};button(box,'증빙 닫기',close);const t=setTimeout(()=>{timers.delete(t);close();},60000);timers.add(t);
+  }
+  const reasonLabels={MISMATCH:'금액 불일치',EXPIRED:'증빙 만료',OLD_INSTRUCTIONS:'입금 안내 변경',HELD:'보류',REVIEW_PENDING:'재증빙 검토 대기'};
+  const eventLabels={DEPOSIT_RECORDED:'입금 기록 (미확정 포함)',POINTS_CREDITED:'확정 충전',EPISODE_PURCHASED:'회차 구매·발생 수익',REFUND_CONFIRMED:'확정 환불',BANK_REVERSAL_CONFIRMED:'은행 입금 취소',REVENUE_REVERSED:'취소된 작가 수익',PAYOUT_REQUESTED:'정산 신청',PAYOUT_CANCELLED:'정산 신청 취소',PAYOUT_PAID:'송금 완료'};
+  function totals(parent,snapshot){
+   el(parent,'p',snapshot.month+' · 한국 시간 · 장부 기록일 기준 · '+snapshot.events.length+'건');
+   el(parent,'p','미결 보류·재증빙 검토 '+(snapshot.reviewIssues?.length||0)+'건 · 검토가 남아 있으면 마감 승인할 수 없습니다.');
+   el(parent,'p','충전과 작가 수익은 별도입니다. 이 자료는 세무 검토용이며 신고서가 아닙니다. 신청의 원천 구매 목록은 누적 참고 목록으로, 지급별 독점 배분을 뜻하지 않습니다.');
+   for(const t of snapshot.totals)el(parent,'p',`${eventLabels[t.type]} · ${t.count}건 · 금액 ${t.amount}원 · 포인트 ${t.points}P · 작가 수익 ${t.revenue}원`);
+  }
+  function showReport(data,parent){
+   const box=el(parent,'section');box.setAttribute('data-live-sensitive','');el(box,'h4',data.approved?'승인한 월마감':'검토 중인 마감 초안');totals(box,data.snapshot);
+   el(box,'p','기록 ID '+data.id+' · 지문 '+data.digest);
+   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}));urls.add(url);
+   const link=el(box,'a','고정된 마감 자료 내려받기 (JSON)','btn btn-outline');link.href=url;link.download='webnovels-'+data.snapshot.month+'-'+data.id+'.json';
+   const close=()=>{URL.revokeObjectURL(url);urls.delete(url);box.replaceChildren();};button(box,'내역 닫기',close);const timer=setTimeout(()=>{timers.delete(timer);close();},60000);timers.add(timer);
+  }
+  async function operations(parent){
+   const container=el(parent,'section');el(container,'h3','입금 예외 · 월마감 · 운영 준비');
+   try{
+    const [exceptionData,months,ready]=await Promise.all([api('admin','exceptions',{query:operationQuery,filter:operationFilter,offset:operationOffset}),api('admin','month-list',{offset:operationOffset}),api('admin','operations-readiness')]);if(!valid())return;
+    const search=el(container,'form');const text=input(search,'거래·주문·회원 ID','text',operationQuery);text.required=false;
+    const label=el(search,'label');el(label,'span','예외 상태');const filter=el(label,'select',null,'form-input');for(const [value,name]of Object.entries({ALL:'미확정 전체',...reasonLabels})){const option=el(filter,'option',name);option.value=value;option.selected=value===operationFilter;}filter.value=operationFilter;
+    const go=el(search,'button','예외 검색');go.type='submit';search.onsubmit=async e=>{e.preventDefault();if(busy||!valid())return;operationQuery=text.value.trim();operationFilter=filter.value;operationOffset=0;await reload();};
+    if(!exceptionData.items.length)el(container,'p','조건에 맞는 미확정 거래가 없습니다.');
+    for(const order of exceptionData.staleOrders||[])el(container,'p','입금 안내가 변경된 미충전 주문: '+order.id+' · 회원 '+order.userId+' · 기존 안내와 실제 입금을 별도로 대조해야 합니다. 새 주문으로 자동 충전하지 않습니다.');
+    el(container,'p','보류 해제는 포인트 지급이나 환불 완료가 아닙니다. 오연결·부분/초과 입금은 원거래를 변경하지 않고 보류하여 별도 대조하세요.');
+    for(const item of exceptionData.items){const card=el(container,'article',null,'glass-panel');el(card,'h4',(item.kind==='DEPOSIT'?'입금':'환불·취소')+' · '+item.amount.toLocaleString()+'원');el(card,'p',item.id+' · 주문 '+item.orderId);el(card,'p',item.reasons.map(r=>reasonLabels[r]).join(' / ')||'독립 확인 대기');
+     form(card,'현재 증빙 확인','reveal',{documentId:item.documentId});
+     if(!item.cases.length)form(card,'보류 사유 등록','case-open',{kind:item.kind,targetId:item.id},[['reasonRef','검토 문서·문의 참조 (개인정보 제외)','text','']]);
+     for(const c of item.cases){el(card,'p','보류 근거 '+c.reasonRef);if(c.actorId!==owner)form(card,'독립 대조 후 보류 해제','case-resolve',{caseId:c.id},[['reasonRef','해제 검토 문서 참조','text','']]);else el(card,'p','다른 관리자가 보류 해제를 검토합니다.');}
+     if(!item.proofs.length)form(card,'같은 은행 거래의 재증빙 제출','reproof',{kind:item.kind,targetId:item.id},[['reasonRef','재증빙 사유 문서 참조','text','']],true);
+     for(const p of item.proofs){el(card,'p','재증빙 사유 '+p.reasonRef);form(card,'제출한 재증빙 보기','reveal',{documentId:p.documentId});if(p.actorId!==owner){form(card,'재증빙 승인','review-reproof',{proofId:p.id,approved:true});form(card,'재증빙 반려','review-reproof',{proofId:p.id,approved:false});}else el(card,'p','다른 관리자가 재증빙을 검토합니다.');}
+    }
+    const nav=el(container,'nav');button(nav,'이전 예외·마감 목록',async()=>{if(busy||!valid())return;operationOffset=Math.max(0,operationOffset-30);await reload();});button(nav,'다음 예외·마감 목록',async()=>{if(busy||!valid())return;operationOffset+=30;await reload();});
+    const closeSection=el(container,'section');el(closeSection,'h3','월별 정산 자료');const preview=el(closeSection,'form');const month=input(preview,'조회 월 (한국 시간)','month');const submit=el(preview,'button','월 내역 조회');submit.type='submit';const previewBody=el(closeSection,'div');
+    preview.onsubmit=async e=>{e.preventDefault();if(busy||!valid())return;busy=true;submit.disabled=true;try{const data=await api('admin','month-preview',{month:month.value});if(!valid())return;previewBody.replaceChildren();totals(previewBody,data.snapshot);form(previewBody,data.previousId?'마감 수정본 작성':'마감 초안 작성','month-draft',{month:data.snapshot.month,expectedDigest:data.digest,previousId:data.previousId},[['reasonRef','마감 검토 근거 문서 참조','text','']]);el(previewBody,'p','지난달까지 마감할 수 있습니다. 기존 승인 자료는 수정하지 않고 수정본을 새로 남깁니다.');}catch(e){if(valid())notice.textContent=errorText(e);}finally{busy=false;if(valid())submit.disabled=false;}};
+    for(const report of months.reports){const card=el(closeSection,'article');el(card,'h4',report.month+' · '+(report.approved?'승인 완료':'검토 중'));el(card,'p',report.id+(report.previousId?' · 이전 마감 '+report.previousId:''));form(card,'마감 내역·다운로드 준비','month-detail',{reportId:report.id});if(!report.approved&&report.actorId!==owner)form(card,'월마감 독립 승인','month-approve',{reportId:report.id,expectedDigest:report.digest});}
+    const readiness=el(container,'details');el(readiness,'summary','운영 준비 상태');el(readiness,'p','활성 표시 최고 관리자 '+ready.activeSuperAdmins+'명 · 보류 '+ready.openCases+'건 · 재증빙 대기 '+ready.pendingProofs+'건');
+    const config=ready.configuration;el(readiness,'p','암호화 쓰기 키 '+(config.keys.activeVersion||'미설정')+' · 읽기 키 '+config.keys.readVersions.join(', ')+' · 은행 거래 중복 판정 키 v1 유지');for(const key of ready.documentKeys)el(readiness,'p',key.version+' 정산 개인정보·증빙 '+key.count+'건');if(config.keys.missingReadVersions?.length)el(readiness,'p','읽기 키 누락: '+config.keys.missingReadVersions.join(', '));
+    el(readiness,'p','SMTP 설정 '+(config.smtp.configurationPresent?'입력됨':'미입력')+' · 메일 도착 검증 미확인 · 금융 알림 미연결');el(readiness,'p','별도 복원 근거 '+(config.hostedRestoreEvidencePresent?'입력됨':'미입력')+' · 실거래 인수 근거 '+(config.bankAcceptanceEvidencePresent?'입력됨':'미입력'));el(readiness,'p','설정·근거의 존재만 표시합니다. 실거래 성공이나 워커 배포 완료를 보장하지 않습니다.');
+   }catch(e){if(valid())el(container,'p',errorText(e));}
   }
   function payoutRows(parent,rows){for(const p of rows){const card=el(parent,'article',null,'glass-panel');el(card,'h3',(p.penName||'작가')+' · '+p.gross.toLocaleString()+'원');el(card,'p',`신청 ${p.id} · ${p.status} · 공제 ${p.deduction??'미확정'}원 · 송금 ${p.net??'미확정'}원`);
    if(role!=='admin')continue;
@@ -51,7 +94,8 @@
    if(p.documentId)form(card,'송금 증빙 확인','reveal',{documentId:p.documentId});
   }}
   async function load(){
-   const data=await api(role,role==='admin'?'list':'state',role==='admin'?{query,offset}:role==='reader'?{offset}:{});if(!valid())return;
+   const ticket=++loadGeneration;
+   const data=await api(role,role==='admin'?'list':'state',role==='admin'?{query,offset}:role==='reader'?{offset}:{});if(!valid()||ticket!==loadGeneration)return;
    for(const fn of cleanups)fn();cleanups.clear();for(const u of urls)URL.revokeObjectURL(u);urls.clear();body.replaceChildren();notice.textContent='';el(body,'h2',role==='admin'?'입금·실수익·외부 송금 관리':role==='author'?'실제 정산 내역':'포인트 충전·작품 읽기');
    el(body,'p',role==='reader'?'회원은 1~2화를 무료로 읽습니다. 10,000원 충전 시 10,000P가 지급되며, 회차별 표시된 포인트를 사용합니다.':'은행자료를 관리자가 대조하는 수동 처리입니다. 등록과 확인은 서로 다른 관리자가 담당합니다.');
    if(role==='admin'){
@@ -65,6 +109,7 @@
     const corrections=el(body,'details');el(corrections,'summary','환불·입금 취소 대사');el(corrections,'p','환불은 미사용 잔액 전액만 접수합니다. 은행 입금 취소는 해당 충전 10,000원 전체와 연결된 열람·수익을 정정합니다. 실제 은행 처리를 먼저 확인하세요.');
     for(const kind of ['REFUND','BANK_REVERSAL'])form(corrections,kind==='REFUND'?'외부 환불 기록':'은행 입금 취소 기록','correction',{kind},[['lotId','충전 원장 ID','text',''],['amount','확인한 환불·취소 금액 (원)','number','']],true);
     for(const c of data.corrections){el(corrections,'p',`${c.kind} · ${c.amount}원 · ${c.id}`);form(corrections,'정정 증빙 확인','reveal',{documentId:c.documentId});form(corrections,'정정 확정','confirm-correction',{correctionId:c.id});form(corrections,'오접수 정정 반려','reject-correction',{correctionId:c.id});}
+    if(operationsOpen)await operations(body);else button(body,'입금 예외·월마감·운영 준비 열기',async()=>{if(busy||!valid())return;operationsOpen=true;await reload();});
    }else if(role==='author'){
     el(body,'p','현재 신청 가능 수익 '+data.available.toLocaleString()+'원');el(body,'p',data.bankConfirmed?'계좌 검토 완료':'계좌·신원 검토가 필요합니다.');
     if(data.available>0&&data.bankConfirmed)form(body,'정산 신청','request',{binding:data.binding});payoutRows(body,data.payouts);

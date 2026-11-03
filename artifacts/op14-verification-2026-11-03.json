@@ -1,0 +1,111 @@
+{
+  "stage": "OP-14",
+  "scope": "Private reconciliation and reproof, immutable monthly snapshots, prospective encryption keyring and SMTP readiness",
+  "local": {
+    "buildCompile": "PASS",
+    "typeCheck": "PASS",
+    "cloudflareFunctionsBundle": "PASS (6 entrypoints)",
+    "targetedRegression": {
+      "files": 23,
+      "uniqueTests": 168,
+      "finalPassed": 168,
+      "finalFailed": 0,
+      "initial": {
+        "tests": 166,
+        "passed": 166,
+        "failed": 0
+      },
+      "finalScoped": {
+        "tests": 21,
+        "passed": 21,
+        "failed": 0
+      }
+    },
+    "op14NewTests": 14,
+    "nativePostgres": {
+      "stage": "OP-14",
+      "result": "PASS",
+      "engine": "postgres (PostgreSQL) 17.11",
+      "steps": [
+        "hold committed before deposit confirmation prevents credit",
+        "concurrent reproof reviews approve once and preserve the original document",
+        "monthly approval serializes and cannot fork the approved revision chain",
+        "archive restores reconciliation, encrypted reproof, immutable monthly snapshots and ACLs"
+      ],
+      "provenance": "NATIVE_POSTGRES_SYNTHETIC",
+      "productionTouched": false,
+      "realMoneyMovement": false,
+      "hostedRestoreVerified": false
+    },
+    "dependencyVulnerabilities": 0,
+    "syntaxSecurityDiff": {
+      "result": "PASS",
+      "syntaxFiles": 12,
+      "issues": [],
+      "reviewedFiles": 21,
+      "scope": "Changed source syntax, secret patterns, safe DOM, financial source preservation, grants/RLS, reauth, immutable snapshots, reproof and stable HMAC"
+    },
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "continuousFullRelease": "NOT_RUN_LOCALLY"
+  },
+  "readiness": {
+    "stage": "OP-14",
+    "checkedAt": "2026-11-03T05:12:13.852Z",
+    "configuration": {
+      "keys": {
+        "configured": true,
+        "activeVersion": "v1",
+        "readVersions": [
+          "v1"
+        ],
+        "fingerprintVersion": "v1",
+        "legacyFingerprintKeyRequired": true
+      },
+      "smtp": {
+        "configurationPresent": false,
+        "deliveryVerified": false,
+        "financialNotificationsConnected": false
+      },
+      "hostedRestoreEvidencePresent": false,
+      "bankAcceptanceEvidencePresent": false,
+      "cleanupConfigured": false,
+      "realMoneyVerified": false
+    },
+    "financialProofPolicyConfigured": false,
+    "bankInstructionsConfigured": false,
+    "restore": {
+      "status": "BLOCKED",
+      "blockers": [
+        "ISOLATED_TARGET_NOT_CONFIGURED"
+      ],
+      "emptyTargetVerified": false,
+      "restoreExecuted": false,
+      "hostedRestoreAccepted": false
+    },
+    "auth": {
+      "status": "READ_ONLY_CHECKED",
+      "siteHostname": "webnovels-db4.pages.dev",
+      "publicRedirectsReady": true,
+      "smtpConfigured": false,
+      "deliveryVerified": false
+    },
+    "productionChanged": false,
+    "realMoneyMovement": false,
+    "liveReady": false
+  },
+  "productionDatabaseApplied": false,
+  "productionFlagsChanged": false,
+  "productionKeysRotated": false,
+  "productionSchedulerDeployed": false,
+  "realProviderCalled": false,
+  "realBankProofUploaded": false,
+  "actualBankTransfer": false,
+  "emailSent": false,
+  "browserAcceptance": "NOT_RUN",
+  "remote": {
+    "gitPush": "PENDING",
+    "githubCI": "PENDING",
+    "cloudflarePages": "PENDING"
+  }
+}
