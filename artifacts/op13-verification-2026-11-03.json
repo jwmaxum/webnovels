@@ -76,8 +76,329 @@
   "actualBankTransfer": false,
   "browserAcceptance": "NOT_RUN",
   "remote": {
-    "gitPush": "PENDING",
-    "githubCI": "PENDING",
-    "cloudflarePages": "PENDING"
+    "gitPush": "SUCCESS",
+    "githubCI": "PASS",
+    "cloudflarePages": "IN_PROGRESS",
+    "finalPublicHttpAcceptance": "PENDING"
+  },
+  "delivery": {
+    "checkedAt": "2026-11-03T01:39:58.998Z",
+    "commit": "d0fb3bed93354fd8f23c1f0d5cf7002f985f2928",
+    "push": "SUCCESS",
+    "github": [
+      {
+        "name": "WebNovels CI / Build & Test Workflow",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41556632878"
+      }
+    ],
+    "checks": [
+      {
+        "name": "native-settlement-recovery",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41556632878/job/125657008556"
+      },
+      {
+        "name": "build-and-test",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41556632878/job/125657008323"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/jwmaxum/webnovels/runs/125657004523"
+      }
+    ],
+    "cloudflare": {
+      "id": "6d1cc824-4382-466e-9642-52c95c024def",
+      "commit": "d0fb3bed93354fd8f23c1f0d5cf7002f985f2928",
+      "environment": "production",
+      "url": "https://6d1cc824.webnovels-db4.pages.dev",
+      "stageStartedAt": "2026-11-03T01:12:40.615426Z",
+      "latestStage": "build",
+      "status": "active",
+      "stages": [
+        {
+          "name": "queued",
+          "status": "success"
+        },
+        {
+          "name": "initialize",
+          "status": "success"
+        },
+        {
+          "name": "clone_repo",
+          "status": "success"
+        },
+        {
+          "name": "build",
+          "status": "active"
+        },
+        {
+          "name": "deploy",
+          "status": "idle"
+        }
+      ],
+      "progress": {
+        "entries": 9,
+        "includesContainerLogs": true,
+        "total": 9,
+        "lastPhases": [
+          {
+            "at": "2026-11-03T01:12:40.041761Z",
+            "phase": "other build log"
+          },
+          {
+            "at": "2026-11-03T01:12:40.042225Z",
+            "phase": "other build log"
+          },
+          {
+            "at": "2026-11-03T01:12:40.065709Z",
+            "phase": "Success"
+          }
+        ],
+        "lastCommands": [],
+        "nonzeroTestFailureSummaries": 0
+      }
+    },
+    "intermediateHttp": {
+      "checkedAt": "2026-11-03T01:13:44.837Z",
+      "passed": false,
+      "results": [
+        {
+          "origin": "https://webnovels-db4.pages.dev",
+          "emailTransformationVerified": false,
+          "findings": [
+            {
+              "code": "DEPLOYED_CONTENT_DIFFERS",
+              "path": "/js/shared/live-commerce.js?v=20261103op13b"
+            },
+            {
+              "code": "DEPLOYED_CONTENT_DIFFERS",
+              "path": "/"
+            },
+            {
+              "code": "DOCUMENT_REFERENCES_DIFFER",
+              "path": "/"
+            }
+          ],
+          "checked": [
+            {
+              "path": "/",
+              "matchesLocal": false,
+              "verifiedEquivalent": false,
+              "status": 200
+            },
+            {
+              "path": "/js/core/role-modules.js?v=20261103op13",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/shared/live-commerce.js?v=20261103op13b",
+              "matchesLocal": false,
+              "verifiedEquivalent": false,
+              "status": 200
+            }
+          ],
+          "flagsDisabled": true,
+          "checks": [
+            {
+              "path": "/api/v2/live-commerce",
+              "status": 503,
+              "code": "LIVE_COMMERCE_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/live-commerce",
+              "status": 503,
+              "code": "LIVE_COMMERCE_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/live-commerce",
+              "status": 503,
+              "code": "LIVE_COMMERCE_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/settlement-readiness",
+              "status": 503,
+              "code": "SETTLEMENT_READINESS_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/settlement-readiness",
+              "status": 503,
+              "code": "SETTLEMENT_READINESS_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/providers",
+              "status": 401,
+              "code": "AUTH_REQUIRED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payouts-test?action=summary",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payouts-test?action=state",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payout-provider-test",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/payout-provider-test/callback",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            }
+          ]
+        },
+        {
+          "origin": "https://webnovels.uk",
+          "emailTransformationVerified": false,
+          "findings": [
+            {
+              "code": "DEPLOYED_CONTENT_DIFFERS",
+              "path": "/js/shared/live-commerce.js?v=20261103op13b"
+            },
+            {
+              "code": "DEPLOYED_CONTENT_DIFFERS",
+              "path": "/"
+            },
+            {
+              "code": "DOCUMENT_REFERENCES_DIFFER",
+              "path": "/"
+            }
+          ],
+          "checked": [
+            {
+              "path": "/",
+              "matchesLocal": false,
+              "verifiedEquivalent": false,
+              "status": 200
+            },
+            {
+              "path": "/js/core/role-modules.js?v=20261103op13",
+              "matchesLocal": true,
+              "verifiedEquivalent": true,
+              "status": 200
+            },
+            {
+              "path": "/js/shared/live-commerce.js?v=20261103op13b",
+              "matchesLocal": false,
+              "verifiedEquivalent": false,
+              "status": 200
+            }
+          ],
+          "flagsDisabled": true,
+          "checks": [
+            {
+              "path": "/api/v2/live-commerce",
+              "status": 503,
+              "code": "LIVE_COMMERCE_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/live-commerce",
+              "status": 503,
+              "code": "LIVE_COMMERCE_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/live-commerce",
+              "status": 503,
+              "code": "LIVE_COMMERCE_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/settlement-readiness",
+              "status": 503,
+              "code": "SETTLEMENT_READINESS_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/settlement-readiness",
+              "status": 503,
+              "code": "SETTLEMENT_READINESS_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payout-workflow",
+              "status": 503,
+              "code": "MANUAL_PAYOUT_WORKFLOW_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/providers",
+              "status": 401,
+              "code": "AUTH_REQUIRED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/creator/payouts-test?action=summary",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payouts-test?action=state",
+              "status": 503,
+              "code": "SETTLEMENTS_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/admin/payout-provider-test",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            },
+            {
+              "path": "/api/v2/payout-provider-test/callback",
+              "status": 503,
+              "code": "PAYOUT_TEST_NOT_ACTIVATED",
+              "passed": true
+            }
+          ]
+        }
+      ],
+      "browser": "NOT_RUN",
+      "productionFlagsChanged": false
+    },
+    "finalDeploymentConfirmed": false
   }
 }
