@@ -52,6 +52,7 @@
     window.ReaderHub?.reset();
     window.GrowthStudio?.reset();
     window.ReaderSession?.reset();
+    window.LiveCommerce?.reset();
     window.ReaderPointsTest?.reset();
     window.AdminPointsTest?.reset();
     window.ReaderTopups?.reset();

@@ -13,7 +13,7 @@ test('Pages .js config URL returns only public fields, not SPA HTML or bindings'
   const source = await response.text(); assert.ok(!source.includes(env.SUPABASE_SECRET_KEY));
   const context = { window: {} }; vm.runInNewContext(source, context);
   assert.deepEqual(Object.keys(context.window.WEBNOVELS_CONFIG).sort(),
-    ['adRewardsTestEnabled','adminOperationsEnabled','adminRecoveryReviewEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','authorRecoveryEnabled','authorRichTextEnabled','chargingTestEnabled','freeBetaEnabled','growthMeasurementEnabled','growthServiceEnabled','manualPayoutWorkflowEnabled','pointsTestEnabled','publicationChangeReviewEnabled','readerDiscoveryEnabled','readerServiceEnabled','settlementReadinessEnabled','settlementsTestEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
+    ['adRewardsTestEnabled','adminOperationsEnabled','adminRecoveryReviewEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','authorRecoveryEnabled','authorRichTextEnabled','chargingTestEnabled','freeBetaEnabled','growthMeasurementEnabled','growthServiceEnabled','liveCommerceEnabled','manualPayoutWorkflowEnabled','pointsTestEnabled','publicationChangeReviewEnabled','readerDiscoveryEnabled','readerServiceEnabled','settlementReadinessEnabled','settlementsTestEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
   assert.equal(context.window.WEBNOVELS_CONFIG.manualPayoutWorkflowEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.freeBetaEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorRichTextEnabled,false);

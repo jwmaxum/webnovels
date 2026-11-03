@@ -1,3 +1,4 @@
+import {liveCommerceEnabled} from '../../server/live-commerce-policy.mjs';
 import {webtoonEnabled} from '../../server/webtoon-api.mjs';
 import {SECURITY_HEADERS} from '../../server/security-headers.mjs';
 import {growthEnabled,measurementEnabled} from '../../server/growth-api.mjs';
@@ -30,6 +31,7 @@ export function onRequestGet({ env }) {
     adminRecoveryReviewEnabled: recoveryReviewEnabled(env),
     adminWorkflowEnabled: env.ADMIN_WORKFLOW_ENABLED === 'true' && env.ADMIN_OPERATIONS_ENABLED === 'true' && env.P0_API_ENABLED === 'true',
     adminRoleChangesEnabled: env.ADMIN_ROLE_CHANGES_ENABLED === 'true' };
+  config.liveCommerceEnabled = liveCommerceEnabled(env);
   config.freeBetaEnabled = env.FREE_BETA_ENABLED === 'true';
   config.pointsTestEnabled = pointsTestEnabled(env);
   config.chargingTestEnabled = chargingTestEnabled(env);

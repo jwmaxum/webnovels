@@ -10,6 +10,7 @@ window.WEBNOVELS_CONFIG = Object.freeze({
   "settlementsTestEnabled": false,
   "manualPayoutWorkflowEnabled": false,
   "settlementReadinessEnabled": false,
+  "liveCommerceEnabled": false,
   "growthServiceEnabled": false,
   "growthMeasurementEnabled": false,
   "adminWorkflowEnabled": false,

@@ -1431,7 +1431,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       if (window.WebNovelsAuth?.getActor()) response = await window.WebNovelsAuth.api('/api/v2/episodes/' + encodeURIComponent(ep.id) + '/content');
       else {
         const raw = await fetch('/api/v2/episodes/' + encodeURIComponent(ep.id) + '/content', {credentials:'omit'});
-        if (!raw.ok) throw Error('READER_CONTENT_UNAVAILABLE');
+        if (!raw.ok){const denied=await raw.json().catch(()=>({}));throw Object.assign(Error('READER_CONTENT_UNAVAILABLE'),{code:denied.error,status:raw.status});}
         response = await raw.json();
       }
       if(!valid())return;
@@ -1442,6 +1442,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       ep.authorComment = response.episode?.author_comment ?? ep.authorComment;
       versionId=response.versionId||response.episode?.versionId||null;
     } catch (error) {
+      if(valid()&&error?.code==='LIVE_COMMERCE_ROUTE_REQUIRED'&&window.LiveCommerce?.active()){switchWebNovelsView('view-wallet',null,false);if(shouldPushState)history.pushState({},'', '/read/'+encodeURIComponent(workId)+'/'+encodeURIComponent(epNum));return window.LiveCommerce.render(document.getElementById('liveCommerceReader'),{workId:String(workId),episodeNumber:epNum,isCurrent:()=>window.currentActiveView==='view-wallet'});}
       console.warn('[Secure Content Load]', error);
     }
   } else if (window.WebNovelsAdmin?.fetchEpisodeContentSecure) {

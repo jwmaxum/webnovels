@@ -14,7 +14,7 @@ test('settlement management remains keyboard accessible with unique original sum
  const loader=await read('public/js/core/role-modules.js');
  assert(loader.indexOf('/creator-settlement.js?')<loader.indexOf('/creator-dashboard.js?'));
  assert(loader.indexOf('/admin-settlement-review.js?')<loader.indexOf('/admin-console.js?'));
- for(const file of ['creator/creator-settlement','creator/creator-dashboard','creator/creator','admin/admin-settlement-review','admin/admin-console'])assert(loader.includes('/js/'+file+'.js?v='+(file==='admin/admin-console'?'20261102op12':file==='creator/creator-dashboard'?'20261102op12':'20261101r13')));
+ for(const file of ['creator/creator-settlement','creator/creator-dashboard','creator/creator','admin/admin-settlement-review','admin/admin-console'])assert(loader.includes('/js/'+file+'.js?v='+(file==='admin/admin-console'?'20261103op13':file==='creator/creator-dashboard'?'20261103op13':'20261101r13')));
 });
 test('settlement styles parse and remain isolated; beta hides bank form without server capability',async()=>{
  const css=await read('public/css/settlement.css'),result=await transform(css,{loader:'css'});assert.deepEqual(result.warnings,[]);

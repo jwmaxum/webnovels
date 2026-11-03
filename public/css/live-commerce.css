@@ -1,0 +1,12 @@
+.live-commerce { color: var(--text-primary); min-width: 0; }
+.live-commerce > div { display: grid; gap: 1rem; }
+.live-commerce article { padding: 1rem; overflow-wrap: anywhere; }
+.live-commerce details { border: 1px solid var(--border-default); border-radius: .5rem; padding: .75rem; }
+.live-commerce summary { cursor: pointer; font-weight: 700; }
+.live-commerce-form { display: grid; gap: .75rem; margin-top: 1rem; max-width: 42rem; }
+.live-commerce-form label { display: grid; gap: .375rem; }
+.live-commerce input[type="checkbox"] { width: 1.25rem; height: 1.25rem; }
+.live-commerce nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+.live-commerce button { min-height: 2.75rem; white-space: normal; }
+.live-commerce input { min-width: 0; max-width: 100%; }
+.live-commerce :focus-visible { outline: 3px solid var(--border-focus, #6e52ff); outline-offset: 3px; }

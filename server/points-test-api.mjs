@@ -21,6 +21,8 @@ const adminActions={state:[],search:['q','type','offset'],enroll:['workId','enab
 const safeErrors=new Set(['AUTH_REQUIRED','INVALID_SESSION','EMAIL_CONFIRMATION_REQUIRED','READER_REQUIRED','ADMIN_FORBIDDEN','FINANCE_PERMISSION_REQUIRED','READER_NOT_FOUND','WORK_NOT_FOUND','TEST_WORK_NOT_FOUND','TEST_WORK_LIMIT','CONTENT_NOT_AVAILABLE','PANEL_NOT_FOUND','EPISODE_LOCKED','PRICE_CHANGED','PUBLICATION_CHANGED','QUOTE_EXPIRED','QUOTE_NOT_FOUND','REWARD_EXPIRED','INSUFFICIENT_POINTS','BALANCE_LIMIT','REVISION_CONFLICT','IDEMPOTENCY_CONFLICT','RATE_LIMITED','INVALID_POINTS_REQUEST','INVALID_TEST_REQUEST','REASON_REQUIRED','INVALID_REQUEST','INVALID_INPUT','POINTS_TEST_NOT_READY','POINTS_TEST_UNAVAILABLE']);
 
 export const pointsTestEnabled=(env={})=>env.POINTS_TEST_ENABLED==='true'&&env.POINTS_TEST_ENVIRONMENT==='TEST'&&env.POINTS_TEST_PROVENANCE==='LOCAL_SIMULATED'&&env.P0_API_ENABLED==='true'&&env.FREE_BETA_ENABLED!=='true'&&env.FREE_BETA_ENABLED!==true;
+// Pure content/storage validation only; no TEST wallet or entitlement is shared.
+export {content as projectPointContent,panel as pointPanel};
 
 async function readJson(request,fail){
   if(request.headers.get('origin')!==new URL(request.url).origin)fail(403,'ORIGIN_REQUIRED');

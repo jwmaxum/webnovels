@@ -1,0 +1,83 @@
+{
+  "stage": "OP-13",
+  "scope": "Separate manual bank ledger: deposits, paid lots, episode consumption, author revenue, manual payout and append-only corrections",
+  "local": {
+    "buildCompile": "PASS",
+    "typeCheck": "PASS",
+    "cloudflareFunctionsBundle": "PASS (6 entrypoints)",
+    "targetedRegression": {
+      "files": 68,
+      "uniqueTests": 744,
+      "finalPassed": 744,
+      "finalFailed": 0,
+      "initial": {
+        "tests": 726,
+        "passed": 724,
+        "failed": 2
+      },
+      "repairs": {
+        "files": [
+          "scripts/verify_cloudflare_routes.test.mjs",
+          "scripts/verify_op13_db.test.mjs",
+          "scripts/verify_op13_api.test.mjs"
+        ],
+        "passed": 18,
+        "failed": 0
+      },
+      "finalUI": {
+        "passed": 22,
+        "failed": 0,
+        "files": [
+          "scripts/verify_op13_ui.test.mjs",
+          "scripts/verify_ui_r4_reader.test.mjs",
+          "scripts/verify_ui_r4_webtoon.test.mjs"
+        ],
+        "op13Passed": 6,
+        "additionalReaderTests": 16,
+        "additionalOP13Tests": 2
+      }
+    },
+    "op13": {
+      "passed": 16,
+      "failed": 0
+    },
+    "nativePostgres": {
+      "stage": "OP-13",
+      "result": "PASS",
+      "engine": "postgres (PostgreSQL) 17.11",
+      "steps": [
+        "two concurrent purchase requests debit the episode once",
+        "independent confirmations of the same bank transaction create one lot",
+        "refund reservation wins against purchase without overspending",
+        "account change before payout approval rejects the bound old account",
+        "archive restore preserves paid-source lineage, receipts, encrypted evidence and ACLs"
+      ],
+      "provenance": "NATIVE_POSTGRES_SYNTHETIC",
+      "productionTouched": false,
+      "realMoneyMovement": false,
+      "hostedRestoreVerified": false
+    },
+    "dependencyVulnerabilities": 0,
+    "syntaxSecurityDiff": {
+      "result": "PASS",
+      "syntaxFiles": 31,
+      "scope": "Changed source syntax, secret patterns, safe DOM; input/auth/ACL/locking/private-proof/financial-source and retry review"
+    },
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "continuousFullRelease": "NOT_RUN_LOCALLY"
+  },
+  "productionDatabaseApplied": false,
+  "productionFlagsChanged": false,
+  "productionSchedulerDeployed": false,
+  "realProviderCalled": false,
+  "realBankProofUploaded": false,
+  "productionRevenueConnected": false,
+  "actualBankTransfer": false,
+  "browserAcceptance": "NOT_RUN",
+  "remote": {
+    "gitPush": "PENDING",
+    "githubCI": "PENDING",
+    "cloudflarePages": "PENDING"
+  }
+}

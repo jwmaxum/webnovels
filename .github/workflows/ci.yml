@@ -57,3 +57,6 @@ jobs:
 
     - name: Verify bank review races and private evidence recovery
       run: npm run verify:op12:native
+
+    - name: Verify live manual ledger concurrency and private recovery
+      run: npm run verify:op13:native

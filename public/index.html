@@ -56,6 +56,7 @@
   <link rel="stylesheet" href="/css/points-test.css?v=20261102op04">
   <link rel="stylesheet" href="/css/topups-test.css?v=20261102op05">
   <link rel="stylesheet" href="/css/rewards-test.css?v=20261102op06">
+  <link rel="stylesheet" href="/css/live-commerce.css?v=20261103op13">
   <link rel="stylesheet" href="/css/payouts-test.css?v=20261102op07">
   <link rel="stylesheet" href="/css/settlement.css?v=20261101r13">
 </head>
@@ -366,6 +367,7 @@
       <section id="view-charging-test" class="main-view">
         <div class="container section-padding"><div id="readerTopupsContent" role="region" aria-label="시험용 충전·주문·환불" tabindex="-1"></div></div>
       </section>
+      <section id="view-wallet" class="main-view"><div id="liveCommerceReader" class="glass-panel"></div></section>
       <section id="view-reading-test" class="main-view">
         <div class="container section-padding"><div id="readerPointsTestContent" role="region" aria-label="시험용 포인트·열람권" tabindex="-1"></div></div>
       </section>
@@ -1054,6 +1056,7 @@
           </div>
           <p id="libraryLoadStatus" class="reader-load-status" role="status" aria-live="polite"></p>
 
+          <a href="/wallet" data-live-commerce-entry hidden>포인트 충전·유료 작품 읽기</a>
           <div class="library-layout mt-6">
             <aside class="library-profile glass-panel">
               <div class="user-profile-summary">
@@ -2514,21 +2517,22 @@
   <!-- Core Architecture Modules -->
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
-  <script src="/js/core/role-modules.js?v=20261102op12"></script>
-  <script src="/js/core/router.js?v=20261102op07"></script>
+  <script src="/js/core/role-modules.js?v=20261103op13"></script>
+  <script src="/js/core/router.js?v=20261103op13"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
   <script src="/js/reader/reader-content.js?v=124"></script>
   <script src="/js/reader/reader-catalog.js?v=117"></script>
   <script src="/js/reader/reader-display.js?v=20261101op03"></script>
   <script src="/js/reader/reader-rewards-test.js?v=20261102op06"></script>
+  <script src="/js/shared/live-commerce.js?v=20261103op13"></script>
   <script src="/js/reader/reader-points-test.js?v=20261102op06"></script>
   <script src="/js/reader/reader-topups.js?v=20261102op06"></script>
   <script src="/js/reader/reader-discovery.js?v=20261101op03"></script>
   <script src="/js/reader/reader-webtoon.js?v=20261031r10"></script>
   <script src="/js/reader/reader-position.js?v=20261031r4"></script>
   <script src="/js/reader/reader-fonts.js?v=20261031r8"></script>
-  <script src="/js/reader/reader.js?v=20261101op03"></script>
+  <script src="/js/reader/reader.js?v=20261103op13"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=116"></script>
@@ -2656,10 +2660,10 @@
     </section>
   </div>
   <!-- Supabase Extension & Bootstrap Entry -->
-  <script src="/supabase-public-config.js?v=20261102op12"></script>
+  <script src="/supabase-public-config.js?v=20261103op13"></script>
   <script src="/api/public-config.js"></script>
   <script src="/supabase-admin.js?v=116"></script>
-  <script src="/js/core/auth-session.js?v=20261102op12"></script>
+  <script src="/js/core/auth-session.js?v=20261103op13"></script>
   <script src="/js/core/author-enrollment.js?v=135"></script>
   <script src="/js/core/account-access.js?v=20261031r6"></script>
   <script src="/js/core/appeals.js?v=117"></script>

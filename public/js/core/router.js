@@ -13,6 +13,7 @@ let routeRevision = 0;
 // Reader navigation follows the accepted view, not the account's role.
 function syncReaderNavigation(viewId = window.currentActiveView, search = window.location.search) {
   document.body?.setAttribute?.('data-active-view', viewId || 'view-home');
+  document.querySelectorAll('[data-live-commerce-entry]').forEach(link=>{link.hidden=window.WEBNOVELS_CONFIG?.liveCommerceEnabled!==true;});
   document.querySelectorAll('[data-points-test-entry]').forEach(link=>{link.hidden=window.WEBNOVELS_CONFIG?.pointsTestEnabled!==true;});
   const params = new URLSearchParams(search || '');
   const selected = viewId === 'view-home' ? 'home' : viewId === 'view-recommendations' ? 'recommendations' : viewId === 'view-mypage' ? 'library' :
@@ -45,7 +46,7 @@ function handleReaderRouteClick(event) {
   let route;
   try { route = new URL(link.getAttribute('href'), window.location.origin); } catch { return true; }
   if (route.origin !== window.location.origin || route.username || route.password ||
-      !/^\/(?:home|discover|recommendations|reading-test|charging-test|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
+      !/^\/(?:home|discover|recommendations|wallet|reading-test|charging-test|library(?:\/(?:continue|favorites|authors|appeals))?)\/?$/.test(route.pathname)) return true;
   event.preventDefault(); window.closeAllModals?.();
   navigateTo(route.pathname + route.search); return false;
 }
@@ -123,6 +124,7 @@ function switchWebNovelsView(viewId, activeLink, shouldPushState = true, options
   if(viewId!=='view-admin-cms')window.AdminTopups?.leave();
   if(viewId!=='view-admin-cms')window.AdminRewardsTest?.leave();
   if(viewId!=='view-admin-cms')window.AdminPayoutsTest?.leave();
+  if(!['view-wallet','view-admin-cms','view-creator'].includes(viewId))window.LiveCommerce?.reset();
   if(viewId!=='view-reading-test')window.ReaderPointsTest?.leave();
   if(viewId!=='view-reading-test')window.ReaderRewardsTest?.leave();
   if(viewId!=='view-charging-test')window.ReaderTopups?.leave();
@@ -282,6 +284,8 @@ function resolveRoute(pathname, isInitial = false) {
     syncReaderNavigation('view-discover', route.search || window.location.search);
     return;
   }
+
+  if(parts[0]==='wallet'){switchWebNovelsView('view-wallet',null,false);window.LiveCommerce?.render(document.getElementById('liveCommerceReader'),{isCurrent:()=>window.currentActiveView==='view-wallet'});return;}
 
   // 3. 작품 상세 경로 (/works/:id)
   if (parts[0] === 'works') {
