@@ -34,7 +34,7 @@
       "result": "PASS",
       "syntaxFiles": 10,
       "issues": [],
-      "reviewedFiles": 16,
+      "reviewedFiles": 17,
       "scope": "Changed source syntax, secret patterns, safe DOM, financial source preservation, grants/RLS, reauth, immutable snapshots, bank allocation conservation, independent approval, payout recovery and notification TEST separation"
     },
     "auditVulnerabilities": 0,
@@ -58,8 +58,83 @@
     "Approved-return exceptions, partial source bank reversal, large exports, key retirement and real-money acceptance remain OP-16 work."
   ],
   "delivery": {
-    "push": "PENDING",
-    "ci": "PENDING",
-    "cloudflare": "PENDING"
+    "push": "SUCCESS",
+    "commit": "8bf17e0952856746f836fbffc3d9f3b803627ca0",
+    "checkedAt": "2026-11-04T01:47:13.544Z",
+    "githubCI": "IN_PROGRESS",
+    "checks": [
+      {
+        "name": "build-and-test",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41756080000/job/126332389171"
+      },
+      {
+        "name": "native-settlement-recovery",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/jwmaxum/webnovels/actions/runs/41756080000/job/126332388930"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/jwmaxum/webnovels/runs/126332385068"
+      }
+    ],
+    "cloudflare": {
+      "id": "2ad764f6-798d-4dbb-80e3-8d8dd542887e",
+      "commit": "8bf17e0952856746f836fbffc3d9f3b803627ca0",
+      "environment": "production",
+      "url": "https://2ad764f6.webnovels-db4.pages.dev",
+      "stageStartedAt": "2026-11-04T01:44:19.313373Z",
+      "latestStage": "build",
+      "status": "active",
+      "stages": [
+        {
+          "name": "queued",
+          "status": "success"
+        },
+        {
+          "name": "initialize",
+          "status": "success"
+        },
+        {
+          "name": "clone_repo",
+          "status": "success"
+        },
+        {
+          "name": "build",
+          "status": "active"
+        },
+        {
+          "name": "deploy",
+          "status": "idle"
+        }
+      ],
+      "progress": {
+        "entries": 9,
+        "includesContainerLogs": true,
+        "total": 9,
+        "lastPhases": [
+          {
+            "at": "2026-11-04T01:44:18.58952Z",
+            "phase": "other build log"
+          },
+          {
+            "at": "2026-11-04T01:44:18.58989Z",
+            "phase": "other build log"
+          },
+          {
+            "at": "2026-11-04T01:44:18.848069Z",
+            "phase": "Success"
+          }
+        ],
+        "lastCommands": [],
+        "nonzeroTestFailureSummaries": 0
+      }
+    },
+    "finalPublicHttpAcceptance": "PENDING",
+    "http": null
   }
 }

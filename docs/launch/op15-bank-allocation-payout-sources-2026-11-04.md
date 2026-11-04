@@ -68,3 +68,9 @@ OP-13의 `payout.sources`는 누적 참고 목록이다. 이를 독점 배분으
 - 네이티브 PostgreSQL 17.11에서 입금 중복 배분·기존 확정 경합·중복 승인·TEST 시도 경합·전체 복원 5개를 통과했다. 이후 추가한 작가 정산 동시 신청 시나리오 1개만 별도 실행해 통과했다. CI는 6개를 함께 실행한다.
 - 컴파일·TypeScript·Cloudflare Functions 6개 번들·구문/보안/diff 검사 통과. npm audit 취약점 0건. 별도 lint와 coverage는 구성되어 있지 않으며 로컬 전체 release는 실행하지 않았다.
 - 운영 DB/키/플래그/SMTP/scheduler·실제 자금·제공자·브라우저 인수는 변경/실행하지 않았다.
+
+## 원격 반영
+
+제품 커밋 `8bf17e0`을 main에 정상 push하고 원격 일치를 확인했다. 2026-11-04T01:47:13.544Z 기준 [GitHub CI](https://github.com/jwmaxum/webnovels/actions/runs/41756080000)는 네이티브 복원 검사 성공, 전체 release 검사 진행 중이다. Cloudflare는 `build/active` 상태로, 최종 배포·공개 파일 검증은 아직 미완료이다.
+
+운영 DB·키·금융 플래그·실제 자금·메일은 변경하지 않았다. 미완료 원격 검증이 있으면 OP-16 시작 시 해당 제품 커밋 기준으로 먼저 확인한다.
