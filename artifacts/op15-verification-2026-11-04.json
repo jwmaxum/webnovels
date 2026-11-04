@@ -1,0 +1,65 @@
+{
+  "stage": "OP-15",
+  "date": "2026-11-04",
+  "status": "LOCAL_VERIFIED",
+  "baseCommit": "8f9b833f67b046dc672891f7450536c6ad929611",
+  "verification": {
+    "build": "PASS",
+    "types": "PASS",
+    "cloudflareFunctionsBundle": {
+      "result": "PASS",
+      "functions": 6
+    },
+    "tests": {
+      "result": "PASS",
+      "relatedFiles": 12,
+      "uniqueTests": 56,
+      "newOp15Tests": 11,
+      "finalRerunTests": 18
+    },
+    "native": {
+      "result": "PASS",
+      "engine": "postgres (PostgreSQL) 17.11",
+      "steps": [
+        "same bank source cannot fund concurrent orders",
+        "allocation reservation prevents competing legacy deposit credit",
+        "independent double approval credits once and atomically enqueues one notification",
+        "stale TEST retry cannot overwrite a later outcome",
+        "full archive restores aggregate sources, immutable notifications and service-only ACLs",
+        "concurrent author requests reserve purchase earnings only once"
+      ],
+      "note": "Five final SQL scenarios passed, then only the added payout race was executed separately."
+    },
+    "security": {
+      "result": "PASS",
+      "syntaxFiles": 10,
+      "issues": [],
+      "reviewedFiles": 16,
+      "scope": "Changed source syntax, secret patterns, safe DOM, financial source preservation, grants/RLS, reauth, immutable snapshots, bank allocation conservation, independent approval, payout recovery and notification TEST separation"
+    },
+    "auditVulnerabilities": 0,
+    "lint": "NOT_CONFIGURED",
+    "coverage": "NOT_MEASURED",
+    "browser": "NOT_RUN_PER_PROJECT_RULE",
+    "fullReleaseLocal": "NOT_RUN_TARGETED_ONLY"
+  },
+  "production": {
+    "migration028Applied": false,
+    "flagsChanged": false,
+    "keysChanged": false,
+    "smtpChanged": false,
+    "emailsSent": false,
+    "moneyMoved": false,
+    "hostedRestoreVerified": false
+  },
+  "limitations": [
+    "Legacy noncancelled payouts without exclusive allocations require separate reviewed reconciliation.",
+    "External notification delivery/lease worker is not implemented; TEST_READY is not SENT.",
+    "Approved-return exceptions, partial source bank reversal, large exports, key retirement and real-money acceptance remain OP-16 work."
+  ],
+  "delivery": {
+    "push": "PENDING",
+    "ci": "PENDING",
+    "cloudflare": "PENDING"
+  }
+}

@@ -62,3 +62,5 @@ jobs:
       run: npm run verify:op13:native
     - name: Verify reconciliation, monthly report concurrency and private recovery
       run: npm run verify:op14:native
+    - name: OP15 bank allocation concurrency and restore
+      run: npm run verify:op15:native
