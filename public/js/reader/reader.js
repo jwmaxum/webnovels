@@ -1934,6 +1934,8 @@ if (document.readyState === 'loading') {
 
 
 async function handleMemberLogin() {
+  const signupStatus = document.getElementById('authLoginStatus');
+  if (signupStatus) { signupStatus.textContent = ''; signupStatus.hidden = true; }
   try {
     const actor = await window.WebNovelsAuth.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
     closeAllModals();
@@ -2061,11 +2063,36 @@ async function submitAuthSignup(kind) {
   const author = kind === 'author';
   const value = id => document.getElementById(id)?.value || '';
   const password = value(author ? 'authorPassword' : 'signupPassword');
-  if (password !== value(author ? 'authorPasswordConfirm' : 'signupPasswordConfirm')) { showToast('비밀번호가 일치하지 않습니다.'); return; }
+  const email = value(author ? 'authorEmail' : 'signupEmail');
+  const readerForm = author ? null : document.getElementById('authForm-signup');
+  const submit = readerForm?.querySelector('button[type="submit"]');
+  if (submit?.disabled) return;
+  const signupError = readerForm && document.getElementById('readerSignupError');
+  const showSignupError = message => {
+    if (!signupError) { showToast(message); return; }
+    signupError.hidden = false;
+    signupError.textContent = message;
+  };
+  if (signupError) { signupError.hidden = true; signupError.textContent = ''; }
+  if (password !== value(author ? 'authorPasswordConfirm' : 'signupPasswordConfirm')) {
+    showSignupError('비밀번호가 일치하지 않습니다.');
+    return;
+  }
+  if (submit) submit.disabled = true;
   try {
-    const message = await window.WebNovelsAuth.signup(kind, value(author ? 'authorEmail' : 'signupEmail'), password, value(author ? 'authorPenName' : 'signupNickname'));
+    const message = await window.WebNovelsAuth.signup(kind, email, password, value(author ? 'authorPenName' : 'signupNickname'));
+    if (readerForm) {
+      document.getElementById('signupPassword').value = '';
+      document.getElementById('signupPasswordConfirm').value = '';
+      document.getElementById('pwMatchMsg').style.display = 'none';
+      if (readerForm.classList.contains('active') && document.getElementById('modalAuth').classList.contains('active')) {
+        window.showReaderSignupLogin(message, email);
+        return;
+      }
+    }
     showToast(message);
-  } catch(error) { showToast(window.WebNovelsAuth.message(error)); }
+  } catch(error) { showSignupError(window.WebNovelsAuth.message(error)); }
+  finally { if (submit) submit.disabled = false; }
 }
 async function handleMemberSignup() { return submitAuthSignup('reader'); }
 async function handleAuthorSignup() { return submitAuthSignup('author'); }

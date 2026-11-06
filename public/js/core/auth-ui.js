@@ -10,6 +10,18 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
 
 (function () {
   let panelGeneration=0;
+  window.showReaderSignupLogin = (message, email) => {
+    const status = document.getElementById('authLoginStatus');
+    status.textContent = message;
+    status.hidden = false;
+    document.getElementById('authTab-login').click();
+    const loginEmail = document.getElementById('loginEmail');
+    if (email) loginEmail.value = email.trim().toLowerCase();
+    document.getElementById('loginPassword').value = '';
+    const modal = document.getElementById('modalAuth');
+    if (!modal.classList.contains('active')) openModal('modalAuth');
+    loginEmail.focus();
+  };
   function panel(mode) {
     const generation=++panelGeneration;
     let backdrop = document.getElementById('modalAuthCompletion');
@@ -79,7 +91,16 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
           document.getElementById('authNewPassword').value = document.getElementById('authNewPasswordConfirm').value = '';
           showToast('비밀번호가 변경되었습니다. 다시 로그인해주세요.');
         } else {
-          await window.WebNovelsAuth.complete(document.getElementById('authCompletionKind').value, document.getElementById('authCompletionName').value);
+          const kind = document.getElementById('authCompletionKind').value;
+          const name = document.getElementById('authCompletionName').value;
+          if (kind === 'reader') {
+            const message = await window.WebNovelsAuth.completeReaderSignup(name);
+            if(generation!==panelGeneration||backdrop.hidden===true)return;
+            closeModal('modalAuthCompletion');
+            window.showReaderSignupLogin(message);
+            return;
+          }
+          await window.WebNovelsAuth.complete(kind, name);
           if(generation!==panelGeneration||backdrop.hidden===true)return;
           showToast('가입이 완료되었습니다.');
         }

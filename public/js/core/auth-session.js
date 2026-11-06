@@ -136,11 +136,14 @@
     try { const result = await api('/api/v2/me'); if (epoch !== generation) throw error('INVALID_SESSION',401); return publish(result); }
     catch(e) { clear(); throw e; }
   }
-  async function logout() {
+  async function logout({ scope = 'global' } = {}) {
     await window.CreatorDraftEditor?.beforeAccountChange();
     clear(); recovery = false;
-    const { error: e } = await sdk().signOut();
-    if (e) { await sdk().signOut({ scope: 'local' }); throw providerError(e); }
+    const { error: e } = await sdk().signOut({ scope });
+    if (e) {
+      if (scope === 'global') await sdk().signOut({ scope: 'local' });
+      throw providerError(e);
+    }
   }
   async function login(email, password) {
     if (authMutation) throw error('AUTH_IN_PROGRESS',409);
@@ -172,8 +175,9 @@
       if (e) throw providerError(e);
       if (data?.session) {
         if(kind==='author'){window.showAuthOnboarding?.();return '작가 가입 화면에서 저작권 동의와 가입 절차를 완료해주세요.';}
-        await complete(kind,displayName); return '가입이 완료되었습니다.';
+        return await completeReaderSignup(displayName);
       }
+      if (kind === 'reader') return '이메일 확인이 필요합니다. 받은 확인 링크를 열고 로그인한 뒤 독자 가입을 마쳐주세요.';
       return '확인 메일을 확인해주세요. 링크를 연 뒤 로그인하여 가입 유형과 필명을 입력하면 가입을 마칠 수 있습니다.';
     } finally { authMutation = false; }
   }
@@ -184,6 +188,16 @@
     }
     const result = await api('/api/v2/onboarding', { method: 'POST', body: JSON.stringify({ kind,displayName }) });
     return publish(result.actor);
+  }
+  async function completeReaderSignup(displayName) {
+    const account = await complete('reader', displayName);
+    if (!account.reader) throw error('AUTH_UNAVAILABLE', 503);
+    try {
+      await logout({ scope: 'local' });
+      return '독자 회원가입이 완료되었습니다. 로그인해주세요.';
+    } catch {
+      return '독자 회원가입이 완료되었습니다. 가입 중 사용한 세션을 정리하지 못했습니다. 로그인 화면에서 다시 로그인해주세요.';
+    }
   }
   async function reset(email) {
     const { error: e } = await sdk().resetPasswordForEmail(email.trim(), { redirectTo: location.origin + '/?auth=recovery' });
@@ -214,6 +228,6 @@
     })().catch(e => { clear(); window.showToast?.(messages.AUTH_UNAVAILABLE || '인증 서비스를 사용할 수 없습니다.'); });
     return initFlight;
   }
-  window.WebNovelsAuth = { init, api, login, logout, signup, complete, reset, changePassword, validate,
+  window.WebNovelsAuth = { init, api, login, logout, signup, complete, completeReaderSignup, reset, changePassword, validate,
     getActor: () => actor, message: e => e?.message || '인증 요청에 실패했습니다. 잠시 후 다시 시도해주세요.' };
 })();

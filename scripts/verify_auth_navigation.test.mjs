@@ -7,6 +7,7 @@ import ts from 'typescript';
 
 const read = file => readFileSync(file, 'utf8');
 const readerSource = ts.createSourceFile('reader.js', read('public/js/reader/reader.js'), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+const appSource = ts.createSourceFile('app.js', read('public/app.js'), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
 const author = () => ({userId:'author-auth-uuid', author:{id:12, status:'APPROVED', pen_name:'Writer'}, reader:null, admin:null, authorWorkspaceReady:true});
 const subscriber = () => ({userId:'reader-auth-uuid', author:null, reader:{id:31, status:'ACTIVE', nickname:'Reader'}, admin:null});
 const ticks = async () => { for (let i=0; i<100; i++) await Promise.resolve(); };
@@ -25,28 +26,39 @@ test('admin route forwards the complete query once and keeps back navigation con
 
 // Execute the production Auth, router, lazy loader and reader entry functions together.
 // SDK responses, DOM elements and script network completion are local substitutes.
-function fixture({who=author(), url='/', holdScripts=false, signedIn=true}={}) {
+function fixture({who=author(), url='/', holdScripts=false, signedIn=true, signupMode='pending'}={}) {
   let serverActor=who, session=signedIn ? {access_token:'test-session'} : null;
-  const nodes=new Map(), scripts=[], events=new Map(), toasts=[], routes=[], storage=new Map(), visits=[];
+  const nodes=new Map(), scripts=[], events=new Map(), toasts=[], routes=[], storage=new Map(), visits=[], signouts=[], requests=[];
   const element = tag => {
-    const classes=new Set(), attributes=new Map(), styles=new Map();
+    const classes=new Set(), attributes=new Map(), styles=new Map(), listeners=new Map();
     return {tag, hidden:false, value:'', innerHTML:'', textContent:'', children:[], dataset:{},
       style:{setProperty:(k,v)=>styles.set(k,v), removeProperty:k=>styles.delete(k)},
       classList:{add:k=>classes.add(k), remove:k=>classes.delete(k), contains:k=>classes.has(k), toggle(k,on){if(on)classes.add(k);else classes.delete(k);}},
       setAttribute:(k,v)=>attributes.set(k,v), getAttribute:k=>attributes.get(k),
       append(...children){this.children.push(...children);}, replaceChildren(...children){this.children=children;},
-      remove(){}, querySelector(){return null;}, querySelectorAll(){return [];}, addEventListener(){}};
+      remove(){}, querySelector(){return null;}, querySelectorAll(){return [];},
+      addEventListener:(name,fn)=>listeners.set(name,fn),
+      dispatch(name){return listeners.get(name)?.({preventDefault(){},target:this});},
+      click(){return this.dispatch('click');},focus(){this.focused=true;}};
   };
   for (const id of ['view-home','view-creator','view-admin-cms','view-mypage','view-work-detail','view-reader',
     'moduleLoadStatus','userProfileMenu','headerCreatorLink','authorStudioNavigation','linkMoreCreator',
     'loginEmail','loginPassword','modalAuthCompletion','authCompletionTitle','authCompletionProfile',
     'authCompletionPassword','authCompletionName','authCompletionKind','authNewPassword',
-    'authNewPasswordConfirm','authCompletionMessage','authCompletionForm','authAuthorEnrollment']) nodes.set(id,element('div'));
+    'authNewPasswordConfirm','authCompletionMessage','authCompletionForm','authAuthorEnrollment','modalAuth','authLoginStatus',
+    'signupEmail','signupNickname','signupPassword','signupPasswordConfirm','pwMatchMsg','readerSignupError']) nodes.set(id,element('div'));
+  const authTabs = ['login','signup','signup-author'].map(name=>{
+    const tab=element('button');tab.dataset.authTab=name;nodes.set('authTab-'+name,tab);return tab;
+  });
+  const authForms = authTabs.map(tab=>{const form=element('form');nodes.set('authForm-'+tab.dataset.authTab,form);return form;});
+  const signupButton=element('button');authForms[1].querySelector=()=>signupButton;
   const portals=['headerCreatorLink','authorStudioNavigation','linkMoreCreator'].map(id=>nodes.get(id));
   portals.forEach(n=>n.hidden=true);
   nodes.get('loginEmail').value='writer@example.test'; nodes.get('loginPassword').value='test-password';
   const auth={
-    getSession:async()=>({data:{session}}), signOut:async()=>{session=null;return {};},
+    getSession:async()=>({data:{session}}), signOut:async options=>{signouts.push(options?.scope);session=null;return {};},
+    signUp:async()=>{session=signupMode==='confirmed'?{access_token:'test-session'}:null;
+      return signupMode==='error'?{error:{status:429}}:{data:{session}};},
     signInWithPassword:async()=>{session={access_token:'test-session'};return {data:{session}};},
     onAuthStateChange:fn=>events.set('auth',fn)
   };
@@ -56,12 +68,19 @@ function fixture({who=author(), url='/', holdScripts=false, signedIn=true}={}) {
     history:{pushState(_state,_title,url){routes.push(['push',url]);c.location=new URL(url,c.location);},
       replaceState(_state,_title,url){routes.push(['replace',url]);c.location=new URL(url,c.location);}},
     supabaseClient:{auth},initSupabaseAdmin:()=>true,
-    fetch:async route=>Response.json(route==='/api/v2/onboarding'?{actor:serverActor}:serverActor),
+    fetch:async route=>{
+      requests.push(route);
+      if (route==='/api/v2/auth/readiness' && signupMode==='closed') return Response.json({}, {status:503});
+      return Response.json(route==='/api/v2/onboarding'?{actor:serverActor}:serverActor);
+    },
     document:{readyState:'loading',body:element('body'),getElementById:id=>nodes.get(id)||null,createElement:element,
-      querySelectorAll:selector=>selector==='[data-account-portal="creator"]'?portals:selector==='.main-view'?
+      querySelectorAll:selector=>selector==='[data-auth-tab]'?authTabs:selector==='.auth-form'?authForms:selector==='[data-account-portal="creator"]'?portals:selector==='.main-view'?
         [...nodes].filter(([id])=>id.startsWith('view-')).map(([,node])=>node):[],
       head:{appendChild(script){scripts.push(script);if(!holdScripts)queueMicrotask(()=>script.onload());}},addEventListener(){}},
-    addEventListener:(name,fn)=>events.set(name,fn), scrollTo(){},showToast:text=>toasts.push(text),openModal(){},closeAllModals(){},closeModal(){},
+    addEventListener:(name,fn)=>events.set(name,fn), scrollTo(){},showToast:text=>toasts.push(text),
+    openModal(id){const node=nodes.get(id);if(node){node.hidden=false;node.classList.add('active');}},
+    closeModal(id){const node=nodes.get(id);if(node){node.hidden=true;node.classList.remove('active');}},
+    closeAllModals(){c.closeModal('modalAuth');c.closeModal('modalAuthCompletion');},
     escapeHtml:value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])),
     CreatorDashboard:{active:()=>!!c.WebNovelsAuth?.getActor()?.authorWorkspaceReady,reset(){}},
     fetchCreatorDashboardData:()=>visits.push('creator'), loadAdminDashboard:()=>visits.push('admin'),
@@ -70,14 +89,59 @@ function fixture({who=author(), url='/', holdScripts=false, signedIn=true}={}) {
   };
   c.window=c;vm.createContext(c);
   const run=file=>vm.runInContext(read(file),c,{filename:path.resolve(file)});
-  for (const name of ['handleMemberLogin','getCurrentAuthorSession','getCurrentCreatorSession','updateMemberHeader']) {
+  for (const name of ['handleMemberLogin','handleMemberSignup','submitAuthSignup','getCurrentAuthorSession','getCurrentCreatorSession','updateMemberHeader']) {
     const fn=readerSource.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(fn,name);
     vm.runInContext(fn.getText(readerSource),c,{filename:'reader-entry-'+name+'.js'});
   }
   for (const file of ['auth-session','role-modules','router','auth-ui']) run('public/js/core/'+file+'.js');
   const drain=async()=>{let i=0;while(i<scripts.length){scripts[i++].onload();await ticks();}};
-  return {c,nodes,scripts,events,toasts,routes,storage,visits,run,drain,portals,setActor:value=>serverActor=value};
+  const bindAuthTabs=()=>{
+    const bind=appSource.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='bindWebNovelsEvents');
+    vm.runInContext(bind.getText(appSource),c);c.bindWebNovelsEvents();
+  };
+  return {c,nodes,scripts,events,toasts,routes,storage,visits,run,drain,portals,signouts,requests,bindAuthTabs,setActor:value=>serverActor=value};
 }
+
+for (const [signupMode, notice] of [['confirmed', /독자 회원가입이 완료/], ['pending', /이메일 확인이 필요/], ['error', null], ['closed', null]]) {
+  test(`reader signup ${signupMode} shows the correct tab, notice and session state`, async () => {
+    const app=fixture({who:subscriber(), signedIn:false, signupMode});
+    app.bindAuthTabs();app.c.openModal('modalAuth');app.nodes.get('authTab-signup').click();
+    for (const [id,value] of Object.entries({signupEmail:'Reader@example.test',signupNickname:'독자이름',signupPassword:'test-password',signupPasswordConfirm:'test-password'})) {
+      app.nodes.get(id).value=value;
+    }
+    await app.c.handleMemberSignup();
+    if (!notice) {
+      assert.equal(app.nodes.get('authTab-signup').getAttribute('aria-selected'),'true');
+      assert.equal(app.nodes.get('authLoginStatus').textContent,'');
+      assert.match(app.nodes.get('readerSignupError').textContent,signupMode==='closed'?/신규 가입을 준비 중/:/잠시/);
+      assert.equal(app.nodes.get('readerSignupError').hidden,false);
+      if (signupMode==='closed') assert.deepEqual(app.signouts,[]);
+      return;
+    }
+    assert.equal(app.nodes.get('authTab-login').getAttribute('aria-selected'),'true');
+    assert.equal(app.nodes.get('authForm-login').classList.contains('active'),true);
+    assert.match(app.nodes.get('authLoginStatus').textContent,notice);
+    assert.equal(app.nodes.get('loginEmail').value,'reader@example.test');
+    assert.equal(app.nodes.get('loginEmail').focused,true);
+    assert.equal(app.nodes.get('signupPassword').value,'');
+    assert.equal(app.c.WebNovelsAuth.getActor(),null);
+    assert.deepEqual(app.signouts,signupMode==='confirmed'?['local','local']:['local']);
+    assert.equal(app.requests.includes('/api/v2/onboarding'),signupMode==='confirmed');
+  });
+}
+
+test('reader profile completion after email confirmation returns to login', async () => {
+  const app=fixture({who:subscriber()});app.bindAuthTabs();app.c.showAuthOnboarding();
+  app.nodes.get('authCompletionKind').value='reader';app.nodes.get('authCompletionName').value='독자이름';
+  await app.nodes.get('authCompletionForm').onsubmit({preventDefault(){},target:{querySelector:()=>({disabled:false})}});
+  assert.equal(app.nodes.get('modalAuthCompletion').hidden,true);
+  assert.equal(app.nodes.get('modalAuth').hidden,false);
+  assert.equal(app.nodes.get('authTab-login').getAttribute('aria-selected'),'true');
+  assert.match(app.nodes.get('authLoginStatus').textContent,/독자 회원가입이 완료/);
+  assert.deepEqual(app.signouts,['local']);
+  assert.equal(app.c.WebNovelsAuth.getActor(),null);
+  assert.equal(app.routes.length,0);
+});
 
 test('restored author at the default URL opens the studio instead of subscriber home',async()=>{
   const app=fixture();await app.c.WebNovelsAuth.init();await app.c.initRouteHandler();
