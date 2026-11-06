@@ -9,6 +9,7 @@ import {chargingTestEnabled} from '../../server/topups-test-api.mjs';
 import {adRewardsTestEnabled} from '../../server/ad-rewards-test-api.mjs';
 import {settlementsTestEnabled,manualPayoutWorkflowEnabled} from '../../server/author-payouts-test-api.mjs';
 import {settlementReadinessEnabled} from '../../server/settlement-readiness-policy.mjs';
+import {novelTranslationEnabled} from '../../server/novel-translation-api.mjs';
 // Cloudflare Pages runtime bindings; never serialize context.env.
 export function onRequestGet({ env }) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL;
@@ -33,6 +34,7 @@ export function onRequestGet({ env }) {
     adminRoleChangesEnabled: env.ADMIN_ROLE_CHANGES_ENABLED === 'true' };
   config.liveCommerceEnabled = liveCommerceEnabled(env);
   config.freeBetaEnabled = env.FREE_BETA_ENABLED === 'true';
+  config.novelTranslationPilotEnabled = novelTranslationEnabled(env);
   config.pointsTestEnabled = pointsTestEnabled(env);
   config.chargingTestEnabled = chargingTestEnabled(env);
   config.adRewardsTestEnabled = adRewardsTestEnabled(env);

@@ -40,3 +40,31 @@ Google Cloud NMT 공개 기본 요율은 월 50만 자 크레딧과 초과 사�
 - **2단계 · ML-03.** 동의한 무료 작품 2종·10화를 확정하고 원문 버전별 초안, 용어집, 검수 화면과 예산 한도를 연결한다. 번역 제공자와 비용 한도는 실제 전송 전에 확정한다.
 
 1단계에서 독자·인증·검색·카탈로그 회귀 검사 337개와 최종 화면 보완 후 관련 검사 18개가 통과했다. TypeScript 컴파일과 Cloudflare Pages Functions 번들 6개를 확인했다. 작품 승인, 다국어 검색, 공개 범위 검사는 합성 DB에서, 독서 위치 및 문구 전환은 가상 DOM에서 수행했다. 실제 독자 인수와 승인 번역 등록은 운영 적용 절차에 포함된다.
+
+## ML-03 운영 절차
+
+1. 운영 DB에 검증한 `authoring-033`을 추가한다. 기본값은 번역 중지와 예산 0이다. 번역 표의
+   직접 API 권한은 부여하지 않으며 Cloudflare의 `NOVEL_TRANSLATION_PILOT_ENABLED`도 준비 후 설정한다.
+2. 운영자가 한국어 원문인 무료 웹소설을 최대 2종 선정한다. `authoring.novel_translation_works`에
+   현재 작가 ID와 작품 ID를 연결하고, 작가는 작품의 회차 관리에서 번역 권한과 외부 처리 범위를 확인한 뒤 동의한다.
+   자동번역 대상은 현재 공개된 무료 회차의 앞 5화다. 작가의 말·계정·비공개 원고는 외부로 전송하지 않는다.
+3. 인명·호칭 표기가 필요한 작품에는 같은 프로젝트·리전의 다국어 Google 용어집을 준비한다.
+   `glossary_resource`와 `glossary_revision`을 함께 기록하고, 변경 시 새 리소스로 교체한다.
+   새 버전의 원문·용어집·동의를 기준으로 새로 검수한 번역만 공개한다.
+4. 제공자 조건과 비용 한도를 확인하고 운영 DB의 `character_limit`을 설정한다. 운영 Pages에
+   `NOVEL_TRANSLATION_GOOGLE_PROJECT`, `NOVEL_TRANSLATION_GOOGLE_LOCATION` 및 최소 권한의 단기
+   `NOVEL_TRANSLATION_GOOGLE_ACCESS_TOKEN`을 설정한다. 토큰은 서버 비밀로 저장하고 만료되면 교체한다.
+   DB 설정의 `enabled`와 Pages 시범 플래그를 적용한 뒤 선정 작가에게 검수를 안내한다.
+5. 작가가 회차·언어를 선택해 요청하면 DB에서 요청 ID와 글자 수를 먼저 예약하고 서버가 공개 원문을 보낸다.
+   같은 원문 버전·언어·동의·용어집 조합은 한 번만 제출된다. 시범 총량은 30건이며 실패·응답 불명 작업도
+   예약량에 포함된다. 처리 중 또는 실패로 남은 작업은 제공자 이력을 대조한 뒤 운영자가 판단한다.
+6. 작가는 원문과 초안을 대조해 수정하고 공개를 승인한다. 독자는 현재 무료 원문과 승인 언어를 같은
+   회차에서 전환한다. 원문 수정, 비공개 전환, 유료 전환, 동의 철회가 있으면 이전 번역은 표시되지 않는다.
+   번역 전환 후 댓글 인용은 원문 문단에 연결된다.
+
+번역 API에 보내는 단위는 제목과 기존 문서의 텍스트 구간이다. 문단·줄바꿈·굵게·기울임·밑줄·정렬은
+기존 원고 구조에서 복원한다. 서식 경계를 넘는 문장과 인명·호칭은 공개 전 사람이 대조한다.
+실제 외부 요청 전에 작품별 동의, Google 제공 조건, 사용할 예산을 확정해야 한다.
+[Google 번역 API](https://docs.cloud.google.com/translate/docs/reference/rest/v3/projects.locations/translateText) ·
+[Google 용어집](https://docs.cloud.google.com/translate/docs/advanced/glossary) ·
+[데이터 처리 안내](https://docs.cloud.google.com/translate/data-usage)

@@ -156,7 +156,7 @@
       <nav class="studio-work-actions" aria-label="작품 관리"><button type="button" id="cwDrafts" class="btn btn-primary" ${disabled?'disabled':''}>원고 작성</button><button type="button" class="btn btn-outline" data-detail-tab="episodes" ${tab==='episodes'?'aria-current="page"':''}>회차·열람 관리</button><button type="button" class="btn btn-outline" data-detail-tab="settings" ${tab==='settings'?'aria-current="page"':''}>작품 설정</button><button type="button" class="btn btn-outline" id="cwCover" ${disabled?'disabled':''}>썸네일 변경</button></nav>
       ${workspace?'':`<details class="studio-work-more"><summary>추가 관리</summary><div class="cw-toolbar">${secondary}<button type="button" class="btn btn-outline" id="cwFiles">원고 가져오기</button><button type="button" class="btn btn-outline" id="cwPublications">발행·예약 관리</button></div></details>`}
       <details class="studio-work-checklist"><summary>발행 준비 확인</summary><section aria-label="첫 연재 준비"><h4>첫 연재 준비</h4>${window.CreatorReadiness?.render(window.CreatorReadiness.workItems(work),true)||''}</section></details>
-      ${body}<p id="cwMessage" role="status"></p>
+      ${body}${tab==='episodes'&&work.content_type==='NOVEL'&&window.WEBNOVELS_CONFIG?.novelTranslationPilotEnabled===true?'<details id="cwNovelTranslations" class="studio-fold"><summary>웹소설 번역 시범</summary></details>':''}<p id="cwMessage" role="status"></p>
       <details class="cw-danger"><summary>삭제·비공개 관리</summary><p>발행 이력이 있는 작품의 변경은 관리자 승인 후 반영됩니다. 회차·원고·파일은 보존되며, 복구 시 예약은 자동 재개되지 않습니다.</p>
       <button type="button" class="btn btn-outline" id="cwTrash">${work.trashed_at?(review?'복구 검토 요청':'비공개로 복구'):(review?'삭제 검토 요청':'휴지통으로 이동')}</button></details>
       <button type="button" class="btn btn-ghost" id="cwReload">최신 내용 불러오기 (입력 초기화)</button>`;
@@ -228,6 +228,7 @@
         return mutate('update',data,tab,{writeAfterSave});
       };
       if(tab==='episodes')window.CreatorOperations?.episodes(root().querySelector('#cwEpisodeOperations'),id);
+      if(tab==='episodes')window.CreatorNovelTranslations?.mount(root().querySelector('#cwNovelTranslations'),current);
       if(tab==='reactions')window.CreatorOperations?.reactions(root().querySelector('#cwReactions'),id);
       if(tab==='settings')window.CreatorOperations?.serial(current,root().querySelector('#cwSerialOperations'));
       return {work:current,epoch:seq};

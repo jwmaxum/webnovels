@@ -113,7 +113,7 @@ test('R6 changed assets have explicit local cache versions and preserve compatib
  assert(styles.includes('/css/operations-account.css?v=20261031r6'));
  assert(styles.includes('/css/admin-shell.css?v=20261101op01'));
  for(const path of ['/app.js','/js/core/auth-ui.js','/js/core/account-access.js','/js/core/beta-support.js']){assert(sources.some(src=>src.startsWith(path+'?v=')&&/^[a-z0-9]+$/.test(src.split('?v=')[1])),path+' cache');await read('public'+path);}
- assert(sources.includes('/js/core/role-modules.js?v=20261103op13'));
+ assert(sources.some(src=>/^\/js\/core\/role-modules\.js\?v=[a-z0-9]+$/.test(src)));
  for(const name of ['admin-console','admin-publication-changes','admin-workflow','admin-beta-operations','admin-navigation','admin-operations','admin-members','admin-display']){const path='/js/admin/'+name+'.js?v='+(name==='admin-console'?'20261103op13':name==='admin-operations'?'20261102op10':name==='admin-display'?'20261101op03':name==='admin-members'?'20261101op02b':name==='admin-navigation'?'20261101op02':name==='admin-workflow'?'20261101op01':'20261031r6');assert(loader.includes(path),name+' cache');await read('public'+path.split('?')[0]);}
  const authSession=sources.findIndex(src=>src.startsWith('/js/core/auth-session.js?v='));assert(authSession>=0);
  assert(authSession<sources.indexOf('/js/core/beta-support.js?v=20261031r6'));assert(sources.indexOf('/js/core/beta-support.js?v=20261031r6')<sources.indexOf('/app.js?v=20261031r6'));

@@ -11,6 +11,7 @@ import { adminWorkflowApi } from './admin-workflow-api.mjs';
 import { accountApi } from './account-api.mjs';
 import { authorEnrollmentApi } from './author-enrollment-api.mjs';
 import { freeBetaEnrollmentApi } from './free-beta-enrollment-api.mjs';
+import { creatorNovelTranslation, withNovelTranslation } from './novel-translation-api.mjs';
 import { discoveryEnabled, publicContent } from './stage16-api.mjs';
 import { paidEpisodeApi } from './paid-episode-api.mjs';
 import { growthApi,measurementEnabled } from './growth-api.mjs';
@@ -213,6 +214,9 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now(), top
       if (path === '/api/v2/creator/works' || path.startsWith('/api/v2/creator/works/')) {
         return reply(await creatorWorkApi({ request, env, actor, db, readBody, fail }));
       }
+      if (path === '/api/v2/creator/novel-translations') {
+        return reply(await creatorNovelTranslation({request,url,env,db,actor:await actor(),readBody,fail,fetchImpl}));
+      }
       if (path === '/api/v2/auth/readiness' && request.method === 'GET') {
         if (env.AUTH_ONBOARDING_ENABLED !== 'true') fail(503, 'ONBOARDING_NOT_ACTIVATED');
         if (await db('rpc/authoring_signup_ready', {}) !== true) fail(503, 'ONBOARDING_NOT_ACTIVATED');
@@ -250,9 +254,10 @@ export function createSecureApi({ fetchImpl = fetch, now = () => Date.now(), top
       if (match && request.method === 'GET') {
         if (newSerials) {
           await actor(false);
-          return reply(publicContent(await db('rpc/stage18_episode_content', {}, {
+          const result=publicContent(await db('rpc/stage18_episode_content', {}, {
             method:'POST',body:{p_episode_id:validId(match[1])}
-          }),fail,env));
+          }),fail,env);
+          return reply(await withNovelTranslation({result,url,env,db,fail}));
         }
         const who = await actor(false); const episode = await getEpisode(match[1]); const work = await getWork(episode.work_id);
         const editor = owns(who, work);

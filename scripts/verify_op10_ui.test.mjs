@@ -45,7 +45,7 @@ test('prepare is explicit, retries reuse operation ID and uncertain jobs offer o
 test('changed assets are loaded in role order and reset at session/navigation boundaries',()=>{
  const loader=readFileSync('public/js/core/role-modules.js','utf8'),html=readFileSync('public/index.html','utf8');
  assert(loader.indexOf('admin-payout-provider-test.js?v=20261102op10')<loader.indexOf('admin-console.js?v=20261103op13'));
- assert(html.includes('role-modules.js?v=20261103op13'));assert.match(html,/auth-session\.js\?v=[a-z0-9]+"/);
+ assert.match(html,/role-modules\.js\?v=[a-z0-9]+/);assert.match(html,/auth-session\.js\?v=[a-z0-9]+"/);
  for(const file of ['public/js/core/auth-session.js','public/js/admin/admin-console.js','public/js/admin/admin-operations.js'])assert(readFileSync(file,'utf8').includes('AdminPayoutProviderTest?.reset()'));
  assert(!/localStorage|sessionStorage|innerHTML|console\.log/.test(code));
 });

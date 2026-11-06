@@ -1410,6 +1410,8 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     window.refreshReaderLocale = null;
     const sourceLanguage = document.getElementById('readerSourceLanguage');
     if (sourceLanguage) sourceLanguage.hidden = true;
+    const translationPanel = document.getElementById('readerNovelTranslation');
+    if (translationPanel) { translationPanel.hidden = true; translationPanel.replaceChildren(); }
     window.ReaderFonts?.start();
     document.getElementById('view-reader')?.setAttribute('data-reader-font-state','PENDING');
     setText(document.getElementById('readerWorkTitle'),'작품 정보 확인 중');
@@ -1460,16 +1462,18 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   let loadedWebtoon=null;
   let loadedPanels = [];
   let versionId=null;
+  let translationLocales=[];
+  const loadContent=async locale=>{
+    const url='/api/v2/episodes/'+encodeURIComponent(ep.id)+'/content'+(locale?'?translation='+encodeURIComponent(locale):'');
+    if(window.WebNovelsAuth?.getActor())return window.WebNovelsAuth.api(url);
+    const raw=await fetch(url,{credentials:'omit'});
+    if(!raw.ok){const denied=await raw.json().catch(()=>({}));throw Object.assign(Error('READER_CONTENT_UNAVAILABLE'),{code:denied.error,status:raw.status});}
+    return raw.json();
+  };
 
   if (window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
     try {
-      let response;
-      if (window.WebNovelsAuth?.getActor()) response = await window.WebNovelsAuth.api('/api/v2/episodes/' + encodeURIComponent(ep.id) + '/content');
-      else {
-        const raw = await fetch('/api/v2/episodes/' + encodeURIComponent(ep.id) + '/content', {credentials:'omit'});
-        if (!raw.ok){const denied=await raw.json().catch(()=>({}));throw Object.assign(Error('READER_CONTENT_UNAVAILABLE'),{code:denied.error,status:raw.status});}
-        response = await raw.json();
-      }
+      const response=await loadContent();
       if(!valid())return;
       loadedText = response.episode?.content;
       ep.contentDocument = response.episode?.contentDocument;
@@ -1477,6 +1481,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       loadedWebtoon=response.episode?.webtoon||null;
       ep.authorComment = response.episode?.author_comment ?? ep.authorComment;
       versionId=response.versionId||response.episode?.versionId||null;
+      if(Array.isArray(response.episode?.translationLocales))translationLocales=response.episode.translationLocales;
     } catch (error) {
       if(valid()&&error?.code==='LIVE_COMMERCE_ROUTE_REQUIRED'&&window.LiveCommerce?.active()){switchWebNovelsView('view-wallet',null,false);if(shouldPushState)history.pushState({},'', '/read/'+encodeURIComponent(workId)+'/'+encodeURIComponent(epNum));return window.LiveCommerce.render(document.getElementById('liveCommerceReader'),{workId:String(workId),episodeNumber:epNum,isCurrent:()=>window.currentActiveView==='view-wallet'});}
       console.warn('[Secure Content Load]', error);
@@ -1573,9 +1578,19 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     if (textBodyEl) {
       textBodyEl.style.display = 'block';
       const contentVersion = versionId||`${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`;
-      window.ReaderContent.render(textBodyEl, authorCommentEl, {
+      const original={
         content: loadedText || '', contentDocument: ep.contentDocument, authorComment: ep.authorComment || '', version: contentVersion, localizeReaderNote: true
-      }, (index, paragraph, version) => selectParagraphComment(index, paragraph, version));
+      };
+      textBodyEl.removeAttribute?.('lang');
+      const onParagraph=(index,paragraph,version)=>selectParagraphComment(index,paragraph,version);
+      window.ReaderContent.render(textBodyEl,authorCommentEl,original,onParagraph);
+      if(translationLocales.length){
+        const user=window.WebNovelsAuth?.getActor()?.userId;
+        window.ReaderContent.mountTranslation?.({panel:document.getElementById('readerNovelTranslation'),body:textBodyEl,
+          heading:document.getElementById('readerHeading'),original,locales:translationLocales,
+          load:async locale=>(await loadContent(locale)).episode,onParagraph,
+          isCurrent:()=>valid()&&window.WebNovelsAuth?.getActor()?.userId===user});
+      }
     }
   }
 
