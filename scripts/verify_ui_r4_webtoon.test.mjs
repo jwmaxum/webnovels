@@ -31,6 +31,35 @@ test('panel geometry is reserved while loading and decoding; a loaded panel clea
  image.onload();assert.equal(box.dataset.loaded,'true');assert.equal(box.getAttribute('aria-busy'),'false');assert.equal(status.textContent,'');assert.equal(retry.hidden,true);assert.equal(image.onerror,null);
 });
 
+test('switching language updates a mounted webtoon panel without reloading images or moving the reader',async()=>{
+ const app=fixture(),root=app.element(),pending=gate();let requests=0;
+ app.context.document.documentElement={lang:'ko'};
+ app.context.document.querySelectorAll=()=>[];
+ app.context.CustomEvent=class{constructor(type){this.type=type;}};
+ app.context.dispatchEvent=event=>app.emit(event.type);
+ for(const file of ['reader-feature-messages.js','reader-i18n.js']){
+   const script=await readFile(new URL('../public/js/core/'+file,import.meta.url),'utf8');
+   vm.runInContext(script,app.context,{filename:file});
+ }
+ app.context.ReaderWebtoon.render(root,panels(1),{load:()=>{requests++;return pending.promise;}});
+ await app.flush();
+ const panel=root.children[0],[image,retry,status]=panel.children;
+ app.context.scrollY=75;
+ for(const [locale, alt, label, loading] of [
+   ['en','Webtoon image 1','Reload image 1','Loading image 1…'],
+   ['ja','ウェブトゥーン画像 1','画像 1 を再読み込み','画像 1 を読み込んでいます。'],
+   ['zh-Hans','网络漫画第1张图片','重新加载第1张图片','正在加载第1张图片…']
+ ]){
+   assert.equal(app.context.ReaderI18n.setLocale(locale),true);
+   assert.equal(image.alt,alt);assert.equal(retry.getAttribute('aria-label'),label);assert.equal(status.textContent,loading);
+   assert.equal(root.children[0],panel);assert.equal(app.context.scrollY,75);assert.equal(requests,1);
+ }
+ pending.resolve(new Blob(['image']));await tick();image.onload();
+ assert.equal(panel.dataset.loaded,'true');assert.equal(status.textContent,'');
+ app.context.ReaderWebtoon.destroy(root);
+ assert.equal(app.events.get('reader:localechange').size,1,'shared translation listener only');
+});
+
 test('network failure has an announced recovery message and retries only the failed panel',async()=>{
  const app=fixture(),root=app.element(),calls=[];let fail=true;
  app.context.ReaderWebtoon.render(root,panels(2),{load:async(panel,format)=>{calls.push([panel.id,format]);if(panel.id==='2'&&fail)throw Error('network');return new Blob(['image']);}});

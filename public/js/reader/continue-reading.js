@@ -3,6 +3,15 @@
   'use strict';
   let generation=0, selected=null;
   const user=()=>window.WebNovelsAuth?.getActor()?.userId||null;
+  const t = (source, params = {}) => window.ReaderI18n?.t(source, params) ?? source.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+  function localized(id,label,attribute) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const render = typeof label === 'function' ? label : () => t(label);
+    if (window.ReaderFeatureCopy) window.ReaderFeatureCopy.bind(el, render, attribute);
+    else if (attribute) el.setAttribute(attribute, render());
+    else el.textContent = render();
+  }
   function reset(){generation++;selected=null;const section=document.getElementById('sectionContinueReading');if(section)section.style.display='none';}
   async function render() {
     const section=document.getElementById('sectionContinueReading');if(!section)return;
@@ -23,9 +32,13 @@
       const entry=await window.ReaderLibrary.latest(history,valid);if(!valid()||!entry)return;
       const {work,item}=entry,progress=Math.max(0,Math.min(100,Math.round(Number(item.progress)||0)));
       document.getElementById('continueCardCover').src=getWorkCover(work);
-      document.getElementById('continueCardTitle').textContent=work.title;
-      document.getElementById('continueCardMeta').textContent=`${item.episodeNumber}화 이어보기 · ${Array.isArray(work.genre)?work.genre.join(', '):work.genre||''}`;
-      document.getElementById('continueCardPct').textContent=`현재 회차 ${progress}%`;
+      const copy = () => window.ReaderI18n?.work(work) || work;
+      localized('continueCardTitle',() => copy().title);
+      localized('continueCardTitle',() => copy().titleLanguage || work.originalLanguage || 'ko','lang');
+      localized('continueCardMeta',() => t('{number}화 이어보기 · {genre}', {
+        number:item.episodeNumber,genre:(Array.isArray(work.genre)?work.genre:String(work.genre||'').split(',')).map(item=>t(item.trim())).join(', ')
+      }));
+      localized('continueCardPct',() => t('현재 회차 {progress}%',{progress}));
       document.getElementById('continueCardFill').style.width=`${progress}%`;
       selected={workId:work.id,episodeNumber:item.episodeNumber,account};
       card.onclick=()=>{if(valid())window.openReaderDirect(work.id,item.episodeNumber);};
@@ -34,9 +47,10 @@
       section.style.display='';
     }catch(error){
       if(!valid())return;
-      document.getElementById('continueCardTitle').textContent='이어서 읽을 회차를 확인하지 못했습니다.';
-      document.getElementById('continueCardMeta').textContent='연결 상태를 확인한 뒤 다시 시도해주세요.';
-      document.getElementById('continueCardPct').textContent='다시 시도';
+      localized('continueCardTitle','이어서 읽을 회차를 확인하지 못했습니다.');
+      localized('continueCardTitle','','lang');
+      localized('continueCardMeta','연결 상태를 확인한 뒤 다시 시도해주세요.');
+      localized('continueCardPct','다시 시도');
       document.getElementById('continueCardFill').style.width='0%';
       document.getElementById('continueCardCover').removeAttribute('src');
       card.onclick=render;card.setAttribute('role','button');card.tabIndex=0;
@@ -52,4 +66,7 @@
     if(document.getElementById('sectionContinueReading')?.style.display==='none')window.switchWebNovelsView?.('view-mypage');
   }});
   window.renderContinueReadingHome=render;
+  window.addEventListener?.('reader:localechange', () => {
+    if (window.currentActiveView === 'view-home') void render();
+  });
 })();

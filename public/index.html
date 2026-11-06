@@ -47,6 +47,7 @@
 <link rel="stylesheet" href="/css/policies.css?v=20261031r6">
   <link rel="stylesheet" href="/css/reader-shell.css?v=20261031r3">
   <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r7">
+  <link rel="stylesheet" href="/css/reader-locales.css?v=20261106ml01">
   <link rel="stylesheet" href="/css/author-studio.css?v=20261101r12">
   <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
   <link rel="stylesheet" href="/css/admin-shell.css?v=20261101op01">
@@ -61,13 +62,13 @@
   <link rel="stylesheet" href="/css/settlement.css?v=20261101r13">
 </head>
 <body class="theme-default" data-user-role="GUEST" data-active-view="view-home">
-  <a class="reader-skip-link" href="#readerMain">본문으로 이동</a>
+  <a class="reader-skip-link" href="#readerMain" data-i18n="static.skip">본문으로 이동</a>
   <div id="moduleLoadStatus" role="status" aria-live="polite" hidden></div>
   <div id="app" class="app-shell">
     <!-- PC 전용 좌측 고정 사이드바 (UI_pc.md 레이아웃 표준: 240px 너비) -->
     <aside class="cdg-desktop-sidebar" id="desktopSidebar">
       <div class="sidebar-brand-area">
-        <a href="#home" class="brand-link cp-brand" onclick="switchWebNovelsView('view-home')" title="webnovels 홈으로">
+        <a href="#home" class="brand-link cp-brand" onclick="switchWebNovelsView('view-home')" title="webnovels 홈으로" data-i18n-title="static.homeLink">
           <svg class="cdg-heart-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
@@ -78,31 +79,31 @@
       <nav class="sidebar-nav-container">
         <!-- 1. 주요 메뉴 -->
         <div class="sidebar-nav-group">
-          <div class="sidebar-group-label">주요 메뉴</div>
+          <div class="sidebar-group-label" data-i18n="static.mainMenu">주요 메뉴</div>
           <button type="button" class="sidebar-nav-item active" data-side-target="view-home" data-reader-route="home" onclick="switchWebNovelsView('view-home')">
             <i data-lucide="home" class="sidebar-nav-icon"></i>
-            <span>홈</span>
+            <span data-i18n="static.home">홈</span>
           </button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-novel" data-reader-route="novel" onclick="openNovelFilterHome()">
             <i data-lucide="book-open" class="sidebar-nav-icon"></i>
-            <span>웹소설</span>
+            <span data-i18n="static.novels">웹소설</span>
           </button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-webtoon" data-reader-route="webtoon" onclick="openWebtoonFilterHome()">
             <i data-lucide="palette" class="sidebar-nav-icon"></i>
-            <span>웹툰</span>
+            <span data-i18n="static.webtoons">웹툰</span>
           </button>
-          <button type="button" class="sidebar-nav-item" data-side-target="view-recommendations" data-reader-route="recommendations" onclick="navigateTo('/recommendations')"><i data-lucide="star" class="sidebar-nav-icon" aria-hidden="true"></i><span>추천</span></button>
+          <button type="button" class="sidebar-nav-item" data-side-target="view-recommendations" data-reader-route="recommendations" onclick="navigateTo('/recommendations')"><i data-lucide="star" class="sidebar-nav-icon" aria-hidden="true"></i><span data-i18n="static.recommendations">추천</span></button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-ranking" data-reader-route="ranking" onclick="navigateTo('/discover?sort=popular')">
             <i data-lucide="trophy" class="sidebar-nav-icon"></i>
-            <span>랭킹</span>
+            <span data-i18n="static.ranking">랭킹</span>
           </button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-new" onclick="scrollToSection('newWorksSection')">
             <i data-lucide="sparkles" class="sidebar-nav-icon"></i>
-            <span>최신</span>
+            <span data-i18n="static.latest">최신</span>
           </button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-completed" onclick="scrollToSection('completedWorksSection')">
             <i data-lucide="circle-check-big" class="sidebar-nav-icon"></i>
-            <span>완결</span>
+            <span data-i18n="static.completed">완결</span>
           </button>
         </div>
 
@@ -110,21 +111,21 @@
 
         <!-- 2. 탐색 (장르 퀵 링크) -->
         <div class="sidebar-nav-group">
-          <div class="sidebar-group-label">탐색</div>
+          <div class="sidebar-group-label" data-i18n="static.discover">탐색</div>
           <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('로맨스')">
-            <span class="genre-dot">●</span> <span>로맨스</span>
+            <span class="genre-dot">●</span> <span data-i18n="static.romance">로맨스</span>
           </button>
           <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('로맨스 판타지')">
-            <span class="genre-dot">●</span> <span>로판</span>
+            <span class="genre-dot">●</span> <span data-i18n="static.romanticFantasy">로판</span>
           </button>
           <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('판타지')">
-            <span class="genre-dot">●</span> <span>판타지</span>
+            <span class="genre-dot">●</span> <span data-i18n="static.fantasy">판타지</span>
           </button>
           <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('현대 판타지')">
-            <span class="genre-dot">●</span> <span>현대판타지</span>
+            <span class="genre-dot">●</span> <span data-i18n="static.modernFantasy">현대판타지</span>
           </button>
           <button type="button" class="sidebar-nav-item genre-sub-item" onclick="openGenreDiscover('무협')">
-            <span class="genre-dot">●</span> <span>무협</span>
+            <span class="genre-dot">●</span> <span data-i18n="static.martialArts">무협</span>
           </button>
         </div>
 
@@ -140,18 +141,18 @@
 
         <!-- 3. 내 서재 -->
         <div class="sidebar-nav-group">
-          <div class="sidebar-group-label">내 서재</div>
+          <div class="sidebar-group-label" data-i18n="static.library">내 서재</div>
           <button type="button" class="sidebar-nav-item" data-side-target="view-mypage" onclick="switchWebNovelsView('view-mypage')">
             <i data-lucide="library" class="sidebar-nav-icon"></i>
-            <span>내 서재</span>
+            <span data-i18n="static.library">내 서재</span>
           </button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-favorites" onclick="openLibraryTab('favorites')">
             <i data-lucide="heart" class="sidebar-nav-icon"></i>
-            <span>관심작</span>
+            <span data-i18n="static.favorites">관심작</span>
           </button>
           <button type="button" class="sidebar-nav-item" data-side-target="view-authors" onclick="openLibraryTab('authors')">
             <i data-lucide="bell" class="sidebar-nav-icon"></i>
-            <span>구독작가</span>
+            <span data-i18n="static.following">구독작가</span>
           </button>
         </div>
       </nav>
@@ -164,7 +165,7 @@
       <header class="webnovels-header" id="mainHeader">
         <div class="header-inner">
           <!-- 모바일 전용 브랜드 로고 -->
-          <a href="/home" class="brand-link cp-brand mobile-only-brand" id="brandLink" onclick="return handleReaderRouteClick(event)" title="webnovels 홈으로">
+          <a href="/home" class="brand-link cp-brand mobile-only-brand" id="brandLink" onclick="return handleReaderRouteClick(event)" title="webnovels 홈으로" data-i18n-title="static.homeLink">
             <svg class="cdg-heart-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
@@ -172,41 +173,50 @@
           </a>
 
           <!-- PC 중앙 검색바 (UI_pc.md: 🔍 작품명, 작가명을 검색) -->
-          <form class="desktop-header-search reader-header-search" id="desktopHeaderSearch" role="search" aria-label="작품 검색" action="/discover" method="get" onsubmit="submitReaderSearch(event)">
-            <label class="sr-only" for="inputSearchHeader">작품명·작가명 검색</label>
-            <input type="search" name="q" class="desktop-search-input" id="inputSearchHeader" maxlength="100" autocomplete="off" placeholder="작품명·작가명 검색">
-            <button type="submit" class="btn btn-ghost" aria-label="검색"><i data-lucide="search" aria-hidden="true"></i></button>
+          <form class="desktop-header-search reader-header-search" id="desktopHeaderSearch" role="search" aria-label="작품 검색" action="/discover" method="get" onsubmit="submitReaderSearch(event)" data-i18n-aria-label="static.workSearch">
+            <label class="sr-only" for="inputSearchHeader" data-i18n="static.searchByTitleOrAuthor">작품명·작가명 검색</label>
+            <input type="search" name="q" class="desktop-search-input" id="inputSearchHeader" maxlength="100" autocomplete="off" placeholder="작품명·작가명 검색" data-i18n-placeholder="static.searchByTitleOrAuthor">
+            <button type="submit" class="btn btn-ghost" aria-label="검색" data-i18n-aria-label="static.search"><i data-lucide="search" aria-hidden="true"></i></button>
           </form>
 
           <!-- Header Actions: 포인트 🪙 1,000P + 👤 프로필/로그인 -->
           <div class="header-actions">
-            <a href="/library" class="reader-header-library" id="readerHeaderLibrary" data-reader-route="library" onclick="return handleReaderRouteClick(event)"><i data-lucide="library" aria-hidden="true"></i><span>내 서재</span></a>
+            <a href="/library" class="reader-header-library" id="readerHeaderLibrary" data-reader-route="library" onclick="return handleReaderRouteClick(event)"><i data-lucide="library" aria-hidden="true"></i><span data-i18n="static.library">내 서재</span></a>
             <a href="/creator" class="btn btn-outline btn-sm" id="headerCreatorLink" data-account-portal="creator" hidden onclick="handleDirectPortalClick(event, 'creator')">작가 스튜디오</a>
             <div class="user-points-badge" id="headerPointsBadge" style="display:none">
               🪙 <span id="headerPointsValue">0P</span>
             </div>
-            <button type="button" class="btn btn-outline btn-sm beta-support-header-link" data-beta-support-open>문의·피드백</button>
+            <button type="button" class="btn btn-outline btn-sm beta-support-header-link" data-beta-support-open data-i18n="static.feedback">문의·피드백</button>
+            <div class="reader-language-picker">
+              <label for="readerLocale" class="sr-only" data-i18n="static.language">표시 언어</label>
+              <select id="readerLocale" data-reader-locale>
+                <option value="ko" lang="ko">한국어</option>
+                <option value="en" lang="en">English</option>
+                <option value="ja" lang="ja">日本語</option>
+                <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+              </select>
+            </div>
             <div class="user-profile-menu" id="userProfileMenu">
-              <button class="btn btn-primary btn-sm" id="btnHeaderLogin">로그인</button>
+              <button class="btn btn-primary btn-sm" id="btnHeaderLogin" data-i18n="static.login">로그인</button>
             </div>
           </div>
         </div>
 
         <!-- 모바일 직하단 검색 입력창 (UI_mobile.md: 🔍 작품명, 작가 검색) -->
-        <form class="mobile-search-bar-wrap reader-header-search" id="mobileSearchBarWrap" role="search" aria-label="작품 검색" action="/discover" method="get" onsubmit="submitReaderSearch(event)">
-          <label class="sr-only" for="inputSearchMobile">작품명·작가명 검색</label>
-          <input id="inputSearchMobile" name="q" type="search" maxlength="100" autocomplete="off" placeholder="작품명·작가명 검색">
-          <button type="submit" class="btn btn-ghost" aria-label="검색"><i data-lucide="search" aria-hidden="true"></i></button>
+        <form class="mobile-search-bar-wrap reader-header-search" id="mobileSearchBarWrap" role="search" aria-label="작품 검색" action="/discover" method="get" onsubmit="submitReaderSearch(event)" data-i18n-aria-label="static.workSearch">
+          <label class="sr-only" for="inputSearchMobile" data-i18n="static.searchByTitleOrAuthor">작품명·작가명 검색</label>
+          <input id="inputSearchMobile" name="q" type="search" maxlength="100" autocomplete="off" placeholder="작품명·작가명 검색" data-i18n-placeholder="static.searchByTitleOrAuthor">
+          <button type="submit" class="btn btn-ghost" aria-label="검색" data-i18n-aria-label="static.search"><i data-lucide="search" aria-hidden="true"></i></button>
         </form>
-        <nav class="reader-primary-nav" id="readerPrimaryNav" aria-label="독자 주요 메뉴">
-          <a href="/home" data-reader-route="home" aria-current="page" onclick="return handleReaderRouteClick(event)">홈</a>
-          <a href="/discover?type=NOVEL" data-reader-route="novel" onclick="return handleReaderRouteClick(event)">웹소설</a>
-          <a href="/discover?type=WEBTOON" data-reader-route="webtoon" onclick="return handleReaderRouteClick(event)">웹툰</a>
-          <a href="/recommendations" data-reader-route="recommendations" onclick="return handleReaderRouteClick(event)">추천</a>
-          <a href="/reading-test" data-points-test-entry hidden onclick="return handleReaderRouteClick(event)">포인트 TEST</a>
-          <a href="/discover?sort=popular" data-reader-route="ranking" onclick="return handleReaderRouteClick(event)">랭킹</a>
-          <a href="/discover?sort=new" data-reader-route="new" onclick="return handleReaderRouteClick(event)">신작</a>
-          <a href="/discover?status=COMPLETED" data-reader-route="completed" onclick="return handleReaderRouteClick(event)">완결</a>
+        <nav class="reader-primary-nav" id="readerPrimaryNav" aria-label="독자 주요 메뉴" data-i18n-aria-label="static.readerNav">
+          <a href="/home" data-reader-route="home" aria-current="page" onclick="return handleReaderRouteClick(event)" data-i18n="static.home">홈</a>
+          <a href="/discover?type=NOVEL" data-reader-route="novel" onclick="return handleReaderRouteClick(event)" data-i18n="static.novels">웹소설</a>
+          <a href="/discover?type=WEBTOON" data-reader-route="webtoon" onclick="return handleReaderRouteClick(event)" data-i18n="static.webtoons">웹툰</a>
+          <a href="/recommendations" data-reader-route="recommendations" onclick="return handleReaderRouteClick(event)" data-i18n="static.recommendations">추천</a>
+          <a href="/reading-test" data-points-test-entry hidden onclick="return handleReaderRouteClick(event)" data-i18n="static.pointsTest">포인트 TEST</a>
+          <a href="/discover?sort=popular" data-reader-route="ranking" onclick="return handleReaderRouteClick(event)" data-i18n="static.ranking">랭킹</a>
+          <a href="/discover?sort=new" data-reader-route="new" onclick="return handleReaderRouteClick(event)" data-i18n="static.newWorks">신작</a>
+          <a href="/discover?status=COMPLETED" data-reader-route="completed" onclick="return handleReaderRouteClick(event)" data-i18n="static.completed">완결</a>
         </nav>
       </header>
 
@@ -214,14 +224,14 @@
       <main class="webnovels-body" id="readerMain" tabindex="-1">
         <aside id="serviceStatus" class="service-status" role="status" aria-live="polite" hidden>
           <span id="serviceStatusMessage"></span>
-          <button id="serviceStatusRetry" type="button" class="btn btn-outline btn-sm">연결 다시 확인</button>
+          <button id="serviceStatusRetry" type="button" class="btn btn-outline btn-sm" data-i18n="static.retryConnection">연결 다시 확인</button>
         </aside>
 
         <!-- View 1: Home View (PC & Mobile 메인 홈) -->
         <section id="view-home" class="main-view active">
           <div class="reader-home-intro">
-            <div><h1>오늘, 어떤 이야기를 읽을까요?</h1><p>웹소설부터 웹툰까지, 새로운 이야기를 만나보세요.</p></div>
-            <a href="/discover?type=NOVEL" class="btn btn-outline" onclick="return handleReaderRouteClick(event)">전체 작품 탐색</a>
+            <div><h1 data-i18n="static.homeHeadline">오늘, 어떤 이야기를 읽을까요?</h1><p data-i18n="static.homeIntro">웹소설부터 웹툰까지, 새로운 이야기를 만나보세요.</p></div>
+            <a href="/discover?type=NOVEL" class="btn btn-outline" onclick="return handleReaderRouteClick(event)" data-i18n="static.exploreAll">전체 작품 탐색</a>
           </div>
           <div id="homeCatalogStatus" class="reader-catalog-status" role="status" aria-live="polite"></div>
 
@@ -231,7 +241,7 @@
               <img alt="" class="continue-thumb" id="continueCardCover">
               <div class="continue-info">
                 <div class="continue-badge-row">
-                  <span class="badge badge-accent continue-badge"><i data-lucide="book-open" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> 계속 읽기</span>
+                  <span class="badge badge-accent continue-badge"><i data-lucide="book-open" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> <span data-i18n="static.continueReading">계속 읽기</span></span>
                   <span class="continue-pct" id="continueCardPct"></span>
                 </div>
                 <h3 class="continue-title" id="continueCardTitle">작품 정보를 불러오는 중</h3>
@@ -246,10 +256,10 @@
             </div>
           </div>
 
-          <div id="readerDisplayHome" aria-label="관리자 선정 추천과 홈 구성"></div>
+          <div id="readerDisplayHome" aria-label="관리자 선정 추천과 홈 구성" data-i18n-aria-label="static.homeEditorial"></div>
           <!-- 1. HERO / Featured Works Carousel -->
           <div class="cdg-hero-container" id="heroFeaturedSection" hidden>
-            <h2 class="cdg-section-title">편집 추천</h2>
+            <h2 class="cdg-section-title" data-i18n="static.editorsPicks">편집 추천</h2>
             <p id="homeRecommendationNote" class="text-muted small"></p>
             <div class="cdg-hero-slider" id="cdgHeroSlider">
               <!-- Dynamic Hero Slides -->
@@ -257,25 +267,25 @@
           </div>
 
           <section class="cdg-section reader-primary-section" id="recentNovelsSection" aria-labelledby="recentNovelsHeading">
-            <div class="cdg-section-head"><h2 class="cdg-section-title" id="recentNovelsHeading">최근 공개한 웹소설</h2><a href="/discover?type=NOVEL&amp;sort=latest" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">웹소설 전체 보기</a></div>
-            <div class="reader-work-grid" id="recentNovelsGrid" aria-busy="true"><p class="text-muted">공개 작품을 불러오고 있습니다.</p></div>
+            <div class="cdg-section-head"><h2 class="cdg-section-title" id="recentNovelsHeading" data-i18n="static.latestNovels">최근 공개한 웹소설</h2><a href="/discover?type=NOVEL&amp;sort=latest" class="cdg-more-link" onclick="return handleReaderRouteClick(event)" data-i18n="static.allNovels">웹소설 전체 보기</a></div>
+            <div class="reader-work-grid" id="recentNovelsGrid" aria-busy="true"><p class="text-muted" data-i18n="static.loadingCatalog">공개 작품을 불러오고 있습니다.</p></div>
           </section>
 
           <section class="cdg-section reader-primary-section" id="webtoonsSection" aria-labelledby="recentWebtoonsHeading">
-            <div class="cdg-section-head"><h2 class="cdg-section-title" id="recentWebtoonsHeading">최근 공개한 웹툰</h2><a href="/discover?type=WEBTOON&amp;sort=latest" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">웹툰 전체 보기</a></div>
-            <div class="reader-work-grid" id="webtoonsGrid"><p class="text-muted">공개 작품을 불러오고 있습니다.</p></div>
+            <div class="cdg-section-head"><h2 class="cdg-section-title" id="recentWebtoonsHeading" data-i18n="static.latestWebtoons">최근 공개한 웹툰</h2><a href="/discover?type=WEBTOON&amp;sort=latest" class="cdg-more-link" onclick="return handleReaderRouteClick(event)" data-i18n="static.allWebtoons">웹툰 전체 보기</a></div>
+            <div class="reader-work-grid" id="webtoonsGrid"><p class="text-muted" data-i18n="static.loadingCatalog">공개 작품을 불러오고 있습니다.</p></div>
           </section>
 
         <!-- 2. 🔥 지금 가장 많이 읽는 작품 (Top 4 Ranking) -->
         <section class="cdg-section" id="editorialSpotlightSection" hidden>
-          <div class="cdg-section-head"><h2 class="cdg-section-title">편집부 기획 추천</h2></div>
-          <p class="text-muted small">편집부가 기간별로 선정한 작품입니다.</p>
+          <div class="cdg-section-head"><h2 class="cdg-section-title" data-i18n="static.editorialCollection">편집부 기획 추천</h2></div>
+          <p class="text-muted small" data-i18n="static.editorialCollectionIntro">편집부가 기간별로 선정한 작품입니다.</p>
           <div class="cdg-scroll-row" id="editorialSpotlightGrid"></div>
         </section>
         <section class="cdg-section" id="trendingWorksSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title" id="homePopularHeading">최근 7일 많이 읽은 작품</h2>
-            <a href="/discover?sort=popular" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">랭킹 전체 보기</a>
+            <h2 class="cdg-section-title" id="homePopularHeading" data-i18n="static.popularWeek">최근 7일 많이 읽은 작품</h2>
+            <a href="/discover?sort=popular" class="cdg-more-link" onclick="return handleReaderRouteClick(event)" data-i18n="static.allRanking">랭킹 전체 보기</a>
           </div>
           <p id="homeRankingNote" class="text-muted small" aria-live="polite"></p>
           <div class="cdg-scroll-row" id="trendingWorksGrid">
@@ -285,18 +295,18 @@
 
         <section class="cdg-section" id="goldenBestSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">🌟 Golden Best · 신인 첫걸음</h2>
-            <span class="golden-best-badge-note" title="누적 조회수 몰아주기가 아닌 최근 24시간 독자 반응(정독률, 관심, 유효댓글) 품질 기반 알고리즘"><i data-lucide="sparkles" style="width:12px;height:12px;display:inline;"></i> 반응 품질 기반 추천 (투명 알고리즘) · 1~15화 신작</span>
+            <h2 class="cdg-section-title" data-i18n="static.goldenBest">🌟 Golden Best · 신인 첫걸음</h2>
+            <span class="golden-best-badge-note" title="누적 조회수 몰아주기가 아닌 최근 24시간 독자 반응(정독률, 관심, 유효댓글) 품질 기반 알고리즘" data-i18n-title="static.goldenTooltip"><i data-lucide="sparkles" style="width:12px;height:12px;display:inline;"></i> <span data-i18n="static.goldenIntro">반응 품질 기반 추천 (투명 알고리즘) · 1~15화 신작</span></span>
           </div>
           <div class="cdg-scroll-row" id="goldenBestWorksGrid"></div>
         </section>
 
-        <section class="cdg-section" id="growthHome" hidden aria-label="새로운 연재 추천과 설정"></section>
+        <section class="cdg-section" id="growthHome" hidden aria-label="새로운 연재 추천과 설정" data-i18n-aria-label="static.growthNav"></section>
         <!-- 3. ✨ 새로운 작품 (New Releases) -->
         <section class="cdg-section" id="newWorksSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">새로 시작한 연재</h2>
-            <a href="/discover?sort=new" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">신작 전체 보기</a>
+            <h2 class="cdg-section-title" data-i18n="static.newSeries">새로 시작한 연재</h2>
+            <a href="/discover?sort=new" class="cdg-more-link" onclick="return handleReaderRouteClick(event)" data-i18n="static.allNew">신작 전체 보기</a>
           </div>
           <div class="cdg-scroll-row" id="newWorksGrid">
             <!-- Dynamic New Releases Cards -->
@@ -306,18 +316,18 @@
         <!-- 4. 장르별 추천 (Interactive Genre Filters) -->
         <section class="cdg-section" id="genreRecSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">장르별 추천</h2>
+            <h2 class="cdg-section-title" data-i18n="static.byGenre">장르별 추천</h2>
           </div>
           <!-- Genre Pills Bar -->
           <div class="cdg-genre-bar" id="cdgGenrePillsBar">
-            <button class="cdg-genre-pill active" data-genre="전체">전체</button>
-            <button class="cdg-genre-pill" data-genre="로맨스">로맨스</button>
-            <button class="cdg-genre-pill" data-genre="판타지">판타지</button>
-            <button class="cdg-genre-pill" data-genre="무협">무협</button>
-            <button class="cdg-genre-pill" data-genre="현대 판타지">현대 판타지</button>
-            <button class="cdg-genre-pill" data-genre="SF">SF</button>
-            <button class="cdg-genre-pill" data-genre="호러">호러</button>
-            <button class="cdg-genre-pill" data-genre="19+ 성인" style="display:none">19+ 성인</button>
+            <button class="cdg-genre-pill active" data-genre="전체" data-i18n="static.all">전체</button>
+            <button class="cdg-genre-pill" data-genre="로맨스" data-i18n="static.romance">로맨스</button>
+            <button class="cdg-genre-pill" data-genre="판타지" data-i18n="static.fantasy">판타지</button>
+            <button class="cdg-genre-pill" data-genre="무협" data-i18n="static.martialArts">무협</button>
+            <button class="cdg-genre-pill" data-genre="현대 판타지" data-i18n="static.modernFantasy">현대 판타지</button>
+            <button class="cdg-genre-pill" data-genre="SF" data-i18n="static.scifi">SF</button>
+            <button class="cdg-genre-pill" data-genre="호러" data-i18n="static.horror">호러</button>
+            <button class="cdg-genre-pill" data-genre="19+ 성인" style="display:none" data-i18n="static.adultGenre">19+ 성인</button>
           </div>
           <!-- Filtered Works Grid -->
           <div class="cdg-scroll-row" id="genreWorksGrid">
@@ -328,8 +338,8 @@
         <!-- 6. 🏆 완결 명작 모음 (Completed Works) -->
         <section class="cdg-section" id="completedWorksSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">완결까지 읽는 이야기</h2>
-            <a href="/discover?status=COMPLETED" class="cdg-more-link" onclick="return handleReaderRouteClick(event)">완결 작품 전체 보기</a>
+            <h2 class="cdg-section-title" data-i18n="static.completedSeries">완결까지 읽는 이야기</h2>
+            <a href="/discover?status=COMPLETED" class="cdg-more-link" onclick="return handleReaderRouteClick(event)" data-i18n="static.allCompleted">완결 작품 전체 보기</a>
           </div>
           <div class="cdg-scroll-row" id="completedWorksGrid">
             <!-- Dynamic Completed Work Cards -->
@@ -339,16 +349,16 @@
         <!-- 7. 오늘의 무료 작품 (Today's Free Works & Ad Unlock Banner) -->
         <section class="cdg-section" id="todayFreeSection" hidden>
           <div class="cdg-section-head">
-            <h2 class="cdg-section-title">🎁 오늘의 무료 작품</h2>
-            <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()">전체보기 <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
+            <h2 class="cdg-section-title" data-i18n="static.todayFree">🎁 오늘의 무료 작품</h2>
+            <span class="cdg-more-link" onclick="document.querySelector('[data-target=\'view-discover\']')?.click()"><span data-i18n="static.viewAll">전체보기</span> <i data-lucide="chevron-right" style="width:14px;height:14px;"></i></span>
           </div>
 
           <!-- Free serialization banner -->
           <div class="cdg-free-banner">
             <div class="cdg-free-banner-content">
-              <span class="cdg-free-badge"><i data-lucide="book-open" style="width:12px;height:12px;"></i> 무료 연재</span>
-              <h3>공개된 무료 회차를 읽어보세요</h3>
-              <p>작가가 공개한 무료 웹소설을 감상할 수 있습니다.</p>
+              <span class="cdg-free-badge"><i data-lucide="book-open" style="width:12px;height:12px;"></i> <span data-i18n="static.freeSeries">무료 연재</span></span>
+              <h3 data-i18n="static.freeEpisodeHeadline">공개된 무료 회차를 읽어보세요</h3>
+              <p data-i18n="static.freeEpisodeIntro">작가가 공개한 무료 웹소설을 감상할 수 있습니다.</p>
             </div>
           </div>
 
@@ -362,7 +372,7 @@
 
       <!-- View 2: Discover View (design.md Section 20) -->
       <section id="view-recommendations" class="main-view">
-        <div class="container section-padding"><div id="readerRecommendationsContent" role="region" aria-label="관리자 선정 추천 작품" tabindex="-1"></div></div>
+        <div class="container section-padding"><div id="readerRecommendationsContent" role="region" aria-label="관리자 선정 추천 작품" tabindex="-1" data-i18n-aria-label="static.curated"></div></div>
       </section>
       <section id="view-charging-test" class="main-view">
         <div class="container section-padding"><div id="readerTopupsContent" role="region" aria-label="시험용 충전·주문·환불" tabindex="-1"></div></div>
@@ -376,82 +386,82 @@
           <div class="section-header discover-header">
             <div>
               <h1 id="discoverHeading">웹소설 작품 탐색</h1>
-              <p class="text-muted">검색, 장르 필터, 정렬로 다음에 읽을 작품을 빠르게 찾으세요.</p>
+              <p class="text-muted" data-i18n="static.discoverIntro">검색, 장르 필터, 정렬로 다음에 읽을 작품을 빠르게 찾으세요.</p>
             </div>
-            <button type="button" class="btn btn-outline" id="btnDiscoverSearch"><i data-lucide="search" aria-hidden="true"></i> 검색창으로 이동</button>
+            <button type="button" class="btn btn-outline" id="btnDiscoverSearch"><i data-lucide="search" aria-hidden="true"></i> <span data-i18n="static.jumpSearch">검색창으로 이동</span></button>
           </div>
 
-          <nav class="discovery-type-tabs" aria-label="작품 종류">
-            <button type="button" class="pill active" data-discover-type="NOVEL" aria-pressed="true" onclick="setDiscoverType('NOVEL')">웹소설</button>
-            <button type="button" class="pill" data-discover-type="WEBTOON" aria-pressed="false" onclick="setDiscoverType('WEBTOON')">웹툰</button>
+          <nav class="discovery-type-tabs" aria-label="작품 종류" data-i18n-aria-label="static.workType">
+            <button type="button" class="pill active" data-discover-type="NOVEL" aria-pressed="true" onclick="setDiscoverType('NOVEL')" data-i18n="static.novels">웹소설</button>
+            <button type="button" class="pill" data-discover-type="WEBTOON" aria-pressed="false" onclick="setDiscoverType('WEBTOON')" data-i18n="static.webtoons">웹툰</button>
           </nav>
           <form id="discoverySearchForm" class="discovery-search" hidden onsubmit="ReaderDiscovery.submit(event)">
-            <label for="discoverQuery" class="sr-only">작품명·작가명 검색</label>
-            <input id="discoverQuery" type="search" maxlength="100" autocomplete="off" placeholder="작품이나 작가를 입력하세요">
-            <button type="submit" class="btn btn-primary">검색</button>
-            <select id="discoverType" aria-label="작품 종류" hidden onchange="ReaderDiscovery.filter('type', this.value)">
-              <option value="NOVEL">웹소설</option><option value="WEBTOON">웹툰</option>
+            <label for="discoverQuery" class="sr-only" data-i18n="static.searchByTitleOrAuthor">작품명·작가명 검색</label>
+            <input id="discoverQuery" type="search" maxlength="100" autocomplete="off" placeholder="작품이나 작가를 입력하세요" data-i18n-placeholder="static.enterTitleOrAuthor">
+            <button type="submit" class="btn btn-primary" data-i18n="static.search">검색</button>
+            <select id="discoverType" aria-label="작품 종류" hidden onchange="ReaderDiscovery.filter('type', this.value)" data-i18n-aria-label="static.workType">
+              <option value="NOVEL" data-i18n="static.novels">웹소설</option><option value="WEBTOON" data-i18n="static.webtoons">웹툰</option>
             </select>
           </form>
           <p id="discoverQueryStatus" class="sr-only" role="status" aria-live="polite"></p>
           <p id="discoveryRankingNote" class="text-muted small"></p>
 
           <!-- Genre Filter Pills -->
-          <div class="filter-pills mb-4" id="discoverGenreFilters" role="group" aria-label="장르">
-            <button type="button" class="pill active" onclick="setDiscoverGenreFilter('ALL', this)">전체</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('로맨스', this)">로맨스</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('판타지', this)">판타지</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('로맨스 판타지', this)">로맨스 판타지</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('현대 판타지', this)">현대 판타지</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('무협', this)">무협</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('SF', this)">SF</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('호러', this)">호러</button>
-            <button type="button" class="pill" onclick="setDiscoverGenreFilter('19+ 성인', this)" style="display:none">19+ 성인</button>
+          <div class="filter-pills mb-4" id="discoverGenreFilters" role="group" aria-label="장르" data-i18n-aria-label="static.genre">
+            <button type="button" class="pill active" data-genre="ALL" onclick="setDiscoverGenreFilter('ALL', this)" data-i18n="static.all">전체</button>
+            <button type="button" class="pill" data-genre="로맨스" onclick="setDiscoverGenreFilter('로맨스', this)" data-i18n="static.romance">로맨스</button>
+            <button type="button" class="pill" data-genre="판타지" onclick="setDiscoverGenreFilter('판타지', this)" data-i18n="static.fantasy">판타지</button>
+            <button type="button" class="pill" data-genre="로맨스 판타지" onclick="setDiscoverGenreFilter('로맨스 판타지', this)" data-i18n="static.romanticFantasy">로맨스 판타지</button>
+            <button type="button" class="pill" data-genre="현대 판타지" onclick="setDiscoverGenreFilter('현대 판타지', this)" data-i18n="static.modernFantasy">현대 판타지</button>
+            <button type="button" class="pill" data-genre="무협" onclick="setDiscoverGenreFilter('무협', this)" data-i18n="static.martialArts">무협</button>
+            <button type="button" class="pill" data-genre="SF" onclick="setDiscoverGenreFilter('SF', this)" data-i18n="static.scifi">SF</button>
+            <button type="button" class="pill" data-genre="호러" onclick="setDiscoverGenreFilter('호러', this)" data-i18n="static.horror">호러</button>
+            <button type="button" class="pill" data-genre="19+ 성인" onclick="setDiscoverGenreFilter('19+ 성인', this)" style="display:none" data-i18n="static.adultGenre">19+ 성인</button>
           </div>
 
           <!-- Comprehensive Multi-dimensional Filter Dashboard (improve3.md) -->
           <div class="discovery-selection-bar">
-            <div id="discoverActiveFilters" class="discovery-active-filters" aria-label="선택한 탐색 조건"></div>
-            <button type="button" class="btn btn-sm btn-ghost" id="btnResetDiscoverFilters" onclick="resetDiscoverFilters()"><i data-lucide="rotate-ccw" aria-hidden="true"></i> 조건 초기화</button>
+            <div id="discoverActiveFilters" class="discovery-active-filters" aria-label="선택한 탐색 조건" data-i18n-aria-label="static.activeFilters"></div>
+            <button type="button" class="btn btn-sm btn-ghost" id="btnResetDiscoverFilters" onclick="resetDiscoverFilters()"><i data-lucide="rotate-ccw" aria-hidden="true"></i> <span data-i18n="static.clearFilters">조건 초기화</span></button>
           </div>
           <details class="discover-filter-dashboard" id="discoverFilterDashboard">
             <summary class="filter-dashboard-header">
               <span class="filter-dashboard-title">
                 <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
-                <span class="font-bold">상세 필터</span>
+                <span class="font-bold" data-i18n="static.detailedFilters">상세 필터</span>
               </span>
-              <span class="text-muted small">연재 상태 · 회차 · 연령 · 키워드</span>
+              <span class="text-muted small" data-i18n="static.filterSummary">연재 상태 · 회차 · 연령 · 키워드</span>
             </summary>
 
             <div class="filter-dashboard-body">
               <!-- Filter Row 1: Status & Episode Range & Age Rating & Sort -->
               <div class="filter-row">
                 <div class="filter-group">
-                  <span class="filter-label">연재 상태</span>
+                  <span class="filter-label" data-i18n="static.seriesStatus">연재 상태</span>
                   <div class="filter-segmented" id="filterStatusGroup">
-                    <button type="button" class="filter-chip active" data-status="ALL" onclick="setDiscoverStatus('ALL', this)">전체</button>
-                    <button type="button" class="filter-chip" data-status="ONGOING" onclick="setDiscoverStatus('ONGOING', this)">연재중</button>
-                    <button type="button" class="filter-chip" data-status="COMPLETED" onclick="setDiscoverStatus('COMPLETED', this)">완결</button>
+                    <button type="button" class="filter-chip active" data-status="ALL" onclick="setDiscoverStatus('ALL', this)" data-i18n="static.all">전체</button>
+                    <button type="button" class="filter-chip" data-status="ONGOING" onclick="setDiscoverStatus('ONGOING', this)" data-i18n="static.ongoing">연재중</button>
+                    <button type="button" class="filter-chip" data-status="COMPLETED" onclick="setDiscoverStatus('COMPLETED', this)" data-i18n="static.completed">완결</button>
                   </div>
                 </div>
 
                 <div class="filter-group">
-                  <span class="filter-label">회차 수</span>
+                  <span class="filter-label" data-i18n="static.episodeCount">회차 수</span>
                   <div class="filter-segmented" id="filterEpRangeGroup">
-                    <button type="button" class="filter-chip active" data-eprange="ALL" onclick="setDiscoverEpisodeRange('ALL', this)">전체</button>
-                    <button type="button" class="filter-chip" data-eprange="1-25" onclick="setDiscoverEpisodeRange('1-25', this)">단편 (1~25화)</button>
-                    <button type="button" class="filter-chip" data-eprange="26-100" onclick="setDiscoverEpisodeRange('26-100', this)">중편 (26~100화)</button>
-                    <button type="button" class="filter-chip" data-eprange="101+" onclick="setDiscoverEpisodeRange('101+', this)">장편 (101화+)</button>
+                    <button type="button" class="filter-chip active" data-eprange="ALL" onclick="setDiscoverEpisodeRange('ALL', this)" data-i18n="static.all">전체</button>
+                    <button type="button" class="filter-chip" data-eprange="1-25" onclick="setDiscoverEpisodeRange('1-25', this)" data-i18n="static.shortSeries">단편 (1~25화)</button>
+                    <button type="button" class="filter-chip" data-eprange="26-100" onclick="setDiscoverEpisodeRange('26-100', this)" data-i18n="static.mediumSeries">중편 (26~100화)</button>
+                    <button type="button" class="filter-chip" data-eprange="101+" onclick="setDiscoverEpisodeRange('101+', this)" data-i18n="static.longSeries">장편 (101화+)</button>
                   </div>
                 </div>
 
                 <div class="filter-group">
-                  <span class="filter-label">연령 등급</span>
+                  <span class="filter-label" data-i18n="static.ageRating">연령 등급</span>
                   <div class="filter-segmented" id="filterRatingGroup">
-                    <button type="button" class="filter-chip active" data-rating="ALL" onclick="setDiscoverRating('ALL', this)">전체</button>
-                    <button type="button" class="filter-chip" data-rating="ALL_AGES" onclick="setDiscoverRating('ALL_AGES', this)">전체이용가</button>
-                    <button type="button" class="filter-chip" data-rating="AGE_15" onclick="setDiscoverRating('AGE_15', this)">15세 이상</button>
-                    <button type="button" class="filter-chip" data-rating="AGE_19" onclick="setDiscoverRating('AGE_19', this)">19세 이상</button>
+                    <button type="button" class="filter-chip active" data-rating="ALL" onclick="setDiscoverRating('ALL', this)" data-i18n="static.all">전체</button>
+                    <button type="button" class="filter-chip" data-rating="ALL_AGES" onclick="setDiscoverRating('ALL_AGES', this)" data-i18n="static.allAges">전체이용가</button>
+                    <button type="button" class="filter-chip" data-rating="AGE_15" onclick="setDiscoverRating('AGE_15', this)" data-i18n="static.ages15">15세 이상</button>
+                    <button type="button" class="filter-chip" data-rating="AGE_19" onclick="setDiscoverRating('AGE_19', this)" data-i18n="static.ages19">19세 이상</button>
                   </div>
                 </div>
 
@@ -460,26 +470,26 @@
               <!-- Filter Row 2: Tag Multi-Select Filters -->
               <div class="filter-row filter-tags-row">
                 <div class="filter-tags-header">
-                  <span class="filter-label">키워드 · 선택한 태그 모두 포함</span>
+                  <span class="filter-label" data-i18n="static.keywords">키워드 · 선택한 태그 모두 포함</span>
                   <span class="text-muted small" id="activeTagsCounter">선택된 태그: 0개</span>
                 </div>
-                <div class="filter-tag-chips-wrap" id="discoverTagFilters" aria-label="세부 태그 필터">
-                  <button type="button" class="filter-tag-pill" data-discover-tag="regression" onclick="toggleDiscoverTag('regression')">#회귀</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="possession" onclick="toggleDiscoverTag('possession')">#빙의</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="reincarnation" onclick="toggleDiscoverTag('reincarnation')">#환생</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="misunderstanding" onclick="toggleDiscoverTag('misunderstanding')">#착각계</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="catharsis" onclick="toggleDiscoverTag('catharsis')">#사이다</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="academy" onclick="toggleDiscoverTag('academy')">#아카데미</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="professional" onclick="toggleDiscoverTag('professional')">#전문직</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="system" onclick="toggleDiscoverTag('system')">#시스템</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="hunter" onclick="toggleDiscoverTag('hunter')">#헌터</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="growth" onclick="toggleDiscoverTag('growth')">#성장</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="romance" onclick="toggleDiscoverTag('romance')">#로맨스</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="martial-arts" onclick="toggleDiscoverTag('martial-arts')">#무협</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="modern-fantasy" onclick="toggleDiscoverTag('modern-fantasy')">#현대판타지</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="healing" onclick="toggleDiscoverTag('healing')">#힐링</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="revenge" onclick="toggleDiscoverTag('revenge')">#복수</button>
-                  <button type="button" class="filter-tag-pill" data-discover-tag="game" onclick="toggleDiscoverTag('game')">#게임빙의</button>
+                <div class="filter-tag-chips-wrap" id="discoverTagFilters" aria-label="세부 태그 필터" data-i18n-aria-label="static.tagFilters">
+                  <button type="button" class="filter-tag-pill" data-discover-tag="regression" onclick="toggleDiscoverTag('regression')" data-i18n="static.tagRegression">#회귀</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="possession" onclick="toggleDiscoverTag('possession')" data-i18n="static.tagPossession">#빙의</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="reincarnation" onclick="toggleDiscoverTag('reincarnation')" data-i18n="static.tagReincarnation">#환생</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="misunderstanding" onclick="toggleDiscoverTag('misunderstanding')" data-i18n="static.tagMisunderstanding">#착각계</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="catharsis" onclick="toggleDiscoverTag('catharsis')" data-i18n="static.tagPayoff">#사이다</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="academy" onclick="toggleDiscoverTag('academy')" data-i18n="static.tagAcademy">#아카데미</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="professional" onclick="toggleDiscoverTag('professional')" data-i18n="static.tagCareer">#전문직</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="system" onclick="toggleDiscoverTag('system')" data-i18n="static.tagSystem">#시스템</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="hunter" onclick="toggleDiscoverTag('hunter')" data-i18n="static.tagHunter">#헌터</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="growth" onclick="toggleDiscoverTag('growth')" data-i18n="static.tagGrowth">#성장</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="romance" onclick="toggleDiscoverTag('romance')" data-i18n="static.tagRomance">#로맨스</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="martial-arts" onclick="toggleDiscoverTag('martial-arts')" data-i18n="static.tagMartialArts">#무협</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="modern-fantasy" onclick="toggleDiscoverTag('modern-fantasy')" data-i18n="static.tagModernFantasy">#현대판타지</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="healing" onclick="toggleDiscoverTag('healing')" data-i18n="static.tagHealing">#힐링</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="revenge" onclick="toggleDiscoverTag('revenge')" data-i18n="static.tagRevenge">#복수</button>
+                  <button type="button" class="filter-tag-pill" data-discover-tag="game" onclick="toggleDiscoverTag('game')" data-i18n="static.tagGame">#게임빙의</button>
                 </div>
               </div>
             </div>
@@ -487,15 +497,15 @@
 
           <div class="discovery-results-toolbar">
             <p class="results-counter" id="discoverResultsCount" role="status" aria-live="polite">공개 작품을 찾고 있습니다.</p>
-            <div class="discovery-sort"><label for="selectDiscoverSort">정렬</label><select id="selectDiscoverSort" class="filter-sort-select" onchange="setDiscoverSortOrder(this.value)">
-              <option value="latest">최신 공개순</option><option value="new" id="discoveryNewSort" hidden>첫 공개순 (신작)</option><option value="popular">최근 7일 독자순</option><option value="views" hidden>최근 7일 독자순</option><option value="episodes">회차 많은순</option>
+            <div class="discovery-sort"><label for="selectDiscoverSort" data-i18n="static.sort">정렬</label><select id="selectDiscoverSort" class="filter-sort-select" onchange="setDiscoverSortOrder(this.value)">
+              <option value="latest" data-i18n="static.sortRecentlyPublished">최신 공개순</option><option value="new" id="discoveryNewSort" hidden data-i18n="static.sortNewSeries">첫 공개순 (신작)</option><option value="popular" data-i18n="static.sortPopularWeek">최근 7일 독자순</option><option value="views" hidden data-i18n="static.sortPopularWeek">최근 7일 독자순</option><option value="episodes" data-i18n="static.sortEpisodeCount">회차 많은순</option>
             </select></div>
           </div>
 
           <div class="works-grid" id="discoverWorksGrid">
             <!-- Discover Works List -->
           </div>
-          <nav id="discoverPager" class="discovery-pager" aria-label="검색 결과 페이지"></nav>
+          <nav id="discoverPager" class="discovery-pager" aria-label="검색 결과 페이지" data-i18n-aria-label="static.pagination"></nav>
         </div>
       </section>
 
@@ -505,9 +515,9 @@
           <!-- Top Back Navigation -->
           <div class="work-detail-top-bar mb-4" style="display: flex; align-items: center; justify-content: space-between;">
             <button class="btn btn-outline btn-sm" id="btnWorkDetailBack" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; cursor: pointer;">
-              <i data-lucide="arrow-left"></i> 이전 목록으로
+              <i data-lucide="arrow-left"></i> <span data-i18n="static.backToList">이전 목록으로</span>
             </button>
-            <span class="text-muted small">작품 상세 정보</span>
+            <span class="text-muted small" data-i18n="static.detail">작품 상세 정보</span>
           </div>
           <p id="detailLoadStatus" class="reader-load-status" role="status" aria-live="polite"></p>
 
@@ -524,8 +534,9 @@
                 <span class="badge badge-outline" id="detailAiBadge"></span>
               </div>
               <h1 id="detailTitle" class="detail-title">작품 정보를 불러오는 중</h1>
+              <p id="detailOriginalLanguage" class="text-muted small" hidden></p>
               <p class="detail-author" id="detailAuthor">작가 정보 확인 중</p>
-              <details class="detail-synopsis" id="detailSynopsis" open><summary id="detailSummaryHeading">작품 소개</summary><p class="detail-desc" id="detailDescription"></p></details>
+              <details class="detail-synopsis" id="detailSynopsis" open><summary id="detailSummaryHeading" data-i18n="static.synopsis">작품 소개</summary><p class="detail-desc" id="detailDescription"></p></details>
 
               <div class="detail-actions">
                 <button class="btn btn-primary btn-lg" id="btnDetailReadFirst" disabled>
@@ -538,7 +549,7 @@
                   <i data-lucide="user-plus"></i> 작가 구독
                 </button>
                 <button class="btn btn-outline btn-lg" id="btnDetailSupport" onclick="supportActiveWork()" style="display:none">
-                  <i data-lucide="heart-handshake"></i> 작가 응원하기
+                  <i data-lucide="heart-handshake"></i> <span data-i18n="static.supportAuthor">작가 응원하기</span>
                 </button>
               </div>
             </div>
@@ -548,23 +559,23 @@
           <div class="work-supporters-section mt-8 mb-6 card glass-panel p-6" id="workTopSupportersWidget" style="display:none; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-subtle);">
             <div class="flex-between mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:1.15rem;">
-                <i data-lucide="trophy" style="color:var(--accent-amber, #F59E0B);"></i> 이 작품의 명예의 전당 (Top Supporters)
+                <i data-lucide="trophy" style="color:var(--accent-amber, #F59E0B);"></i> <span data-i18n="static.topSupporters">이 작품의 명예의 전당 (Top Supporters)</span>
               </h3>
               <button class="btn btn-outline btn-sm" onclick="supportActiveWork()" style="font-size:0.82rem; padding:5px 12px;">
-                <i data-lucide="heart-handshake"></i> 나도 응원하기
+                <i data-lucide="heart-handshake"></i> <span data-i18n="static.supportThis">나도 응원하기</span>
               </button>
             </div>
             <div class="top-supporters-list" id="workTopSupportersList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;">
-              <div class="p-3 text-center text-muted small">서포터즈 목록을 불러오고 있습니다...</div>
+              <div class="p-3 text-center text-muted small" data-i18n="static.loadingSupporters">서포터즈 목록을 불러오고 있습니다...</div>
             </div>
           </div>
 
           <!-- Episode List (design.md Section 24) -->
           <div class="episodes-section mt-8">
-            <h2 class="mb-4" id="detailEpisodesHeading">공개 회차</h2>
+            <h2 class="mb-4" id="detailEpisodesHeading" data-i18n="static.publishedEpisodes">공개 회차</h2>
             <p id="detailDates" class="text-muted small"></p>
-            <div id="detailExternalLinks" class="discovery-links" aria-label="다른 플랫폼 연재 링크"></div>
-            <a id="detailShareLink" class="btn btn-outline" hidden>작품 공유 페이지</a>
+            <div id="detailExternalLinks" class="discovery-links" aria-label="다른 플랫폼 연재 링크" data-i18n-aria-label="static.otherPlatforms"></div>
+            <a id="detailShareLink" class="btn btn-outline" hidden data-i18n="static.shareWork">작품 공유 페이지</a>
             <div class="episode-list" id="detailEpisodeList">
               <!-- Dynamic Episode Rows -->
             </div>
@@ -582,14 +593,24 @@
       <!-- View 4: Fullscreen Web Novel Reader (design.md Section 26~31) -->
       <section id="view-reader" class="main-view full-screen-reader">
         <header class="reader-header" id="readerHeader">
-          <button class="btn btn-icon btn-ghost" id="btnReaderBack" aria-label="작품 상세로 돌아가기">
+          <button class="btn btn-icon btn-ghost" id="btnReaderBack" aria-label="작품 상세로 돌아가기" data-i18n-aria-label="static.backToWork">
             <i data-lucide="arrow-left" aria-hidden="true"></i>
           </button>
           <div class="reader-title-info">
             <h4 id="readerWorkTitle">작품 정보를 불러오는 중</h4>
             <span id="readerEpTitle"></span>
           </div>
-          <div class="reader-header-tools"><button type="button" class="btn btn-outline btn-sm" id="btnReaderEpisodes" disabled>회차 목록</button><button class="btn btn-icon btn-ghost" id="btnReaderSettings" aria-label="읽기 환경 설정"><i data-lucide="sliders" aria-hidden="true"></i></button></div>
+          <div class="reader-header-tools">
+            <label for="readerViewerLocale" class="sr-only" data-i18n="static.language">표시 언어</label>
+            <select id="readerViewerLocale" data-reader-locale>
+              <option value="ko" lang="ko">한국어</option>
+              <option value="en" lang="en">English</option>
+              <option value="ja" lang="ja">日本語</option>
+              <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+            </select>
+            <button type="button" class="btn btn-outline btn-sm" id="btnReaderEpisodes" disabled data-i18n="static.episodeList">회차 목록</button>
+            <button class="btn btn-icon btn-ghost" id="btnReaderSettings" aria-label="읽기 환경 설정" data-i18n-aria-label="static.readingSettings"><i data-lucide="sliders" aria-hidden="true"></i></button>
+          </div>
         </header>
 
         <!-- Reader Content Area (Web Novel & Webtoon Support) -->
@@ -597,6 +618,7 @@
           <div class="reader-paper" id="readerPaper">
             <div id="readerChapterStatus" class="reader-load-status" role="status" aria-live="polite"></div>
             <h1 class="ep-heading" id="readerHeading">공개 회차 확인 중</h1>
+            <p id="readerSourceLanguage" class="small text-muted" hidden></p>
             <p id="readerProgressStatus" class="text-muted small" role="status" aria-live="polite"></p>
 
             <!-- 1. Web Novel Text Content -->
@@ -614,21 +636,21 @@
             </div>
 
             <!-- Reader Bottom Navigation (이전화 / 다음화) -->
-            <nav class="reader-bottom-nav" aria-label="공개 회차 이동">
-              <button class="btn btn-outline" id="btnPrevEp"><i data-lucide="chevron-left"></i> 이전 화</button>
+            <nav class="reader-bottom-nav" aria-label="공개 회차 이동" data-i18n-aria-label="static.episodeNav">
+              <button class="btn btn-outline" id="btnPrevEp"><i data-lucide="chevron-left"></i> <span data-i18n="static.previousEpisode">이전 화</span></button>
               <div class="reader-nav-center-btns">
-                <button type="button" class="btn btn-outline" id="btnReaderEpisodeList" disabled>회차 목록</button>
-                <button class="btn btn-outline" id="btnReaderLibrary" onclick="switchWebNovelsView('view-mypage')"><i data-lucide="book-marked"></i> 내 서재</button>
-                <button class="btn btn-outline" id="btnReaderHome" onclick="switchWebNovelsView('view-home')"><i data-lucide="home"></i> 홈</button>
+                <button type="button" class="btn btn-outline" id="btnReaderEpisodeList" disabled data-i18n="static.episodeList">회차 목록</button>
+                <button class="btn btn-outline" id="btnReaderLibrary" onclick="switchWebNovelsView('view-mypage')"><i data-lucide="book-marked"></i> <span data-i18n="static.library">내 서재</span></button>
+                <button class="btn btn-outline" id="btnReaderHome" onclick="switchWebNovelsView('view-home')"><i data-lucide="home"></i> <span data-i18n="static.home">홈</span></button>
               </div>
-              <button class="btn btn-primary" id="btnNextEp">다음 화 <i data-lucide="chevron-right"></i></button>
+              <button class="btn btn-primary" id="btnNextEp"><span data-i18n="static.nextEpisode">다음 화</span> <i data-lucide="chevron-right"></i></button>
             </nav>
 
             <!-- Reader Comments Section (회차 댓글 & 좋아요) -->
             <div class="reader-comments-box mt-6" id="readerCommentsSection" style="border-top: 1px solid var(--border-color); padding-top: 24px;">
               <div class="flex-between mb-3" style="display:flex; justify-content:space-between; align-items:center;">
                 <h2 class="reader-section-heading">
-                  <i data-lucide="message-square" style="width:18px;height:18px;color:var(--cdg-pink);"></i> 독자 댓글 <span id="readerCommentCount" style="color:var(--cdg-pink); font-size:0.9rem;">(0)</span>
+                  <i data-lucide="message-square" style="width:18px;height:18px;color:var(--cdg-pink);"></i> <span data-i18n="static.comments">독자 댓글</span> <span id="readerCommentCount" style="color:var(--cdg-pink); font-size:0.9rem;">(0)</span>
                 </h2>
               </div>
 
@@ -640,7 +662,7 @@
 
             <!-- Reader Recommended Works (추천작품) -->
             <div class="reader-recommend-box mt-8" id="readerRecommendBox" style="border-top: 1px solid var(--border-color); padding-top: 24px;">
-              <h2 class="reader-section-heading" id="readerRecommendHeading">편집 추천</h2>
+              <h2 class="reader-section-heading" id="readerRecommendHeading" data-i18n="static.editorsPicks">편집 추천</h2>
               <div class="cdg-scroll-row" id="readerRecommendGrid">
                 <!-- Dynamic Recommended Work Cards -->
               </div>
@@ -651,7 +673,7 @@
       </section>
 
       <!-- View 5: Creator Studio (service_structure.md 작가센터 7대 메뉴) -->
-      <section id="view-creator" class="main-view">
+      <section id="view-creator" class="main-view" lang="ko">
         <div class="container section-padding">
           <!-- Author Info Bar -->
           <div class="card glass-panel p-4 mb-4" id="creatorAuthorBar">
@@ -1049,14 +1071,14 @@
         <div class="container section-padding">
           <div class="panel-header library-panel-header">
             <div>
-              <h1 id="libraryHeading">내 서재</h1>
-              <p class="text-muted">읽던 작품, 관심 작품과 구독 작가를 한 화면에서 관리합니다.</p>
+              <h1 id="libraryHeading" data-i18n="static.library">내 서재</h1>
+              <p class="text-muted" data-i18n="static.libraryIntro">읽던 작품, 관심 작품과 구독 작가를 한 화면에서 관리합니다.</p>
             </div>
-            <a href="/discover" class="btn btn-outline" onclick="return handleReaderRouteClick(event)"><i data-lucide="search" aria-hidden="true"></i> 새 작품 찾기</a>
+            <a href="/discover" class="btn btn-outline" onclick="return handleReaderRouteClick(event)"><i data-lucide="search" aria-hidden="true"></i> <span data-i18n="static.findWork">새 작품 찾기</span></a>
           </div>
           <p id="libraryLoadStatus" class="reader-load-status" role="status" aria-live="polite"></p>
 
-          <a href="/wallet" data-live-commerce-entry hidden>포인트 충전·유료 작품 읽기</a>
+          <a href="/wallet" data-live-commerce-entry hidden data-i18n="static.topUpAndRead">포인트 충전·유료 작품 읽기</a>
           <div class="library-layout mt-6">
             <aside class="library-profile glass-panel">
               <div class="user-profile-summary">
@@ -1068,30 +1090,30 @@
                 </div>
               </div>
               <div class="library-stats">
-                <div><strong id="statReadingCount">—</strong><span>읽기 기록</span></div>
-                <div><strong id="statFavoriteCount">—</strong><span>관심작</span></div>
-                <div><strong id="statAuthorCount">—</strong><span>구독 작가</span></div>
+                <div><strong id="statReadingCount">—</strong><span data-i18n="static.history">읽기 기록</span></div>
+                <div><strong id="statFavoriteCount">—</strong><span data-i18n="static.favorites">관심작</span></div>
+                <div><strong id="statAuthorCount">—</strong><span data-i18n="static.following">구독 작가</span></div>
               </div>
               <div id="boxPassVerify" style="display:none">
                 <button class="btn btn-primary w-full" id="btnStartPassVerify">
-                  <i data-lucide="smartphone"></i> PASS 성인 인증
+                  <i data-lucide="smartphone"></i> <span data-i18n="static.verifyPass">PASS 성인 인증</span>
                 </button>
-                <p class="text-muted small" id="passVerifyNotice">19+ 작품은 인증 완료 후 열람할 수 있습니다.</p>
+                <p class="text-muted small" id="passVerifyNotice" data-i18n="static.verifyPassRequired">19+ 작품은 인증 완료 후 열람할 수 있습니다.</p>
               </div>
 
               <button class="btn btn-outline w-full mt-3" id="btnOpenEditProfile" onclick="openEditProfileModal()">
-                <i data-lucide="user-cog"></i> 나의 정보 수정
+                <i data-lucide="user-cog"></i> <span data-i18n="static.editProfile">나의 정보 수정</span>
               </button>
-              <button type="button" class="btn btn-outline w-full mt-3" data-beta-support-open>문의·피드백</button>
+              <button type="button" class="btn btn-outline w-full mt-3" data-beta-support-open data-i18n="static.feedback">문의·피드백</button>
             </aside>
 
 
             <div class="library-main">
-              <div class="library-tabs" role="tablist" aria-label="내 서재 탭">
-                <button type="button" class="active" id="library-tab-continue" role="tab" aria-controls="libraryTab-continue" aria-selected="true" data-library-tab="continue">이어읽기</button>
-                <button type="button" id="library-tab-favorites" role="tab" aria-controls="libraryTab-favorites" aria-selected="false" tabindex="-1" data-library-tab="favorites">관심 작품</button>
-                <button type="button" id="library-tab-authors" role="tab" aria-controls="libraryTab-authors" aria-selected="false" tabindex="-1" data-library-tab="authors">구독 작가</button>
-                <button type="button" id="library-tab-appeals" role="tab" aria-controls="libraryTab-appeals" aria-selected="false" tabindex="-1" data-library-tab="appeals" hidden>이의제기</button>
+              <div class="library-tabs" role="tablist" aria-label="내 서재 탭" data-i18n-aria-label="static.libraryTabs">
+                <button type="button" class="active" id="library-tab-continue" role="tab" aria-controls="libraryTab-continue" aria-selected="true" data-library-tab="continue" data-i18n="static.continueReading">이어읽기</button>
+                <button type="button" id="library-tab-favorites" role="tab" aria-controls="libraryTab-favorites" aria-selected="false" tabindex="-1" data-library-tab="favorites" data-i18n="static.favorites">관심 작품</button>
+                <button type="button" id="library-tab-authors" role="tab" aria-controls="libraryTab-authors" aria-selected="false" tabindex="-1" data-library-tab="authors" data-i18n="static.following">구독 작가</button>
+                <button type="button" id="library-tab-appeals" role="tab" aria-controls="libraryTab-appeals" aria-selected="false" tabindex="-1" data-library-tab="appeals" hidden data-i18n="static.appeals">이의제기</button>
               </div>
               <div class="library-tab-panel active" id="libraryTab-continue" role="tabpanel" aria-labelledby="library-tab-continue">
                 <div class="library-list" id="libraryContinueList"></div>
@@ -1111,7 +1133,7 @@
       </section>
 
       <!-- View 7: Admin CMS Integration (Sidebar + 16 Panel Content Area) -->
-      <section id="view-admin-cms" class="main-view">
+      <section id="view-admin-cms" class="main-view" lang="ko">
         <div id="adminOperationsShell" class="container section-padding" hidden>
           <header class="cms-header">
             <div><p class="cms-eyebrow">관리자 센터</p><h1>서비스 운영</h1><p class="cms-intro">처리할 요청을 확인하고, 권한에 맞는 업무를 선택하세요.</p><p id="adminConsoleIdentity" role="status"></p></div>
@@ -1624,12 +1646,12 @@
       </section>
 
     </main>
-    <footer class="legal-footer" aria-label="사업자정보">
+    <footer class="legal-footer" aria-label="사업자정보" data-i18n-aria-label="static.businessInfo">
       <p id="readerDisplayFooterNote" hidden></p>
-      <nav aria-label="정책 바로가기"><a href="/company/">회사정보</a><a href="/policies/terms/">이용약관</a><a href="/policies/refund/">환불정책</a><a href="/policies/settlement/">정산 정보·서류 확인</a></nav>
+      <nav aria-label="정책 바로가기" data-i18n-aria-label="static.policies"><a href="/company/" data-i18n="static.company">회사정보</a><a href="/policies/terms/" data-i18n="static.terms">이용약관</a><a href="/policies/refund/" data-i18n="static.refunds">환불정책</a><a href="/policies/settlement/" data-i18n="static.settlementPolicy">정산 정보·서류 확인</a></nav>
       <p><strong>(주)얼토당토</strong> · 대표이사 성재원 · 사업자등록번호 555-81-02749</p>
       <address>서울특별시 송파구 중대로 192, 201-18호</address>
-      <p>전화 <a href="tel:01021432120">010-2143-2120</a> · 이메일 <a href="mailto:bazier.stage@gmail.com">bazier.stage@gmail.com</a></p>
+      <p><span data-i18n="static.phone">전화</span> <a href="tel:01021432120">010-2143-2120</a> <span data-i18n="static.footerEmail">· 이메일</span> <a href="mailto:bazier.stage@gmail.com">bazier.stage@gmail.com</a></p>
       <p>통신판매업: 신고 전 · 유료 결제 서비스 준비 중</p><p>© (주)얼토당토. WebNovels.</p>
     </footer>
     </div> <!-- /#mainContentWrapper -->
@@ -1642,8 +1664,8 @@
         </div>
         <div class="ad-modal-content text-center">
           <div class="ad-unlock-icon" style="font-size:2.2rem; margin-bottom:6px;">🔓</div>
-          <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:6px;">다음 회차 열람 방법</h2>
-          <p class="text-muted small mb-4" style="line-height:1.45;">광고가 없는 경우 포인트 구매로 이용합니다. 기본 충전상품은 10,000원 / 10,000P입니다. 회차 가격과 열람권은 서버 확인 후 적용하며 실제 결제는 연동 준비 중입니다.</p>
+          <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:6px;" data-i18n="static.unlockHeading">다음 회차 열람 방법</h2>
+          <p class="text-muted small mb-4" style="line-height:1.45;" data-i18n="static.unlockIntro">광고가 없는 경우 포인트 구매로 이용합니다. 기본 충전상품은 10,000원 / 10,000P입니다. 회차 가격과 열람권은 서버 확인 후 적용하며 실제 결제는 연동 준비 중입니다.</p>
 
           <!-- Compatibility region only: no simulated ad completion. -->
           <div class="ad-player-box mb-4" id="adPlayerBox" style="display: none; background:var(--bg-surface); border-radius:12px; padding:20px; border:1px solid var(--cdg-pink-border);">
@@ -1660,9 +1682,9 @@
             </button>
             <!-- Option 2: 🪙 포인트 사용 (UX.md) -->
             <button class="btn btn-outline btn-lg w-full" id="btnUsePointUnlock" onclick="handlePointUnlockEpisode()" style="height:48px; font-size:0.92rem; font-weight:700;">
-              🪙 포인트 열람 준비 중 (표시 잔액: <span id="modalCurrentPoints">0P</span>)
+              <span data-i18n="static.pointsUnlock">🪙 포인트 열람 준비 중 (표시 잔액:</span> <span id="modalCurrentPoints">0P</span>)
             </button>
-            <button class="btn btn-ghost modal-close w-full mt-1" style="font-size:0.85rem;">나중에 보기</button>
+            <button class="btn btn-ghost modal-close w-full mt-1" style="font-size:0.85rem;" data-i18n="static.later">나중에 보기</button>
           </div>
         </div>
       </div>
@@ -1675,71 +1697,71 @@
           <div class="sheet-handle"></div>
         </div>
         <div class="modal-header" style="margin-bottom:12px;">
-          <h3 id="readerSettingsHeading"><i data-lucide="sliders" aria-hidden="true"></i> 뷰어 읽기 환경 설정</h3>
-          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="읽기 환경 설정 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
+          <h3 id="readerSettingsHeading"><i data-lucide="sliders" aria-hidden="true"></i> <span data-i18n="static.readingSettings">뷰어 읽기 환경 설정</span></h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="읽기 환경 설정 닫기" data-i18n-aria-label="static.closeReadingSettings"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body" style="gap:16px;">
           <!-- 1. 독서 배경 테마 (4종) -->
           <div class="form-group">
-            <label id="readerThemeLabel" class="small text-muted mb-2 block font-bold">독서 배경 테마</label>
+            <label id="readerThemeLabel" class="small text-muted mb-2 block font-bold" data-i18n="static.readingTheme">독서 배경 테마</label>
             <div class="theme-selector-grid" role="group" aria-labelledby="readerThemeLabel" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;">
-              <button type="button" class="theme-btn theme-dark" data-theme="theme-dark" onclick="window.ReaderPreferencesManager?.setTheme('theme-dark')">다크</button>
-              <button type="button" class="theme-btn theme-oled" data-theme="theme-oled" onclick="window.ReaderPreferencesManager?.setTheme('theme-oled')">OLED 블랙</button>
-              <button type="button" class="theme-btn theme-sepia" data-theme="theme-sepia" onclick="window.ReaderPreferencesManager?.setTheme('theme-sepia')">세피아</button>
-              <button type="button" class="theme-btn theme-light active" data-theme="theme-light" onclick="window.ReaderPreferencesManager?.setTheme('theme-light')">화이트</button>
+              <button type="button" class="theme-btn theme-dark" data-theme="theme-dark" onclick="window.ReaderPreferencesManager?.setTheme('theme-dark')" data-i18n="static.dark">다크</button>
+              <button type="button" class="theme-btn theme-oled" data-theme="theme-oled" onclick="window.ReaderPreferencesManager?.setTheme('theme-oled')" data-i18n="static.oled">OLED 블랙</button>
+              <button type="button" class="theme-btn theme-sepia" data-theme="theme-sepia" onclick="window.ReaderPreferencesManager?.setTheme('theme-sepia')" data-i18n="static.sepia">세피아</button>
+              <button type="button" class="theme-btn theme-light active" data-theme="theme-light" onclick="window.ReaderPreferencesManager?.setTheme('theme-light')" data-i18n="static.white">화이트</button>
             </div>
           </div>
 
           <!-- 2. 본문 글꼴 계열 (명조 / 고딕) -->
           <div class="form-group">
-            <label id="readerFontLabel" class="small text-muted mb-2 block font-bold">본문 서체 (글꼴)</label>
+            <label id="readerFontLabel" class="small text-muted mb-2 block font-bold" data-i18n="static.textFont">본문 서체 (글꼴)</label>
             <div class="pref-btn-group" role="group" aria-labelledby="readerFontLabel" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
               <button type="button" class="btn btn-outline pref-btn active" data-font="serif" onclick="window.ReaderPreferencesManager?.setFontFamily('serif')">
-                <i data-lucide="book-open" style="width:14px;height:14px;"></i> 가독 명조 (Serif)
+                <i data-lucide="book-open" style="width:14px;height:14px;"></i> <span data-i18n="static.serif">가독 명조 (Serif)</span>
               </button>
               <button type="button" class="btn btn-outline pref-btn" data-font="sans" onclick="window.ReaderPreferencesManager?.setFontFamily('sans')">
-                <i data-lucide="type" style="width:14px;height:14px;"></i> 깔끔 고딕 (Sans)
+                <i data-lucide="type" style="width:14px;height:14px;"></i> <span data-i18n="static.sans">깔끔 고딕 (Sans)</span>
               </button>
             </div>
           </div>
 
           <!-- 3. 본문 글자 크기 (14px ~ 26px) -->
           <div class="form-group">
-            <label id="readerSizeLabel" class="small text-muted mb-2 block font-bold">본문 글자 크기</label>
+            <label id="readerSizeLabel" class="small text-muted mb-2 block font-bold" data-i18n="static.textSize">본문 글자 크기</label>
             <div class="font-size-control" role="group" aria-labelledby="readerSizeLabel" style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-subtle); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);">
-              <button type="button" class="btn btn-outline btn-sm" aria-label="글자 크기 줄이기" onclick="window.ReaderPreferencesManager?.changeFontSize(-2)" style="width:44px; height:44px; font-weight:800;">A-</button>
+              <button type="button" class="btn btn-outline btn-sm" aria-label="글자 크기 줄이기" onclick="window.ReaderPreferencesManager?.changeFontSize(-2)" style="width:44px; height:44px; font-weight:800;" data-i18n-aria-label="static.smaller">A-</button>
               <span id="fontSizeDisplay" role="status" aria-live="polite" style="font-weight:800; font-size:1.1rem; color:var(--cdg-pink);">18px</span>
-              <button type="button" class="btn btn-outline btn-sm" aria-label="글자 크기 늘리기" onclick="window.ReaderPreferencesManager?.changeFontSize(2)" style="width:44px; height:44px; font-weight:800;">A+</button>
+              <button type="button" class="btn btn-outline btn-sm" aria-label="글자 크기 늘리기" onclick="window.ReaderPreferencesManager?.changeFontSize(2)" style="width:44px; height:44px; font-weight:800;" data-i18n-aria-label="static.larger">A+</button>
             </div>
           </div>
 
           <!-- 4. 줄간격 (Line Height: 1.5, 1.8, 2.2) -->
           <div class="form-group">
-            <label id="readerLineLabel" class="small text-muted mb-2 block font-bold">본문 줄간격</label>
+            <label id="readerLineLabel" class="small text-muted mb-2 block font-bold" data-i18n="static.lineSpacing">본문 줄간격</label>
             <div class="pref-btn-group" role="group" aria-labelledby="readerLineLabel" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
-              <button type="button" class="btn btn-outline pref-btn" data-line-height="1.5" onclick="window.ReaderPreferencesManager?.setLineHeight(1.5)">좁게 (1.5)</button>
-              <button type="button" class="btn btn-outline pref-btn active" data-line-height="1.8" onclick="window.ReaderPreferencesManager?.setLineHeight(1.8)">보통 (1.8)</button>
-              <button type="button" class="btn btn-outline pref-btn" data-line-height="2.2" onclick="window.ReaderPreferencesManager?.setLineHeight(2.2)">넓게 (2.2)</button>
+              <button type="button" class="btn btn-outline pref-btn" data-line-height="1.5" onclick="window.ReaderPreferencesManager?.setLineHeight(1.5)" data-i18n="static.lineNarrow">좁게 (1.5)</button>
+              <button type="button" class="btn btn-outline pref-btn active" data-line-height="1.8" onclick="window.ReaderPreferencesManager?.setLineHeight(1.8)" data-i18n="static.lineNormal">보통 (1.8)</button>
+              <button type="button" class="btn btn-outline pref-btn" data-line-height="2.2" onclick="window.ReaderPreferencesManager?.setLineHeight(2.2)" data-i18n="static.lineWide">넓게 (2.2)</button>
             </div>
           </div>
 
           <!-- 5. 좌우 여백 (Horizontal Padding: 12px, 20px, 36px) -->
           <div class="form-group">
-            <label id="readerPaddingLabel" class="small text-muted mb-2 block font-bold">본문 좌우 여백</label>
+            <label id="readerPaddingLabel" class="small text-muted mb-2 block font-bold" data-i18n="static.textMargins">본문 좌우 여백</label>
             <div class="pref-btn-group" role="group" aria-labelledby="readerPaddingLabel" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
-              <button type="button" class="btn btn-outline pref-btn" data-padding="12" onclick="window.ReaderPreferencesManager?.setPaddingX(12)">화면 가득</button>
-              <button type="button" class="btn btn-outline pref-btn active" data-padding="20" onclick="window.ReaderPreferencesManager?.setPaddingX(20)">기본 여백</button>
-              <button type="button" class="btn btn-outline pref-btn" data-padding="36" onclick="window.ReaderPreferencesManager?.setPaddingX(36)">여유 있게</button>
+              <button type="button" class="btn btn-outline pref-btn" data-padding="12" onclick="window.ReaderPreferencesManager?.setPaddingX(12)" data-i18n="static.marginFull">화면 가득</button>
+              <button type="button" class="btn btn-outline pref-btn active" data-padding="20" onclick="window.ReaderPreferencesManager?.setPaddingX(20)" data-i18n="static.marginNormal">기본 여백</button>
+              <button type="button" class="btn btn-outline pref-btn" data-padding="36" onclick="window.ReaderPreferencesManager?.setPaddingX(36)" data-i18n="static.marginWide">여유 있게</button>
             </div>
           </div>
 
           <!-- 6. 문단 간격 (Paragraph Gap: 0.8em, 1.2em, 1.6em) -->
           <div class="form-group">
-            <label id="readerGapLabel" class="small text-muted mb-2 block font-bold">문단 사이 간격</label>
+            <label id="readerGapLabel" class="small text-muted mb-2 block font-bold" data-i18n="static.paragraphGap">문단 사이 간격</label>
             <div class="pref-btn-group" role="group" aria-labelledby="readerGapLabel" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
-              <button type="button" class="btn btn-outline pref-btn" data-gap="0.8" onclick="window.ReaderPreferencesManager?.setParagraphGap(0.8)">밀착</button>
-              <button type="button" class="btn btn-outline pref-btn active" data-gap="1.2" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.2)">표준</button>
-              <button type="button" class="btn btn-outline pref-btn" data-gap="1.6" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.6)">여유</button>
+              <button type="button" class="btn btn-outline pref-btn" data-gap="0.8" onclick="window.ReaderPreferencesManager?.setParagraphGap(0.8)" data-i18n="static.gapTight">밀착</button>
+              <button type="button" class="btn btn-outline pref-btn active" data-gap="1.2" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.2)" data-i18n="static.gapNormal">표준</button>
+              <button type="button" class="btn btn-outline pref-btn" data-gap="1.6" onclick="window.ReaderPreferencesManager?.setParagraphGap(1.6)" data-i18n="static.gapWide">여유</button>
             </div>
           </div>
         </div>
@@ -1750,26 +1772,26 @@
     <div class="modal-backdrop" id="modalSearch">
       <div class="modal-dialog glass-panel dialog-search" role="dialog" aria-modal="true" aria-labelledby="readerSearchHeading">
         <div class="modal-header">
-          <h3 id="readerSearchHeading"><i data-lucide="search" aria-hidden="true"></i> 작품·작가 검색</h3>
-          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="작품·작가 검색 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
+          <h3 id="readerSearchHeading"><i data-lucide="search" aria-hidden="true"></i> <span data-i18n="static.searchWorksAndAuthors">작품·작가 검색</span></h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="작품·작가 검색 닫기" data-i18n-aria-label="static.closeSearch"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <div class="search-control">
             <i data-lucide="search"></i>
-            <label class="sr-only" for="globalSearchInput">작품·작가 검색</label><input type="search" id="globalSearchInput" placeholder="제목, 작가, 장르를 입력하세요" autocomplete="off">
+            <label class="sr-only" for="globalSearchInput" data-i18n="static.searchWorksAndAuthors">작품·작가 검색</label><input type="search" id="globalSearchInput" placeholder="제목, 작가, 장르를 입력하세요" autocomplete="off" data-i18n-placeholder="static.searchPlaceholder">
           </div>
           <div class="search-suggest-row" id="searchQuickTags">
-            <button data-search-term="판타지">판타지</button>
-            <button data-search-term="무협">무협</button>
-            <button data-search-term="로맨스">로맨스</button>
-            <button data-search-term="천마">천마</button>
+            <button data-search-term="판타지" data-i18n="static.fantasy">판타지</button>
+            <button data-search-term="무협" data-i18n="static.martialArts">무협</button>
+            <button data-search-term="로맨스" data-i18n="static.romance">로맨스</button>
+            <button data-search-term="천마" data-i18n="static.heavenlyDemon">천마</button>
           </div>
           <div class="search-meta-row">
             <span id="searchSuggestionNote">작품명·작가명으로 검색하세요.</span>
-            <select id="searchSortSelect" aria-label="검색 결과 정렬">
-              <option value="popular">인기순</option>
-              <option value="title">제목순</option>
-              <option value="new">신작순</option>
+            <select id="searchSortSelect" aria-label="검색 결과 정렬" data-i18n-aria-label="static.sortResults">
+              <option value="popular" data-i18n="static.sortPopular">인기순</option>
+              <option value="title" data-i18n="static.sortTitle">제목순</option>
+              <option value="new" data-i18n="static.sortNew">신작순</option>
             </select>
           </div>
           <div class="search-results" id="searchResults"></div>
@@ -1781,45 +1803,45 @@
     <div class="modal-backdrop" id="modalAuth">
       <div class="modal-dialog glass-panel" role="dialog" aria-modal="true" aria-labelledby="authModalHeading">
         <div class="modal-header">
-          <h3 id="authModalHeading"><i data-lucide="user-circle" aria-hidden="true"></i> 로그인·회원가입</h3>
-          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="로그인·회원가입 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
+          <h3 id="authModalHeading"><i data-lucide="user-circle" aria-hidden="true"></i> <span data-i18n="static.loginAndSignup">로그인·회원가입</span></h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="로그인·회원가입 닫기" data-i18n-aria-label="static.closeAuth"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
-          <div class="auth-tabs" role="tablist" aria-label="인증 탭">
-            <button type="button" class="active" id="authTab-login" role="tab" aria-controls="authForm-login" aria-selected="true" data-auth-tab="login">로그인</button>
-            <button type="button" id="authTab-signup" role="tab" aria-controls="authForm-signup" aria-selected="false" tabindex="-1" data-auth-tab="signup">독자 가입</button>
-            <button type="button" id="authTab-signup-author" role="tab" aria-controls="authForm-signup-author" aria-selected="false" tabindex="-1" data-auth-tab="signup-author">작가 가입</button>
+          <div class="auth-tabs" role="tablist" aria-label="인증 탭" data-i18n-aria-label="static.authTabs">
+            <button type="button" class="active" id="authTab-login" role="tab" aria-controls="authForm-login" aria-selected="true" data-auth-tab="login" data-i18n="static.login">로그인</button>
+            <button type="button" id="authTab-signup" role="tab" aria-controls="authForm-signup" aria-selected="false" tabindex="-1" data-auth-tab="signup" data-i18n="static.readerSignup">독자 가입</button>
+            <button type="button" id="authTab-signup-author" role="tab" aria-controls="authForm-signup-author" aria-selected="false" tabindex="-1" data-auth-tab="signup-author" data-i18n="static.authorSignup">작가 가입</button>
           </div>
           <form class="auth-form active" id="authForm-login" role="tabpanel" aria-labelledby="authTab-login">
             <p id="authLoginStatus" role="status" aria-live="polite" aria-atomic="true" hidden></p>
-            <label for="loginEmail">이메일</label>
+            <label for="loginEmail" data-i18n="static.email">이메일</label>
             <input type="email" id="loginEmail" class="form-control" autocomplete="username" aria-describedby="authLoginStatus" required>
-            <label for="loginPassword">비밀번호</label>
+            <label for="loginPassword" data-i18n="static.password">비밀번호</label>
             <input type="password" id="loginPassword" class="form-control"  autocomplete="current-password" required>
-            <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="log-in"></i> 로그인</button>
-          <button type="button" class="btn btn-ghost" onclick="requestAuthReset()">비밀번호 재설정 메일 보내기</button>
-            <button type="button" class="btn btn-ghost" onclick="showAuthOnboarding()">이메일 확인 후 가입 마무리</button>
+            <button type="submit" class="btn btn-primary btn-lg w-full"><i data-lucide="log-in"></i> <span data-i18n="static.login">로그인</span></button>
+          <button type="button" class="btn btn-ghost" onclick="requestAuthReset()" data-i18n="static.resetEmail">비밀번호 재설정 메일 보내기</button>
+            <button type="button" class="btn btn-ghost" onclick="showAuthOnboarding()" data-i18n="static.finishSignup">이메일 확인 후 가입 마무리</button>
           </form>
 
           <form class="auth-form" id="authForm-signup" role="tabpanel" aria-labelledby="authTab-signup">
-            <label for="signupNickname">별명</label>
+            <label for="signupNickname" data-i18n="static.nickname">별명</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-              <input type="text" id="signupNickname" class="form-control" style="margin-bottom: 0;" autocomplete="nickname" placeholder="예: 새벽독자" required>
+              <input type="text" id="signupNickname" class="form-control" style="margin-bottom: 0;" autocomplete="nickname" placeholder="예: 새벽독자" required data-i18n-placeholder="static.nicknameExample">
 
             </div>
             <div id="nicknameCheckMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
 
-            <label for="signupEmail">이메일</label>
+            <label for="signupEmail" data-i18n="static.email">이메일</label>
             <input type="email" id="signupEmail" class="form-control" autocomplete="email" placeholder="reader@webnovels.com" required>
 
-            <label for="signupPassword">비밀번호</label>
-            <input type="password" id="signupPassword" class="form-control" autocomplete="new-password" placeholder="8자 이상" required>
+            <label for="signupPassword" data-i18n="static.password">비밀번호</label>
+            <input type="password" id="signupPassword" class="form-control" autocomplete="new-password" placeholder="8자 이상" required data-i18n-placeholder="static.passwordMinimum">
 
-            <label for="signupPasswordConfirm">비밀번호 확인</label>
-            <input type="password" id="signupPasswordConfirm" class="form-control" autocomplete="new-password" placeholder="비밀번호 재입력" required>
+            <label for="signupPasswordConfirm" data-i18n="static.passwordConfirmation">비밀번호 확인</label>
+            <input type="password" id="signupPasswordConfirm" class="form-control" autocomplete="new-password" placeholder="비밀번호 재입력" required data-i18n-placeholder="static.reenterPassword">
             <div id="pwMatchMsg" class="small mb-2" style="font-size: 0.82rem; display: none;"></div>
             <p id="readerSignupError" role="alert" hidden></p>
-            <button type="submit" class="btn btn-primary btn-lg w-full mt-3"><i data-lucide="user-plus"></i> 일반 독자 회원가입</button>
+            <button type="submit" class="btn btn-primary btn-lg w-full mt-3"><i data-lucide="user-plus"></i> <span data-i18n="static.createReader">일반 독자 회원가입</span></button>
           </form>
 
           <form class="auth-form" id="authForm-signup-author" role="tabpanel" aria-labelledby="authTab-signup-author">
@@ -1843,7 +1865,7 @@
 
             <button type="submit" class="btn btn-secondary btn-lg w-full mt-3"><i data-lucide="feather"></i> 작가 회원가입</button>
           </form>
-          <nav class="auth-policy-links" aria-label="회사·이용 정책"><a href="/company/">회사정보</a><a href="/policies/terms/">이용약관</a><a href="/policies/refund/">환불정책</a></nav>
+          <nav class="auth-policy-links" aria-label="회사·이용 정책" data-i18n-aria-label="static.companyPolicies"><a href="/company/" data-i18n="static.company">회사정보</a><a href="/policies/terms/" data-i18n="static.terms">이용약관</a><a href="/policies/refund/" data-i18n="static.refunds">환불정책</a></nav>
         </div>
       </div>
     </div>
@@ -1862,7 +1884,7 @@
           <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body" style="padding-top: 10px;">
-          <p class="text-muted small mb-3">연재 중인 소설을 선택하면 해당 작품의 상세 회차 목록으로 이동합니다.</p>
+          <p class="text-muted small mb-3" data-i18n="static.authorWorksIntro">연재 중인 소설을 선택하면 해당 작품의 상세 회차 목록으로 이동합니다.</p>
           <div id="modalAuthorWorksList" style="display: flex; flex-direction: column; gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
             <!-- 소설 리스트가 동적으로 렌더링됩니다 -->
           </div>
@@ -1874,15 +1896,15 @@
     <div class="modal-backdrop" id="modalPassAdultVerify">
       <div class="modal-dialog glass-panel">
         <div class="modal-header">
-          <h3><i data-lucide="shield-check"></i> 성인 본인인증 필요</h3>
+          <h3><i data-lucide="shield-check"></i> <span data-i18n="static.adultVerification">성인 본인인증 필요</span></h3>
           <button class="btn btn-icon btn-ghost modal-close"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body">
-          <p class="text-muted mb-4">19+ 작품을 읽으려면 PASS/KCP 본인인증을 먼저 완료해야 합니다.</p>
+          <p class="text-muted mb-4" data-i18n="static.adultVerificationIntro">19+ 작품을 읽으려면 PASS/KCP 본인인증을 먼저 완료해야 합니다.</p>
           <button class="btn btn-primary btn-lg w-full" onclick="closeAllModals(); handlePassAdultVerify();">
-            <i data-lucide="smartphone"></i> PASS 인증 시작
+            <i data-lucide="smartphone"></i> <span data-i18n="static.startPass">PASS 인증 시작</span>
           </button>
-          <button class="btn btn-ghost w-full mt-3" onclick="closeAllModals(); switchWebNovelsView('view-mypage');">내 서재에서 인증 관리</button>
+          <button class="btn btn-ghost w-full mt-3" onclick="closeAllModals(); switchWebNovelsView('view-mypage');" data-i18n="static.manageVerification">내 서재에서 인증 관리</button>
         </div>
       </div>
     </div>
@@ -2176,20 +2198,20 @@
     <div class="modal-backdrop" id="modalEditProfile">
       <div class="modal-dialog glass-panel" role="dialog" aria-modal="true" aria-labelledby="editProfileHeading" style="max-width: 480px;">
         <div class="modal-header">
-          <h3 id="editProfileHeading"><i data-lucide="user-cog" aria-hidden="true"></i> 내 정보 수정</h3>
-          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="내 정보 수정 닫기"><i data-lucide="x" aria-hidden="true"></i></button>
+          <h3 id="editProfileHeading"><i data-lucide="user-cog" aria-hidden="true"></i> <span data-i18n="static.editProfile">내 정보 수정</span></h3>
+          <button type="button" class="btn btn-icon btn-ghost modal-close" aria-label="내 정보 수정 닫기" data-i18n-aria-label="static.closeEditProfile"><i data-lucide="x" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
           <form id="formEditProfile" onsubmit="handleSaveProfile(event)">
             <div class="form-group mb-4">
-              <label for="editProfileNickname">별명</label>
-              <input type="text" id="editProfileNickname" class="form-control" autocomplete="nickname" placeholder="변경할 별명 입력" minlength="2" maxlength="40" required>
+              <label for="editProfileNickname" data-i18n="static.nickname">별명</label>
+              <input type="text" id="editProfileNickname" class="form-control" autocomplete="nickname" placeholder="변경할 별명 입력" minlength="2" maxlength="40" required data-i18n-placeholder="static.newNickname">
             </div>
 
-            <p class="text-muted small mb-4">비밀번호는 로그인 화면의 재설정 메일로 변경할 수 있습니다.</p>
+            <p class="text-muted small mb-4" data-i18n="static.resetProfilePassword">비밀번호는 로그인 화면의 재설정 메일로 변경할 수 있습니다.</p>
 
             <button type="submit" class="btn btn-primary btn-lg w-full" id="btnSaveProfile">
-              <i data-lucide="check"></i> 변경 사항 저장
+              <i data-lucide="check"></i> <span data-i18n="static.saveChanges">변경 사항 저장</span>
             </button>
           </form>
         </div>
@@ -2351,7 +2373,7 @@
           <div class="sheet-handle"></div>
         </div>
         <div class="mobile-more-content">
-          <h3 id="mobileMoreHeading">더 보기</h3>
+          <h3 id="mobileMoreHeading" data-i18n="static.more">더 보기</h3>
           <!-- User Profile Summary Card -->
           <div class="mobile-more-user-box glass-panel p-4 mb-3">
             <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -2370,30 +2392,30 @@
 
           <!-- Reader Shortcuts -->
           <div class="mobile-more-section mb-3">
-            <div class="mobile-more-title">내 서재 및 열람</div>
+            <div class="mobile-more-title" data-i18n="static.readingShortcuts">내 서재 및 열람</div>
             <div class="mobile-more-grid">
               <button class="mobile-more-btn" onclick="openLibraryTabDirect('continue')">
                 <i data-lucide="clock" class="text-indigo"></i>
-                <span>이어보기</span>
+                <span data-i18n="static.continueReading">이어보기</span>
               </button>
               <button class="mobile-more-btn" onclick="openLibraryTabDirect('favorites')">
                 <i data-lucide="heart" class="text-pink"></i>
-                <span>관심 작품</span>
+                <span data-i18n="static.favorites">관심 작품</span>
               </button>
               <button class="mobile-more-btn" onclick="openLibraryTabDirect('authors')">
                 <i data-lucide="bell" class="text-amber"></i>
-                <span>구독작가</span>
+                <span data-i18n="static.following">구독작가</span>
               </button>
               <button class="mobile-more-btn" onclick="openWalletModal()" style="display:none">
                 <i data-lucide="wallet" class="text-emerald"></i>
-                <span>포인트 충전</span>
+                <span data-i18n="static.topUp">포인트 충전</span>
               </button>
             </div>
           </div>
 
           <!-- Portals (Separated /creator, /admin) -->
           <div class="mobile-more-section mb-3">
-            <div class="mobile-more-title">창작 및 관리 포털 분리 접속</div>
+            <div class="mobile-more-title" data-i18n="static.portalShortcuts">창작 및 관리 포털 분리 접속</div>
             <div class="mobile-more-list">
               <a href="/creator" class="mobile-more-list-item" id="linkMoreCreator" data-account-portal="creator" hidden onclick="handleDirectPortalClick(event, 'creator')">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -2421,11 +2443,11 @@
           <!-- Settings & Auth -->
           <div class="mobile-more-section">
             <div class="mobile-more-list">
-              <button type="button" class="mobile-more-list-item w-full text-left" data-beta-support-open>문의·피드백</button>
+              <button type="button" class="mobile-more-list-item w-full text-left" data-beta-support-open data-i18n="static.feedback">문의·피드백</button>
               <div class="mobile-more-list-item" style="display:none" onclick="toggleAdultContentMode()">
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <i data-lucide="shield-alert" style="color: var(--accent-danger);"></i>
-                  <span>19+ 성인 콘텐츠 필터</span>
+                  <span data-i18n="static.adultFilter">19+ 성인 콘텐츠 필터</span>
                 </div>
                 <span id="mMoreAdultToggleLabel" class="badge badge-outline">ON</span>
               </div>
@@ -2486,28 +2508,28 @@
     </div>
 
     <!-- Reader navigation stays out of writing and full-screen reading surfaces. -->
-    <nav class="cdg-mobile-bottom-nav" id="mobileBottomNav" aria-label="모바일 독자 메뉴">
+    <nav class="cdg-mobile-bottom-nav" id="mobileBottomNav" aria-label="모바일 독자 메뉴" data-i18n-aria-label="static.mobileNav">
       <div class="cdg-bottom-nav-inner">
         <a href="/home" class="bottom-nav-item active" data-target="view-home" data-reader-route="home" id="bnavHome" onclick="return handleReaderRouteClick(event)">
           <i data-lucide="home" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">홈</span>
+          <span class="bottom-nav-label" data-i18n="static.home">홈</span>
         </a>
         <a href="/discover?sort=popular" class="bottom-nav-item" data-target="view-discover" data-sub="ranking" id="bnavRanking" hidden onclick="openRankingFromNav(event)">
           <i data-lucide="trending-up" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">랭킹</span>
+          <span class="bottom-nav-label" data-i18n="static.ranking">랭킹</span>
         </a>
         <a href="/discover" class="bottom-nav-item" data-target="view-discover" data-reader-route="discover" id="bnavDiscover" onclick="return handleReaderRouteClick(event)">
           <i data-lucide="compass" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">탐색</span>
+          <span class="bottom-nav-label" data-i18n="static.discover">탐색</span>
         </a>
         <a href="/library" class="bottom-nav-item" data-target="view-mypage" data-reader-route="library" id="bnavLibrary" onclick="return handleReaderRouteClick(event)">
           <i data-lucide="bookmark" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">내 서재</span>
+          <span class="bottom-nav-label" data-i18n="static.library">내 서재</span>
         </a>
-        <a href="/recommendations" class="bottom-nav-item" data-target="view-recommendations" data-reader-route="recommendations" id="bnavRecommendations" onclick="return handleReaderRouteClick(event)"><i data-lucide="star" class="bottom-nav-icon" aria-hidden="true"></i><span class="bottom-nav-label">추천</span></a>
+        <a href="/recommendations" class="bottom-nav-item" data-target="view-recommendations" data-reader-route="recommendations" id="bnavRecommendations" onclick="return handleReaderRouteClick(event)"><i data-lucide="star" class="bottom-nav-icon" aria-hidden="true"></i><span class="bottom-nav-label" data-i18n="static.recommendations">추천</span></a>
         <button type="button" class="bottom-nav-item" id="bnavMore" onclick="openMobileMoreModal(event)">
           <i data-lucide="user-round" class="bottom-nav-icon"></i>
-          <span class="bottom-nav-label">내 정보</span>
+          <span class="bottom-nav-label" data-i18n="static.myAccount">내 정보</span>
         </button>
       </div>
     </nav>
@@ -2515,27 +2537,31 @@
   </div>
 
   <!-- Core Architecture Modules -->
+  <script src="/js/core/reader-static-messages.js?v=20261106ml01"></script>
+  <script src="/js/core/reader-feature-messages.js?v=20261106ml01"></script>
+  <script src="/js/core/reader-shell-messages.js?v=20261106ml01"></script>
+  <script src="/js/core/reader-i18n.js?v=20261106ml01"></script>
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
   <script src="/js/core/role-modules.js?v=20261103op13"></script>
   <script src="/js/core/router.js?v=20261103op13"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
-  <script src="/js/reader/reader-content.js?v=124"></script>
-  <script src="/js/reader/reader-catalog.js?v=117"></script>
-  <script src="/js/reader/reader-display.js?v=20261101op03"></script>
+  <script src="/js/reader/reader-content.js?v=20261106ml01"></script>
+  <script src="/js/reader/reader-catalog.js?v=20261106ml01"></script>
+  <script src="/js/reader/reader-display.js?v=20261106ml01"></script>
   <script src="/js/reader/reader-rewards-test.js?v=20261102op06"></script>
   <script src="/js/shared/live-commerce.js?v=20261104op15"></script>
   <script src="/js/reader/reader-points-test.js?v=20261102op06"></script>
   <script src="/js/reader/reader-topups.js?v=20261102op06"></script>
-  <script src="/js/reader/reader-discovery.js?v=20261101op03"></script>
-  <script src="/js/reader/reader-webtoon.js?v=20261031r10"></script>
-  <script src="/js/reader/reader-position.js?v=20261031r4"></script>
+  <script src="/js/reader/reader-discovery.js?v=20261106ml01"></script>
+  <script src="/js/reader/reader-webtoon.js?v=20261106ml01"></script>
+  <script src="/js/reader/reader-position.js?v=20261106ml01"></script>
   <script src="/js/reader/reader-fonts.js?v=20261031r8"></script>
-  <script src="/js/reader/reader.js?v=20261106signup"></script>
+  <script src="/js/reader/reader.js?v=20261106ml01"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
-  <script src="/js/reader/continue-reading.js?v=116"></script>
+  <script src="/js/reader/continue-reading.js?v=20261106ml01"></script>
   <div class="modal-backdrop" id="modalCreatorFiles" role="dialog" aria-modal="true" aria-labelledby="creatorFilesWorkTitle" hidden>
     <div class="modal-dialog creator-files-modal">
       <div class="modal-header"><h3 id="creatorFilesWorkTitle">작품 파일 관리</h3><button type="button" class="modal-close" aria-label="파일 관리 닫기">×</button></div>
@@ -2668,9 +2694,9 @@
   <script src="/js/core/account-access.js?v=20261031r6"></script>
   <script src="/js/core/appeals.js?v=117"></script>
   <script src="/js/core/beta-support.js?v=20261031r6"></script>
-  <script src="/js/core/auth-ui.js?v=20261106signup"></script>
+  <script src="/js/core/auth-ui.js?v=20261106ml01"></script>
   <script src="/js/core/service-status.js?v=114"></script>
-  <script src="/js/core/free-beta-ui.js?v=20261101r13"></script>
+  <script src="/js/core/free-beta-ui.js?v=20261106ml01"></script>
   <script src="/app.js?v=20261031r6"></script>
 </body>
 </html>

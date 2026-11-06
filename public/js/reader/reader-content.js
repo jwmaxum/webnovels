@@ -18,8 +18,10 @@
     body.replaceChildren(fragment);
     if (comment) {
       comment.replaceChildren();
+      comment.removeAttribute?.('data-i18n');
       const strong = document.createElement('strong');
-      strong.textContent = '작가의 말: ';
+      if (snapshot?.localizeReaderNote && window.ReaderI18n) window.ReaderI18n.text(strong, '작가의 말: ');
+      else strong.textContent = '작가의 말: ';
       comment.append(strong, document.createTextNode(String(snapshot?.authorComment ?? '')));
     }
   }

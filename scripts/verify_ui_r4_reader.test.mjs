@@ -86,6 +86,33 @@ test('late failed chapter requests cannot replace newer reading status or restor
   assert.equal(f.node('readerChapterStatus').hidden,true);assert.equal(f.node('readerWorkTitle').textContent,'작품 20');assert.equal(f.node('view-reader').getAttribute('aria-busy'),'false');
 });
 
+test('viewer locale switch updates approved metadata without loading or replacing the original body', async () => {
+  const f=fixture();let bodyReads=0,metadataReads=0,scrollWrites=0;
+  f.c.document.documentElement={lang:'ko'};
+  f.c.CustomEvent=CustomEvent;f.c.dispatchEvent=()=>{};
+  for(const name of ['reader-shell-messages','reader-i18n']) vm.runInContext(await read('public/js/core/'+name+'.js'),f.c);
+  const readMetadata=f.c.ReaderCatalog.reading;
+  f.c.ReaderCatalog.reading=async(...args)=>{
+    metadataReads++;
+    const result=await readMetadata(...args);
+    if(f.c.ReaderI18n.locale()==='ja') {
+      result.work.localization={locale:'ja',title:'日本語の作品名'};
+      result.episode.localization={locale:'ja',title:'日本語のエピソード'};
+    }
+    return result;
+  };
+  const readBody=f.c.fetch;f.c.fetch=(...args)=>{bodyReads++;return readBody(...args);};
+  f.c.scrollTo=()=>{scrollWrites++;};
+  await f.c.openReaderDirect('10',5,false);
+  const session=f.c.ReaderSession.current,scrollBefore=scrollWrites;
+  f.c.ReaderI18n.setLocale('ja');await f.c.refreshReaderLocale();
+  assert.equal(f.node('readerWorkTitle').textContent,'日本語の作品名');
+  assert.match(f.node('readerHeading').textContent,/日本語のエピソード.*第5話/);
+  assert.equal(f.node('readerBody').textContent,'원본 본문');assert.equal(f.node('readerBody').lang,'ko');
+  assert.equal(f.c.ReaderSession.current,session);assert.equal(scrollWrites,scrollBefore);
+  assert.equal(bodyReads,1);assert.equal(metadataReads,2);assert.deepEqual(f.paths,[]);
+});
+
 test('recommendations reflect editorial source, safe text, distinct work IDs and modified link clicks',async()=>{
   const f=fixture(),token=f.c.ReaderSession.begin('10',5);f.c.getAuthorName=work=>work.author;
   f.c.ReaderCatalog.home=async()=>({sections:{recommended:[{id:'10',title:'현재 작품'},{id:'20',title:'<img onerror=1>',author:'<svg onload=1>',coverUrl:'/actual.webp'},{id:'20',title:'중복'}]}});

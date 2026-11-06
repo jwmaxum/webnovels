@@ -1,4 +1,5 @@
 import {projectWork} from './stage16-api.mjs';
+import {attachReaderTranslations,readerLocale} from './reader-catalog-localization.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id=value=>typeof value==='string'&&/^[1-9]\d{0,18}$/.test(value)&&BigInt(value)<=9223372036854775807n;
 const revision=value=>typeof value==='string'&&/^(0|[1-9]\d{0,18})$/.test(value)&&BigInt(value)<=9223372036854775807n;
@@ -68,12 +69,15 @@ function state(result,fail){
   if(result.selectionCards!==undefined&&(!Array.isArray(result.selectionCards)||result.selectionCards.length>200))fail(503,'DISPLAY_UNAVAILABLE');
   return {ready:true,draft:{revision:result.draft.revision,document:result.draft.document},selectionCards:(result.selectionCards||[]).map(value=>card(value,fail,true)),releases,capabilities:{canEdit:result.capabilities?.canEdit===true},legacyAvailable:result.legacyAvailable===true,...(result.saved===true?{saved:true,replayed:result.replayed===true}:{})};
 }
-export async function siteDisplayPublicApi({request,rpc,fail}){
+export async function siteDisplayPublicApi({request,env={},rpc,fail}){
   const url=new URL(request.url);if(request.method!=='GET')fail(405,'METHOD_NOT_ALLOWED');
-  if([...url.searchParams.keys()].some(key=>!['offset','type'].includes(key)||url.searchParams.getAll(key).length!==1))fail(400,'INVALID_QUERY');
+  if([...url.searchParams.keys()].some(key=>!['offset','type','locale'].includes(key)||url.searchParams.getAll(key).length!==1))fail(400,'INVALID_QUERY');
   const offset=url.searchParams.get('offset')||'0',type=url.searchParams.get('type')||'ALL';
   if(!/^(0|[1-9]\d{0,5})$/.test(offset)||Number(offset)>100000||!['ALL','NOVEL','WEBTOON'].includes(type))fail(400,'INVALID_QUERY');
-  return projectDisplayPublic(await rpc('site_display_public',{p_data:{offset:Number(offset),type}}),fail);
+  const locale=readerLocale(url.searchParams,fail);
+  const display=projectDisplayPublic(await rpc('site_display_public',{p_data:{offset:Number(offset),type}}),fail);
+  await attachReaderTranslations({locale,env,rpc,works:[...display.items,display.home.hero,...display.home.featured],webtoon:true,fail});
+  return display;
 }
 export async function siteDisplayAdminApi({request,user,actor,rpc,fail}){
   if(!UUID.test(user?.id||'')||actor?.userId!==user.id||actor.admin?.is_active!==true||!(actor.admin.role==='SUPER_ADMIN'||actor.admin.permissions?.includes('CURATION_WRITE')))fail(403,'ADMIN_FORBIDDEN');

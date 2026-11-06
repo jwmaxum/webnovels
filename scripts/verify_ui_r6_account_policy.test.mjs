@@ -28,6 +28,7 @@ function fixture(initialActor=null){
   }
   setAttribute(name,value){this.attributes.set(name,String(value));if(['id','class','type','href'].includes(name))this[name==='class'?'className':name]=String(value);if(['hidden','disabled','required'].includes(name))this[name]=true;}
   getAttribute(name){return this.attributes.get(name)??null;}
+  focus(){this.focused=true;}
   append(...nodes){for(const node of nodes){node.parentNode=this;this.children.push(node);}}
   appendChild(node){this.append(node);return node;}
   prepend(node){node.parentNode=this;this.children.unshift(node);}
@@ -44,7 +45,14 @@ function fixture(initialActor=null){
  const body=new Element('body'),get=id=>walk(body).find(node=>node.id===id)||null;
  for(const id of ['view-creator','view-mypage','authorWorkspaceNotice','loginEmail','adminLoginId','adminLoginPw']){const node=new Element(id.includes('Login')||id==='loginEmail'?'input':'section');node.id=id;body.append(node);}
  let actor=initialActor;const calls=[],toasts=[],routes=[],closes=[];
- const api={getActor:()=>actor,message:error=>error.message,complete:async(kind,name)=>{calls.push(['complete',kind,name]);},changePassword:async password=>{calls.push(['password',password]);},login:async(email,password)=>{calls.push(['login',email,password]);return actor;},logout:async()=>{calls.push(['logout']);actor=null;},reset:async email=>calls.push(['reset',email])};
+ const loginModal=new Element('div');loginModal.id='modalAuth';loginModal.hidden=true;body.append(loginModal);
+ for(const [id,tag] of [['loginPassword','input'],['authLoginStatus','p'],['authTab-login','button']]){
+  const node=new Element(tag);node.id=id;loginModal.append(node);
+ }
+ get('authTab-login').click=()=>calls.push(['select-login']);
+ const api={getActor:()=>actor,message:error=>error.message,complete:async(kind,name)=>{calls.push(['complete',kind,name]);},
+  completeReaderSignup:async name=>{calls.push(['complete-reader-signup',name]);return '독자 회원가입이 완료되었습니다. 로그인해주세요.';},
+  changePassword:async password=>{calls.push(['password',password]);},login:async(email,password)=>{calls.push(['login',email,password]);return actor;},logout:async()=>{calls.push(['logout']);actor=null;},reset:async email=>calls.push(['reset',email])};
  const c={document:{body,getElementById:get,createElement:tag=>new Element(tag)},WebNovelsAuth:api,
   AuthorEnrollment:{mount:node=>calls.push(['mount',node.id]),reset:()=>calls.push(['enrollment-reset'])},
   showToast:message=>toasts.push(message),switchWebNovelsView:id=>routes.push(id),openAccountHome:async()=>routes.push('account-home'),
@@ -105,11 +113,14 @@ test('generated completion dialog keeps labels, live status, policy links and di
 test('reader completion calls the existing verified Auth path and author completion cannot skip enrollment failures',async()=>{
  const app=fixture();app.c.showAuthOnboarding();const kind=app.get('authCompletionKind');kind.value='reader';kind.onchange();
  app.get('authCompletionName').value='Reader';await app.submit();
- assert.deepEqual(app.calls.find(call=>call[0]==='complete'),['complete','reader','Reader']);assert.deepEqual(app.routes,['account-home']);
+ assert.deepEqual(app.calls.find(call=>call[0]==='complete-reader-signup'),['complete-reader-signup','Reader']);
+ assert.deepEqual(app.calls.at(-1),['select-login']);assert.deepEqual(app.routes,[]);
+ assert.equal(app.get('modalAuthCompletion').hidden,true);assert.equal(app.get('modalAuth').hidden,false);
+ assert.match(app.get('authLoginStatus').textContent,/독자 회원가입이 완료/);assert.equal(app.get('loginEmail').focused,true);
  app.c.showAuthOnboarding();kind.value='author';kind.onchange();
  app.api.complete=async()=>{throw Error('저작권 동의와 PASS 본인확인을 먼저 완료해주세요.');};
  await app.submit();assert.match(app.get('authCompletionMessage').textContent,/저작권.*PASS/);
- assert.equal(app.get('modalAuthCompletion').hidden,false);assert.equal(app.routes.length,1);
+ assert.equal(app.get('modalAuthCompletion').hidden,false);assert.equal(app.routes.length,0);
  assert.equal(app.get('authCompletionMessage').classList.contains('auth-form-error'),true);
 });
 

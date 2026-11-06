@@ -9,18 +9,29 @@
   const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   const text=(value,max)=>typeof value==='string'&&value.length<=max;
   const date=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
-  let homeTurn=0,pageTurn=0,viewerTurn=0,chromeTurn=0,homeData=null;
+  let homeTurn=0,pageTurn=0,viewerTurn=0,chromeTurn=0,homeData=null,chromeData=null;
+  let currentPage=null,currentViewer=null;
   const menuDefaults=new Map();
   const view=id=>!window.currentActiveView||window.currentActiveView===id;
   const node=(parent,tag,value,cls)=>{const item=document.createElement(tag);if(value!=null)item.textContent=String(value);if(cls)item.className=cls;parent?.append(item);return item;};
+  const t = (source, params = {}) => window.ReaderI18n?.t(source, params) ?? source.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+  function localized(item, label, attribute) {
+    if (!item) return item;
+    const render = typeof label === 'function' ? label : () => t(label);
+    if (window.ReaderFeatureCopy) window.ReaderFeatureCopy.bind(item, render, attribute);
+    else if (attribute) item.setAttribute(attribute, render());
+    else item.textContent = render();
+    return item;
+  }
+  const message = (parent, tag, label, cls) => localized(node(parent, tag, null, cls), label);
   function link(parent,label,path,cls){
-    const item=node(parent,'a',label,cls);item.href=path;
+    const item=label ? message(parent,'a',label,cls) : node(parent,'a',null,cls);item.href=path;
     item.onclick=event=>{if(event&&(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button>0))return;
       if(typeof window.navigateTo!=='function'||!/^\/(?:works\/|home(?:$|\?)|discover(?:$|\?)|recommendations(?:$|\?))/.test(path))return;
       event?.preventDefault();window.navigateTo(path);};return item;
   }
-  const status=(parent,message)=>{const item=node(parent,'p',message,'reader-display-status');item.setAttribute('role','status');return item;};
-  function retry(parent,action){const button=node(parent,'button','다시 시도','btn btn-outline');button.type='button';button.onclick=action;return button;}
+  const status=(parent,label)=>{const item=message(parent,'p',label,'reader-display-status');item.setAttribute('role','status');return item;};
+  function retry(parent,action){const button=message(parent,'button','다시 시도','btn btn-outline');button.type='button';button.onclick=action;return button;}
   function safeHref(value){
     if(typeof value!=='string')return null;
     if(/^\/(?:home|discover|recommendations)\/?$/.test(value)||/^\/company\/?$/.test(value)||/^\/policies\/(?:terms|privacy|refund|settlement)\/?$/.test(value))return value;
@@ -53,25 +64,39 @@
     return value;
   }
   async function request({type='ALL',offset=0}={}){
-    const response=await fetch('/api/v2/display?'+new URLSearchParams({offset:String(offset),type}),{credentials:'omit',cache:'no-store',redirect:'error'});
-    if(!response.ok)throw Error('DISPLAY_UNAVAILABLE');return validate(await response.json(),{type,offset});
+    const locale = window.ReaderI18n?.locale() || 'ko';
+    const params = new URLSearchParams({offset:String(offset),type});
+    if (locale !== 'ko') params.set('locale', locale);
+    const response=await fetch('/api/v2/display?'+params,{credentials:'omit',cache:'no-store',redirect:'error'});
+    if(!response.ok)throw Error('DISPLAY_UNAVAILABLE');
+    const data = validate(await response.json(),{type,offset});
+    for (const item of [...data.items, data.home.hero, ...data.home.featured]) {
+      if (item) window.ReaderI18n?.rememberWork(item, locale);
+    }
+    return data;
   }
   function card(parent,item,{hero=false}={}){
     const anchor=link(parent,'','/works/'+item.id,'reader-display-card'+(hero?' reader-display-hero-card':''));
     const art=node(anchor,'div',null,'reader-display-cover'),source=cover(item.cover_image);
     if(source){const image=node(art,'img');image.src=source;image.alt='';image.loading='lazy';image.decoding='async';}
-    else node(art,'span','표지 준비 중','reader-display-cover-placeholder');
-    const info=node(anchor,'div',null,'reader-display-info');node(info,'span',item.content_type==='WEBTOON'?'웹툰':'웹소설','reader-display-kind');
-    node(info,'h3',item.title);node(info,'p',item.author,'reader-display-author');
-    node(info,'p',(item.status==='COMPLETED'||item.is_completed?'완결':item.status==='PAUSED'?'휴재':'연재 중')+' · '+(item.rating==='AGE_15'?'15세 이상':'전체이용가')+' · 공개 '+item.episode_count+'화','reader-display-meta');
+    else message(art,'span','표지 준비 중','reader-display-cover-placeholder');
+    const info=node(anchor,'div',null,'reader-display-info');message(info,'span',item.content_type==='WEBTOON'?'웹툰':'웹소설','reader-display-kind');
+    const copy = () => window.ReaderI18n?.work(item) || item;
+    const title = message(info,'h3',() => copy().title);
+    localized(title, () => copy().titleLanguage || item.originalLanguage || 'ko', 'lang');
+    node(info,'p',item.author,'reader-display-author');
+    message(info,'p',() => [t(item.status==='COMPLETED'||item.is_completed?'완결':item.status==='PAUSED'?'휴재':'연재 중'),
+      t(item.rating==='AGE_15'?'15세 이상':'전체이용가'),t(item.episode_count===1?'공개 1화':'공개 {count}화',{count:item.episode_count})].join(' · '),'reader-display-meta');
     if(text(item.caption,120)&&item.caption)node(info,'p',item.caption,'reader-display-caption');return anchor;
   }
   function chrome(data){
+    chromeData=data;
     const managed=[...document.querySelectorAll?.('[data-reader-route]')||[]].filter(item=>Object.hasOwn(menuPaths,item.dataset?.readerRoute));
     for(const item of managed){
       const key=item.dataset.readerRoute,config=data.menus.find(menu=>menu.key===key);if(!menuDefaults.has(item))menuDefaults.set(item,{hidden:item.hidden===true});
       item.hidden=menuDefaults.get(item).hidden||!config.visible;
-      const label=item.querySelector?.('[data-reader-label]')||item.querySelector?.('span');if(label)label.textContent=config.label;else item.textContent=config.label;
+      const label=item.querySelector?.('[data-reader-label]')||item.querySelector?.('span')||item;
+      localized(label, config.label);
     }
     const parents=new Set(managed.map(item=>item.parentElement).filter(Boolean)),order=new Map(data.menus.map((item,index)=>[item.key,index]));
     for(const parent of parents){
@@ -113,19 +138,19 @@
       if(config.key==='recommendations')section.hidden||=homeData.home.featured.length===0;
       if(config.key==='notice')section.hidden||=notices.length===0;
       if(config.key==='latest'){
-        if($('recentNovelsHeading'))$('recentNovelsHeading').textContent=(config.title||titles.latest)+' · 웹소설';
-        if($('recentWebtoonsHeading'))$('recentWebtoonsHeading').textContent=(config.title||titles.latest)+' · 웹툰';
+        localized($('recentNovelsHeading'), () => t(config.title||titles.latest)+' · '+t('웹소설'));
+        localized($('recentWebtoonsHeading'), () => t(config.title||titles.latest)+' · '+t('웹툰'));
       }
-      if(config.key==='ranking'&&$('homePopularHeading'))$('homePopularHeading').textContent=config.title||titles.ranking;
+      if(config.key==='ranking')localized($('homePopularHeading'), config.title||titles.ranking);
       parts.root.append(section);
     }
   }
   function renderHome(data,parts){
     parts.status.replaceChildren();parts.status.hidden=true;
     for(const key of ['hero','recommendations','notice'])parts[key].replaceChildren();
-    const config=key=>data.blocks.find(item=>item.key===key),heading=(section,key)=>node(section,'h2',config(key).title||titles[key],'reader-display-heading');
+    const config=key=>data.blocks.find(item=>item.key===key),heading=(section,key)=>message(section,'h2',config(key).title||titles[key],'reader-display-heading');
     heading(parts.hero,'hero');if(data.home.hero)card(parts.hero,data.home.hero,{hero:true});
-    const head=node(parts.recommendations,'div',null,'reader-display-section-head');node(head,'h2',config('recommendations').title||titles.recommendations,'reader-display-heading');link(head,'추천 전체 보기','/recommendations','btn btn-outline');
+    const head=node(parts.recommendations,'div',null,'reader-display-section-head');message(head,'h2',config('recommendations').title||titles.recommendations,'reader-display-heading');link(head,'추천 전체 보기','/recommendations','btn btn-outline');
     const grid=node(parts.recommendations,'div',null,'reader-display-grid');for(const item of data.home.featured)card(grid,item);
     heading(parts.notice,'notice');for(const item of activeNotices(data)){
       const notice=node(parts.notice,'article',null,'reader-display-notice');node(notice,'h3',item.title);node(notice,'p',item.body);if(item.href)link(notice,'자세히 보기',safeHref(item.href),'btn btn-outline');
@@ -142,42 +167,52 @@
     finally{if(current())parts.root.setAttribute('aria-busy','false');}
   }
   function path(type,offset=0){const params=new URLSearchParams();if(type!=='ALL')params.set('type',type);if(offset)params.set('offset',String(offset));return '/recommendations'+(params.size?'?'+params:'');}
-  async function enter({type='ALL',offset=0}={}){
+  async function enter({type='ALL',offset=0,focus=true}={}){
     const root=$('readerRecommendationsContent');if(!root)return;const turn=++pageTurn;
+    currentPage={type,offset};
     root.replaceChildren();root.setAttribute('aria-busy','true');root.setAttribute('tabindex','-1');
     if(!kinds.includes(type)||!Number.isInteger(offset)||offset<0||offset>100000){status(root,'추천 페이지 주소를 확인해주세요.');root.setAttribute('aria-busy','false');return;}
     const current=()=>turn===pageTurn&&view('view-recommendations');status(root,'관리자가 선정한 작품을 불러오는 중입니다.');
     try{
       const data=await request({type,offset});if(!current())return;root.replaceChildren();
-      node(root,'p','관리자가 직접 선정한 작품을 저장된 순서로 안내합니다.','reader-display-intro');
-      const filters=node(root,'nav',null,'reader-display-filters');filters.setAttribute('aria-label','추천 작품 유형');
+      message(root,'p','관리자가 직접 선정한 작품을 저장된 순서로 안내합니다.','reader-display-intro');
+      const filters=node(root,'nav',null,'reader-display-filters');localized(filters,'추천 작품 유형','aria-label');
       for(const [value,label]of [['ALL','전체'],['NOVEL','웹소설'],['WEBTOON','웹툰']]){const item=link(filters,label,path(value),'btn btn-outline');if(value===type)item.setAttribute('aria-current','page');}
-      status(root,'선정 작품 '+data.total+'개');const grid=node(root,'div',null,'reader-display-grid');
+      status(root,() => t(data.total===1?'선정 작품 1개':'선정 작품 {count}개',{count:data.total}));const grid=node(root,'div',null,'reader-display-grid');
       for(const item of data.items)card(grid,item);
       if(!data.items.length){status(grid,offset?'이 페이지에 표시할 추천 작품이 없습니다.':'선정된 추천 작품을 준비 중입니다.');if(offset)link(grid,'첫 페이지로',path(type),'btn btn-outline');}
-      const pager=node(root,'nav',null,'reader-display-pager');pager.setAttribute('aria-label','추천 목록 페이지');
+      const pager=node(root,'nav',null,'reader-display-pager');localized(pager,'추천 목록 페이지','aria-label');
       if(offset)link(pager,'이전 페이지',path(type,Math.max(0,offset-24)),'btn btn-outline');
       if(data.hasMore)link(pager,'다음 페이지',path(type,data.nextOffset),'btn btn-primary');
-      chrome(data);root.focus?.({preventScroll:true});
+      chrome(data);if(focus)root.focus?.({preventScroll:true});
     }catch{if(current()){root.replaceChildren();status(root,'추천 작품을 불러오지 못했습니다.');retry(root,()=>enter({type,offset}));}}
     finally{if(current())root.setAttribute('aria-busy','false');}
   }
-  async function viewer(currentWorkId,{isCurrent=()=>true}={}){
+  async function viewer(currentWorkId,{isCurrent=()=>true,refresh=false}={}){
     const grid=$('readerRecommendGrid');if(!grid)return;const turn=++viewerTurn,box=$('readerRecommendBox');
-    grid.replaceChildren();if(box)box.hidden=false;if($('readerRecommendHeading'))$('readerRecommendHeading').textContent='관리자 선정 추천';
-    grid.setAttribute('aria-busy','true');status(grid,'선정된 추천을 불러오는 중입니다.');
+    currentViewer={currentWorkId,isCurrent};
+    if(!refresh){grid.replaceChildren();if(box)box.hidden=false;status(grid,'선정된 추천을 불러오는 중입니다.');}
+    localized($('readerRecommendHeading'),'관리자 선정 추천');grid.setAttribute('aria-busy','true');
     const current=()=>turn===viewerTurn&&isCurrent()&&view('view-reader');
     try{const data=await request();if(!current())return;grid.replaceChildren();const works=data.items.filter(item=>item.id!==String(currentWorkId)).slice(0,4);
       for(const item of works)card(grid,item);if(box)box.hidden=works.length===0;chrome(data);
-    }catch{if(current()){grid.replaceChildren();status(grid,'추천 작품을 불러오지 못했습니다.');retry(grid,()=>viewer(currentWorkId,{isCurrent}));}}
+    }catch{if(current()&&!refresh){grid.replaceChildren();status(grid,'추천 작품을 불러오지 못했습니다.');retry(grid,()=>viewer(currentWorkId,{isCurrent}));}}
     finally{if(current())grid.setAttribute('aria-busy','false');}
   }
   function leave(viewId){
     chromeTurn++;
     if(viewId!=='view-home'){homeTurn++;homeData=null;for(const id of ['readerDisplayHero','readerDisplayFeatured','readerDisplayNotices'])$(id)?.replaceChildren();}
-    if(viewId!=='view-recommendations')pageTurn++;
-    if(viewId!=='view-reader')viewerTurn++;
+    if(viewId!=='view-recommendations'){pageTurn++;currentPage=null;}
+    if(viewId!=='view-reader'){viewerTurn++;currentViewer=null;}
   }
   function reset(){leave();$('readerRecommendationsContent')?.replaceChildren();$('readerRecommendGrid')?.replaceChildren();}
+  window.addEventListener?.('reader:localechange', () => {
+    if (chromeData) chrome(chromeData);
+    if (currentPage && view('view-recommendations')) void enter({...currentPage,focus:false});
+    if (currentViewer && view('view-reader') && currentViewer.isCurrent()) {
+      const {currentWorkId,isCurrent} = currentViewer;
+      void viewer(currentWorkId,{isCurrent,refresh:true});
+    }
+  });
   window.ReaderDisplay=Object.freeze({home,syncHome,syncChrome,enter,viewer,leave,reset,path});
 })();

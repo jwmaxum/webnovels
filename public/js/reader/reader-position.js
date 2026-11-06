@@ -67,10 +67,25 @@
 
 (function() {
   'use strict';
-  let generation = 0;
+  let generation = 0, renderedLimit = 20;
   const user = () => window.WebNovelsAuth?.getActor()?.userId || null;
   const missing = error => error?.status === 404 || /^(?:NOT_FOUND|PUBLIC_WORK_NOT_FOUND|PUBLIC_EPISODE_NOT_FOUND|WORK_NOT_FOUND|EPISODE_NOT_FOUND)$/.test(error?.code || error?.message || '');
   const node = (tag, text, className) => { const el=document.createElement(tag); if(text!=null)el.textContent=text;if(className)el.className=className;return el; };
+  const t = (source, params = {}) => window.ReaderI18n?.t(source, params) ?? source.replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '');
+  function localized(el, label, attribute) {
+    if (!el) return el;
+    const render = typeof label === 'function' ? label : () => t(label);
+    if (window.ReaderFeatureCopy) window.ReaderFeatureCopy.bind(el, render, attribute);
+    else if (attribute) el.setAttribute(attribute, render());
+    else el.textContent = render();
+    return el;
+  }
+  function title(el, work) {
+    const copy = () => window.ReaderI18n?.work(work) || work;
+    localized(el, () => copy().title);
+    localized(el, () => copy().titleLanguage || work.originalLanguage || 'ko', 'lang');
+    return el;
+  }
   async function resolve(item) {
     if (!Number.isSafeInteger(Number(item?.episodeNumber)) || Number(item.episodeNumber) < 1) return null;
     if (window.ReaderCatalog?.active()) {
@@ -88,21 +103,22 @@
   }
   function message(container,text,retry) {
     if(!container)return;
-    const status=node('p',text);status.setAttribute('role','status');container.replaceChildren(status);
-    if(retry){const button=node('button','다시 시도','btn btn-outline');button.type='button';button.onclick=retry;container.append(button);}
+    const status=localized(node('p'),text);status.setAttribute('role','status');container.replaceChildren(status);
+    if(retry){const button=localized(node('button',null,'btn btn-outline'),'다시 시도');button.type='button';button.onclick=retry;container.append(button);}
   }
   async function render(limit=20) {
+    renderedLimit = limit;
     const ticket=++generation, account=user();
     const valid=()=>ticket===generation&&account===user();
     const recent=document.getElementById('libraryContinueList'), favorites=document.getElementById('libraryFavoritesList');
     const authors=document.getElementById('libraryCreatorsList')||document.getElementById('libraryAuthorsList');
     const retry=()=>render(limit);
-    const notice=text=>{const el=document.getElementById('libraryLoadStatus');if(el)el.textContent=text;};
-    const count=(ids,value)=>{for(const id of ids){const el=document.getElementById(id);if(el)el.textContent=String(value);}};
+    const notice=text=>localized(document.getElementById('libraryLoadStatus'),text);
+    const count=(ids,value)=>{for(const id of ids)localized(document.getElementById(id),() => typeof value==='number'?value.toLocaleString(window.ReaderI18n?.locale()||'ko'):String(value));};
     const groups=[['statReadingCount'],['statFavoriteCount'],['statAuthorCount','statCreatorCount']];
     const more=(container,available)=>{
       if(!container||!available)return;
-      const button=node('button','서재 더 보기','btn btn-outline library-more');button.type='button';
+      const button=localized(node('button',null,'btn btn-outline library-more'),'서재 더 보기');button.type='button';
       button.onclick=()=>{if(valid())return render(limit+20);};container.append(button);
     };
     for(const ids of groups)count(ids,'—');
@@ -134,7 +150,7 @@
           for(const entry of entries.filter(Boolean)){
             const {work,item}=entry,pct=Math.max(0,Math.min(100,Math.round(Number(item.progress)||0)));
             const button=node('button',null,'library-row');button.type='button';
-            button.append(node('strong',work.title),node('span',`${item.episodeNumber}화 · 현재 회차 ${pct}% · 이어보기`));
+            button.append(title(node('strong'),work),localized(node('span'),() => t('{number}화 · 현재 회차 {progress}% · 이어보기', {number:item.episodeNumber,progress:pct})));
             button.onclick=()=>{if(valid())window.openReaderDirect(work.id,item.episodeNumber);};recent.append(button);
           }
           if(!recent.children.length)message(recent,history.length?'이어볼 수 있는 공개 회차가 없습니다.':'아직 읽은 작품이 없습니다. 작품 탐색에서 읽기를 시작해 보세요.');
@@ -156,7 +172,7 @@
         if(favorites){
           favorites.replaceChildren();
           for(const work of favoriteWorks.filter(Boolean)){
-            const button=node('button',work.title,'library-row');button.type='button';
+            const button=title(node('button',null,'library-row'),work);button.type='button';
             button.onclick=()=>{if(valid())window.openWorkDetailDirect(work.id);};favorites.append(button);
           }
           if(!favorites.children.length)message(favorites,'등록된 공개 관심 작품이 없습니다.');
@@ -175,12 +191,15 @@
     }
   }
   function reset(){
-    generation++;
+    generation++;renderedLimit=20;
     for(const id of ['libraryContinueList','libraryFavoritesList','libraryCreatorsList','libraryAuthorsList']){
       const el=document.getElementById(id);el?.replaceChildren();el?.setAttribute('aria-busy','false');
     }
-    for(const id of ['statReadingCount','statFavoriteCount','statAuthorCount','statCreatorCount']){const el=document.getElementById(id);if(el)el.textContent='—';}
-    const status=document.getElementById('libraryLoadStatus');if(status)status.textContent='';
+    for(const id of ['statReadingCount','statFavoriteCount','statAuthorCount','statCreatorCount'])localized(document.getElementById(id),'—');
+    localized(document.getElementById('libraryLoadStatus'),'');
   }
+  window.addEventListener?.('reader:localechange', () => {
+    if (window.currentActiveView === 'view-mypage' && window.ReaderCatalog?.active()) void render(renderedLimit);
+  });
   window.ReaderLibrary=Object.freeze({resolve,latest,render,reset});
 })();

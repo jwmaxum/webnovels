@@ -1,0 +1,40 @@
+[data-reader-locale] {
+  min-block-size: 44px;
+  max-inline-size: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background: var(--control-bg);
+  color: var(--control-fg);
+  font-size: 16px;
+}
+
+[data-reader-locale]:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.reader-language-picker {
+  flex: 0 0 auto;
+  min-inline-size: 0;
+  margin: 0;
+}
+
+body.portal-fullscreen-mode #mainHeader .reader-language-picker {
+  display: none;
+}
+
+:is(#mainHeader, #mobileBottomNav, #view-home, #view-discover, #view-recommendations, #view-work-detail, #view-reader, #view-mypage, #modalAuth, #modalAuthCompletion, #modalEditProfile, #modalReaderSettings, #modalSearch, #modalMobileMore):lang(ja) {
+  --font-ui: 'Hiragino Sans', 'Yu Gothic', Meiryo, 'Noto Sans CJK JP', system-ui, sans-serif;
+  font-family: var(--font-ui);
+}
+
+:is(#mainHeader, #mobileBottomNav, #view-home, #view-discover, #view-recommendations, #view-work-detail, #view-reader, #view-mypage, #modalAuth, #modalAuthCompletion, #modalEditProfile, #modalReaderSettings, #modalSearch, #modalMobileMore):lang(zh-Hans) {
+  --font-ui: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
+  font-family: var(--font-ui);
+}
+
+@media (max-width: 859px) {
+  #view-reader #readerViewerLocale { max-inline-size: 7rem; }
+  #view-mypage .library-tabs button { min-inline-size: 0; overflow-wrap: anywhere; }
+}

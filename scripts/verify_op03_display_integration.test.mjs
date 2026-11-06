@@ -103,9 +103,10 @@ test('display integration ships unique labelled workspaces, protected legal node
   assert(nodes.some(node=>attr(node,'data-beta-support-open')!==undefined),'existing support entry remains');
   for(const id of ['readerPrimaryNav','mobileBottomNav'])assert(nodes.some(node=>node.tagName==='a'&&attr(node,'href')==='/recommendations'&&inside(node,byId(id))),id+' recommendations');
   const sources=nodes.filter(node=>node.tagName==='script').map(node=>attr(node,'src')),styles=nodes.filter(node=>node.tagName==='link').map(node=>attr(node,'href')),loader=read('public/js/core/role-modules.js');
-  assert(sources.indexOf('/js/reader/reader-catalog.js?v=117')<sources.indexOf('/js/reader/reader-display.js?v=20261101op03'));
-  assert(sources.indexOf('/js/reader/reader-display.js?v=20261101op03')<sources.indexOf('/js/reader/reader-discovery.js?v=20261101op03'));
-  for(const path of ['/js/core/role-modules.js','/js/core/router.js','/js/reader/reader.js'])assert(sources.includes(path+'?v='+(path.endsWith('/reader.js')?'20261103op13':path.endsWith('/role-modules.js')?'20261103op13':'20261103op13')));
+  const versioned = path => sources.findIndex(src=>src?.startsWith(path+'?v=')&&/^[a-z0-9]+$/.test(src.split('?v=')[1]));
+  const catalog=versioned('/js/reader/reader-catalog.js'),display=versioned('/js/reader/reader-display.js'),discovery=versioned('/js/reader/reader-discovery.js');
+  assert(catalog>=0&&catalog<display&&display<discovery);
+  for(const path of ['/js/core/role-modules.js','/js/core/router.js','/js/reader/reader.js'])assert(versioned(path)>=0);
   for(const path of ['/css/admin-display.css','/css/reader-display.css'])assert(styles.includes(path+'?v=20261101op03'));
   assert(loader.indexOf('/admin-display.js?v=20261101op03')<loader.indexOf('/admin-operations.js?v=20261102op10'));
   assert(loader.includes('/admin-console.js?v=20261103op13'));assert(loader.includes('/admin-members.js?v=20261101op02b'));

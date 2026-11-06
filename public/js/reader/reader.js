@@ -24,6 +24,8 @@
 // Single Work Card HTML Template (CDG PLAY Aesthetic - 실제 독자 조회수 실시간 연동)
 function renderCdgWorkCardHtml(w, options = {}) {
   const isAdult = w.rating === 'AGE_19' || w.genre === '성인';
+  const i18n = typeof window === 'undefined' ? null : window.ReaderI18n;
+  const shown = i18n?.work(w) ?? w;
   const cover = escapeHtml(getWorkCover(w));
   const workId = /^[1-9]\d{0,18}$/.test(String(w.id)) ? String(w.id) : '';
   const rank = Number.isInteger(Number(options.rank)) && Number(options.rank)>0 && Number(options.rank)<=100000
@@ -56,15 +58,15 @@ function renderCdgWorkCardHtml(w, options = {}) {
   }
 
   return `
-    <article class="cdg-work-card ${options.badge === 'GOLDEN' ? 'cdg-card-golden' : ''}" onclick="openWorkDetailDirect('${workId}')" title="${escapeHtml(w.title)}">
+    <article class="cdg-work-card ${options.badge === 'GOLDEN' ? 'cdg-card-golden' : ''}" onclick="openWorkDetailDirect('${workId}')" title="${escapeHtml(shown.title)}">
       <div class="cdg-card-cover">
-        <img class="cdg-card-cover-img" src="${cover}" alt="${escapeHtml(w.title)}" loading="lazy">
+        <img class="cdg-card-cover-img" src="${cover}" alt="${escapeHtml(shown.title)}" loading="lazy">
         ${rankBadgeHtml}
         ${cornerBadgeHtml}
       </div>
       <div class="cdg-card-info">
-        <span class="cdg-card-tag">${escapeHtml(w.genre || '웹소설')}</span>
-        <h3 class="cdg-card-title">${escapeHtml(w.title)}</h3>
+        <span class="cdg-card-tag">${escapeHtml(i18n?.t(w.genre || '웹소설') ?? (w.genre || '웹소설'))}</span>
+        <h3 class="cdg-card-title" lang="${escapeHtml(shown.titleLanguage || 'ko')}">${escapeHtml(shown.title)}</h3>
         <div class="cdg-card-meta">
           <span>${escapeHtml(authorName)}</span>
           <span><i data-lucide="eye" style="width:11px;height:11px;display:inline;vertical-align:middle;"></i> ${viewFormatted}</span>
@@ -192,6 +194,8 @@ window.applyHomeCuration = function(work) {
 };
 async function renderHomeWorks() {
   if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.home();
+  const i18n = window.ReaderI18n;
+  const t = i18n?.t ?? (key => key);
   const display = window.ReaderDisplay?.home();
   // The legacy public feed uses the same two primary shelves when discovery is off.
   const recentGrid = document.getElementById('recentNovelsGrid');
@@ -211,18 +215,22 @@ async function renderHomeWorks() {
         const cover = document.createElement('div'); cover.className = 'cdg-card-cover';
         const image = document.createElement('img'); image.className = 'cdg-card-cover-img'; image.src = getWorkCover(work); image.alt = ''; image.loading = 'lazy'; cover.append(image);
         const info = document.createElement('div'); info.className = 'cdg-card-info';
-        const title = document.createElement('h3'); title.className = 'cdg-card-title'; title.textContent = work.title;
+        const shown = i18n?.work(work) ?? work;
+        const title = document.createElement('h3'); title.className = 'cdg-card-title'; title.textContent = shown.title;
+        if (shown.titleLanguage) title.lang = shown.titleLanguage;
         const author = document.createElement('p'); author.className = 'small text-muted'; author.textContent = getAuthorName(work);
-        const state = document.createElement('p'); state.className = 'small'; state.textContent = `${work.isCompleted || work.is_completed || work.status === 'COMPLETED' ? '완결' : work.status === 'PAUSED' ? '휴재' : '연재 중'} · 공개 ${work.episodes.length}화`;
+        const status = work.isCompleted || work.is_completed || work.status === 'COMPLETED' ? '완결' : work.status === 'PAUSED' ? '휴재' : '연재 중';
+        const state = document.createElement('p'); state.className = 'small';
+        state.textContent = i18n?.t('{status} · 공개 {count}화', {status: t(status), count: i18n.number(work.episodes.length)}) ?? `${status} · 공개 ${work.episodes.length}화`;
         info.append(title, author, state); card.append(cover, info); grid.append(card);
       }
-      if (!selected.length) { const message = document.createElement('p'); message.className = 'text-muted'; message.textContent = empty; grid.append(message); }
+      if (!selected.length) { const message = document.createElement('p'); message.className = 'text-muted'; message.textContent = t(empty); grid.append(message); }
     };
-    const heading = document.getElementById('recentNovelsHeading'); if (heading) heading.textContent = '공개된 웹소설';
-    const webtoonHeading = document.getElementById('recentWebtoonsHeading'); if (webtoonHeading) webtoonHeading.textContent = '공개된 웹툰';
+    const heading = document.getElementById('recentNovelsHeading'); if (heading) heading.textContent = t('공개된 웹소설');
+    const webtoonHeading = document.getElementById('recentWebtoonsHeading'); if (webtoonHeading) webtoonHeading.textContent = t('공개된 웹툰');
     render('recentNovelsGrid', 'NOVEL', '표시할 작품이 없습니다. 새로운 연재를 기다려 주세요.');
     if (window.WEBNOVELS_CONFIG?.webtoonServiceEnabled === true) render('webtoonsGrid', 'WEBTOON', '아직 공개된 웹툰이 없습니다.');
-    else { const grid = document.getElementById('webtoonsGrid'); if (grid) { grid.textContent = '웹툰 공개 서비스는 준비 중입니다.'; grid.setAttribute('aria-busy', 'false'); } }
+    else { const grid = document.getElementById('webtoonsGrid'); if (grid) { grid.textContent = t('웹툰 공개 서비스는 준비 중입니다.'); grid.setAttribute('aria-busy', 'false'); } }
     for (const id of ['recentNovelsSection','webtoonsSection']) { const section = document.getElementById(id); if (section) section.hidden = false; }
     for (const id of ['heroFeaturedSection','editorialSpotlightSection','trendingWorksSection','newWorksSection','completedWorksSection','goldenBestSection','todayFreeSection','genreRecSection']) {
       const section = document.getElementById(id); if (section) section.hidden = true;
@@ -526,7 +534,7 @@ function renderDiscoverWorks(explicitGenre = null) {
   if (explicitGenre && explicitGenre !== 'undefined') {
     discoverFilterState.genre = explicitGenre;
     document.querySelectorAll('#discoverGenreFilters .pill').forEach(btn => {
-      btn.classList.toggle('active', btn.textContent.trim() === explicitGenre);
+      btn.classList.toggle('active', (btn.dataset?.genre || btn.textContent.trim()) === explicitGenre);
     });
   }
 
@@ -648,6 +656,8 @@ function renderDiscoverWorks(explicitGenre = null) {
 // ----------------------------------------------------
 function renderSearchResults(query = '') {
   if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.search(query);
+  const i18n = window.ReaderI18n;
+  const t = i18n?.t ?? (key => key);
   const container = document.getElementById('searchResults');
   if (!container) return;
 
@@ -656,7 +666,8 @@ function renderSearchResults(query = '') {
   const searchable = getPublishedWorks().filter(work => !['NOVEL','WEBTOON'].includes(kind) || (work.contentType || work.content_type || 'NOVEL') === kind);
   let results = searchable.filter(work => {
     if (!normalized) return true;
-    const haystack = normalizeSearchText(`${work.title} ${work.author} ${work.genre} ${work.description}`);
+    const shown = i18n?.work(work) ?? work;
+    const haystack = normalizeSearchText(`${work.title} ${shown.title} ${work.author} ${work.genre} ${work.description} ${shown.description}`);
     return haystack.includes(normalized);
   });
 
@@ -664,7 +675,7 @@ function renderSearchResults(query = '') {
   if (sort === 'popular') {
     results = results.sort((a, b) => b.viewCount - a.viewCount);
   } else if (sort === 'title') {
-    results = results.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+    results = results.sort((a, b) => (i18n?.work(a) ?? a).title.localeCompare((i18n?.work(b) ?? b).title, i18n?.locale() ?? 'ko'));
   } else {
     results = results.sort((a, b) => BigInt(b.id) > BigInt(a.id) ? 1 : BigInt(b.id) < BigInt(a.id) ? -1 : 0);
   }
@@ -673,8 +684,8 @@ function renderSearchResults(query = '') {
     const fallback = searchable.slice().sort((a, b) => b.viewCount - a.viewCount).slice(0, 3);
     container.innerHTML = `
       <div class="empty-search p-4 text-center text-muted">
-        <h4>검색 결과가 없습니다</h4>
-        <p class="small">띄어쓰기를 줄이거나 장르명으로 다시 검색해 보세요.</p>
+        <h4>${escapeHtml(t('검색 결과가 없습니다'))}</h4>
+        <p class="small">${escapeHtml(t('띄어쓰기를 줄이거나 장르명으로 다시 검색해 보세요.'))}</p>
       </div>
       ${fallback.map(renderSearchResultItem).join('')}
     `;
@@ -690,12 +701,13 @@ function renderSearchResultItem(work) {
   const isAdult = work.rating === 'AGE_19' || work.genre === '성인';
   const cover = escapeHtml(getWorkCover(work));
   const workId = /^[1-9]\d{0,18}$/.test(String(work.id)) ? String(work.id) : '';
+  const shown = window.ReaderI18n?.work(work) ?? work;
   return `
     <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect('${workId}');" style="width: 100%; border-radius: 8px; text-align: left; background: var(--bg-subtle); border: 1px solid var(--border-color); color: var(--text-primary);">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <img src="${cover}" alt="${escapeHtml(work.title)}" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px;">
+        <img src="${cover}" alt="${escapeHtml(shown.title)}" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px;">
         <div>
-          <strong>${escapeHtml(work.title)}</strong>
+          <strong lang="${escapeHtml(shown.titleLanguage || 'ko')}">${escapeHtml(shown.title)}</strong>
           <div class="text-muted small">${escapeHtml(getAuthorName(work))} · ${escapeHtml(isAdult ? '19+ 성인' : work.genre)} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</div>
         </div>
       </div>
@@ -797,9 +809,9 @@ function updateFavoriteButtons(workId) {
   const btnStickyFav = document.getElementById('btnStickyHeart');
 
   if (btnDetailFav) {
-    btnDetailFav.innerHTML = isFav 
-      ? '<i data-lucide="heart" style="fill: #ef4444; color: var(--accent-danger);"></i> 관심등록 완료'
-      : '<i data-lucide="heart"></i> 관심등록';
+    const label = isFav ? '관심등록 완료' : '관심등록';
+    btnDetailFav.innerHTML = isFav ? '<i data-lucide="heart" style="fill: #ef4444; color: var(--accent-danger);"></i>' : '<i data-lucide="heart"></i>';
+    btnDetailFav.append(document.createTextNode(' ' + (window.ReaderI18n?.t(label) ?? label)));
   }
   if (btnStickyFav) {
     btnStickyFav.innerHTML = isFav 
@@ -847,9 +859,9 @@ function updateSubscribeButtons(authorData) {
   const btnSub = document.getElementById('btnDetailSubscribe');
 
   if (btnSub) {
-    btnSub.innerHTML = isSubbed
-      ? '<i data-lucide="user-check" style="color: var(--primary-color);"></i> 작가 구독중'
-      : '<i data-lucide="user-plus"></i> 작가 구독';
+    const label = isSubbed ? '작가 구독중' : '작가 구독';
+    btnSub.innerHTML = isSubbed ? '<i data-lucide="user-check" style="color: var(--primary-color);"></i>' : '<i data-lucide="user-plus"></i>';
+    btnSub.append(document.createTextNode(' ' + (window.ReaderI18n?.t(label) ?? label)));
   }
   if (window.lucide) window.lucide.createIcons();
 }
@@ -1172,16 +1184,18 @@ async function renderLibraryContent(skipRemote = false) {
 // ============================================================
 window.openWorkDetailDirect = function(workId, shouldPushState = true, didRefresh = false) {
   if (window.ReaderDiscovery?.active()) return window.ReaderDiscovery.detail(workId, shouldPushState);
+  const i18n = window.ReaderI18n;
+  const t = i18n?.t ?? ((key, values = {}) => key.replace(/\{(\w+)\}/g, (token, name) => values[name] ?? token));
   activeWork=null;
-  for(const id of ['btnDetailReadFirst','btnStickyRead']){const el=document.getElementById(id);if(el){el.disabled=true;el.textContent='공개 회차 확인 중';}}
+  for(const id of ['btnDetailReadFirst','btnStickyRead']){const el=document.getElementById(id);if(el){el.disabled=true;el.textContent=t('공개 회차 확인 중');}}
   const targetId = String(workId);
   const work = getPublishedWorks().find(w => String(w.id) === targetId);
   if(!work&&window.ReaderHub?.active()&&!didRefresh) {
     refreshReaderCatalog(true).then(()=>openWorkDetailDirect(workId,shouldPushState,true))
-      .catch(()=>showToast('공개 작품 목록을 확인할 수 없습니다.'));
+      .catch(()=>showToast(t('공개 작품 목록을 확인할 수 없습니다.')));
     return;
   }
-  if (!work) {const status=document.getElementById('detailLoadStatus');if(status)status.textContent='공개 작품을 찾을 수 없습니다.';return showToast('작품을 찾을 수 없습니다.');}
+  if (!work) {const status=document.getElementById('detailLoadStatus');if(status)status.textContent=t('공개 작품을 찾을 수 없습니다.');return showToast(t('작품을 찾을 수 없습니다.'));}
   activeWork = work;
 
   // Only actual public episodes from the existing feed are eligible.
@@ -1189,16 +1203,27 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true, didRefres
 
   const cover = getWorkCover(work);
   const authorName = (typeof work.author === 'object' ? work.author?.penName : work.author) || '작자미상';
+  const shown = i18n?.work(work) ?? work;
 
   document.getElementById('detailCoverImg').src = cover;
-  document.getElementById('detailTitle').textContent = work.title;
-  document.getElementById('detailAuthor').textContent = `작가: ${authorName}`;
-  document.getElementById('detailGenreBadge').textContent = work.genre;
-  document.getElementById('detailRatingBadge').textContent = work.rating === 'AGE_15' ? '15세 이상' : '전체이용가';
-  document.getElementById('detailAiBadge').textContent = {NONE:'AI 미사용',ASSISTED:'AI 보조',GENERATED:'AI 생성'}[work.aiUsageType]||'AI 사용 정보 없음';
-  document.getElementById('detailDescription').textContent = work.description;
-  const type=document.getElementById('detailContentType');if(type)type.textContent=(work.contentType||work.content_type)==='WEBTOON'?'웹툰':'웹소설';
-  const state=document.getElementById('detailPublicationStatus');if(state)state.textContent=work.isCompleted||work.is_completed||work.status==='COMPLETED'?'완결':work.status==='PAUSED'?'휴재':'연재 중';
+  const title = document.getElementById('detailTitle');title.textContent = shown.title;
+  const description = document.getElementById('detailDescription');description.textContent = shown.description;
+  if (i18n) {
+    title.lang = shown.titleLanguage;
+    description.lang = shown.descriptionLanguage;
+    const note = document.getElementById('detailOriginalLanguage');
+    if (note) {
+      const original = work.originalLanguage || 'ko';
+      note.hidden = i18n.locale() === original || (shown.titleLanguage === i18n.locale() && shown.descriptionLanguage === i18n.locale());
+      note.textContent = t('원문 · {language}', {language: i18n.language(original)});
+    }
+  }
+  document.getElementById('detailAuthor').textContent = t('작가: {name}', {name:authorName});
+  document.getElementById('detailGenreBadge').textContent = t(work.genre);
+  document.getElementById('detailRatingBadge').textContent = t(work.rating === 'AGE_15' ? '15세 이상' : '전체이용가');
+  document.getElementById('detailAiBadge').textContent = t({NONE:'AI 미사용',ASSISTED:'AI 보조',GENERATED:'AI 생성'}[work.aiUsageType]||'AI 사용 정보 없음');
+  const type=document.getElementById('detailContentType');if(type)type.textContent=t((work.contentType||work.content_type)==='WEBTOON'?'웹툰':'웹소설');
+  const state=document.getElementById('detailPublicationStatus');if(state)state.textContent=t(work.isCompleted||work.is_completed||work.status==='COMPLETED'?'완결':work.status==='PAUSED'?'휴재':'연재 중');
 
   // 관심등록 및 작가 구독 상태 버튼 업데이트
   updateFavoriteButtons(work.id);
@@ -1216,17 +1241,18 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true, didRefres
   });
   const sortedEpisodes = Array.from(uniqueEpisodesMap.values()).filter(ep=>Number.isSafeInteger(Number(ep.episodeNumber))&&Number(ep.episodeNumber)>0).sort((a,b)=>a.episodeNumber-b.episodeNumber);
   work.firstEpisodeNumber=sortedEpisodes[0]?.episodeNumber;
-  for(const id of ['btnDetailReadFirst','btnStickyRead']){const el=document.getElementById(id);if(el){el.disabled=!work.firstEpisodeNumber;el.textContent=work.firstEpisodeNumber?`첫 공개 회차 읽기 (${work.firstEpisodeNumber}화)`:'공개 회차 없음';}}
-  const heading=document.getElementById('detailEpisodesHeading');if(heading)heading.textContent=`공개 회차 · ${sortedEpisodes.length}화`;
-  const status=document.getElementById('detailLoadStatus');if(status)status.textContent='작품 정보와 공개 회차를 표시했습니다.';
+  for(const id of ['btnDetailReadFirst','btnStickyRead']){const el=document.getElementById(id);if(el){el.disabled=!work.firstEpisodeNumber;el.textContent=work.firstEpisodeNumber?t('첫 공개 회차 읽기 ({number}화)',{number:work.firstEpisodeNumber}):t('공개 회차 없음');}}
+  const heading=document.getElementById('detailEpisodesHeading');if(heading)heading.textContent=t('공개 회차 · {count}화',{count:sortedEpisodes.length});
+  const status=document.getElementById('detailLoadStatus');if(status)status.textContent=t('작품 정보와 공개 회차를 표시했습니다.');
   epList.replaceChildren();
   for(const ep of sortedEpisodes){
     const row=document.createElement('a');row.className='episode-row discovery-episode';row.href=`/read/${encodeURIComponent(work.id)}/${ep.episodeNumber}`;
     row.onclick=event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button>0)return;event.preventDefault();window.openReaderDirect(work.id,ep.episodeNumber);};
-    for(const [text,cls]of [[`${ep.episodeNumber}화`,'discovery-episode-number'],[ep.title,'discovery-episode-title'],['무료','discovery-episode-meta']]){const span=document.createElement('span');span.textContent=text;span.className=cls;row.append(span);}
+    const shownEpisode = i18n?.episode(work.id, ep) ?? ep;
+    for(const [text,cls,language]of [[t('{number}화',{number:ep.episodeNumber}),'discovery-episode-number'],[shownEpisode.title,'discovery-episode-title',shownEpisode.titleLanguage],[t('무료'),'discovery-episode-meta']]){const span=document.createElement('span');span.textContent=text;span.className=cls;if(language)span.lang=language;row.append(span);}
     epList.append(row);
   }
-  if(!sortedEpisodes.length){const empty=document.createElement('p');empty.className='text-muted';empty.textContent='공개된 회차가 없습니다.';epList.append(empty);}
+  if(!sortedEpisodes.length){const empty=document.createElement('p');empty.className='text-muted';empty.textContent=t('공개된 회차가 없습니다.');epList.append(empty);}
   switchWebNovelsView('view-work-detail', null, false);
   
   // 명예의 전당 (Top Supporters) 렌더링 (improve5.md)
@@ -1358,6 +1384,12 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.openReaderDirect = async function(workId, epNumber, shouldPushState = true) {
+  const i18n = window.ReaderI18n;
+  const t = i18n?.t ?? ((key, values = {}) => key.replace(/\{(\w+)\}/g, (token, name) => values[name] ?? token));
+  const setText = (node, key, values) => {
+    if (i18n) i18n.text(node, key, values);
+    else if (node) node.textContent = t(key, values);
+  };
   const session=window.ReaderSession?.begin(workId,epNumber);
   const valid=()=>!session||window.ReaderSession.valid(session);
   const discovery=window.ReaderCatalog?.active();
@@ -1367,19 +1399,22 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     document.getElementById('view-reader')?.setAttribute('aria-busy',String(busy));
     const el=document.getElementById('readerChapterStatus');if(!el)return;
     el.replaceChildren();el.hidden=!text;
-    if(text&&!busy){const heading=document.getElementById('readerHeading');if(heading)heading.textContent='공개 회차를 확인해 주세요.';}
-    if(text){const message=document.createElement('p');message.textContent=text;el.append(message);}
-    if(retry){const button=document.createElement('button');button.type='button';button.className='btn btn-outline';button.textContent='회차 다시 불러오기';
+    if(text&&!busy)setText(document.getElementById('readerHeading'),'공개 회차를 확인해 주세요.');
+    if(text){const message=document.createElement('p');setText(message,text);el.append(message);}
+    if(retry){const button=document.createElement('button');button.type='button';button.className='btn btn-outline';setText(button,'회차 다시 불러오기');
       button.onclick=()=>{if(valid())return window.openReaderDirect(workId,epNumber,shouldPushState);};el.append(button);}
   };
   const enterReader=()=>{
     if(entered||!valid())return;entered=true;
     switchWebNovelsView('view-reader',null,false);activeWork=null;
+    window.refreshReaderLocale = null;
+    const sourceLanguage = document.getElementById('readerSourceLanguage');
+    if (sourceLanguage) sourceLanguage.hidden = true;
     window.ReaderFonts?.start();
     document.getElementById('view-reader')?.setAttribute('data-reader-font-state','PENDING');
-    if(document.getElementById('readerWorkTitle'))document.getElementById('readerWorkTitle').textContent='작품 정보 확인 중';
+    setText(document.getElementById('readerWorkTitle'),'작품 정보 확인 중');
     if(document.getElementById('readerEpTitle'))document.getElementById('readerEpTitle').textContent='';
-    if(document.getElementById('readerHeading'))document.getElementById('readerHeading').textContent='공개 회차를 불러오는 중입니다.';
+    setText(document.getElementById('readerHeading'),'공개 회차를 불러오는 중입니다.');
     const recommendations=document.getElementById('readerRecommendBox');if(recommendations)recommendations.hidden=true;
     document.getElementById('readerRecommendGrid')?.replaceChildren();chapterStatus('공개 회차를 불러오는 중입니다.',true);
     for(const id of ['btnPrevEp','btnNextEp','btnReaderEpisodes','btnReaderEpisodeList']){const el=document.getElementById(id);if(el)el.disabled=true;}
@@ -1389,21 +1424,21 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   let chapter;
   if(discovery) {
     try {chapter=await window.ReaderCatalog.reading(workId,epNumber);}
-    catch(error){if(valid()){const message=error?.status===404?'공개된 회차를 찾을 수 없습니다.':'공개 회차를 확인하지 못했습니다. 다시 시도해주세요.';chapterStatus(message,false,true);showToast(message);}return;}
+    catch(error){if(valid()){const message=error?.status===404?'공개된 회차를 찾을 수 없습니다.':'공개 회차를 확인하지 못했습니다. 다시 시도해주세요.';chapterStatus(message,false,true);showToast(t(message));}return;}
   } else if (window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
     try { await refreshReaderCatalog(true); }
-    catch { if(valid()){chapterStatus('공개 회차 목록을 갱신하지 못했습니다.',false,true);showToast('공개 회차 목록을 갱신하지 못했습니다. 다시 시도해주세요.');}return; }
+    catch { if(valid()){chapterStatus('공개 회차 목록을 갱신하지 못했습니다.',false,true);showToast(t('공개 회차 목록을 갱신하지 못했습니다. 다시 시도해주세요.'));}return; }
   }
   if(!valid())return;
   const targetWorkId = String(workId);
   const work = discovery?chapter?.work:getPublishedWorks().find(w => String(w.id) === targetWorkId);
-  if (!work) {chapterStatus('공개 작품을 찾을 수 없습니다.',false,true);return showToast('작품을 찾을 수 없습니다.');}
+  if (!work) {chapterStatus('공개 작품을 찾을 수 없습니다.',false,true);return showToast(t('작품을 찾을 수 없습니다.'));}
 
   if (!work.episodes) work.episodes = [];
 
   const epNum = Number(discovery?chapter?.episode?.episodeNumber:epNumber);
   const ep = discovery?chapter?.episode:work.episodes.find(e => Number(e.episodeNumber) === epNum);
-  if (!ep) {chapterStatus('공개된 회차를 찾을 수 없습니다.',false,true);return showToast('공개된 회차를 찾을 수 없습니다.');}
+  if (!ep) {chapterStatus('공개된 회차를 찾을 수 없습니다.',false,true);return showToast(t('공개된 회차를 찾을 수 없습니다.'));}
   // 유료·성인 권한은 서버에서만 판정한다. 레거시 브라우저 해금·성인인증 캐시는 사용하지 않는다.
   const genres = Array.isArray(work.genre) ? work.genre : [work.genre];
   const isAdultWork = ['AGE_19', 'ADULT', '19'].includes(work.rating) ||
@@ -1413,11 +1448,12 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     (accessPolicy && accessPolicy !== 'FREE');
   if (protectedEpisode && !window.WEBNOVELS_CONFIG?.authorPublishEnabled) {
     chapterStatus('이 회차의 열람 기능은 현재 사용할 수 없습니다.');
-    return showToast('이 회차의 열람 기능은 현재 사용할 수 없습니다.');
+    return showToast(t('이 회차의 열람 기능은 현재 사용할 수 없습니다.'));
   }
   enterReader();
 
   const authorCommentEl = document.getElementById('readerAuthorComment');
+  authorCommentEl?.removeAttribute?.('data-i18n');
 
   // 3. 온디맨드 보안 회차 본문 로드 (episode_contents / episode_panels)
   let loadedText = null;
@@ -1461,7 +1497,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   if(!valid())return;
   if (!loadedText && !loadedPanels.length && !loadedWebtoon?.panels?.length) {
     chapterStatus('본문을 불러오지 못했습니다. 접근 권한 또는 연결 상태를 확인해 주세요.',false,true);
-    showToast('본문을 불러오지 못했습니다. 접근 권한 또는 연결 상태를 확인해 주세요.');
+    showToast(t('본문을 불러오지 못했습니다. 접근 권한 또는 연결 상태를 확인해 주세요.'));
     return;
   }
 
@@ -1482,14 +1518,33 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   window._currentReadingWorkId=work.id;window._currentReadingEpNum=epNum;
   window._currentContentVersionId=versionId;
   if(session){session.workId=String(work.id);session.episodeNumber=epNum;session.episode=ep;session.versionId=versionId;}
-  document.getElementById('readerWorkTitle').textContent=work.title;
-  document.getElementById('readerEpTitle').textContent=ep.title;
   const heading=document.getElementById('readerHeading');
-  heading.textContent=`${ep.title} (${epNum}화)`;heading.setAttribute('tabindex','-1');
+  heading.setAttribute('tabindex','-1');
+  function updateTitles(workInfo, episodeInfo) {
+    const shownWork = i18n?.work(workInfo) ?? workInfo;
+    const shownEpisode = i18n?.episode(work.id, episodeInfo) ?? episodeInfo;
+    const workTitle = document.getElementById('readerWorkTitle');
+    const episodeTitle = document.getElementById('readerEpTitle');
+    for (const [element, item] of [[workTitle, shownWork], [episodeTitle, shownEpisode]]) {
+      element.removeAttribute?.('data-i18n');
+      element.textContent = item.title;
+      if (item.titleLanguage) element.lang = item.titleLanguage;
+    }
+    heading.removeAttribute?.('data-i18n');
+    heading.textContent = t('{title} ({number}화)', {title: shownEpisode.title, number: i18n?.number(epNum) ?? epNum});
+    const sourceLanguage = document.getElementById('readerSourceLanguage');
+    if (i18n && sourceLanguage) {
+      const source = workInfo.originalLanguage ?? workInfo.localization?.sourceLocale ?? 'ko';
+      sourceLanguage.hidden = source === i18n.locale();
+      sourceLanguage.textContent = t('원문 · {language}', {language: i18n.language(source)});
+    }
+  }
+  updateTitles(work, ep);
 
   // 4. 웹툰 vs 웹소설 분기 렌더링
   const textBodyEl = document.getElementById('readerBody');
   const webtoonViewerEl = document.getElementById('readerWebtoonViewer');
+  if (textBodyEl) textBodyEl.lang = work.originalLanguage ?? work.localization?.sourceLocale ?? 'ko';
 
   document.querySelector('.reader-container')?.classList.toggle('is-webtoon',!!loadedWebtoon?.panels?.length||work.contentType==='WEBTOON');
   if(loadedWebtoon?.panels?.length){
@@ -1510,7 +1565,8 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
         img.style.cssText='width:100%;height:auto;display:block;margin-bottom:2px';
         wrapper.append(img);webtoonViewerEl.append(wrapper);
       }
-      if(authorCommentEl)authorCommentEl.textContent=ep.authorComment?`작가의 말: ${ep.authorComment}`:'';
+      if(authorCommentEl&&ep.authorComment)setText(authorCommentEl,'작가의 말: {text}',{text:ep.authorComment});
+      else if(authorCommentEl)authorCommentEl.textContent='';
     }
   } else {
     if (webtoonViewerEl) webtoonViewerEl.style.display = 'none';
@@ -1518,7 +1574,7 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
       textBodyEl.style.display = 'block';
       const contentVersion = versionId||`${ep.id || epNum}:${ep.updatedAt || ep.createdAt || 'v1'}`;
       window.ReaderContent.render(textBodyEl, authorCommentEl, {
-        content: loadedText || '', contentDocument: ep.contentDocument, authorComment: ep.authorComment || '', version: contentVersion
+        content: loadedText || '', contentDocument: ep.contentDocument, authorComment: ep.authorComment || '', version: contentVersion, localizeReaderNote: true
       }, (index, paragraph, version) => selectParagraphComment(index, paragraph, version));
     }
   }
@@ -1531,16 +1587,34 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
     .sort((a,b)=>Number(a.episodeNumber)-Number(b.episodeNumber));
   const index=ordered.findIndex(item=>Number(item.episodeNumber)===epNum);
   const previous=discovery?chapter.previous:ordered[index-1],next=discovery?chapter.next:ordered[index+1];
+  const updateNavigationLabels = () => {
+    btnPrev?.setAttribute('aria-label',previous?t('{number}화로 이동',{number:previous.episodeNumber}):t('이전 공개 회차 없음'));
+    btnNext?.setAttribute('aria-label',next?t('{number}화로 이동',{number:next.episodeNumber}):t('다음 공개 회차 없음'));
+  };
+  updateNavigationLabels();
   if (btnPrev) {
     btnPrev.disabled=!previous;
-    btnPrev.setAttribute('aria-label',previous?`${previous.episodeNumber}화로 이동`:'이전 공개 회차 없음');
     btnPrev.onclick=()=>{if(valid()&&previous)window.openReaderDirect(work.id,previous.episodeNumber);};
   }
   if (btnNext) {
     btnNext.disabled=!next;
-    btnNext.setAttribute('aria-label',next?`${next.episodeNumber}화로 이동`:'다음 공개 회차 없음');
     btnNext.onclick=()=>{if(valid()&&next)window.openReaderDirect(work.id,next.episodeNumber);};
   }
+  let titleRequest = 0;
+  window.refreshReaderLocale = async () => {
+    if (!valid() || window.currentActiveView !== 'view-reader') return;
+    const request = ++titleRequest;
+    updateTitles(work, ep);
+    updateNavigationLabels();
+    if (!discovery) return;
+    try {
+      // This catalog read only returns metadata. The existing body and progress stay mounted.
+      const result = await window.ReaderCatalog.reading(workId, epNum);
+      if (valid() && window.currentActiveView === 'view-reader' && request === titleRequest) {
+        updateTitles(result.work, result.episode);
+      }
+    } catch { /* Keep the original title when translated metadata is unavailable. */ }
+  };
   for(const id of ['btnReaderEpisodes','btnReaderEpisodeList']){
     const button=document.getElementById(id);if(!button)continue;
     button.disabled=false;button.onclick=()=>{if(valid())window.openWorkDetailDirect(work.id);};
@@ -1584,14 +1658,16 @@ window.openReaderDirect = async function(workId, epNumber, shouldPushState = tru
   const progressStatus=document.getElementById('readerProgressStatus');
   if(progressStatus){
     progressStatus.setAttribute('role','status');progressStatus.setAttribute('aria-live','polite');
-    progressStatus.textContent=restored==='USER_MOVED'?'이동한 읽기 위치를 유지합니다.':restored==='RESTORED'?'저장한 위치에서 이어봅니다.':
+    const progressMessage=restored==='USER_MOVED'?'이동한 읽기 위치를 유지합니다.':restored==='RESTORED'?'저장한 위치에서 이어봅니다.':
       restored==='VERSION_CHANGED'||positionChanged?'공개본이 수정되어 처음부터 표시합니다. 기존 독서 기록은 유지됩니다.':
       restored==='UNAVAILABLE'||positionUnavailable?'저장 위치를 확인하지 못해 처음부터 표시합니다. 위치를 다시 불러오려면 회차를 다시 열어주세요.':
       window.WebNovelsAuth?.getActor()?.reader?'스크롤하면 읽은 위치를 저장합니다.':'독자 로그인 후 읽은 위치를 저장할 수 있습니다.';
-    if(['TIMEOUT','ERROR','UNAVAILABLE','FALLBACK'].includes(fontState))progressStatus.textContent+=' 글꼴 연결을 확인하지 못해 현재 표시 기준으로 읽기를 계속합니다.';
+    if(['TIMEOUT','ERROR','UNAVAILABLE','FALLBACK'].includes(fontState)) {
+      progressStatus.textContent=t(progressMessage)+' '+t('글꼴 연결을 확인하지 못해 현재 표시 기준으로 읽기를 계속합니다.');
+    } else setText(progressStatus,progressMessage);
   }
-  if(restored==='VERSION_CHANGED'||positionChanged)showToast('공개본이 수정되어 처음부터 표시합니다. 이전 독서 기록은 유지됩니다.');
-  else if(restored==='UNAVAILABLE'||positionUnavailable)showToast('저장 위치를 확인하지 못해 처음부터 표시합니다.');
+  if(restored==='VERSION_CHANGED'||positionChanged)showToast(t('공개본이 수정되어 처음부터 표시합니다. 이전 독서 기록은 유지됩니다.'));
+  else if(restored==='UNAVAILABLE'||positionUnavailable)showToast(t('저장 위치를 확인하지 못해 처음부터 표시합니다.'));
   if(shouldPushState){
     const path=`/read/${encodeURIComponent(work.id)}/${epNum}`;
     if(window.location.pathname!==path)window.history.pushState({path},'',path);
@@ -1934,21 +2010,23 @@ if (document.readyState === 'loading') {
 
 
 async function handleMemberLogin() {
+  const t = window.ReaderI18n?.t ?? (key => key);
   const signupStatus = document.getElementById('authLoginStatus');
-  if (signupStatus) { signupStatus.textContent = ''; signupStatus.hidden = true; }
+  if (signupStatus) { signupStatus.removeAttribute?.('data-i18n'); signupStatus.textContent = ''; signupStatus.hidden = true; }
   try {
     const actor = await window.WebNovelsAuth.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
     closeAllModals();
     await window.openAccountHome();
-    if (window.WebNovelsAuth.getActor() === actor) showToast('로그인되었습니다.');
+    if (window.WebNovelsAuth.getActor() === actor) showToast(t('로그인되었습니다.'));
   } catch (error) {
-    showToast(window.WebNovelsAuth.message(error));
+    showToast(t(window.WebNovelsAuth.message(error)));
     if (error.code === 'ACCOUNT_NOT_LINKED') window.showAuthOnboarding();
   }
 }
 window.handleMemberLogout = async function() {
-  try { await window.WebNovelsAuth.logout(); showToast('로그아웃되었습니다.'); }
-  catch(error) { showToast(window.WebNovelsAuth.message(error)); }
+  const t = window.ReaderI18n?.t ?? (key => key);
+  try { await window.WebNovelsAuth.logout(); showToast(t('로그아웃되었습니다.')); }
+  catch(error) { showToast(t(window.WebNovelsAuth.message(error))); }
   switchWebNovelsView('view-home');
 };
 
@@ -2025,10 +2103,12 @@ function setupPasswordMatchCheckers() {
     msg.style.display = 'block';
     if (pw1.value === pw2.value) {
       msg.style.color = 'var(--text-success)';
-      msg.textContent = '✓ 비밀번호가 일치합니다.';
+      if (window.ReaderI18n) window.ReaderI18n.text(msg, '✓ 비밀번호가 일치합니다.');
+      else msg.textContent = '✓ 비밀번호가 일치합니다.';
     } else {
       msg.style.color = 'var(--text-error)';
-      msg.textContent = '✗ 비밀번호가 일치하지 않습니다.';
+      if (window.ReaderI18n) window.ReaderI18n.text(msg, '✗ 비밀번호가 일치하지 않습니다.');
+      else msg.textContent = '✗ 비밀번호가 일치하지 않습니다.';
     }
   }
 
@@ -2071,9 +2151,10 @@ async function submitAuthSignup(kind) {
   const showSignupError = message => {
     if (!signupError) { showToast(message); return; }
     signupError.hidden = false;
-    signupError.textContent = message;
+    if (window.ReaderI18n) window.ReaderI18n.text(signupError, message);
+    else signupError.textContent = message;
   };
-  if (signupError) { signupError.hidden = true; signupError.textContent = ''; }
+  if (signupError) { signupError.hidden = true; signupError.removeAttribute?.('data-i18n'); signupError.textContent = ''; }
   if (password !== value(author ? 'authorPasswordConfirm' : 'signupPasswordConfirm')) {
     showSignupError('비밀번호가 일치하지 않습니다.');
     return;
@@ -2090,7 +2171,7 @@ async function submitAuthSignup(kind) {
         return;
       }
     }
-    showToast(message);
+    showToast(author ? message : (window.ReaderI18n?.t(message) ?? message));
   } catch(error) { showSignupError(window.WebNovelsAuth.message(error)); }
   finally { if (submit) submit.disabled = false; }
 }
@@ -2106,6 +2187,8 @@ async function loadMyProfile() { await window.WebNovelsAuth.init(); }
 
 function updateMemberHeader(user) {
   const actor = window.WebNovelsAuth?.getActor();
+  const i18n = window.ReaderI18n;
+  const t = i18n?.t ?? (key => key);
   // The argument and localStorage are presentation compatibility only.
   user = actor ? { ...(actor.admin || actor.author || actor.reader),
     role: actor.admin?.role || (actor.author ? 'AUTHOR' : 'READER') } : null;
@@ -2165,14 +2248,15 @@ function updateMemberHeader(user) {
           </div>
         `;
       } else {
-        const displayName = `${escapeHtml(user.nickname || user.username || "")}님`;
+        const name = user.nickname || user.username || '';
+        const displayName = escapeHtml(i18n?.t('{name}님', {name}) ?? `${name}님`);
         profileMenu.innerHTML = `
           <div style="display: flex; align-items: center; gap: 8px;">
             <button class="btn btn-outline btn-sm" onclick="switchWebNovelsView('view-mypage')" style="display: flex; align-items: center; gap: 6px;">
               <i data-lucide="user"></i>
               <span>${displayName}</span>
             </button>
-            <button class="btn btn-ghost btn-sm" onclick="handleMemberLogout()" title="로그아웃" style="color: var(--text-muted); padding: 4px 8px;">
+            <button class="btn btn-ghost btn-sm" onclick="handleMemberLogout()" title="${escapeHtml(t('로그아웃'))}" data-i18n-title="로그아웃" style="color: var(--text-muted); padding: 4px 8px;">
               <i data-lucide="log-out"></i>
             </button>
           </div>
@@ -2205,16 +2289,16 @@ function updateMemberHeader(user) {
         myAdultBadge.className = 'badge badge-primary mt-2';
       }
     } else {
-      if (myNickname) myNickname.textContent = user.nickname || user.username || '독자';
-      if (myEmail) myEmail.textContent = user.email || '이메일 정보 없음';
+      if (myNickname) myNickname.textContent = user.nickname || user.username || t('독자');
+      if (myEmail) myEmail.textContent = user.email || t('이메일 정보 없음');
       if (myAvatar) myAvatar.textContent = (user.nickname || user.username || 'R').slice(0, 1).toUpperCase();
       if (myAdultBadge) {
         if (user.isAdultVerified) {
-          myAdultBadge.textContent = '🔞 19+ 성인 인증 완료';
+          myAdultBadge.textContent = t('🔞 19+ 성인 인증 완료');
           myAdultBadge.className = 'badge badge-primary mt-2';
           window._isAdultVerified = true;
         } else {
-          myAdultBadge.textContent = '성인 인증 미완료';
+          myAdultBadge.textContent = t('성인 인증 미완료');
           myAdultBadge.className = 'badge badge-accent mt-2';
           window._isAdultVerified = false;
         }
@@ -2235,7 +2319,7 @@ function updateMemberHeader(user) {
     if (profileMenu) {
       profileMenu.innerHTML = `
         <button class="btn btn-primary btn-sm" id="btnHeaderLogin" onclick="openModal('modalAuth')">
-          <i data-lucide="log-in"></i> 로그인
+          <i data-lucide="log-in"></i> <span data-i18n="로그인">${escapeHtml(t('로그인'))}</span>
         </button>
       `;
     }
@@ -2246,11 +2330,11 @@ function updateMemberHeader(user) {
     const myAdultBadge = document.getElementById('myAdultBadge');
     const boxPassVerify = document.getElementById('boxPassVerify');
 
-    if (myNickname) myNickname.textContent = '게스트 독자';
-    if (myEmail) myEmail.textContent = '로그인이 필요합니다';
+    if (myNickname) myNickname.textContent = t('게스트 독자');
+    if (myEmail) myEmail.textContent = t('로그인이 필요합니다');
     if (myAvatar) myAvatar.textContent = 'G';
     if (myAdultBadge) {
-      myAdultBadge.textContent = '성인 인증 미완료';
+      myAdultBadge.textContent = t('성인 인증 미완료');
       myAdultBadge.className = 'badge badge-accent mt-2';
     }
     if (boxPassVerify) {
@@ -2352,6 +2436,7 @@ window.filterParagraphComments = function(paragraphIndex) {
 };
 
 window.loadEpisodeComments = async function(workId, episodeId) {
+  const i18n = window.ReaderI18n;
   const reading=window.ReaderSession?.current;
   if(reading&&(!reading.episode||String(reading.workId)!==String(workId)||String(reading.episode.id)!==String(episodeId)))return;
   const ticket=window.ReaderSession?.commentTicket();
@@ -2363,11 +2448,12 @@ window.loadEpisodeComments = async function(workId, episodeId) {
   // untrusted identifier into an HTML attribute or event handler.
   const safeId = value => /^(?:[1-9]\d{0,18}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(String(value ?? ''));
   if (!safeId(workId) || !safeId(episodeId)) {
-    container.textContent = '댓글을 불러오지 못했습니다.';
+    container.textContent = i18n?.t('댓글을 불러오지 못했습니다.') ?? '댓글을 불러오지 못했습니다.';
     return;
   }
 
-  container.innerHTML = `<div class="p-3 text-center text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span>댓글을 불러오는 중입니다...</div>`;
+  container.innerHTML = `<div class="p-3 text-center text-muted small"><span class="spinner-border spinner-border-sm mr-2"></span><span data-i18n="댓글을 불러오는 중입니다...">댓글을 불러오는 중입니다...</span></div>`;
+  i18n?.apply(container);
 
   try {
     let comments = [];
@@ -2416,7 +2502,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
       if (count > 0) {
         const badge = document.createElement('span');
         badge.className = 'paragraph-badge';
-        badge.title = `이 문단의 댓글 ${count}개 보기`;
+        badge.title = i18n?.t('이 문단의 댓글 {count}개 보기', {count}) ?? `이 문단의 댓글 ${count}개 보기`;
         badge.innerHTML = `💬 ${count}`;
         badge.onclick = (e) => {
           e.stopPropagation();
@@ -2446,7 +2532,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
             📌 <strong>문단 #${Number(window._filterParagraphIndex) + 1}</strong>에 남겨진 댓글만 표시 중입니다.
           </span>
           <button type="button" class="btn btn-ghost btn-sm" onclick="filterParagraphComments(${window._filterParagraphIndex})" style="font-size:0.75rem; padding:3px 8px; color:var(--text-primary); border:1px solid var(--border-color);">
-            전체 댓글 보기 ✕
+            <span data-i18n="전체 댓글 보기 ✕">전체 댓글 보기 ✕</span>
           </button>
         </div>
       `;
@@ -2458,20 +2544,20 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     const selectedParagraph = window._paragraphComment;
     const paragraphContext = selectedParagraph ? `
       <div class="paragraph-comment-context">
-        <span>문단 #${Number(selectedParagraph.paragraphIndex) + 1} 인용</span><q>${escapeReaderHtml(selectedParagraph.quoteText)}</q>
-        <button type="button" onclick="window._paragraphComment = null; loadEpisodeComments('${workId}', '${episodeId}')">선택 해제</button>
+        <span>${escapeReaderHtml(i18n?.t('문단 #{number} 인용',{number:Number(selectedParagraph.paragraphIndex)+1}) ?? `문단 #${Number(selectedParagraph.paragraphIndex)+1} 인용`)}</span><q>${escapeReaderHtml(selectedParagraph.quoteText)}</q>
+        <button type="button" onclick="window._paragraphComment = null; loadEpisodeComments('${workId}', '${episodeId}')" data-i18n="선택 해제">선택 해제</button>
       </div>` : '';
 
     let html = `
       <!-- 댓글 입력창 -->
       <div class="comment-input-box card glass-panel p-3 mb-4" style="border: 1px solid var(--border-color); border-radius: 8px;">
-        <label for="readerCommentInput" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">💬 독자 한줄 감상평 남기기</label>
+        <label for="readerCommentInput" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;" data-i18n="💬 독자 한줄 감상평 남기기">💬 독자 한줄 감상평 남기기</label>
         ${paragraphContext}
-        <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
+        <textarea id="readerCommentInput" class="form-control" rows="2" placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." data-i18n-placeholder="작품과 작가님을 응원하는 따뜻한 댓글을 남겨주세요." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:8px; border:1px solid var(--border-color); font-size:0.9rem;"></textarea>
         <div class="flex-between mt-2" style="display:flex; justify-content:space-between; align-items:center;">
-          <label class="text-muted" style="font-size:.78rem; cursor:pointer;"><input id="readerCommentSpoiler" type="checkbox"> ⚠️ 스포일러 포함</label>
+          <label class="text-muted" style="font-size:.78rem; cursor:pointer;"><input id="readerCommentSpoiler" type="checkbox"> <span data-i18n="⚠️ 스포일러 포함">⚠️ 스포일러 포함</span></label>
           <button type="button" id="btnSubmitComment" class="btn btn-primary btn-sm" onclick="handleReaderCommentSubmit('${workId}', '${episodeId}')">
-            댓글 등록
+            <span data-i18n="댓글 등록">댓글 등록</span>
           </button>
         </div>
       </div>
@@ -2479,7 +2565,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     `;
 
     if (rootComments.length === 0) {
-      html += `<div class="text-center text-muted p-4">아직 작성된 댓글이 없습니다. 첫 번째 감상평의 주인공이 되어보세요!</div>`;
+      html += `<div class="text-center text-muted p-4" data-i18n="아직 작성된 댓글이 없습니다. 첫 번째 감상평의 주인공이 되어보세요!">아직 작성된 댓글이 없습니다. 첫 번째 감상평의 주인공이 되어보세요!</div>`;
     } else {
       rootComments.forEach(c => {
         const timeStr = new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -2489,9 +2575,9 @@ window.loadEpisodeComments = async function(workId, episodeId) {
         const spoilerBlock = isSpoiler ? `
           <div class="comment-spoiler-blur-wrap is-blurred" id="spoilerWrap-${c.id}">
             <div class="spoiler-reveal-bar">
-              <span class="spoiler-notice">⚠️ 스포일러가 포함된 감상평입니다.</span>
+              <span class="spoiler-notice" data-i18n="⚠️ 스포일러가 포함된 감상평입니다.">⚠️ 스포일러가 포함된 감상평입니다.</span>
               <button type="button" class="btn btn-sm btn-outline btn-reveal-spoiler" onclick="document.getElementById('spoilerWrap-${c.id}').classList.remove('is-blurred'); this.parentElement.remove();">
-                내용 보기
+                <span data-i18n="내용 보기">내용 보기</span>
               </button>
             </div>
             <div class="comment-content-text">${escapeReaderHtml(c.content)}</div>
@@ -2508,21 +2594,21 @@ window.loadEpisodeComments = async function(workId, episodeId) {
             <div class="comment-content">${spoilerBlock}</div>
             <div class="comment-actions">
               <button class="btn-like-comment" onclick="handleLikeComment('${c.id}')" id="btnLike-${c.id}">
-                ❤️ 공감 <span id="likeCount-${c.id}">${Math.max(0, Number(c.likes_count) || 0)}</span>
+                <span data-i18n="❤️ 공감">❤️ 공감</span> <span id="likeCount-${c.id}">${Math.max(0, Number(c.likes_count) || 0)}</span>
               </button>
               <button class="btn-reply-toggle" onclick="toggleReplyInput('${c.id}')">
-                💬 답글 (${replies.length})
+                ${escapeReaderHtml(i18n?.t('💬 답글 ({count})',{count:replies.length}) ?? `💬 답글 (${replies.length})`)}
               </button>
               ${canModerate ? `<button class="btn-reply-toggle" onclick="authorHideComment('${c.id}')">숨김</button>${safeId(c.user_id) ? `<button class="btn-reply-toggle" onclick="authorBlockCommenter('${workId}', '${c.user_id}')">독자 차단</button>` : ''}` : ''}
             </div>
 
             <!-- 대댓글 입력창 -->
             <div class="reply-input-wrapper" id="replyInput-${c.id}">
-              <label for="replyText-${c.id}" class="sr-only">답글 내용</label>
-              <textarea id="replyText-${c.id}" class="form-control" rows="2" placeholder="답글을 입력하세요..." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:6px; border:1px solid var(--border-color); font-size:0.85rem;"></textarea>
+              <label for="replyText-${c.id}" class="sr-only" data-i18n="답글 내용">답글 내용</label>
+              <textarea id="replyText-${c.id}" class="form-control" rows="2" placeholder="답글을 입력하세요..." data-i18n-placeholder="답글을 입력하세요..." style="width:100%; background:var(--bg-subtle); color:var(--text-primary); border-radius:6px; padding:6px; border:1px solid var(--border-color); font-size:0.85rem;"></textarea>
               <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
-                <button class="btn btn-ghost btn-sm" onclick="toggleReplyInput('${c.id}')">취소</button>
-                <button class="btn btn-primary btn-sm" onclick="handleReaderReplySubmit('${workId}', '${episodeId}', '${c.id}')">답글 등록</button>
+                <button class="btn btn-ghost btn-sm" onclick="toggleReplyInput('${c.id}')" data-i18n="취소">취소</button>
+                <button class="btn btn-primary btn-sm" onclick="handleReaderReplySubmit('${workId}', '${episodeId}', '${c.id}')" data-i18n="답글 등록">답글 등록</button>
               </div>
             </div>
           </div>
@@ -2535,9 +2621,9 @@ window.loadEpisodeComments = async function(workId, episodeId) {
           const replySpoilerBlock = isReplySpoiler ? `
             <div class="comment-spoiler-blur-wrap is-blurred" id="spoilerWrap-${r.id}">
               <div class="spoiler-reveal-bar">
-                <span class="spoiler-notice">⚠️ 스포일러가 포함된 답글입니다.</span>
+                <span class="spoiler-notice" data-i18n="⚠️ 스포일러가 포함된 답글입니다.">⚠️ 스포일러가 포함된 답글입니다.</span>
                 <button type="button" class="btn btn-sm btn-outline btn-reveal-spoiler" onclick="document.getElementById('spoilerWrap-${r.id}').classList.remove('is-blurred'); this.parentElement.remove();">
-                  내용 보기
+                  <span data-i18n="내용 보기">내용 보기</span>
                 </button>
               </div>
               <div class="comment-content-text">${escapeReaderHtml(r.content)}</div>
@@ -2553,7 +2639,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
               <div class="comment-content">${replySpoilerBlock}</div>
               <div class="comment-actions">
                 <button class="btn-like-comment" onclick="handleLikeComment('${r.id}')" id="btnLike-${r.id}">
-                  ❤️ 공감 <span id="likeCount-${r.id}">${Math.max(0, Number(r.likes_count) || 0)}</span>
+                  <span data-i18n="❤️ 공감">❤️ 공감</span> <span id="likeCount-${r.id}">${Math.max(0, Number(r.likes_count) || 0)}</span>
                 </button>
               </div>
             </div>
@@ -2564,12 +2650,14 @@ window.loadEpisodeComments = async function(workId, episodeId) {
 
     if(!valid())return;
     container.innerHTML = html;
+    i18n?.apply(container);
     const countEl = document.getElementById('readerCommentCount');
     if (countEl) countEl.textContent = `(${comments.length})`;
   } catch (err) {
     if(!valid())return;
     console.warn('[Comments Load Error]', err);
-    container.innerHTML = `<div class="text-danger p-3">댓글을 불러오지 못했습니다.</div>`;
+    container.innerHTML = `<div class="text-danger p-3" data-i18n="댓글을 불러오지 못했습니다.">댓글을 불러오지 못했습니다.</div>`;
+    i18n?.apply(container);
   }
 };
 
@@ -2738,6 +2826,26 @@ window.handleLikeComment = async function(commentId) {
 // [Global Window Namespace Exports for Reader]
 // ============================================================
 if (typeof window !== 'undefined') {
+  window.addEventListener?.('reader:localechange', () => {
+    const view = window.currentActiveView;
+    if (view === 'view-reader') {
+      void window.refreshReaderLocale?.();
+    } else if (!window.ReaderDiscovery?.active()) {
+      if (view === 'view-home') void renderHomeWorks().catch(() => {});
+      if (view === 'view-work-detail' && activeWork) {
+        const top = window.scrollY;
+        window.openWorkDetailDirect(activeWork.id, false, true);
+        window.scrollTo({top, behavior: 'instant'});
+      }
+      if (view === 'view-mypage') void renderLibraryContent(true).catch(() => {});
+    }
+    const actor = window.WebNovelsAuth?.getActor();
+    if (!actor?.admin && !actor?.author) updateMemberHeader(null);
+    if (view === 'view-work-detail' && activeWork) {
+      updateFavoriteButtons(activeWork.id);
+      updateSubscribeButtons(activeWork);
+    }
+  });
   window.renderHomeWorks = renderHomeWorks;
   window.renderDiscoverWorks = renderDiscoverWorks;
   window.renderSearchResults = renderSearchResults;

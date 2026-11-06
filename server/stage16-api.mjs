@@ -3,6 +3,7 @@ import {webtoonEnabled,projectWebtoon} from './webtoon-api.mjs';
 // Additive public discovery. No client identity, private distribution rows, or manuscript text in cards.
 import { DISTRIBUTION_HOSTS, normalizeExternalLinks } from './creator-distribution-api.mjs';
 import { adminWorkflowEnabled } from './admin-workflow-api.mjs';
+import { attachReaderTranslations, readerLocale, readerMetadataLocalizationEnabled } from './reader-catalog-localization.mjs';
 
 const BIGINT = /^[1-9]\d{0,18}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -95,10 +96,13 @@ export async function stage16Catalog({url,env,db,fail}) {
   if(!discoveryEnabled(env))fail(503,'READER_DISCOVERY_NOT_ACTIVATED');
   const action=url.searchParams.get('action');
   if(!Object.hasOwn(actions,action))fail(400,'INVALID_ACTION');
-  const allowed=actions[action];
+  const allowed=[...actions[action],'locale'];
   for(const key of url.searchParams.keys()) {
     if(!allowed.includes(key) || (key!=='tag' && url.searchParams.getAll(key).length!==1))fail(400,'INVALID_QUERY');
   }
+  const locale=readerLocale(url.searchParams,fail), webtoon=webtoonEnabled(env);
+  const rpc=(name,body)=>db('rpc/'+name,{}, {method:'POST',body});
+  const translate=(works,episodes)=>attachReaderTranslations({locale,env,rpc,works,episodes,webtoon,fail});
   const data={};
   if(['work','episodes','chapter'].includes(action)) {
     data.workId=url.searchParams.get('workId');
@@ -125,7 +129,8 @@ export async function stage16Catalog({url,env,db,fail}) {
       data.tags.length>10||data.tags.some(tag=>!tag||tag.length>40||/[\x00-\x1f\x7f]/.test(tag)))fail(400,'INVALID_QUERY');
     if(data.sort==='views')data.sort='popular';
   }
-  const filter=await fingerprint({action,...data});
+  const localizedSearch=action==='list'&&Boolean(data.q)&&readerMetadataLocalizationEnabled(env,locale);
+  const filter=await fingerprint({action,...data,...(locale==='ko'?{}:{locale,localizedSearch})});
   if(['list','episodes'].includes(action)) {
     const limit=url.searchParams.get('limit')||'24';
     if(!/^[1-9]\d?$/.test(limit)||Number(limit)>50)fail(400,'INVALID_LIMIT');
@@ -137,17 +142,19 @@ export async function stage16Catalog({url,env,db,fail}) {
       data.cursor={key:cursor.key,id:cursor.id};data.asOf=cursor.asOf;
     }
   }
-  const result=await db(webtoonEnabled(env)?'rpc/stage18_catalog':'rpc/stage16_catalog',{}, {method:'POST',body:{p_action:action,p_query:data}});
+  const result=localizedSearch
+    ?await rpc('reader_catalog_localized_search',{p_locale:locale,p_query:data,p_webtoon:webtoon})
+    :await rpc(webtoon?'stage18_catalog':'stage16_catalog',{p_action:action,p_query:data});
   if(result?.error)fail([400,404].includes(result.status)?result.status:503,result.error);
   if(!object(result))fail(503,'CATALOG_UNAVAILABLE');
   if(action==='home') {
     if(!object(result.sections))fail(503,'CATALOG_UNAVAILABLE');
     const displayReady=await db('rpc/site_display_ready',{}, {method:'POST',body:{}})===true;
     const sections={};
-    for(const key of ['recommended','popular','new','completed',...(webtoonEnabled(env)?['webtoons']:[])]) {
+    for(const key of ['recommended','popular','new','completed',...(webtoon?['webtoons']:[])]) {
       if(key==='recommended'&&displayReady){sections[key]=[];continue;}
       if(!Array.isArray(result.sections[key])||result.sections[key].length>8)fail(503,'CATALOG_UNAVAILABLE');
-      sections[key]=result.sections[key].map(work=>projectWork(work,fail,false,webtoonEnabled(env)));
+      sections[key]=result.sections[key].map(work=>projectWork(work,fail,false,webtoon));
     }
     if(displayReady){
       const display=await db('rpc/site_display_public',{}, {method:'POST',body:{p_data:{offset:0,type:'ALL'}}});
@@ -165,14 +172,23 @@ export async function stage16Catalog({url,env,db,fail}) {
         sections[item.slot==='HOME_RECOMMENDED'?'recommended':'spotlight'].push(projectWork(item.work,fail));
       }
     }
+    await translate(Object.values(sections).flat());
     return {sections,ranking:rank(result.ranking,fail)};
   }
-  if(action==='work')return {work:projectWork(result.work,fail,true,webtoonEnabled(env))};
-  if(action==='chapter')return {
-    episode:projectEpisode(result.episode,data.workId,fail),
-    previous:result.previous==null?null:projectEpisode(result.previous,data.workId,fail),
-    next:result.next==null?null:projectEpisode(result.next,data.workId,fail)
-  };
+  if(action==='work') {
+    const work=projectWork(result.work,fail,true,webtoon);
+    await translate([work]);
+    return {work};
+  }
+  if(action==='chapter') {
+    const chapter={
+      episode:projectEpisode(result.episode,data.workId,fail),
+      previous:result.previous==null?null:projectEpisode(result.previous,data.workId,fail),
+      next:result.next==null?null:projectEpisode(result.next,data.workId,fail)
+    };
+    await translate([],Object.values(chapter));
+    return chapter;
+  }
   const key=action==='list'?'works':'episodes';
   if(!Array.isArray(result[key])||result[key].length>data.limit)fail(503,'CATALOG_UNAVAILABLE');
   let nextCursor=null;
@@ -182,8 +198,10 @@ export async function stage16Catalog({url,env,db,fail}) {
     if(!cursorShape(cursor))fail(503,'CATALOG_UNAVAILABLE');
     nextCursor=encode(cursor);
   }
-  return {[key]:result[key].map(value=>action==='list'?projectWork(value,fail,false,webtoonEnabled(env)):projectEpisode(value,data.workId,fail)),
-    nextCursor,...(ranking?{ranking}:{})};
+  const items=result[key].map(value=>action==='list'?projectWork(value,fail,false,webtoon):projectEpisode(value,data.workId,fail));
+  if(action==='list')await translate(items);
+  else await translate([],items);
+  return {[key]:items,nextCursor,...(ranking?{ranking}:{})};
 }
 
 export function publicContent(result,fail,env={}) {

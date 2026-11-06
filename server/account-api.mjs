@@ -79,7 +79,7 @@ export async function accountApi(request,env,{fetchImpl=fetch,topupsProviderTran
     if(await rpc('launch_accounts_ready')!==true)fail(503,'ACCOUNT_SERVICE_NOT_ACTIVATED');
     if(payoutCallback)return reply(await payoutProviderTestCallback({request,env,rpc}));
     if(adRewardsCallback)return reply(await adRewardsTestCallback({proof:rewardProof,rpc,fail}));
-    if(path==='/api/v2/display')return reply(await siteDisplayPublicApi({request,rpc,fail}));
+    if(path==='/api/v2/display')return reply(await siteDisplayPublicApi({request,env,rpc,fail}));
     const workspaceReady=async()=>{
       if(env.AUTHOR_WORKSPACE_DISABLED==='true')return false;
       try{return await rpc('launch_author_workspace_ready')===true;}catch{return false;}

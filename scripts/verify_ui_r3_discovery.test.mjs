@@ -25,9 +25,11 @@ class Element {
 function setup(handler,{webtoon=true}={}) {
   const ids=['recentNovelsSection','recentNovelsGrid','homeCatalogStatus','heroFeaturedSection','cdgHeroSlider','editorialSpotlightSection','editorialSpotlightGrid','trendingWorksSection','trendingWorksGrid','newWorksSection','newWorksGrid','completedWorksSection','completedWorksGrid','webtoonsSection','webtoonsGrid','todayFreeSection','todayFreeGrid','genreRecSection','genreWorksGrid','goldenBestSection','homeRankingNote','homeRecommendationNote',
     'discoverActiveFilters','discoverWorksGrid','discoverPager','discoverResultsCount','discoverQueryStatus','discoveryRankingNote','selectDiscoverSort','discoverQuery','discoverType','inputSearchHeader','inputSearchMobile','discoverGenreFilters','filterStatusGroup','filterEpRangeGroup','filterRatingGroup','discoverTagFilters','activeTagsCounter'];
-  const nodes=Object.fromEntries(ids.map(id=>[id,new Element()])),description=new Element('meta'),head=new Element('head'),requests=[],navigations=[];
+  const nodes=Object.fromEntries(ids.map(id=>[id,new Element()])),description=new Element('meta'),head=new Element('head'),requests=[],navigations=[],events=new Map();
   let navSyncs=0;
   const context={URL,URLSearchParams,Date,Response,clearInterval(){},setTimeout,clearTimeout,WEBNOVELS_CONFIG:{readerDiscoveryEnabled:true,webtoonServiceEnabled:webtoon},location:new URL('https://app.test/home'),
+    addEventListener(type,callback){if(!events.has(type))events.set(type,[]);events.get(type).push(callback);},
+    dispatchEvent(event){for(const callback of events.get(event.type)||[])callback(event);},
     document:{title:'webnovels',head,getElementById:id=>nodes[id]||null,createElement:tag=>new Element(tag),querySelector:selector=>selector==='meta[name="description"]'?description:null},
     fetch:async(url,init)=>{const parsed=new URL(url,'https://app.test');requests.push({url:parsed,init});return handler(parsed,requests.length);},
     navigateTo:path=>{navigations.push(path);context.location=new URL(path,context.location);},syncReaderNavigation(){navSyncs++;}};
@@ -50,6 +52,33 @@ test('one actual work is shown once across home shelves and no invented ranking 
   const latest=app.requests.find(row=>row.url.searchParams.get('action')==='list').url.searchParams;
   assert.equal(latest.get('type'),'NOVEL');assert.equal(latest.get('sort'),'latest');assert.equal(latest.get('limit'),'6');
   assert.ok(app.requests.every(row=>row.init.credentials==='omit'&&row.init.cache==='no-store'));
+});
+
+test('locale change preserves the submitted query and draft input while dropping the old locale cursor',async()=>{
+  const app=setup(()=>reply({works:[work('10',{localization:{locale:'en',title:'A published story'}})],nextCursor:null}));
+  const {context,nodes}=app;
+  context.currentActiveView='view-discover';
+  context.location=new URL('https://app.test/discover?type=NOVEL&q=cat&tag=romance&cursor=OLD');
+  context.history={state:{route:'discover'},replaceState(state,title,path){context.location=new URL(path,context.location);}};
+  context.CustomEvent=class{constructor(type){this.type=type;}};
+  context.document.documentElement={lang:'ko'};
+  context.document.querySelectorAll=()=>[];
+  for(const file of ['reader-feature-messages.js','reader-i18n.js']){
+    const code=await readFile(new URL('../public/js/core/'+file,import.meta.url),'utf8');
+    vm.runInContext(code,context,{filename:file});
+  }
+  await app.ui.discover();
+  nodes.discoverQuery.value='not submitted';
+  assert.equal(context.ReaderI18n.setLocale('en'),true);
+  await tick();
+  const query=app.requests.at(-1).url.searchParams;
+  assert.equal(query.get('type'),'NOVEL');assert.equal(query.get('q'),'cat');assert.equal(query.get('tag'),'romance');
+  assert.equal(query.has('cursor'),false);assert.equal(context.location.searchParams.has('cursor'),false);
+  assert.equal(context.location.pathname,'/discover');assert.equal(nodes.discoverQuery.value,'not submitted');
+  assert.equal(app.navigations.length,0,'locale does not add history navigation');
+  assert.equal(nodes.discoverWorksGrid.children[0].href,'/works/10');
+  assert.match(nodes.discoverWorksGrid.textContent,/A published story/);
+  assert.match(nodes.discoverResultsCount.textContent,/1 work on this page/);
 });
 
 test('primary shelves show explicit empty states while optional empty shelves are omitted',async()=>{
