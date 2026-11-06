@@ -23,8 +23,10 @@ export async function freeBetaEnrollmentApi(request,env,{fetchImpl=fetch,now=()=
   if(!['readiness','policy','status','complete','reader'].includes(action))fail(404,'NOT_FOUND');
   if(request.method!==(['readiness','policy','status'].includes(action)?'GET':'POST'))fail(405,'METHOD_NOT_ALLOWED');
   if(request.method==='POST'&&request.headers.get('origin')!==url.origin)fail(403,'ORIGIN_REQUIRED');
+  const readerEnrollment=readerSignup||(readiness&&url.searchParams.get('kind')!=='author');
+  const onboardingEnabled=readerEnrollment?(env.READER_ONBOARDING_ENABLED??env.AUTH_ONBOARDING_ENABLED):env.AUTH_ONBOARDING_ENABLED;
   const documents=(await enrollmentDocuments()).filter(d=>d.id!=='identity-privacy');
-  if(env.AUTH_ONBOARDING_ENABLED!=='true'||env.ACCOUNT_API_DISABLED==='true'){
+  if(onboardingEnabled!=='true'||env.ACCOUNT_API_DISABLED==='true'){
    if(action==='policy')return reply({enabled:false,mode:'FREE_BETA',identityVerified:false,documents});fail(503,'FREE_BETA_NOT_READY');
   }
   const base=env.SUPABASE_URL||env.NEXT_PUBLIC_SUPABASE_URL,secret=env.SUPABASE_SECRET_KEY||env.SUPABASE_SERVICE_ROLE_KEY;

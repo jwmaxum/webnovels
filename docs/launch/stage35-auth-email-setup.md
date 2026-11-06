@@ -63,6 +63,16 @@ SMTP 값이 없을 때도 `--apply`로 Site URL과 redirect를 먼저 고칠 수
 복귀를 인수한다. SMTP 발신 주소 및 도메인 인증, 발송 한도는 제공자 설정에서 확인한다.
 프로젝트 규칙에 따라 브라우저 검증은 명시적으로 요청받은 뒤 수행한다.
 
+## 독자 가입 단독 개방
+
+- 가입 확인과 비밀번호 복구 메일의 실제 수신과 링크 동작을 확인한 뒤 운영 환경을 변경한다.
+- 무료 베타에서 `READER_ONBOARDING_ENABLED=true`로 독자 가입 준비·완료 API를 연다.
+  `AUTH_ONBOARDING_ENABLED=false`를 유지하면 작가 가입 준비·동의·완료 API는 닫힌다.
+  독자 플래그가 없으면 기존 공통 설정을 따른다. `ACCOUNT_API_DISABLED=true`는 두 가입을 모두 막는다.
+- 운영 DB의 `authoring.free_beta_settings.enabled`도 켜져 있어야 한다. 서버의 공개 플래그와 별도로
+  문서 버전 및 가입 준비 RPC의 확인을 통과해야 독자 계정을 생성할 수 있다.
+- 적용 후 독자 준비 API는 200, 작가 준비 API는 503, 작가 가입 정책은 `enabled=false`인지 확인한다.
+
 근거: [redirect URL 문법](https://supabase.com/docs/guides/auth/redirect-urls),
 [Auth 설정 Management API](https://supabase.com/docs/reference/api/v1-update-auth-service-config),
 [Supabase Auth URL 검사 구현](https://github.com/supabase/auth/blob/master/internal/utilities/request.go).

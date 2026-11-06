@@ -17,7 +17,7 @@ function setup() {
     updateUser:async input=>{calls.push(['update',input]);return {};},
     onAuthStateChange:fn=>{listener=fn;return {};}
   };
-  const context={console,location:{origin:'https://app.test'},supabaseClient:{auth},initSupabaseAdmin:()=>true,
+  const context={console,URLSearchParams,location:{origin:'https://app.test'},supabaseClient:{auth},initSupabaseAdmin:()=>true,
     localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     setTimeout:()=>{},updateMemberHeader:()=>{},fetch:async(path,init)=>{
       calls.push(['fetch',path,init]);return responses.shift()||Response.json(path.includes('readiness')?{ready:true}:actor);
@@ -82,11 +82,27 @@ test('signup stops before provider when closed; confirmed account can resume wit
   assert.equal(s.calls.filter(c=>c[0]==='signup').length,1);
 });
 test('reset uses same-origin redirect; password update requires recovery event and signs out',async()=>{
-  const s=setup();await s.api.init();await s.api.reset('writer@example.test');
+  const s=setup();s.context.location.search='?auth=recovery';await s.api.init();await s.api.reset('writer@example.test');
   assert.equal(s.calls.find(c=>c[0]==='reset')[2].redirectTo,'https://app.test/?auth=recovery');
   await assert.rejects(s.api.changePassword('new-password'));
   s.event('PASSWORD_RECOVERY');await s.api.changePassword('new-password');
   assert.equal(s.calls.filter(c=>c[0]==='update').length,1);assert.equal(s.api.getActor(),null);
+});
+test('a pending unlinked-profile response cannot replace the password recovery screen',async()=>{
+  const s=setup(),panels=[];
+  s.context.setTimeout=callback=>callback();
+  s.context.showAuthRecovery=()=>panels.push('recovery');
+  s.context.showAuthOnboarding=()=>panels.push('onboarding');
+  let markStarted,finish;
+  const started=new Promise(resolve=>{markStarted=resolve;});
+  const response=new Promise(resolve=>{finish=resolve;});
+  s.context.fetch=async()=>{markStarted();return response;};
+  const init=s.api.init();await started;
+  s.event('PASSWORD_RECOVERY',{user:{id:'new-user'}});
+  finish(Response.json({error:'ACCOUNT_NOT_LINKED'},{status:403}));
+  await init;
+  assert.deepEqual(panels,['recovery']);
+  assert.equal(s.api.getActor(),null);
 });
 test('late reply cannot restore a logged-out actor',async()=>{
   const s=setup();let finish;

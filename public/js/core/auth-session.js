@@ -174,7 +174,7 @@
         options: { emailRedirectTo: location.origin + '/?auth=confirm' } });
       if (e) throw providerError(e);
       if (data?.session) {
-        if(kind==='author'){window.showAuthOnboarding?.();return '작가 가입 화면에서 저작권 동의와 가입 절차를 완료해주세요.';}
+        if(kind==='author'){window.showAuthOnboarding?.('author');return '작가 가입 화면에서 저작권 동의와 가입 절차를 완료해주세요.';}
         return await completeReaderSignup(displayName);
       }
       if (kind === 'reader') return '이메일 확인이 필요합니다. 받은 확인 링크를 열고 로그인한 뒤 독자 가입을 마쳐주세요.';
@@ -214,17 +214,31 @@
     clear();
     initFlight = (async () => {
       sdk().onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_OUT') clear();
+        if (event === 'SIGNED_OUT') { recovery = false; clear(); return; }
+        if (event === 'PASSWORD_RECOVERY') {
+          recovery = true;
+          clear();
+          setTimeout(() => { if (recovery) window.showAuthRecovery?.(); },0);
+          return;
+        }
+        if (recovery) return;
         if (!authMutation && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
           if (actor?.userId !== session?.user?.id) clear();
           setTimeout(() => validate().catch(() => {}),0);
         }
-        if (event === 'PASSWORD_RECOVERY') { recovery = true; setTimeout(() => window.showAuthRecovery?.(),0); }
         // Do not await SDK methods inside its auth callback.
         if (event === 'TOKEN_REFRESHED') setTimeout(() => validate().catch(() => {}),0);
       });
-      try { await validate(); if(new URLSearchParams(location.search).get('auth')==='author-identity')window.showAuthOnboarding?.(); }
-      catch(e) { if (e.code === 'ACCOUNT_NOT_LINKED') window.showAuthOnboarding?.(); else if (e.status !== 401) window.showToast?.(e.message); }
+      try {
+        if (recovery) return;
+        await validate();
+        if (!recovery && new URLSearchParams(location.search).get('auth')==='author-identity') window.showAuthOnboarding?.('author');
+      } catch(e) {
+        // The verified recovery event takes priority over a pending profile lookup.
+        if (recovery) return;
+        if (e.code === 'ACCOUNT_NOT_LINKED') window.showAuthOnboarding?.();
+        else if (e.status !== 401) window.showToast?.(e.message);
+      }
     })().catch(e => { clear(); window.showToast?.(messages.AUTH_UNAVAILABLE || '인증 서비스를 사용할 수 없습니다.'); });
     return initFlight;
   }

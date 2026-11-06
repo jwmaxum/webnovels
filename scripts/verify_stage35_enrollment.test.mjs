@@ -62,7 +62,8 @@ test('actual role grants, consent validation, banned/unconfirmed users, rollback
 });
 const origin='https://app.test';
 const env={FREE_BETA_ENABLED:'true',AUTH_ONBOARDING_ENABLED:'true',SUPABASE_URL:'https://example.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_fixture'};
-const request=(action,data,headers={})=>new Request(origin+(action==='reader'?'/api/v2/onboarding':'/api/v2/onboarding/author/'+action),{method:data===undefined?'GET':'POST',headers:{Origin:origin,Authorization:'Bearer fixture.jwt.value','Content-Type':'application/json',...headers},...(data===undefined?{}:{body:JSON.stringify(data)})});
+const onboardingPaths={reader:'/api/v2/onboarding',readiness:'/api/v2/auth/readiness'};
+const request=(action,data,headers={})=>new Request(origin+(onboardingPaths[action]??'/api/v2/onboarding/author/'+action),{method:data===undefined?'GET':'POST',headers:{Origin:origin,Authorization:'Bearer fixture.jwt.value','Content-Type':'application/json',...headers},...(data===undefined?{}:{body:JSON.stringify(data)})});
 test('beta API uses confirmed upstream Auth, exact consent, caps body, and never calls PASS',async()=>{
  const db=await setup();let user=users[0],authPatch={},rate=true;
  const fetchImpl=async(input,options)=>{
@@ -80,7 +81,16 @@ test('beta API uses confirmed upstream Auth, exact consent, caps body, and never
   assert.equal(await freeBetaEnrollmentApi(request('policy'),{}),null);
   assert.equal((await call('policy',undefined,{...env,AUTH_ONBOARDING_ENABLED:'false'})).body.enabled,false);
   const policy=(await call('policy')).body;assert.equal(policy.enabled,true);assert.equal(policy.identityVerified,false);assert.equal(policy.documents.length,2);
-  assert.equal((await freeBetaEnrollmentApi(new Request(origin+'/api/v2/auth/readiness?kind=author'),env,{fetchImpl})).status,200);
+  const authorReadiness=new Request(origin+'/api/v2/auth/readiness?kind=author');
+  const readerOnly={...env,AUTH_ONBOARDING_ENABLED:'false',READER_ONBOARDING_ENABLED:'true'};
+  assert.equal((await freeBetaEnrollmentApi(authorReadiness,env,{fetchImpl})).status,200);
+  assert.equal((await freeBetaEnrollmentApi(authorReadiness,readerOnly,{fetchImpl})).status,503);
+  assert.equal((await call('readiness',undefined,readerOnly)).status,200);
+  assert.equal((await call('policy',undefined,readerOnly)).body.enabled,false);
+  assert.equal((await call('status',undefined,readerOnly)).status,503);
+  assert.equal((await call('complete',{},readerOnly)).status,503);
+  assert.equal((await call('readiness',undefined,{...readerOnly,ACCOUNT_API_DISABLED:'true'})).status,503);
+  assert.equal((await call('readiness',undefined,{...env,READER_ONBOARDING_ENABLED:'false'})).status,503);
   assert.equal((await call('status')).body.completed,false);
   const {kind,...input}=await consent();
   for(const [patch,expected] of [[{rightsAccepted:false},400],[{documentHash:'stale'},409],[{authorId:1},400],[{identityVerified:true},400],[{padding:'x'.repeat(9000)},413]])assert.equal((await call('complete',{...input,...patch})).status,expected);
@@ -91,8 +101,8 @@ test('beta API uses confirmed upstream Auth, exact consent, caps body, and never
   assert.equal((await call('complete',input)).body.identityVerified,false);
   assert.equal((await call('complete',input)).body.created,false);
   assert.equal((await call('start',input)).status,404);
-  user=users[1];const reader=await call('reader',{kind:'reader',displayName:'독자입니다'});assert.equal(reader.status,200);assert.equal(reader.body.actor.author,null);
-  assert.equal((await call('reader',{kind:'author',displayName:'우회작가'})).status,403);
+  user=users[1];const reader=await call('reader',{kind:'reader',displayName:'독자입니다'},readerOnly);assert.equal(reader.status,200);assert.equal(reader.body.actor.author,null);
+  assert.equal((await call('reader',{kind:'author',displayName:'우회작가'},readerOnly)).status,403);
  }finally{await db.close();}
 });
 test('beta UI has only rights consent, skips PASS SDK, and never sets verified state',async()=>{

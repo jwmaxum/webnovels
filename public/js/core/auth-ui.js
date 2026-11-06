@@ -28,7 +28,7 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
     if (!modal.classList.contains('active')) openModal('modalAuth');
     loginEmail.focus();
   };
-  function panel(mode) {
+  function panel(mode, preferredKind) {
     const generation=++panelGeneration;
     let backdrop = document.getElementById('modalAuthCompletion');
     if (!backdrop) {
@@ -78,7 +78,9 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
       enrollment.hidden=reset||document.getElementById('authCompletionKind').value!=='author';
       if(!enrollment.hidden)window.AuthorEnrollment?.mount(enrollment);else window.AuthorEnrollment?.reset();
     };
-    document.getElementById('authCompletionKind').onchange=selectKind;selectKind();
+    const kindSelect=document.getElementById('authCompletionKind');
+    if(!reset)kindSelect.value=currentAuthor||preferredKind==='author'?'author':'reader';
+    kindSelect.onchange=selectKind;selectKind();
     let busy=false;
     document.getElementById('authCompletionForm').onsubmit = async event => {
       event.preventDefault();
@@ -119,7 +121,7 @@ window.handleAdminLogoutProcess = async function() { return window.handleMemberL
     window.ReaderI18n?.apply(backdrop);
     closeAllModals(); openModal('modalAuthCompletion');
   }
-  window.showAuthOnboarding = () => panel('profile');
+  window.showAuthOnboarding = preferredKind => panel('profile', preferredKind);
   window.showAuthRecovery = () => panel('recovery');
   window.requestAuthReset = async function() {
     const email = document.getElementById('loginEmail').value;
