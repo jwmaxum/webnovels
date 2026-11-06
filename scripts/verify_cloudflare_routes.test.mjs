@@ -13,8 +13,9 @@ test('Pages .js config URL returns only public fields, not SPA HTML or bindings'
   const source = await response.text(); assert.ok(!source.includes(env.SUPABASE_SECRET_KEY));
   const context = { window: {} }; vm.runInNewContext(source, context);
   assert.deepEqual(Object.keys(context.window.WEBNOVELS_CONFIG).sort(),
-    ['adRewardsTestEnabled','adminOperationsEnabled','adminRecoveryReviewEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','authorRecoveryEnabled','authorRichTextEnabled','chargingTestEnabled','freeBetaEnabled','growthMeasurementEnabled','growthServiceEnabled','liveCommerceEnabled','manualPayoutWorkflowEnabled','pointsTestEnabled','publicationChangeReviewEnabled','readerDiscoveryEnabled','readerServiceEnabled','settlementReadinessEnabled','settlementsTestEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
+    ['adRewardsTestEnabled','adminOperationsEnabled','adminRecoveryReviewEnabled','adminRoleChangesEnabled','adminWorkflowEnabled','authorFilesEnabled','authorOperationsEnabled','authorPublishEnabled','authorRecoveryEnabled','authorRichTextEnabled','chargingTestEnabled','freeBetaEnabled','growthMeasurementEnabled','growthServiceEnabled','liveCommerceEnabled','manualPayoutWorkflowEnabled','novelTranslationPilotEnabled','pointsTestEnabled','publicationChangeReviewEnabled','readerDiscoveryEnabled','readerServiceEnabled','settlementReadinessEnabled','settlementsTestEnabled','supabaseAnonKey','supabaseUrl','webtoonServiceEnabled']);
   assert.equal(context.window.WEBNOVELS_CONFIG.manualPayoutWorkflowEnabled,false);
+  assert.equal(context.window.WEBNOVELS_CONFIG.novelTranslationPilotEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.freeBetaEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.authorRichTextEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.publicationChangeReviewEnabled,false);
@@ -27,6 +28,18 @@ test('Pages .js config URL returns only public fields, not SPA HTML or bindings'
   assert.equal(context.window.WEBNOVELS_CONFIG.adminOperationsEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.adminWorkflowEnabled,false);
   assert.equal(context.window.WEBNOVELS_CONFIG.adminRoleChangesEnabled,false);
+});
+test('the novel translation pilot publishes only its boolean and requires free serial prerequisites',async()=>{
+  const flags=['P0_API_ENABLED','FREE_BETA_ENABLED','NEW_SERIALS_ENABLED','AUTHOR_PUBLISH_ENABLED','READER_SERVICE_ENABLED','NOVEL_TRANSLATION_PILOT_ENABLED'];
+  const secret='fixture-secret-for-translation';
+  for(const disabled of [null,...flags]){
+    const env={NEXT_PUBLIC_SUPABASE_URL:'https://example.supabase.co',NEXT_PUBLIC_SUPABASE_ANON_KEY:'sb_publishable_example',
+      NOVEL_TRANSLATION_GOOGLE_ACCESS_TOKEN:secret,...Object.fromEntries(flags.map(flag=>[flag,flag===disabled?'false':'true']))};
+    const source=await onRequest({request:new Request('https://app.test/api/public-config.js'),env}).text(),context={window:{}};
+    vm.runInNewContext(source,context);
+    assert.equal(context.window.WEBNOVELS_CONFIG.novelTranslationPilotEnabled,disabled===null);
+    assert(!source.includes(secret));assert(!source.includes('NOVEL_TRANSLATION_GOOGLE_ACCESS_TOKEN'));
+  }
 });
 test('wrongly configured secret key cannot be served as public key', async () => {
   const response = onRequest({ request: new Request('https://webnovels-db4.pages.dev/api/public-config.js'), env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'sb_secret_bad' } });

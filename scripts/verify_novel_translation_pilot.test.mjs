@@ -7,7 +7,7 @@ import {creatorNovelTranslation,withNovelTranslation} from '../server/novel-tran
 
 const read=name=>readFile(new URL('../'+name,import.meta.url),'utf8');
 const origin='https://webnovels.test',version='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',nextVersion='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
-const env={FREE_BETA_ENABLED:'true',NEW_SERIALS_ENABLED:'true',AUTHOR_PUBLISH_ENABLED:'true',READER_SERVICE_ENABLED:'true',
+const env={P0_API_ENABLED:'true',FREE_BETA_ENABLED:'true',NEW_SERIALS_ENABLED:'true',AUTHOR_PUBLISH_ENABLED:'true',READER_SERVICE_ENABLED:'true',
   NOVEL_TRANSLATION_PILOT_ENABLED:'true',NOVEL_TRANSLATION_GOOGLE_PROJECT:'pilot-fixture',NOVEL_TRANSLATION_GOOGLE_LOCATION:'us-central1',
   NOVEL_TRANSLATION_GOOGLE_ACCESS_TOKEN:'synthetic-credential-for-testing'};
 const work={workId:'31'},episode={...work,episodeId:'311',locale:'en'},text='  첫 문단\n대사  \n\n둘째 문단';

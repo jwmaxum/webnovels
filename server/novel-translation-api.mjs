@@ -5,7 +5,7 @@ const targetCodes=Object.freeze({en:'en',ja:'ja','zh-Hans':'zh-CN'});
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id=value=>typeof value==='string'&&/^[1-9]\d{0,18}$/.test(value)&&BigInt(value)<=9223372036854775807n;
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
-export const novelTranslationEnabled=env=>env.FREE_BETA_ENABLED==='true'&&env.NEW_SERIALS_ENABLED==='true'&&
+export const novelTranslationEnabled=env=>env.P0_API_ENABLED==='true'&&env.FREE_BETA_ENABLED==='true'&&env.NEW_SERIALS_ENABLED==='true'&&
   env.AUTHOR_PUBLISH_ENABLED==='true'&&env.READER_SERVICE_ENABLED==='true'&&env.NOVEL_TRANSLATION_PILOT_ENABLED==='true';
 
 function translationSource(source){
