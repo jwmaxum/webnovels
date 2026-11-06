@@ -58,12 +58,13 @@ test('locale change preserves the submitted query and draft input while dropping
   const app=setup(()=>reply({works:[work('10',{localization:{locale:'en',title:'A published story'}})],nextCursor:null}));
   const {context,nodes}=app;
   context.currentActiveView='view-discover';
+  context.navigator={languages:['ko-KR']};
   context.location=new URL('https://app.test/discover?type=NOVEL&q=cat&tag=romance&cursor=OLD');
   context.history={state:{route:'discover'},replaceState(state,title,path){context.location=new URL(path,context.location);}};
   context.CustomEvent=class{constructor(type){this.type=type;}};
   context.document.documentElement={lang:'ko'};
   context.document.querySelectorAll=()=>[];
-  for(const file of ['reader-feature-messages.js','reader-i18n.js']){
+  for(const file of ['reader-feature-messages.js','reader-arabic-messages.js','reader-i18n.js']){
     const code=await readFile(new URL('../public/js/core/'+file,import.meta.url),'utf8');
     vm.runInContext(code,context,{filename:file});
   }
@@ -79,6 +80,12 @@ test('locale change preserves the submitted query and draft input while dropping
   assert.equal(nodes.discoverWorksGrid.children[0].href,'/works/10');
   assert.match(nodes.discoverWorksGrid.textContent,/A published story/);
   assert.match(nodes.discoverResultsCount.textContent,/1 work on this page/);
+  assert.equal(context.ReaderI18n.setLocale('ar'),true);
+  await tick();
+  assert.equal(app.requests.at(-1).url.searchParams.get('locale'),'ar');
+  assert.equal(nodes.discoverQuery.value,'not submitted');
+  assert.match(nodes.discoverWorksGrid.textContent,/작품 10/);
+  assert.match(nodes.discoverResultsCount.textContent,/عمل واحد/);
 });
 
 test('primary shelves show explicit empty states while optional empty shelves are omitted',async()=>{

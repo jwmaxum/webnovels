@@ -47,7 +47,7 @@
 <link rel="stylesheet" href="/css/policies.css?v=20261031r6">
   <link rel="stylesheet" href="/css/reader-shell.css?v=20261031r3">
   <link rel="stylesheet" href="/css/reader-experience.css?v=20261031r7">
-  <link rel="stylesheet" href="/css/reader-locales.css?v=20261106ml01">
+  <link rel="stylesheet" href="/css/reader-locales.css?v=20261106mlar">
   <link rel="stylesheet" href="/css/author-studio.css?v=20261101r12">
   <link rel="stylesheet" href="/css/operations-account.css?v=20261031r6">
   <link rel="stylesheet" href="/css/admin-shell.css?v=20261101op01">
@@ -190,10 +190,12 @@
             <div class="reader-language-picker">
               <label for="readerLocale" class="sr-only" data-i18n="static.language">표시 언어</label>
               <select id="readerLocale" data-reader-locale>
-                <option value="ko" lang="ko">한국어</option>
+                <option value="auto" data-i18n="static.languageAuto">기기 언어 자동 선택</option>
                 <option value="en" lang="en">English</option>
+                <option value="ko" lang="ko">한국어</option>
                 <option value="ja" lang="ja">日本語</option>
                 <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+                <option value="ar" lang="ar" dir="rtl">العربية</option>
               </select>
             </div>
             <div class="user-profile-menu" id="userProfileMenu">
@@ -244,7 +246,7 @@
                   <span class="badge badge-accent continue-badge"><i data-lucide="book-open" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> <span data-i18n="static.continueReading">계속 읽기</span></span>
                   <span class="continue-pct" id="continueCardPct"></span>
                 </div>
-                <h3 class="continue-title" id="continueCardTitle">작품 정보를 불러오는 중</h3>
+                <h3 class="continue-title" id="continueCardTitle" dir="auto">작품 정보를 불러오는 중</h3>
                 <p class="continue-meta text-muted" id="continueCardMeta"></p>
                 <div class="progress-bar-bg continue-progress-bg">
                   <div class="progress-bar-fill continue-progress-fill" id="continueCardFill" style="width: 0%;"></div>
@@ -533,10 +535,10 @@
                 <span class="badge badge-outline" id="detailRatingBadge"></span>
                 <span class="badge badge-outline" id="detailAiBadge"></span>
               </div>
-              <h1 id="detailTitle" class="detail-title">작품 정보를 불러오는 중</h1>
+              <h1 id="detailTitle" class="detail-title" dir="auto">작품 정보를 불러오는 중</h1>
               <p id="detailOriginalLanguage" class="text-muted small" hidden></p>
               <p class="detail-author" id="detailAuthor">작가 정보 확인 중</p>
-              <details class="detail-synopsis" id="detailSynopsis" open><summary id="detailSummaryHeading" data-i18n="static.synopsis">작품 소개</summary><p class="detail-desc" id="detailDescription"></p></details>
+              <details class="detail-synopsis" id="detailSynopsis" open><summary id="detailSummaryHeading" data-i18n="static.synopsis">작품 소개</summary><p class="detail-desc" id="detailDescription" dir="auto"></p></details>
 
               <div class="detail-actions">
                 <button class="btn btn-primary btn-lg" id="btnDetailReadFirst" disabled>
@@ -597,16 +599,18 @@
             <i data-lucide="arrow-left" aria-hidden="true"></i>
           </button>
           <div class="reader-title-info">
-            <h4 id="readerWorkTitle">작품 정보를 불러오는 중</h4>
-            <span id="readerEpTitle"></span>
+            <h4 id="readerWorkTitle" dir="auto">작품 정보를 불러오는 중</h4>
+            <span id="readerEpTitle" dir="auto"></span>
           </div>
           <div class="reader-header-tools">
             <label for="readerViewerLocale" class="sr-only" data-i18n="static.language">표시 언어</label>
             <select id="readerViewerLocale" data-reader-locale>
-              <option value="ko" lang="ko">한국어</option>
+              <option value="auto" data-i18n="static.languageAuto">기기 언어 자동 선택</option>
               <option value="en" lang="en">English</option>
+              <option value="ko" lang="ko">한국어</option>
               <option value="ja" lang="ja">日本語</option>
               <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+              <option value="ar" lang="ar" dir="rtl">العربية</option>
             </select>
             <button type="button" class="btn btn-outline btn-sm" id="btnReaderEpisodes" disabled data-i18n="static.episodeList">회차 목록</button>
             <button class="btn btn-icon btn-ghost" id="btnReaderSettings" aria-label="읽기 환경 설정" data-i18n-aria-label="static.readingSettings"><i data-lucide="sliders" aria-hidden="true"></i></button>
@@ -617,7 +621,7 @@
         <div class="reader-container" id="readerContainer">
           <div class="reader-paper" id="readerPaper">
             <div id="readerChapterStatus" class="reader-load-status" role="status" aria-live="polite"></div>
-            <h1 class="ep-heading" id="readerHeading">공개 회차 확인 중</h1>
+            <h1 class="ep-heading" id="readerHeading" dir="auto">공개 회차 확인 중</h1>
             <p id="readerSourceLanguage" class="small text-muted" hidden></p>
             <div id="readerNovelTranslation" hidden></div>
             <p id="readerProgressStatus" class="text-muted small" role="status" aria-live="polite"></p>
@@ -674,7 +678,7 @@
       </section>
 
       <!-- View 5: Creator Studio (service_structure.md 작가센터 7대 메뉴) -->
-      <section id="view-creator" class="main-view" lang="ko">
+      <section id="view-creator" class="main-view" lang="ko" dir="ltr">
         <div class="container section-padding">
           <!-- Author Info Bar -->
           <div class="card glass-panel p-4 mb-4" id="creatorAuthorBar">
@@ -1134,7 +1138,7 @@
       </section>
 
       <!-- View 7: Admin CMS Integration (Sidebar + 16 Panel Content Area) -->
-      <section id="view-admin-cms" class="main-view" lang="ko">
+      <section id="view-admin-cms" class="main-view" lang="ko" dir="ltr">
         <div id="adminOperationsShell" class="container section-padding" hidden>
           <header class="cms-header">
             <div><p class="cms-eyebrow">관리자 센터</p><h1>서비스 운영</h1><p class="cms-intro">처리할 요청을 확인하고, 권한에 맞는 업무를 선택하세요.</p><p id="adminConsoleIdentity" role="status"></p></div>
@@ -2538,28 +2542,29 @@
   </div>
 
   <!-- Core Architecture Modules -->
-  <script src="/js/core/reader-static-messages.js?v=20261106ml01"></script>
+  <script src="/js/core/reader-static-messages.js?v=20261106mlar"></script>
   <script src="/js/core/reader-feature-messages.js?v=20261106ml03"></script>
   <script src="/js/core/reader-shell-messages.js?v=20261106ml01"></script>
-  <script src="/js/core/reader-i18n.js?v=20261106ml01"></script>
+  <script src="/js/core/reader-arabic-messages.js?v=20261106mlar"></script>
+  <script src="/js/core/reader-i18n.js?v=20261106mlar"></script>
   <script src="/js/core/state.js?v=20261012"></script>
   <script src="/js/core/ui-utils.js?v=126"></script>
   <script src="/js/core/role-modules.js?v=20261106firstwork"></script>
-  <script src="/js/core/router.js?v=20261103op13"></script>
+  <script src="/js/core/router.js?v=20261106mlar"></script>
   <!-- Domain Functional Modules -->
   <script src="/js/shared/manuscript-document.js?v=124"></script>
-  <script src="/js/reader/reader-content.js?v=20261106ml03"></script>
-  <script src="/js/reader/reader-catalog.js?v=20261106ml01"></script>
-  <script src="/js/reader/reader-display.js?v=20261106ml01"></script>
+  <script src="/js/reader/reader-content.js?v=20261106mlar"></script>
+  <script src="/js/reader/reader-catalog.js?v=20261106mlar"></script>
+  <script src="/js/reader/reader-display.js?v=20261106mlar"></script>
   <script src="/js/reader/reader-rewards-test.js?v=20261102op06"></script>
   <script src="/js/shared/live-commerce.js?v=20261104op15"></script>
   <script src="/js/reader/reader-points-test.js?v=20261102op06"></script>
   <script src="/js/reader/reader-topups.js?v=20261102op06"></script>
-  <script src="/js/reader/reader-discovery.js?v=20261106ml01"></script>
+  <script src="/js/reader/reader-discovery.js?v=20261106mlar"></script>
   <script src="/js/reader/reader-webtoon.js?v=20261106ml01"></script>
   <script src="/js/reader/reader-position.js?v=20261106ml01"></script>
   <script src="/js/reader/reader-fonts.js?v=20261031r8"></script>
-  <script src="/js/reader/reader.js?v=20261106ml03"></script>
+  <script src="/js/reader/reader.js?v=20261106mlar"></script>
   <script src="/js/reader/reader-hub.js?v=116"></script>
   <script src="/js/reader/growth-studio.js?v=122"></script>
   <script src="/js/reader/continue-reading.js?v=20261106ml01"></script>

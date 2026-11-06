@@ -2,25 +2,40 @@
 (function () {
   'use strict';
 
-  const locales = Object.freeze(['ko', 'en', 'ja', 'zh-Hans']);
+  const languageNames = Object.freeze({en: 'English', ko: '한국어', ja: '日本語', 'zh-Hans': '简体中文', ar: 'العربية'});
+  const locales = Object.freeze(Object.keys(languageNames));
+  const defaultLocale = 'en';
   const preference = 'webnovels_reader_locale';
   const bindings = new WeakMap();
   const metadata = new Map();
   const attributes = ['placeholder', 'aria-label', 'title', 'alt'];
   const owned = (record, key) => record && Object.hasOwn(record, key) ? record[key] : undefined;
-  let current = 'ko';
+  let override = null;
   try {
     const stored = window.localStorage.getItem(preference);
-    if (locales.includes(stored)) current = stored;
-  } catch { /* The default works when browser storage is restricted. */ }
+    if (locales.includes(stored)) override = stored;
+  } catch { /* Device language still works when browser storage is restricted. */ }
+
+  function deviceLocale() {
+    const browser = window.navigator;
+    const preferences = browser?.languages?.length ? browser.languages : [browser?.language];
+    for (const tag of preferences) {
+      if (typeof tag !== 'string') continue;
+      const base = tag.trim().toLowerCase().split('-')[0];
+      const candidate = base === 'zh' ? 'zh-Hans' : base;
+      if (locales.includes(candidate)) return candidate;
+    }
+    return defaultLocale;
+  }
+
+  let current = override ?? deviceLocale();
 
   function t(key, values = {}) {
     const catalogs = [window.ReaderStaticMessages, window.ReaderFeatureMessages, window.ReaderShellMessages];
-    let text;
-    for (const catalog of catalogs) {
-      const entry = owned(owned(catalog, current), key) ?? owned(owned(catalog, 'ko'), key);
-      if (typeof entry === 'string') { text = entry; break; }
-    }
+    const translation = locale => catalogs.map(catalog => owned(owned(catalog, locale), key))
+      .find(entry => typeof entry === 'string');
+    const text = (current === 'ar' ? owned(window.ReaderArabicMessages, key) : translation(current))
+      ?? translation(defaultLocale);
     return (text ?? String(key)).replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g,
       (match, name) => Object.hasOwn(values, name) ? String(values[name]) : match);
   }
@@ -46,18 +61,37 @@
   }
 
   function setLocale(locale) {
-    if (!locales.includes(locale) || current === locale) return false;
+    if (locale !== 'auto' && !locales.includes(locale)) return false;
+    override = locale === 'auto' ? null : locale;
+    try {
+      if (override) window.localStorage.setItem(preference, override);
+      else window.localStorage.removeItem(preference);
+    } catch { /* Session selection still applies. */ }
+    return updateLocale();
+  }
+
+  function updateLocale() {
     const previous = current;
-    current = locale;
-    try { window.localStorage.setItem(preference, locale); } catch { /* Session selection still applies. */ }
+    current = override ?? deviceLocale();
     sync();
-    window.dispatchEvent(new CustomEvent('reader:localechange', {detail: {locale, previous}}));
+    if (current === previous) return false;
+    window.dispatchEvent(new CustomEvent('reader:localechange', {detail: {locale: current, previous}}));
     return true;
   }
 
+  function syncDocumentLanguage(viewId) {
+    // Operational screens keep their current language; the reader shell uses the selected locale.
+    const path = window.location?.pathname ?? '';
+    const operations = typeof viewId === 'string'
+      ? viewId === 'view-creator' || viewId === 'view-admin-cms'
+      : /^\/(?:admin|author|creator)(?:\/|$)/.test(path);
+    document.documentElement.lang = operations ? 'ko' : current;
+    document.documentElement.dir = !operations && current === 'ar' ? 'rtl' : 'ltr';
+  }
+
   function sync() {
-    document.documentElement.lang = current;
-    for (const select of document.querySelectorAll('[data-reader-locale]')) select.value = current;
+    syncDocumentLanguage();
+    for (const select of document.querySelectorAll('[data-reader-locale]')) select.value = override ?? 'auto';
     apply();
   }
 
@@ -98,10 +132,10 @@
   const workKey = item => item?.id ? 'work:' + String(item.id) : '';
   const episodeKey = (workId, item) => workId && (item?.id || item?.episodeNumber)
     ? 'episode:' + String(workId) + ':' + String(item.id || item.episodeNumber) : '';
-  const language = code => ({ko: '한국어', en: 'English', ja: '日本語', 'zh-Hans': '简体中文'})[code] ?? '';
+  const language = code => owned(languageNames, code) ?? '';
 
   window.ReaderI18n = Object.freeze({
-    locales, locale: () => current, setLocale, apply, t, text, language,
+    locales, locale: () => current, setLocale, apply, t, text, language, syncDocumentLanguage,
     number: (value, options) => new Intl.NumberFormat(current, options).format(value),
     work: item => display(workKey(item), item),
     episode: (workId, item) => display(episodeKey(workId, item), item),
@@ -116,7 +150,9 @@
     for (const select of document.querySelectorAll('[data-reader-locale]')) {
       select.addEventListener('change', () => setLocale(select.value));
     }
+    window.addEventListener('languagechange', () => { if (!override) updateLocale(); });
   }
+  syncDocumentLanguage();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once: true});
   else init();
 })();

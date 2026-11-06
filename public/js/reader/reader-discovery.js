@@ -50,6 +50,7 @@
     const info = node('div', null, 'cdg-card-info');
     const kind = work.contentType === 'WEBTOON' ? '웹툰' : '웹소설';
     const title = message('h3', () => workCopy(work).title, 'cdg-card-title');
+    title.dir = 'auto';
     localized(title, () => workCopy(work).titleLanguage || work.originalLanguage || 'ko', 'lang');
     info.append(message('span', () => work.genre ? localGenre(work.genre) : t(kind), 'cdg-card-tag'), title,
       message('p', () => work.author === '작가 정보 없음' ? t(work.author) : work.author, 'text-muted small'),
@@ -314,6 +315,7 @@
     const row = link('', `/read/${id}/${ep.episodeNumber}`, 'episode-row discovery-episode');
     const copy = () => window.ReaderI18n?.episode(id, ep) || ep;
     const title = message('span', () => copy().title, 'discovery-episode-title');
+    title.dir = 'auto';
     localized(title, () => copy().titleLanguage || ep.originalLanguage || 'ko', 'lang');
     const published = ep.published_at || ep.publishedAt;
     row.append(message('span', () => t('{number}화', { number: ep.episodeNumber }), 'discovery-episode-number'), title,

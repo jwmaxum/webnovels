@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 import {parse} from 'parse5';
 
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
-const languages = ['ko','en','ja','zh-Hans'];
-const scripts = ['reader-static-messages','reader-feature-messages','reader-shell-messages','reader-i18n'];
+const languages = ['en','ko','ja','zh-Hans','ar'];
+const scripts = ['reader-static-messages','reader-feature-messages','reader-shell-messages','reader-arabic-messages','reader-i18n'];
 
 function element(attributes = {}) {
   const events = new Map();
@@ -19,7 +19,7 @@ function element(attributes = {}) {
   };
 }
 
-function fixture(stored) {
+function fixture(stored, navigator, pathname = '/') {
   const selector = element({'data-reader-locale':''}), viewerSelector = element({'data-reader-locale':''});
   const notice = element({'data-i18n':'작품을 찾을 수 없습니다.'});
   const field = element({'data-i18n-placeholder':'이메일을 입력해주세요.'});
@@ -29,8 +29,8 @@ function fixture(stored) {
     documentElement: {lang:'ko'}, readyState:'complete',
     querySelectorAll: query => labels.filter(node => Object.hasOwn(node.attributes, query.slice(1, -1)))
   };
-  const context = vm.createContext({document, CustomEvent,
-    localStorage: {getItem: () => stored, setItem: (...args) => writes.push(args)},
+  const context = vm.createContext({document, CustomEvent, navigator, location: {pathname},
+    localStorage: {getItem: () => stored, setItem: (...args) => writes.push(args), removeItem: (...args) => writes.push(args)},
     addEventListener: (name, callback) => events.set(name, callback),
     dispatchEvent: event => events.get(event.type)?.(event)
   });
@@ -39,7 +39,7 @@ function fixture(stored) {
   return {context, api:context.ReaderI18n, document, selector, viewerSelector, notice, field, writes};
 }
 
-test('all static reader bindings have four strings, preserve child controls and load before the reader', () => {
+test('all static reader bindings have five strings, preserve child controls and load before the reader', () => {
   const {context} = fixture('ko');
   const markup = parse(read('public/index.html'));
   const keys = new Set(), loaded = [], pickers = [];
@@ -57,28 +57,81 @@ test('all static reader bindings have four strings, preserve child controls and 
   visit(markup);
   assert(keys.size > 120);
   for (const key of keys) for (const language of languages) {
-    assert.equal(typeof context.ReaderStaticMessages[language][key], 'string', `${language}: ${key}`);
+    const catalog = language === 'ar' ? context.ReaderArabicMessages : context.ReaderStaticMessages[language];
+    assert.equal(typeof catalog[key], 'string', `${language}: ${key}`);
   }
   assert.equal(pickers.length,2);
-  for (const picker of pickers) assert.deepEqual(picker.childNodes.filter(n=>n.tagName==='option').map(n=>n.attrs.find(a=>a.name==='value').value),languages);
+  for (const picker of pickers) assert.deepEqual(picker.childNodes.filter(n=>n.tagName==='option').map(n=>n.attrs.find(a=>a.name==='value').value),['auto',...languages]);
   const index = file => loaded.findIndex(src=>src.includes('/'+file+'.js?v='));
   assert(index('reader-static-messages')>=0 && index('reader-static-messages')<index('reader-i18n'));
+  assert(index('reader-arabic-messages')>=0 && index('reader-arabic-messages')<index('reader-i18n'));
   assert(index('reader-i18n')<index('reader'));
 });
 
 test('language change updates both controls and accessible text while preserving input', () => {
   const f=fixture('xx');
-  assert.equal(f.api.locale(),'ko');
-  for (const language of languages.slice(1)) {
+  assert.equal(f.api.locale(),'en');
+  assert.equal(f.selector.value,'auto');
+  for (const language of languages) {
     f.viewerSelector.value=language;f.viewerSelector.emit('change');
     assert.equal(f.selector.value,language);
     assert.equal(f.document.documentElement.lang,language);
-    assert.notEqual(f.notice.textContent,'작품을 찾을 수 없습니다.');
-    assert.notEqual(f.field.attributes.placeholder,'이메일을 입력해주세요.');
+    assert.equal(f.document.documentElement.dir,language === 'ar' ? 'rtl' : 'ltr');
+    assert.equal(f.notice.textContent,f.api.t('작품을 찾을 수 없습니다.'));
+    assert.equal(f.field.attributes.placeholder,f.api.t('이메일을 입력해주세요.'));
     assert.equal(f.field.value,'already-entered');
   }
   assert.equal(f.api.setLocale('en<script>'),false);
-  assert.deepEqual(f.writes,languages.slice(1).map(locale=>['webnovels_reader_locale',locale]));
+  assert.deepEqual(f.writes,languages.map(locale=>['webnovels_reader_locale',locale]));
+});
+
+test('device locale uses preference order, regional variants and English fallback', () => {
+  const cases = [
+    [{languages:['fr-CA','ar-SA','en-US']}, 'ar'],
+    [{languages:['ko-KR','en-US']}, 'ko'],
+    [{languages:['ja-JP','ar-EG']}, 'ja'],
+    [{languages:[],language:'zh-TW'}, 'zh-Hans'],
+    [{language:'ar-EG'}, 'ar'],
+    [{languages:['fr-CA','de-DE']}, 'en'],
+    [undefined, 'en']
+  ];
+  for (const [navigator, locale] of cases) {
+    const f=fixture(null,navigator);
+    assert.equal(f.api.locale(),locale);
+    assert.equal(f.selector.value,'auto');
+    assert.equal(f.document.documentElement.dir,locale === 'ar' ? 'rtl' : 'ltr');
+    assert.deepEqual(f.writes,[]);
+  }
+});
+
+test('returning to automatic rechecks device language and portals keep their direction', () => {
+  const navigator={languages:['ar-SA']};
+  const f=fixture('ja',navigator,'/creator/episodes');
+  assert.equal(f.api.locale(),'ja');
+  assert.equal(f.document.documentElement.lang,'ko');
+  f.context.location.pathname='/library';
+  f.api.syncDocumentLanguage('view-mypage');
+  assert.equal(f.document.documentElement.lang,'ja');
+  f.api.setLocale('auto');
+  assert.equal(f.api.locale(),'ar');
+  assert.equal(f.document.documentElement.dir,'rtl');
+  assert.equal(f.viewerSelector.value,'auto');
+  assert.deepEqual(f.writes,[['webnovels_reader_locale']]);
+  navigator.languages=['ko-KR'];
+  f.context.dispatchEvent({type:'languagechange'});
+  assert.equal(f.api.locale(),'ko');
+  assert.equal(f.document.documentElement.dir,'ltr');
+});
+
+test('Arabic covers existing dynamic reader messages and preserves interpolation slots', () => {
+  const {context,api}=fixture('ar');
+  const {ReaderShellMessages,ReaderFeatureMessages,ReaderStaticMessages,ReaderArabicMessages}=context;
+  const english={...ReaderShellMessages.en,...ReaderFeatureMessages.en,...ReaderStaticMessages.en};
+  const slots=value=>[...value.matchAll(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g)].map(match=>match[1]).sort();
+  assert.deepEqual(Object.keys(ReaderArabicMessages).sort(),Object.keys(english).sort());
+  for (const [key,value] of Object.entries(english)) assert.deepEqual(slots(ReaderArabicMessages[key]),slots(value),key);
+  assert.equal(api.t('static.login'),'تسجيل الدخول');
+  assert.equal(api.t('{number}화',{number:4}),'الحلقة 4');
 });
 
 test('approved titles overlay display only, and old source values cannot reuse cached translations', () => {

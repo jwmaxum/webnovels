@@ -66,7 +66,7 @@ function renderCdgWorkCardHtml(w, options = {}) {
       </div>
       <div class="cdg-card-info">
         <span class="cdg-card-tag">${escapeHtml(i18n?.t(w.genre || '웹소설') ?? (w.genre || '웹소설'))}</span>
-        <h3 class="cdg-card-title" lang="${escapeHtml(shown.titleLanguage || 'ko')}">${escapeHtml(shown.title)}</h3>
+        <h3 class="cdg-card-title" dir="auto" lang="${escapeHtml(shown.titleLanguage || 'ko')}">${escapeHtml(shown.title)}</h3>
         <div class="cdg-card-meta">
           <span>${escapeHtml(authorName)}</span>
           <span><i data-lucide="eye" style="width:11px;height:11px;display:inline;vertical-align:middle;"></i> ${viewFormatted}</span>
@@ -217,6 +217,7 @@ async function renderHomeWorks() {
         const info = document.createElement('div'); info.className = 'cdg-card-info';
         const shown = i18n?.work(work) ?? work;
         const title = document.createElement('h3'); title.className = 'cdg-card-title'; title.textContent = shown.title;
+        title.dir = 'auto';
         if (shown.titleLanguage) title.lang = shown.titleLanguage;
         const author = document.createElement('p'); author.className = 'small text-muted'; author.textContent = getAuthorName(work);
         const status = work.isCompleted || work.is_completed || work.status === 'COMPLETED' ? '완결' : work.status === 'PAUSED' ? '휴재' : '연재 중';
@@ -703,11 +704,11 @@ function renderSearchResultItem(work) {
   const workId = /^[1-9]\d{0,18}$/.test(String(work.id)) ? String(work.id) : '';
   const shown = window.ReaderI18n?.work(work) ?? work;
   return `
-    <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect('${workId}');" style="width: 100%; border-radius: 8px; text-align: left; background: var(--bg-subtle); border: 1px solid var(--border-color); color: var(--text-primary);">
+    <button class="search-result-item glass-panel p-2 mb-2 flex-between" onclick="closeAllModals(); openWorkDetailDirect('${workId}');" style="width: 100%; border-radius: 8px; text-align: start; background: var(--bg-subtle); border: 1px solid var(--border-color); color: var(--text-primary);">
       <div style="display: flex; align-items: center; gap: 10px;">
         <img src="${cover}" alt="${escapeHtml(shown.title)}" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px;">
         <div>
-          <strong lang="${escapeHtml(shown.titleLanguage || 'ko')}">${escapeHtml(shown.title)}</strong>
+          <strong dir="auto" lang="${escapeHtml(shown.titleLanguage || 'ko')}">${escapeHtml(shown.title)}</strong>
           <div class="text-muted small">${escapeHtml(getAuthorName(work))} · ${escapeHtml(isAdult ? '19+ 성인' : work.genre)} · 조회 ${(work.viewCount / 1000).toFixed(1)}K</div>
         </div>
       </div>
@@ -1208,6 +1209,7 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true, didRefres
   document.getElementById('detailCoverImg').src = cover;
   const title = document.getElementById('detailTitle');title.textContent = shown.title;
   const description = document.getElementById('detailDescription');description.textContent = shown.description;
+  title.dir = 'auto'; description.dir = 'auto';
   if (i18n) {
     title.lang = shown.titleLanguage;
     description.lang = shown.descriptionLanguage;
@@ -1249,7 +1251,7 @@ window.openWorkDetailDirect = function(workId, shouldPushState = true, didRefres
     const row=document.createElement('a');row.className='episode-row discovery-episode';row.href=`/read/${encodeURIComponent(work.id)}/${ep.episodeNumber}`;
     row.onclick=event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button>0)return;event.preventDefault();window.openReaderDirect(work.id,ep.episodeNumber);};
     const shownEpisode = i18n?.episode(work.id, ep) ?? ep;
-    for(const [text,cls,language]of [[t('{number}화',{number:ep.episodeNumber}),'discovery-episode-number'],[shownEpisode.title,'discovery-episode-title',shownEpisode.titleLanguage],[t('무료'),'discovery-episode-meta']]){const span=document.createElement('span');span.textContent=text;span.className=cls;if(language)span.lang=language;row.append(span);}
+    for(const [text,cls,language]of [[t('{number}화',{number:ep.episodeNumber}),'discovery-episode-number'],[shownEpisode.title,'discovery-episode-title',shownEpisode.titleLanguage],[t('무료'),'discovery-episode-meta']]){const span=document.createElement('span');span.textContent=text;span.className=cls;if(language){span.lang=language;span.dir='auto';}row.append(span);}
     epList.append(row);
   }
   if(!sortedEpisodes.length){const empty=document.createElement('p');empty.className='text-muted';empty.textContent=t('공개된 회차가 없습니다.');epList.append(empty);}
@@ -2559,7 +2561,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
     const selectedParagraph = window._paragraphComment;
     const paragraphContext = selectedParagraph ? `
       <div class="paragraph-comment-context">
-        <span>${escapeReaderHtml(i18n?.t('문단 #{number} 인용',{number:Number(selectedParagraph.paragraphIndex)+1}) ?? `문단 #${Number(selectedParagraph.paragraphIndex)+1} 인용`)}</span><q>${escapeReaderHtml(selectedParagraph.quoteText)}</q>
+        <span>${escapeReaderHtml(i18n?.t('문단 #{number} 인용',{number:Number(selectedParagraph.paragraphIndex)+1}) ?? `문단 #${Number(selectedParagraph.paragraphIndex)+1} 인용`)}</span><q dir="auto">${escapeReaderHtml(selectedParagraph.quoteText)}</q>
         <button type="button" onclick="window._paragraphComment = null; loadEpisodeComments('${workId}', '${episodeId}')" data-i18n="선택 해제">선택 해제</button>
       </div>` : '';
 
@@ -2583,7 +2585,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
       html += `<div class="text-center text-muted p-4" data-i18n="아직 작성된 댓글이 없습니다. 첫 번째 감상평의 주인공이 되어보세요!">아직 작성된 댓글이 없습니다. 첫 번째 감상평의 주인공이 되어보세요!</div>`;
     } else {
       rootComments.forEach(c => {
-        const timeStr = new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = new Date(c.created_at).toLocaleTimeString(i18n?.locale(), { hour: '2-digit', minute: '2-digit' });
         const replies = replyMap[c.id] || [];
         const isSpoiler = !!(c.is_spoiler || c.isSpoiler);
 
@@ -2595,9 +2597,9 @@ window.loadEpisodeComments = async function(workId, episodeId) {
                 <span data-i18n="내용 보기">내용 보기</span>
               </button>
             </div>
-            <div class="comment-content-text">${escapeReaderHtml(c.content)}</div>
+            <div class="comment-content-text" dir="auto">${escapeReaderHtml(c.content)}</div>
           </div>
-        ` : `<div class="comment-content-text">${escapeReaderHtml(c.content)}</div>`;
+        ` : `<div class="comment-content-text" dir="auto">${escapeReaderHtml(c.content)}</div>`;
 
         html += `
           <div class="comment-item" id="comment-${c.id}">
@@ -2631,7 +2633,7 @@ window.loadEpisodeComments = async function(workId, episodeId) {
 
         // 대댓글 렌더링
         replies.forEach(r => {
-          const rTimeStr = new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const rTimeStr = new Date(r.created_at).toLocaleTimeString(i18n?.locale(), { hour: '2-digit', minute: '2-digit' });
           const isReplySpoiler = !!(r.is_spoiler || r.isSpoiler);
           const replySpoilerBlock = isReplySpoiler ? `
             <div class="comment-spoiler-blur-wrap is-blurred" id="spoilerWrap-${r.id}">
@@ -2641,9 +2643,9 @@ window.loadEpisodeComments = async function(workId, episodeId) {
                   <span data-i18n="내용 보기">내용 보기</span>
                 </button>
               </div>
-              <div class="comment-content-text">${escapeReaderHtml(r.content)}</div>
+              <div class="comment-content-text" dir="auto">${escapeReaderHtml(r.content)}</div>
             </div>
-          ` : `<div class="comment-content-text">${escapeReaderHtml(r.content)}</div>`;
+          ` : `<div class="comment-content-text" dir="auto">${escapeReaderHtml(r.content)}</div>`;
 
           html += `
             <div class="comment-item is-reply" id="comment-${r.id}">

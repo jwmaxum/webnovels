@@ -33,11 +33,12 @@ test('panel geometry is reserved while loading and decoding; a loaded panel clea
 
 test('switching language updates a mounted webtoon panel without reloading images or moving the reader',async()=>{
  const app=fixture(),root=app.element(),pending=gate();let requests=0;
+ app.context.navigator={languages:['ko-KR']};
  app.context.document.documentElement={lang:'ko'};
  app.context.document.querySelectorAll=()=>[];
  app.context.CustomEvent=class{constructor(type){this.type=type;}};
  app.context.dispatchEvent=event=>app.emit(event.type);
- for(const file of ['reader-feature-messages.js','reader-i18n.js']){
+ for(const file of ['reader-feature-messages.js','reader-arabic-messages.js','reader-i18n.js']){
    const script=await readFile(new URL('../public/js/core/'+file,import.meta.url),'utf8');
    vm.runInContext(script,app.context,{filename:file});
  }
@@ -48,7 +49,8 @@ test('switching language updates a mounted webtoon panel without reloading image
  for(const [locale, alt, label, loading] of [
    ['en','Webtoon image 1','Reload image 1','Loading image 1…'],
    ['ja','ウェブトゥーン画像 1','画像 1 を再読み込み','画像 1 を読み込んでいます。'],
-   ['zh-Hans','网络漫画第1张图片','重新加载第1张图片','正在加载第1张图片…']
+   ['zh-Hans','网络漫画第1张图片','重新加载第1张图片','正在加载第1张图片…'],
+   ['ar','صورة الويبتون رقم 1','أعد تحميل الصورة رقم 1','جارٍ تحميل الصورة رقم 1…']
  ]){
    assert.equal(app.context.ReaderI18n.setLocale(locale),true);
    assert.equal(image.alt,alt);assert.equal(retry.getAttribute('aria-label'),label);assert.equal(status.textContent,loading);

@@ -118,6 +118,13 @@ test('catalog locale is allowlisted, cursor-bound, additive, and safe without da
   const fallback = await request('action=list&locale=ja&q=원제',false);
   assert.deepEqual(fallback.calls.map(call=>call.route), ['rpc/stage16_catalog']);
   assert.equal(fallback.calls[0].options.body.p_query.locale,undefined);
+
+  const arabic = await request('action=list&locale=ar&q=원제',true);
+  assert.deepEqual(arabic.calls.map(call=>call.route), fallback.calls.map(call=>call.route));
+  assert.equal(arabic.result.works[0].title,work.title);
+  assert.equal(arabic.result.works[0].localization,undefined);
+  const arabicDetail = await request('action=work&workId=30&locale=ar',true);
+  assert(!arabicDetail.calls.some(call=>call.route.includes('reader_catalog_translations')));
   assert.equal(fallback.result.works[0].title,work.title);
   const localized = await request('action=list&locale=ja&q=冒険',true);
   assert.deepEqual(localized.calls.map(call=>call.route),['rpc/reader_catalog_localized_search','rpc/reader_catalog_translations']);

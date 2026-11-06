@@ -9,6 +9,7 @@
     text.split('\n\n').forEach((part, index) => {
       const paragraph = formatted?window.ManuscriptDocument.paragraph(formatted.paragraphs[index]):document.createElement('p');
       paragraph.className = 'reader-paragraph';
+      paragraph.dir = 'auto';
       paragraph.dataset.paragraphIndex = String(index);
       paragraph.style.whiteSpace = 'pre-wrap';
       if (!formatted) { if (part) paragraph.textContent = part; else paragraph.append(document.createElement('br')); }
@@ -22,7 +23,9 @@
       const strong = document.createElement('strong');
       if (snapshot?.localizeReaderNote && window.ReaderI18n) window.ReaderI18n.text(strong, '작가의 말: ');
       else strong.textContent = '작가의 말: ';
-      comment.append(strong, document.createTextNode(String(snapshot?.authorComment ?? '')));
+      const note = document.createElement('bdi');
+      note.textContent = String(snapshot?.authorComment ?? '');
+      comment.append(strong, note);
     }
   }
   function mountTranslation({panel,body,heading,original,locales,load,isCurrent,onParagraph}) {

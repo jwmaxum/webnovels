@@ -83,6 +83,7 @@
     const info=node(anchor,'div',null,'reader-display-info');message(info,'span',item.content_type==='WEBTOON'?'웹툰':'웹소설','reader-display-kind');
     const copy = () => window.ReaderI18n?.work(item) || item;
     const title = message(info,'h3',() => copy().title);
+    title.dir = 'auto';
     localized(title, () => copy().titleLanguage || item.originalLanguage || 'ko', 'lang');
     node(info,'p',item.author,'reader-display-author');
     message(info,'p',() => [t(item.status==='COMPLETED'||item.is_completed?'완결':item.status==='PAUSED'?'휴재':'연재 중'),

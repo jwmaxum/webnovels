@@ -34,6 +34,26 @@ body.portal-fullscreen-mode #mainHeader .reader-language-picker {
   font-family: var(--font-ui);
 }
 
+html[dir="rtl"] body {
+  --font-ui: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-family: var(--font-ui);
+  letter-spacing: normal;
+}
+
+html[dir="rtl"] .reader-skip-link { left: auto; inset-inline-start: 16px; }
+html[dir="rtl"] body[data-active-view] .reader-header-search input { padding: 10px 16px 10px 52px; }
+html[dir="rtl"] body[data-active-view] .reader-header-search button { right: auto; inset-inline-end: 2px; }
+html[dir="rtl"] #discoverFilterDashboard .filter-dashboard-title { margin-right: 0; margin-inline-end: 16px; }
+html[dir="rtl"] #view-home .cdg-more-link { text-align: end; }
+html[dir="rtl"] #view-mypage .library-row,
+html[dir="rtl"] #view-reader .reader-title-info,
+html[dir="rtl"] .discovery-episode-meta { text-align: start; }
+html[dir="rtl"] :is(#view-reader, #view-discover, #view-recommendations, #view-home, #view-work-detail)
+  :is([data-lucide="chevron-left"], [data-lucide="chevron-right"], [data-lucide="arrow-left"],
+      [data-lucide="arrow-right"], .lucide-chevron-left, .lucide-chevron-right, .lucide-arrow-left, .lucide-arrow-right) {
+  scale: -1 1;
+}
+
 @media (max-width: 859px) {
   #view-reader #readerViewerLocale { max-inline-size: 7rem; }
   #view-mypage .library-tabs button { min-inline-size: 0; overflow-wrap: anywhere; }

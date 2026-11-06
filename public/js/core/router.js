@@ -13,6 +13,7 @@ let routeRevision = 0;
 // Reader navigation follows the accepted view, not the account's role.
 function syncReaderNavigation(viewId = window.currentActiveView, search = window.location.search) {
   document.body?.setAttribute?.('data-active-view', viewId || 'view-home');
+  window.ReaderI18n?.syncDocumentLanguage?.(viewId);
   document.querySelectorAll('[data-live-commerce-entry]').forEach(link=>{link.hidden=window.WEBNOVELS_CONFIG?.liveCommerceEnabled!==true;});
   document.querySelectorAll('[data-points-test-entry]').forEach(link=>{link.hidden=window.WEBNOVELS_CONFIG?.pointsTestEnabled!==true;});
   const params = new URLSearchParams(search || '');

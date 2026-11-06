@@ -34,7 +34,7 @@
       if (Array.isArray(value)) value.forEach(item => params.append(key, item));
       else params.set(key, String(value));
     }
-    if (['en', 'ja', 'zh-Hans'].includes(locale)) params.set('locale', locale);
+    if (['en', 'ja', 'zh-Hans', 'ar'].includes(locale)) params.set('locale', locale);
     const response = await fetch('/api/v2/catalog?' + params.toString(), { credentials: 'omit', cache: 'no-store' });
     const result = await response.json();
     if (!response.ok) {

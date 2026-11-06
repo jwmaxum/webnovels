@@ -1,4 +1,6 @@
-const locales = new Set(['ko', 'en', 'ja', 'zh-Hans']);
+const locales = new Set(['en', 'ko', 'ja', 'zh-Hans', 'ar']);
+// Arabic is a reader interface locale; approved catalog metadata has its own rollout.
+const translatedLocales = new Set(['en', 'ja', 'zh-Hans']);
 const validId = value => typeof value === 'string' && /^[1-9]\d{0,18}$/.test(value) && BigInt(value) <= 9223372036854775807n;
 const titleText = value => typeof value === 'string' && value.trim().length > 0 &&
   [...value].length <= 500 && !/[\p{Cc}<>]/u.test(value);
@@ -12,7 +14,7 @@ export function readerLocale(params, fail) {
 }
 
 export const readerMetadataLocalizationEnabled = (env, locale) =>
-  env.READER_METADATA_LOCALIZATION_ENABLED === 'true' && locales.has(locale) && locale !== 'ko';
+  env.READER_METADATA_LOCALIZATION_ENABLED === 'true' && translatedLocales.has(locale);
 
 // Callers supply records already projected by a public endpoint. The RPC separately
 // checks visibility, so approved translated metadata cannot widen that scope.

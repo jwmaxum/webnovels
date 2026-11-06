@@ -3,6 +3,7 @@
   const languages = ['ko', 'en', 'ja', 'zh-Hans'];
   const entries = {
     language: ['표시 언어', 'Display language', '表示言語', '显示语言'],
+    languageAuto: ['자동', 'Auto', '自動', '自动'],
     skip: ['본문으로 이동', 'Skip to content', '本文へ移動', '跳转到正文'],
     homeLink: ['webnovels 홈으로', 'WebNovels home', 'WebNovels ホームへ', '返回 WebNovels 首页'],
     mainMenu: ['주요 메뉴', 'Main menu', 'メインメニュー', '主菜单'],
