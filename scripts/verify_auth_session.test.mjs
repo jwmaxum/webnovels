@@ -3,27 +3,36 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 const source=await readFile(new URL('../public/js/core/auth-session.js',import.meta.url),'utf8');
-function setup() {
+const providerSource=await readFile(new URL('../public/supabase-admin.js',import.meta.url),'utf8');
+function setup({eagerSdk=false}={}) {
   const storage=new Map([['webnovels_user','{"role":"SUPER_ADMIN"}'],['webnovels_token','admin-token-1']]);
-  const calls=[];let listener;let session={access_token:'real.jwt.token'};let responses=[];
+  const calls=[],listeners=[];let session={access_token:'real.jwt.token'};let responses=[];
+  const event=(name,value)=>listeners.forEach(listener=>listener(name,value));
   const actor={userId:'uuid',author:{id:12,pen_name:'작가',status:'APPROVED'},reader:null,admin:null};
   const auth={
     getSession:async()=>({data:{session}}),
     signInWithPassword:async input=>{session={access_token:'real.jwt.token'};calls.push(['login',input]);return {data:{session}};},
     refreshSession:async()=>{calls.push(['refresh']);return {data:{session}};},
-    signOut:async()=>{session=null;listener?.('SIGNED_OUT');calls.push(['logout']);return {};},
+    signOut:async()=>{session=null;event('SIGNED_OUT');calls.push(['logout']);return {};},
     signUp:async input=>{calls.push(['signup',input]);return {data:{session:null}};},
     resetPasswordForEmail:async(...args)=>{calls.push(['reset',...args]);return {};},
     updateUser:async input=>{calls.push(['update',input]);return {};},
-    onAuthStateChange:fn=>{listener=fn;return {};}
+    onAuthStateChange:fn=>{listeners.push(fn);return {};}
   };
   const context={console,URLSearchParams,location:{origin:'https://app.test'},supabaseClient:{auth},initSupabaseAdmin:()=>true,
     localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     setTimeout:()=>{},updateMemberHeader:()=>{},fetch:async(path,init)=>{
       calls.push(['fetch',path,init]);return responses.shift()||Response.json(path.includes('readiness')?{ready:true}:actor);
     }};
-  context.window=context;vm.createContext(context);vm.runInContext(source,context);
-  return {context,api:context.WebNovelsAuth,auth,calls,storage,actor,respond:(...r)=>responses.push(...r),event:(e,session)=>listener(e,session)};
+  context.window=context;vm.createContext(context);
+  if(eagerSdk){
+    delete context.initSupabaseAdmin;delete context.supabaseClient;
+    context.WEBNOVELS_CONFIG={supabaseUrl:'https://example.supabase.co',supabaseAnonKey:'fixture'};
+    context.supabase={createClient:()=>({auth})};context.addEventListener=()=>{};
+    vm.runInContext(providerSource,context);
+  }
+  vm.runInContext(source,context);
+  return {context,api:context.WebNovelsAuth,auth,calls,storage,actor,respond:(...r)=>responses.push(...r),event};
 }
 test('account change awaits draft checkpoint; failed checkpoint preserves the authenticated session',async()=>{
   const s=setup();await s.api.login('writer@example.test','password');let cleared=0;
@@ -103,6 +112,19 @@ test('a pending unlinked-profile response cannot replace the password recovery s
   await init;
   assert.deepEqual(panels,['recovery']);
   assert.equal(s.api.getActor(),null);
+});
+test('recovery survives eager SDK initialization, and sign-out clears a pending recovery',async()=>{
+  for(const signedOut of [false,true]){
+    const s=setup({eagerSdk:true}),panels=[];
+    s.context.setTimeout=callback=>callback();
+    s.context.showAuthRecovery=()=>panels.push('recovery');
+    s.event('PASSWORD_RECOVERY');
+    if(signedOut)await s.auth.signOut();
+    await s.api.init();
+    assert.deepEqual(panels,signedOut?[]:['recovery']);
+    if(signedOut)await assert.rejects(s.api.changePassword('new-password'));
+    else await s.api.changePassword('new-password');
+  }
 });
 test('late reply cannot restore a logged-out actor',async()=>{
   const s=setup();let finish;

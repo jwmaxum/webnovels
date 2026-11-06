@@ -213,12 +213,16 @@
     if (initFlight) return initFlight;
     clear();
     initFlight = (async () => {
+      const beginRecovery = () => {
+        if (recovery) return;
+        recovery = true;
+        clear();
+        setTimeout(() => { if (recovery) window.showAuthRecovery?.(); },0);
+      };
       sdk().onAuthStateChange((event, session) => {
         if (event === 'SIGNED_OUT') { recovery = false; clear(); return; }
         if (event === 'PASSWORD_RECOVERY') {
-          recovery = true;
-          clear();
-          setTimeout(() => { if (recovery) window.showAuthRecovery?.(); },0);
+          beginRecovery();
           return;
         }
         if (recovery) return;
@@ -229,6 +233,7 @@
         // Do not await SDK methods inside its auth callback.
         if (event === 'TOKEN_REFRESHED') setTimeout(() => validate().catch(() => {}),0);
       });
+      if (typeof takeSupabasePasswordRecovery === 'function' && takeSupabasePasswordRecovery()) beginRecovery();
       try {
         if (recovery) return;
         await validate();

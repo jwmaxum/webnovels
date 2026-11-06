@@ -7,6 +7,7 @@ const SUPABASE_URL = window.WEBNOVELS_CONFIG?.supabaseUrl;
 const SUPABASE_ANON_KEY = window.WEBNOVELS_CONFIG?.supabaseAnonKey;
 
 let supabaseClient = null;
+let pendingSupabasePasswordRecovery = false;
 let currentAdmin = null;
 let currentAuthUser = null;
 
@@ -25,6 +26,11 @@ function initSupabaseAdmin() {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
       });
+      // The SDK can finish processing the email link before the auth UI initializes.
+      supabaseClient.auth?.onAuthStateChange?.(event => {
+        if (event === 'PASSWORD_RECOVERY') pendingSupabasePasswordRecovery = true;
+        else if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') pendingSupabasePasswordRecovery = false;
+      });
       console.log('⚡ [WebNovels Admin] Production Supabase v1 클라이언트 초기화 완료');
       return true;
     } catch(e) {
@@ -32,6 +38,12 @@ function initSupabaseAdmin() {
     }
   }
   return false;
+}
+
+function takeSupabasePasswordRecovery() {
+  const pending = pendingSupabasePasswordRecovery;
+  pendingSupabasePasswordRecovery = false;
+  return pending;
 }
 
 initSupabaseAdmin();
