@@ -111,13 +111,13 @@ test('generated completion dialog keeps labels, live status, policy links and di
 });
 
 test('reader completion calls the existing verified Auth path and author completion cannot skip enrollment failures',async()=>{
- const app=fixture();app.c.showAuthOnboarding();const kind=app.get('authCompletionKind');kind.value='reader';kind.onchange();
+ const app=fixture();app.c.showAuthOnboarding();const kind=app.get('authCompletionKind');assert.equal(kind.value,'reader');
  app.get('authCompletionName').value='Reader';await app.submit();
  assert.deepEqual(app.calls.find(call=>call[0]==='complete-reader-signup'),['complete-reader-signup','Reader']);
  assert.deepEqual(app.calls.at(-1),['select-login']);assert.deepEqual(app.routes,[]);
  assert.equal(app.get('modalAuthCompletion').hidden,true);assert.equal(app.get('modalAuth').hidden,false);
  assert.match(app.get('authLoginStatus').textContent,/독자 회원가입이 완료/);assert.equal(app.get('loginEmail').focused,true);
- app.c.showAuthOnboarding();kind.value='author';kind.onchange();
+ app.c.showAuthOnboarding('author');assert.equal(kind.value,'author');
  app.api.complete=async()=>{throw Error('저작권 동의와 PASS 본인확인을 먼저 완료해주세요.');};
  await app.submit();assert.match(app.get('authCompletionMessage').textContent,/저작권.*PASS/);
  assert.equal(app.get('modalAuthCompletion').hidden,false);assert.equal(app.routes.length,0);
@@ -125,7 +125,7 @@ test('reader completion calls the existing verified Auth path and author complet
 });
 
 test('completion serializes repeated submits and an older mode cannot overwrite a newly opened recovery panel',async()=>{
- const app=fixture(),pending=deferred();app.api.complete=()=>{app.calls.push(['pending-complete']);return pending.promise;};app.c.showAuthOnboarding();
+ const app=fixture(),pending=deferred();app.api.complete=()=>{app.calls.push(['pending-complete']);return pending.promise;};app.c.showAuthOnboarding('author');
  const first=app.submit();await app.submit();assert.equal(app.calls.filter(call=>call[0]==='pending-complete').length,1);
  assert.equal(app.get('authCompletionForm').getAttribute('aria-busy'),'true');assert.equal(app.get('authCompletionForm').querySelector('button[type="submit"]').disabled,true);
  app.c.showAuthRecovery();assert.equal(app.get('authCompletionForm').querySelector('button[type="submit"]').disabled,false);
@@ -136,7 +136,7 @@ test('completion serializes repeated submits and an older mode cannot overwrite 
 
 test('closed or superseded completion failures do not expose stale errors in the current panel',async()=>{
  for(const reopen of [true,false]){
-  const app=fixture(),pending=deferred();app.api.complete=()=>pending.promise;app.c.showAuthOnboarding();const first=app.submit();
+  const app=fixture(),pending=deferred();app.api.complete=()=>pending.promise;app.c.showAuthOnboarding('author');const first=app.submit();
   if(reopen)app.c.showAuthRecovery();else app.c.closeModal('modalAuthCompletion');
   pending.reject(Error('<img src=x> previous account error'));await first;
   assert(!app.get('authCompletionMessage').textContent.includes('previous account'));assert.deepEqual(app.routes,[]);assert.deepEqual(app.toasts,[]);
