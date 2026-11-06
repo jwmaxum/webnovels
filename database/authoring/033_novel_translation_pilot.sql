@@ -144,7 +144,7 @@ begin
    return jsonb_build_object('error','TRANSLATION_SOURCE_LIMIT','status',400);
   end if;
   select * into settings from authoring.novel_translation_settings where singleton for update;
-  if not settings.enabled or settings.character_limit-settings.reserved_characters<cost then
+  if settings.enabled is distinct from true or settings.character_limit-settings.reserved_characters<cost then
    return jsonb_build_object('error','TRANSLATION_BUDGET_OR_PROVIDER_DISABLED','status',409);
   end if;
   if ((select count(distinct work_id) from authoring.novel_translation_jobs)>=2

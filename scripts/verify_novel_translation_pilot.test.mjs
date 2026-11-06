@@ -73,6 +73,9 @@ test('requires exact owner, consent, current free source, provider configuration
  await api('consent',{...work,accepted:true,version:state.consentVersion});
  await assert.rejects(api('detail',{...episode,episodeId:'312'}),{code:'TRANSLATION_EPISODE_UNAVAILABLE'});
  await assert.rejects(api('generate',episode),{code:'TRANSLATION_BUDGET_OR_PROVIDER_DISABLED'});
+ await db.exec('delete from authoring.novel_translation_settings');
+ try{await assert.rejects(api('generate',episode),{code:'TRANSLATION_BUDGET_OR_PROVIDER_DISABLED'});}
+ finally{await db.exec('insert into authoring.novel_translation_settings(singleton) values(true)');}
  const noToken={...env,NOVEL_TRANSLATION_GOOGLE_ACCESS_TOKEN:''};
  await assert.rejects(caller({bindings:noToken})('generate',episode),{code:'TRANSLATION_PROVIDER_NOT_CONFIGURED'});
  assert.deepEqual(await publicRows(),[]);
