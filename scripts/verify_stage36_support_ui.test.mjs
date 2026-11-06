@@ -186,7 +186,7 @@ test('HTML and lazy loader wire support to reader, author and administrator with
   const admin = await readFile(new URL('../public/js/admin/admin-operations.js', import.meta.url), 'utf8');
   const navigation = await readFile(new URL('../public/js/admin/admin-navigation.js', import.meta.url), 'utf8');
   assert.equal((html.match(/data-beta-support-open/g) || []).length, 4);
-  assert.match(html, /auth-session\.js\?v=20261103op13"/);
+  assert.match(html, /src="\/js\/core\/auth-session\.js\?v=[a-z0-9]+"/);
   assert.match(html, /aria-modal="true" aria-labelledby="betaSupportTitle"/);
   assert.ok(html.indexOf('auth-session.js') < html.indexOf('beta-support.js'));
   assert.ok(loader.indexOf('admin-beta-operations.js') < loader.indexOf('admin-operations.js'));

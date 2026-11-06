@@ -100,5 +100,5 @@ test('live status templates use readable colors and the reader asset version cha
   assert.doesNotMatch(reader,/style\.color = '#(?:ef4444|10b981)'/);
   assert.match(reader,/style\.color = 'var\(--text-error\)'/);
   assert.match(reader,/style\.color = 'var\(--text-success\)'/);
-  assert.match(await read('public/index.html'),/reader\/reader\.js\?v=20261103op13"/);
+  assert.match(await read('public/index.html'),/src="\/js\/reader\/reader\.js\?v=[a-z0-9]+"/);
 });
