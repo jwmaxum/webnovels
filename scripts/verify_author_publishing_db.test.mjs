@@ -22,6 +22,40 @@ const doc={version:1,paragraphs:[{align:'center',indent:0,runs:[{text:'첫 문�
 test('additive migrations are repeatable and do not expose private original RPCs',async()=>{
  for(const name of ['021_manuscript_documents','022_publication_change_review'])await db.exec(await readFile(new URL('../database/authoring/'+name+'.sql',import.meta.url),'utf8'));
 });
+test('first-work selection is atomic with creation, survives retries, and cannot be bypassed',async()=>{
+ const migration=await readFile(new URL('../database/authoring/034_first_work_registration.sql',import.meta.url),'utf8');
+ const role=async(name,run)=>{await db.exec('set role '+name);try{return await run();}finally{await db.exec('reset role');}};
+ await db.exec(migration);await db.exec(migration);
+ const state=user=>query("select public.creator_works($1,'first-registration') result",[user]);
+ const create=(user,data,key=uid())=>query("select public.creator_works($1,'create',null,$2,$3) result",[user,j(data),key]);
+ assert.deepEqual(await state(admin),{required:false});
+ for(const name of ['anon','authenticated','service_role']) await role(name,async()=>{
+  await assert.rejects(db.query('select * from authoring.first_work_registrations'),/permission denied/);
+  await assert.rejects(db.query("select authoring.first_registration_original_works($1,'list')",[admin]),/permission denied/);
+  if(name==='service_role')assert.deepEqual(await state(admin),{required:false});
+  else await assert.rejects(state(admin),/permission denied/);
+ });
+ for(const [authorId,path,type] of [[41,'NO_SETTLEMENT','NOVEL'],[42,'FOREIGN','WEBTOON']]){
+  const user=uid(),key=uid();
+  await db.query('insert into auth.users(id) values($1)',[user]);
+  await db.query("insert into public.authors(id,auth_user_id,pen_name,status) values($1,$2,'새 작가','APPROVED')",[authorId,user]);
+  assert.deepEqual(await state(user),{required:true});
+  assert.equal((await create(user,{title:'첫 작품'},key)).error,'FIRST_WORK_PATH_REQUIRED');
+  assert.equal((await create(user,{title:'첫 작품',firstWorkPath:'DOMESTIC_SETTLEMENT'},key)).error,'FIRST_WORK_PASS_REQUIRED');
+  assert.equal((await create(user,{title:'첫 작품',firstWorkPath:'FOREIGN',passVerified:true},key)).status,400);
+  assert.equal((await create(user,{title:'',firstWorkPath:path},key)).status,400);
+  assert.equal((await db.query('select count(*)::int n from public.works where author_id=$1',[authorId])).rows[0].n,0);
+  assert.equal((await db.query('select count(*)::int n from authoring.first_work_registrations where author_id=$1',[authorId])).rows[0].n,0);
+  const data={title:'첫 작품',contentType:type,firstWorkPath:path};
+  const first=await create(user,data,key);
+  assert.equal(first.created,true,j(first));assert.equal(first.work.content_type,type);assert.equal(first.work.visibility,'PRIVATE');
+  assert.deepEqual(await state(user),{required:false});
+  const replay=await create(user,data,key);assert.equal(replay.created,false);assert.equal(replay.work.id,first.work.id);
+  assert.equal((await create(user,{...data,firstWorkPath:path==='FOREIGN'?'NO_SETTLEMENT':'FOREIGN'},key)).error,'IDEMPOTENCY_CONFLICT');
+  assert.equal((await create(user,{title:'다음 작품'})).created,true);
+  assert.equal((await db.query('select registration_path from authoring.first_work_registrations where author_id=$1',[authorId])).rows[0].registration_path,path);
+ }
+});
 test('formatted novel survives save, history, immediate publication, reader and edit draft',async()=>{
  const w=await work(),id=uid(),key=uid();
  const saved=await draft(w,id,undefined,{contentDocument:doc},key);assert.deepEqual(saved.draft.contentDocument,doc);

@@ -99,7 +99,7 @@ test('failed and stale list loads never become an empty success or overwrite the
 });
 
 test('authored strings remain escaped and both work types stay available independently of previous publications',async()=>{
-  const app=fixture({path:'/creator/works/new'});app.context.WEBNOVELS_CONFIG.webtoonServiceEnabled=false;
+  const app=fixture({path:'/creator/works/new',responses:[{required:false}]});app.context.WEBNOVELS_CONFIG.webtoonServiceEnabled=false;
   app.setActor({userId:'auth-a',author:{id:'70',status:'APPROVED'},multiFormatWorksEnabled:true,authorWorkspaceReady:true});await app.ui.loadFromRoute();
   assert.match(app.root.innerHTML,/<option value="NOVEL"/);assert.match(app.root.innerHTML,/<option value="WEBTOON"/);assert.match(app.root.innerHTML,/기존 작품의 발행 이력과 관계없이/);
   const html=app.ui.renderCard(work({title:'"><script>attack()</script>',cover_image:'javascript:attack()',episode_count:null}));

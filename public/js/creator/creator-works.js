@@ -7,6 +7,9 @@
   const api = (path,options) => window.WebNovelsAuth.api('/api/v2/creator/works'+path,options);
   const actor = () => window.WebNovelsAuth?.getActor();
   const pendingKey = () => 'creator.pending-work.'+actor().userId;
+  const firstWorkPaths = {
+    DOMESTIC_SETTLEMENT:'국내 작가 · 정산 희망', NO_SETTLEMENT:'정산 신청 없이 연재', FOREIGN:'외국인 작가'
+  };
   const message = error => ({
     PUBLICATION_REVIEW_NOT_ACTIVATED:'발행 이력이 있는 작품의 변경은 관리자 검토가 필요합니다. 검토 서비스 연결 전까지 기존 공개본을 유지합니다. 비공개 수정 원고는 계속 작성할 수 있습니다.',
     WORK_CONFLICT:'다른 화면에서 수정되었습니다. 입력 내용은 유지됩니다. 최신 내용을 확인한 뒤 다시 저장해주세요.',
@@ -18,6 +21,8 @@
     WORK_REGISTRATION_NOT_ACTIVATED:'작품 유형 등록 기능을 연결 중입니다. 입력을 보존했습니다. 잠시 후 같은 요청으로 다시 시도해주세요.',
     WORK_STATE_MIGRATION_REQUIRED:'기존 작품의 관리 정보 확인이 필요합니다. 운영자에게 문의해주세요.',
     IDEMPOTENCY_CONFLICT:'이전 등록 요청과 내용이 다릅니다. 목록에서 등록 결과를 먼저 확인해주세요.',
+    FIRST_WORK_PATH_REQUIRED:'첫 작품 등록 화면을 다시 열고 등록 유형을 선택해주세요.',
+    FIRST_WORK_PASS_REQUIRED:'정산을 원하는 국내 작가는 PASS 본인확인이 필요합니다. 인증 서비스를 준비 중입니다.',
     INVALID_FIELD:'입력 길이와 선택 항목을 확인해주세요.'
   }[error.code] || '작품 요청에 실패했습니다. 입력을 유지한 채 다시 시도해주세요.');
   function navigate(path) { window.navigateTo(path); }
@@ -87,39 +92,73 @@
   }
   const formSnapshot=form=>JSON.stringify([...new FormData(form)].map(([key,value])=>[key,String(value)]));
   const canSaveAndWrite=work=>actor()?.author?.status==='APPROVED'&&work.visibility==='PRIVATE'&&!reviewed(work)&&!work.trashed_at&&work.moderation_state==='CLEAR';
-  function createForm() {
+  async function createForm() {
     window.CreatorDistribution?.reset();
     window.CreatorOperations?.reset();
-    ++epoch;current=null;
+    const seq=++epoch,user=actor()?.userId,route=location.pathname;current=null;
+    const isCurrent=()=>location.pathname===route&&validRequest(seq,user);
+    root().innerHTML='<p role="status">작품 등록 조건을 확인하고 있습니다.</p>';
+    let state;
+    try {state=await api('/first-registration');}
+    catch(error){
+      if(!isCurrent())return;
+      root().innerHTML=`<p role="alert">${e(message(error))}</p><button type="button" class="btn btn-outline" id="cwRetry">다시 불러오기</button>`;
+      root().querySelector('#cwRetry').onclick=createForm;
+      return;
+    }
+    if(!isCurrent())return;
     const saved=pending();
+    const pathControl=state.required?`<label for="cwFirstWorkPath">첫 작품 등록 유형</label>
+      <select id="cwFirstWorkPath" class="form-control" aria-describedby="cwFirstWorkHelp cwPassNotice" required ${saved?.firstWorkPath?'disabled':''}>
+        <option value="">등록 유형을 선택해주세요</option>${options(Object.entries(firstWorkPaths),saved?.firstWorkPath)}
+      </select>
+      <p id="cwFirstWorkHelp">정산을 원하지 않는 작가와 외국인 작가는 바로 등록할 수 있습니다.</p>
+      <p id="cwPassNotice" role="status" hidden>${message({code:'FIRST_WORK_PASS_REQUIRED'})}</p>`:'';
     root().innerHTML=`<button type="button" class="btn btn-ghost" id="cwBack">← 내 작품</button><h3>새 작품 시작하기</h3>${registrationSteps(1)}
       <p>작품마다 웹소설 또는 웹툰을 선택할 수 있습니다. 같은 작가 계정으로 두 종류를 모두 등록할 수 있으며, 기존 작품의 발행 이력과 관계없이 새 작품을 시작할 수 있습니다.</p>
-      <form id="cwCreateForm"><label for="cwTitle">작품명</label><input id="cwTitle" class="form-control" maxlength="200" required value="${e(saved?.title||'')}" ${saved?'readonly':''}>
+      <form id="cwCreateForm">${pathControl}<label for="cwTitle">작품명</label><input id="cwTitle" class="form-control" maxlength="200" required value="${e(saved?.title||'')}" ${saved?'readonly':''}>
         <label for="cwType">작품 유형</label><select id="cwType" class="form-control" ${saved?'disabled':''}><option value="NOVEL">웹소설</option>${actor()?.multiFormatWorksEnabled===true||window.WEBNOVELS_CONFIG?.webtoonServiceEnabled===true||saved?.contentType==='WEBTOON'?'<option value="WEBTOON" '+(saved?.contentType==='WEBTOON'?'selected':'')+'>웹툰</option>':''}</select><p>제목과 유형으로 비공개 작품을 만듭니다. 생성한 작품의 유형은 변경할 수 없습니다.</p>
         ${actor()?.multiFormatWorksEnabled===true&&window.WEBNOVELS_CONFIG?.webtoonServiceEnabled!==true?'<p class="cw-notice">웹툰 작품 등록과 소개 설정이 가능합니다. 이미지 업로드와 발행은 연결이 완료되면 이용할 수 있습니다.</p>':''}
         <p id="cwMessage" role="status">${saved?'이전 요청의 등록 결과를 확인하지 못했습니다. 같은 요청을 다시 확인합니다.':''}</p>
         <button type="submit" class="btn btn-primary">${saved?'등록 결과 확인 / 재시도':'비공개 작품 만들기'}</button></form>`;
     root().querySelector('#cwBack').onclick=()=>navigate('/creator/works');
-    root().querySelector('#cwCreateForm').onsubmit=submitCreate;
+    const form=root().querySelector('#cwCreateForm'),path=root().querySelector('#cwFirstWorkPath');
+    if(path){
+      const notice=root().querySelector('#cwPassNotice'),button=form.querySelector('button[type="submit"]');
+      path.onchange=()=>{
+        const requiresPass=path.value==='DOMESTIC_SETTLEMENT';
+        notice.hidden=!requiresPass;button.disabled=busy||requiresPass;
+      };
+      path.onchange();
+    }
+    form.onsubmit=submitCreate;
   }
-  async function create(title) {
+  async function create(title,firstWorkPath) {
     const storageKey=pendingKey();
     let saved=pending();
-    if(!saved){saved={key:crypto.randomUUID(),title:title.trim(),...(document.getElementById('cwType')?.value==='WEBTOON'?{contentType:'WEBTOON'}:{})};sessionStorage.setItem(pendingKey(),JSON.stringify(saved));}
-    const result=await api('',{method:'POST',headers:{'Idempotency-Key':saved.key},body:JSON.stringify({title:saved.title,...(saved.contentType?{contentType:saved.contentType}:{})})});
+    if(!saved) saved={key:crypto.randomUUID(),title:title.trim(),...(document.getElementById('cwType')?.value==='WEBTOON'?{contentType:'WEBTOON'}:{})};
+    if(Object.hasOwn(firstWorkPaths,firstWorkPath)&&!saved.firstWorkPath)saved.firstWorkPath=firstWorkPath;
+    sessionStorage.setItem(storageKey,JSON.stringify(saved));
+    const {key,title:requestTitle,contentType,firstWorkPath:requestPath}=saved;
+    const data={title:requestTitle,...(contentType?{contentType}:{}),...(requestPath?{firstWorkPath:requestPath}:{})};
+    const result=await api('',{method:'POST',headers:{'Idempotency-Key':key},body:JSON.stringify(data)});
     sessionStorage.removeItem(storageKey);return result;
   }
   async function submitCreate(event) {
     event.preventDefault();if(busy)return;
     const title=document.getElementById('cwTitle'),button=event.target.querySelector('button[type="submit"]');
-    if(!title.value.trim())return;
-    busy=true;button.disabled=true;title.readOnly=true;const type=document.getElementById('cwType');if(type)type.disabled=true;const user=actor()?.userId,seq=epoch;
-    try {const result=await create(title.value);if(validRequest(seq,user))navigate('/creator/works/'+result.work.id+'/settings');}
+    const path=document.getElementById('cwFirstWorkPath');
+    if(!title.value.trim()||path&&(!Object.hasOwn(firstWorkPaths,path.value)||path.value==='DOMESTIC_SETTLEMENT'))return;
+    busy=true;button.disabled=true;title.readOnly=true;const type=document.getElementById('cwType');if(type)type.disabled=true;if(path)path.disabled=true;
+    const user=actor()?.userId,seq=epoch;
+    try {const result=await create(title.value,path?.value);if(validRequest(seq,user))navigate('/creator/works/'+result.work.id+'/settings');}
     catch(error){if(validRequest(seq,user)){
       document.getElementById('cwMessage').textContent=message(error);
-      if(error.status===400){sessionStorage.removeItem(pendingKey());title.readOnly=false;if(type)type.disabled=false;}
+      if(error.status===400||error.code==='FIRST_WORK_PASS_REQUIRED'){
+        sessionStorage.removeItem(pendingKey());title.readOnly=false;if(type)type.disabled=false;if(path)path.disabled=false;
+      }
     }}
-    finally{busy=false;button.disabled=false;}
+    finally{busy=false;if(path)path.onchange();else button.disabled=false;}
   }
   function options(values,selected,blank=false) {return (blank?'<option value="">미설정 (공개 전 선택)</option>':'')+values.map(([v,t])=>`<option value="${v}" ${v===selected?'selected':''}>${t}</option>`).join('');}
   function detailHTML(work,episodes,tab,distributionEnabled=false) {

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createSecureApi} from '../server/secure-api.mjs';
+import {creatorWorkApi} from '../server/creator-work-api.mjs';
 const uid='11111111-1111-4111-8111-111111111111';
 const env={P0_API_ENABLED:'true',AUTHOR_WORKS_ENABLED:'true',SUPABASE_URL:'https://example.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_test'};
 function setup({author=true,role=null,status='APPROVED',result={works:[],nextCursor:null},dbFailure=false}={}){
@@ -50,4 +51,29 @@ test('DB conflict/not-found/unavailability are errors, never empty successful li
     const s=setup({result:{error:code,status}});const response=await s.request('/10');assert.equal(response.status,status);assert.equal((await response.json()).error,code);assert.ok(response.headers.get('X-Request-ID'));
   }
   const response=await setup({dbFailure:true}).request();assert.equal(response.status,503);assert.ok(!(await response.text()).includes('private upstream'));
+});
+
+test('first registration uses verified identity and accepts only the creation choice',async()=>{
+  const s=setup({result:{required:true,privateField:'hidden'}});
+  assert.deepEqual(await (await s.request('/first-registration')).json(),{required:true});
+  assert.deepEqual(s.calls.at(-1).body,{p_user_id:uid,p_action:'first-registration'});
+  assert.equal((await s.request('/first-registration?authorId=2')).status,400);
+  assert.equal((await s.request('/first-registration',{method:'POST',body:{firstWorkPath:'FOREIGN'}})).status,405);
+  const key='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  for(const body of [{title:'작품',firstWorkPath:true},{title:'작품',firstWorkPath:'PASS_VERIFIED'},{title:'작품',firstWorkPath:'FOREIGN',passVerified:true}])
+    assert.equal((await s.request('',{method:'POST',key,body})).status,400);
+  const denied=setup({result:{error:'FIRST_WORK_PASS_REQUIRED',status:403}});
+  const response=await denied.request('',{method:'POST',key,body:{title:'작품',firstWorkPath:'DOMESTIC_SETTLEMENT'}});
+  assert.equal(response.status,403);
+  assert.equal((await response.json()).error,'FIRST_WORK_PASS_REQUIRED');
+});
+
+test('the screen can be deployed before the database in both workspace adapters',async()=>{
+  const old={status:400,error:'INVALID_REQUEST'};
+  assert.deepEqual(await (await setup({result:old}).request('/first-registration')).json(),{required:false});
+  const request=new Request('https://app.test/api/v2/creator/works/first-registration');
+  const fail=(status,code)=>{throw Object.assign(Error(code),{status,code});};
+  const args={request,env,workspaceReady:true,actor:async()=>({userId:uid,author:{status:'APPROVED'}}),fail};
+  assert.deepEqual(await creatorWorkApi({...args,db:async()=>fail(400,'INVALID_REQUEST')}),{required:false});
+  await assert.rejects(creatorWorkApi({...args,db:async()=>fail(503,'DATABASE_UNAVAILABLE')}),{status:503});
 });

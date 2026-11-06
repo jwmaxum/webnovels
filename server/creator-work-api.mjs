@@ -2,6 +2,7 @@ import {webtoonEnabled} from './webtoon-api.mjs';
 import {creatorDistributionApi} from './creator-distribution-api.mjs';
 import '../public/js/shared/manuscript-document.js';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const firstWorkPaths = ['DOMESTIC_SETTLEMENT','NO_SETTLEMENT','FOREIGN'];
 const decimal = (value, zero = false) => typeof value === 'string' && (zero ? /^(0|[1-9]\d{0,18})$/ : /^[1-9]\d{0,18}$/).test(value) && BigInt(value) <= 9223372036854775807n;
 function episodeProjection(value,fail) {
   if (!value || !decimal(value.id) || !Number.isSafeInteger(value.episode_number) || value.episode_number<1 ||
@@ -55,6 +56,22 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
   const who = await actor();
   if (!who.author || who.author.status !== 'APPROVED') fail(403, 'AUTHOR_REQUIRED');
   const url = new URL(request.url);
+  if (url.pathname === '/api/v2/creator/works/first-registration') {
+    if (request.method !== 'GET') fail(405,'METHOD_NOT_ALLOWED');
+    if (url.searchParams.size) fail(400,'FIELD_NOT_ALLOWED');
+    // Older workspace schemas reject unknown actions until the migration is applied.
+    let state;
+    try {
+      state = await db('rpc/creator_works',{}, {method:'POST',body:{p_user_id:who.userId,p_action:'first-registration'}});
+    } catch(error) {
+      if (error.code==='INVALID_REQUEST' && error.status===400) return {required:false};
+      throw error;
+    }
+    if (state?.error==='INVALID_REQUEST' && state.status===400) return {required:false};
+    if (state?.error) fail(state.status===403?403:503,state.error);
+    if (typeof state?.required!=='boolean') fail(503,'DATABASE_UNAVAILABLE');
+    return {required:state.required};
+  }
   const match = url.pathname.match(/^\/api\/v2\/creator\/works(?:\/([0-9]+)(?:\/(trash|restore|distribution|episodes)(?:\/([0-9]+))?)?)?$/);
   if (!match) fail(404, 'NOT_FOUND');
   const id = match[1] || null;
@@ -83,13 +100,14 @@ export async function creatorWorkApi({ request, env, actor, db, readBody, fail, 
     else if (request.method === 'POST' && id && match[2]) action = match[2];
     else fail(405, 'METHOD_NOT_ALLOWED');
     data = await readBody(request);
-    const allowed = action === 'create' ? ['title','contentType'] : action === 'update'
+    const allowed = action === 'create' ? ['title','contentType','firstWorkPath'] : action === 'update'
       ? ['title','description','genre','tags','rating','ai_usage_type','serial_state','visibility','version'] : ['version'];
     if (!Object.keys(data).length || Object.keys(data).some(k => !allowed.includes(k))) fail(400, 'FIELD_NOT_ALLOWED');
     if (action === 'create') {
       key = request.headers.get('Idempotency-Key');
       if (!UUID.test(key || '')) fail(400, 'IDEMPOTENCY_KEY_REQUIRED');
       if (!('title' in data)) fail(400, 'INVALID_FIELD');
+      if ('firstWorkPath' in data && !firstWorkPaths.includes(data.firstWorkPath)) fail(400,'INVALID_FIELD');
     } else if (!decimal(data.version)) fail(400, 'VERSION_REQUIRED');
     if ('contentType' in data && !['NOVEL','WEBTOON'].includes(data.contentType)) fail(400,'INVALID_FIELD');
     if (action==='create' && 'contentType' in data && !webtoonEnabled(env)) {

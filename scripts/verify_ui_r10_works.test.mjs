@@ -40,10 +40,26 @@ function fixture({path='/creator/works/'+id+'/settings',responses=[{work:work(),
 }
 
 test('registration retains title/type-only creation and explains the native three-step sequence',async()=>{
-  const app=fixture({path:'/creator/works/new',responses:[{work:work()}]});await app.ui.loadFromRoute();
+  const app=fixture({path:'/creator/works/new',responses:[{required:false},{work:work()}]});await app.ui.loadFromRoute();
   assert.match(app.root.innerHTML,/aria-label="연재 시작 순서"/);assert.match(app.root.innerHTML,/aria-current="step">작품 등록/);
   assert.match(app.root.innerHTML,/유형은 변경할 수 없습니다/);await app.ui.create('새 작품');
-  assert.deepEqual(JSON.parse(app.calls[0].options.body),{title:'새 작품'});assert.match(app.calls[0].options.headers['Idempotency-Key'],/^[0-9a-f-]{36}$/);
+  assert.equal(app.field('cwFirstWorkPath'),null);
+  assert.deepEqual(JSON.parse(app.calls[1].options.body),{title:'새 작품'});assert.match(app.calls[1].options.headers['Idempotency-Key'],/^[0-9a-f-]{36}$/);
+});
+
+test('first-work form blocks the domestic settlement route and submits either exempt route',async()=>{
+  for(const choice of ['NO_SETTLEMENT','FOREIGN']){
+    const app=fixture({path:'/creator/works/new',responses:[{required:true},{work:work()}]});await app.ui.loadFromRoute();
+    const select=app.field('cwFirstWorkPath'),form=app.field('cwCreateForm'),button=form.querySelector('button[type="submit"]');
+    app.field('cwTitle').value='첫 작품';
+    select.value='DOMESTIC_SETTLEMENT';select.onchange();
+    assert.equal(button.disabled,true);assert.equal(app.field('cwPassNotice').hidden,false);
+    await form.onsubmit({target:form,preventDefault(){}});assert.equal(app.calls.length,1);
+    select.value=choice;select.onchange();assert.equal(button.disabled,false);
+    await form.onsubmit({target:form,preventDefault(){}});
+    assert.deepEqual(JSON.parse(app.calls[1].options.body),{title:'첫 작품',firstWorkPath:choice});
+    assert.deepEqual(app.navigations,['/creator/works/'+id+'/settings']);
+  }
 });
 
 test('private settings distinguish publication requirements from optional tags and keep normal saving',async()=>{

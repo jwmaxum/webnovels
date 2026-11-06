@@ -10,7 +10,7 @@
       '/js/creator/creator-webtoon.js?v=20261031r10', '/vendor/manuscript-paste.js?v=20261031r9', '/js/creator/creator-rich-editor.js?v=20261031r9', '/js/creator/creator-editor.js?v=20261101r12',
       '/js/creator/creator-publications.js?v=20261101r12', '/js/creator/creator-recovery.js?v=123', '/js/creator/creator-files.js?v=132',
       '/js/creator/creator-settlement.js?v=20261101r13', '/js/shared/settlement-readiness.js?v=20261102op12', '/js/shared/payout-workflow.js?v=20261102op11', '/js/shared/payouts-test.js?v=20261102op11', '/js/creator/creator-dashboard.js?v=20261103op13', '/js/creator/creator.js?v=20261101r13',
-      '/js/creator/creator-works.js?v=20261106ml03', '/js/creator/creator-distribution.js?v=124',
+      '/js/creator/creator-works.js?v=20261106firstwork', '/js/creator/creator-distribution.js?v=124',
       '/js/creator/creator-operations.js?v=20261101r12'
     ],
     admin: [
