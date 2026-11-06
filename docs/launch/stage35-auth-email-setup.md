@@ -79,3 +79,14 @@ SMTP 값이 없을 때도 `--apply`로 Site URL과 redirect를 먼저 고칠 수
 
 로컬 검증: `node --test scripts/verify_stage35_auth_config.test.mjs`. 합성 설정으로 부분 SMTP
 거절·비밀 오류 제거·원본 보존·기본 읽기 전용·중간 변경 거절·PATCH 실패 상태 보존을 확인한다.
+
+## 작가 가입 개방
+
+독자 가입과 확인·복구 메일이 운영에서 검증되면, 동일한 운영 DB의 가입 준비 RPC와 저작권
+동의 문서 두 건의 버전·해시를 재확인한다. 무료 베타에서는 기존 DB 가입 게이트를 공유한다.
+Cloudflare Pages 운영 설정의 `AUTH_ONBOARDING_ENABLED=true`를 반영한 뒤 운영 배포를 적용한다.
+두 운영 주소에서 독자·작가 준비 API가 200이고 작가 정책이 `enabled=true`여야 한다.
+인증 없이 작가 상태를 읽거나 가입을 완료하려는 요청은 401로 거절되어야 한다.
+
+작가는 이메일 확인과 저작권 확약을 완료한 뒤 자신의 Auth UUID에 연결된 작가 프로필을 받는다.
+무료 베타 가입 정책의 `identityVerified`는 `false`이며 PASS 인증은 별도 연동 절차를 따른다.
